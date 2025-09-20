@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Plus, Building2, CheckCircle, XCircle, Clock } from "lucide-react"
-import DashboardLayout from "@/components/layout/DashboardLayout"
 import SalaTable from "./components/SalaTable"
 import SalaModal from "./components/SalaModal"
 import { salasService, Sala, CreateSala, UpdateSala } from "@/services/salasService"
@@ -12,10 +11,9 @@ export default function GestaoSalas() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingSala, setEditingSala] = useState<Sala | null>(null)
-  const [formData, setFormData] = useState<CreateSala>({
+  const [formData, setFormData] = useState<CreateSala & { status: "LIVRE" | "OCUPADA" | "RESERVADA" }>({
     nome: "",
     capacidade: 0,
-    recursos: [],
     localizacao: "",
     status: "LIVRE",
   })
@@ -38,22 +36,20 @@ export default function GestaoSalas() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     try {
-      if (editingSala) {
-        const updatedSala: UpdateSala = {
-          ...formData,
-          capacidade: Number(formData.capacidade),
-        }
-        // ⚡ Garantir que ID seja number
-        await salasService.update(Number(editingSala.id), updatedSala)
-      } else {
-        const newSala: CreateSala = {
-          ...formData,
-          capacidade: Number(formData.capacidade),
-        }
-        await salasService.create(newSala)
+      const payload = {
+        nome: formData.nome,
+        capacidade: Number(formData.capacidade),
+        localizacao: formData.localizacao,
+        status: formData.status,
       }
+
+      if (editingSala) {
+        await salasService.update(editingSala.id, payload as UpdateSala)
+      } else {
+        await salasService.create(payload as CreateSala)
+      }
+
       await fetchSalas()
       closeModal()
     } catch (error) {
@@ -61,10 +57,10 @@ export default function GestaoSalas() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Tem certeza que deseja excluir esta sala?")) {
       try {
-        await salasService.delete(Number(id))
+        await salasService.delete(id)
         await fetchSalas()
       } catch (error) {
         console.error("Erro ao excluir sala:", error)
@@ -78,7 +74,6 @@ export default function GestaoSalas() {
       setFormData({
         nome: sala.nome,
         capacidade: sala.capacidade,
-        recursos: sala.recursos || [],
         localizacao: sala.localizacao || "",
         status: sala.status,
       })
@@ -87,7 +82,6 @@ export default function GestaoSalas() {
       setFormData({
         nome: "",
         capacidade: 0,
-        recursos: [],
         localizacao: "",
         status: "LIVRE",
       })
@@ -101,13 +95,12 @@ export default function GestaoSalas() {
     setFormData({
       nome: "",
       capacidade: 0,
-      recursos: [],
       localizacao: "",
       status: "LIVRE",
     })
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: "LIVRE" | "OCUPADA" | "RESERVADA") => {
     switch (status) {
       case "LIVRE":
         return <CheckCircle className="w-4 h-4 text-green-500" />
@@ -115,12 +108,10 @@ export default function GestaoSalas() {
         return <XCircle className="w-4 h-4 text-red-500" />
       case "RESERVADA":
         return <Clock className="w-4 h-4 text-yellow-500" />
-      default:
-        return null
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: "LIVRE" | "OCUPADA" | "RESERVADA") => {
     switch (status) {
       case "LIVRE":
         return "bg-green-100 text-green-800"
@@ -128,8 +119,6 @@ export default function GestaoSalas() {
         return "bg-red-100 text-red-800"
       case "RESERVADA":
         return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
     }
   }
 
@@ -162,7 +151,7 @@ export default function GestaoSalas() {
           loading={loading}
           getStatusIcon={getStatusIcon}
           getStatusColor={getStatusColor}
-          handleDelete={handleDelete}
+          handleDelete={(id) => handleDelete(id)}
           openModal={openModal}
         />
       </div>

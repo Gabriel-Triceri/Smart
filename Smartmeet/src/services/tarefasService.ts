@@ -58,7 +58,6 @@ function checkTokenValid(token: string) {
 
 /**
  * Lista de statuses aceitos pelo backend para desserializar StatusTarefa
- * (conforme erro que você colou: [POS_REUNIAO, PRE_REUNIAO])
  */
 const BACKEND_ALLOWED_STATUSES = ["PRE_REUNIAO", "POS_REUNIAO"];
 
@@ -125,7 +124,7 @@ export const tarefasService = {
       };
 
       if (isValidBackendStatus(tarefa.statusTarefa)) {
-        payload.status = tarefa.statusTarefa;
+        payload.statusTarefa = tarefa.statusTarefa; // ✅ corrigido (antes estava "status")
       }
 
       console.log("Payload criar tarefa:", JSON.stringify(payload));
@@ -163,21 +162,19 @@ export const tarefasService = {
 
       if (tarefa.statusTarefa !== undefined) {
         if (isValidBackendStatus(tarefa.statusTarefa)) {
-          payload.status = tarefa.statusTarefa;
+          payload.statusTarefa = tarefa.statusTarefa; // ✅ corrigido (antes estava "status")
         } else {
           console.warn(
-            `Status "${tarefa.statusTarefa}" não é aceito pelo backend. Campo 'status' será omitido do payload.`
+            `Status "${tarefa.statusTarefa}" não é aceito pelo backend. Campo 'statusTarefa' será omitido do payload.`
           );
         }
       }
 
       const url = `${API_BASE_URL}/tarefas/${encodeURIComponent(id)}`;
 
-      // DEBUG: mostra URL e payload
       console.log("UPDATE URL:", url);
       console.log("Payload atualizar tarefa:", JSON.stringify(payload));
 
-      // Tenta PUT primeiro (com o URL padrão)
       let res = await fetch(url, {
         method: "PUT",
         headers: {
@@ -187,11 +184,9 @@ export const tarefasService = {
         body: JSON.stringify(payload),
       });
 
-      // Se 404, vamos diagnosticar/fazer fallback:
       if (res.status === 404) {
-        console.warn(`PUT ${url} retornou 404. Tentando diagnosticar...`);
+        console.warn(`PUT ${url} retornou 404. Verificando se a tarefa existe...`);
 
-        // 1) Verifica se a tarefa existe com GET
         const getRes = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -200,19 +195,16 @@ export const tarefasService = {
         });
 
         if (getRes.status === 404) {
-          // recurso realmente não existe
           const bodyText = await getRes.text().catch(() => "");
           throw new Error(`Tarefa não encontrada (404). Resposta GET: ${bodyText}`);
         }
 
         if (!getRes.ok) {
-          // GET retornou outro erro
           const bodyText = await getRes.text().catch(() => "");
           throw new Error(`Erro ao verificar existência da tarefa: ${getRes.status} - ${bodyText}`);
         }
 
-        // 2) Recurso existe (GET ok) — tenta PATCH (fallback)
-        console.warn("GET /tarefas/{id} retornou OK, mas PUT deu 404. Tentando PATCH como fallback...");
+        console.warn("GET retornou OK, mas PUT deu 404. Tentando PATCH...");
         res = await fetch(url, {
           method: "PATCH",
           headers: {

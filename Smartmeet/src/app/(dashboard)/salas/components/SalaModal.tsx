@@ -2,13 +2,13 @@
 
 import type React from "react"
 import { XCircle } from "lucide-react"
-import { Sala } from "@/services/salasService"
+import { Sala, CreateSala } from "@/services/salasService"
 
 interface SalaModalProps {
   showModal: boolean
   editingSala: Sala | null
-  formData: any
-  setFormData: (data: any) => void
+  formData: CreateSala & { status: "LIVRE" | "OCUPADA" | "RESERVADA" }
+  setFormData: (data: CreateSala & { status: "LIVRE" | "OCUPADA" | "RESERVADA" }) => void
   handleSubmit: (e: React.FormEvent) => void
   closeModal: () => void
 }
@@ -27,7 +27,9 @@ const SalaModal: React.FC<SalaModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">{editingSala ? "Editar Sala" : "Nova Sala"}</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {editingSala ? "Editar Sala" : "Nova Sala"}
+          </h2>
           <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
             <XCircle className="w-5 h-5" />
           </button>
@@ -51,22 +53,24 @@ const SalaModal: React.FC<SalaModalProps> = ({
             <input
               type="number"
               required
-              min="1"
+              min={1}
               value={formData.capacidade}
-              onChange={(e) => setFormData({ ...formData, capacidade: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, capacidade: Number(e.target.value) })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Ex: 10"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Recursos</label>
-            <textarea
-              value={formData.recursos}
-              onChange={(e) => setFormData({ ...formData, recursos: e.target.value })}
-              rows={3}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Localização</label>
+            <input
+              type="text"
+              value={formData.localizacao}
+              onChange={(e) => setFormData({ ...formData, localizacao: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Ex: Projetor, TV, Quadro branco, Wi-Fi"
+              placeholder="Ex: 3º Andar"
             />
           </div>
 
@@ -107,5 +111,3 @@ const SalaModal: React.FC<SalaModalProps> = ({
 }
 
 export default SalaModal
-
-

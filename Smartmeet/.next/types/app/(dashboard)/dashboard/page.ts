@@ -1,4 +1,4 @@
-// File: C:\Users\mniac\Desktop\Smartmeet\src\app\(dashboard)\dashboard\page.tsx
+// File: C:\Users\mniac\Desktop\Smart\Smartmeet\src\app\(dashboard)\dashboard\page.tsx
 import * as entry from '../../../../../src/app/(dashboard)/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
