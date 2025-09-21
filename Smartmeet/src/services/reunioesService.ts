@@ -5,27 +5,29 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL as string) || "http:/
 
 export interface Reuniao {
   id: string;
-  titulo: string;
+  pauta: string;
   descricao?: string;
-  dataHora: string;
+  dataHoraInicio: string;
+  duracaoMinutos: number;
   salaId: string;
   organizadorId: string;
   participantes: string[];
   status: "AGENDADA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
-  createdAt: string;
-  updatedAt: string;
+  ata?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateReuniao {
-  titulo: string;
+  pauta?: string;
   descricao?: string;
-  duracao: number;
-  dataHoraInicio: string;
-  salaId: string;
-  organizadorId: string;
-  participantes: string[];
+  ata?: string;
+  duracao?: number;
+  dataHoraInicio?: string;
+  salaId?: string;
+  organizadorId?: string;
+  participantes?: string[];
   ataReuniao?: string;
-  // se no futuro quiser enviar status no create, adicione aqui
 }
 
 export interface UpdateReuniao extends Partial<CreateReuniao> {
@@ -36,10 +38,7 @@ async function handleErrorResponse(response: Response) {
   let bodyText = "";
   try {
     bodyText = await response.text();
-  } catch (e) {
-    /* ignore */
-  }
-
+  } catch (e) {}
   const msg = bodyText ? `Erro ${response.status}: ${bodyText}` : `Erro ${response.status}: ${response.statusText}`;
   const error: any = new Error(msg);
   error.status = response.status;
@@ -47,24 +46,16 @@ async function handleErrorResponse(response: Response) {
   throw error;
 }
 
-/**
- * Verifica se o token JWT está expirado
- */
 function checkTokenValid(token: string) {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const now = Math.floor(Date.now() / 1000);
-    if (payload.exp < now) {
-      throw new Error("Token expirado");
-    }
+    if (payload.exp < now) throw new Error("Token expirado");
   } catch (e) {
     throw new Error("Token inválido ou expirado");
   }
 }
 
-/**
- * Helper para normalizar duracao -> duracaoMinutos (garante número e default 0)
- */
 function normalizeDuracaoToMinutos(duracao: any): number {
   if (typeof duracao === "number" && Number.isFinite(duracao)) return Math.floor(duracao);
   if (typeof duracao === "string") {
@@ -89,7 +80,6 @@ export const reunioesService = {
       });
 
       if (!response.ok) await handleErrorResponse(response);
-
       return await response.json();
     } catch (error) {
       console.error("Erro ao buscar reuniões:", error);
@@ -111,7 +101,6 @@ export const reunioesService = {
       });
 
       if (!response.ok) await handleErrorResponse(response);
-
       return await response.json();
     } catch (error) {
       console.error("Erro ao buscar reunião:", error);
@@ -125,30 +114,22 @@ export const reunioesService = {
       if (!token) throw new Error("Usuário não autenticado (token ausente).");
       checkTokenValid(token);
 
-      // normaliza duracao para duracaoMinutos e monta payload explícito
       const duracaoMinutos = normalizeDuracaoToMinutos(reuniao.duracao);
-
-      // --- CORREÇÃO PRINCIPAL: incluir 'pauta' e 'status' (campos que o backend espera) ---
-      // usamos reuniao.descricao como fallback para pauta
-      const pauta = (reuniao as any).pauta ?? reuniao.descricao ?? "";
-
-      // se o objeto vier com status (não esperado no CreateReuniao por enquanto), usa; senão default AGENDADA
+      const descricao = reuniao.descricao ?? reuniao.ata ?? reuniao.ataReuniao ?? "";
       const status = (reuniao as any).status ?? "AGENDADA";
 
-      const payload = {
-        titulo: reuniao.titulo,
-        descricao: reuniao.descricao ?? "",
-        pauta, // evita pauta_reuniao NULL
+      const payload: any = {
+        pauta: reuniao.pauta ?? "",
+        descricao,
         dataHoraInicio: reuniao.dataHoraInicio,
-        duracaoMinutos, // evita duracaominutos_reuniao NULL
+        duracaoMinutos,
         salaId: reuniao.salaId,
         organizadorId: reuniao.organizadorId,
         participantes: reuniao.participantes ?? [],
-        ataReuniao: reuniao.ataReuniao ?? "",
-        status, // evita status_reuniao NULL (default "AGENDADA")
+        ataReuniao: reuniao.ataReuniao ?? (reuniao.ata ?? ""),
+        status,
       };
 
-      // --- DEBUG: mostrar payload e token ---
       console.log("Payload enviado:", JSON.stringify(payload));
       console.log("Authorization header:", `Bearer ${token}`);
 
@@ -162,7 +143,6 @@ export const reunioesService = {
       });
 
       if (!response.ok) await handleErrorResponse(response);
-
       return await response.json();
     } catch (error) {
       console.error("Erro ao criar reunião:", error);
@@ -176,9 +156,8 @@ export const reunioesService = {
       if (!token) throw new Error("Usuário não autenticado (token ausente).");
       checkTokenValid(token);
 
-      // monta payload e, se fornecida, converte duracao para duracaoMinutos
       const payload: any = {
-        ...(reuniao.titulo !== undefined ? { titulo: reuniao.titulo } : {}),
+        ...(reuniao.pauta !== undefined ? { pauta: reuniao.pauta } : {}),
         ...(reuniao.descricao !== undefined ? { descricao: reuniao.descricao ?? "" } : {}),
         ...(reuniao.dataHoraInicio !== undefined ? { dataHoraInicio: reuniao.dataHoraInicio } : {}),
         ...(reuniao.salaId !== undefined ? { salaId: reuniao.salaId } : {}),
@@ -188,11 +167,8 @@ export const reunioesService = {
         ...(reuniao.status !== undefined ? { status: reuniao.status } : {}),
       };
 
-      // se houver 'pauta' explícita no objeto, envie-a; caso contrário, tente usar descricao
-      if ((reuniao as any).pauta !== undefined) {
-        payload.pauta = (reuniao as any).pauta ?? "";
-      } else if (reuniao.descricao !== undefined) {
-        payload.pauta = reuniao.descricao ?? "";
+      if (payload.descricao === undefined) {
+        payload.descricao = (reuniao as any).ata ?? (reuniao as any).ataReuniao ?? "";
       }
 
       if (reuniao.duracao !== undefined) {
@@ -209,8 +185,12 @@ export const reunioesService = {
       });
 
       if (!response.ok) await handleErrorResponse(response);
+      const updated: Reuniao = await response.json();
 
-      return await response.json();
+      // força descrição no front
+      updated.descricao = payload.descricao;
+
+      return updated;
     } catch (error) {
       console.error("Erro ao atualizar reunião:", error);
       throw new Error("Não foi possível atualizar a reunião");

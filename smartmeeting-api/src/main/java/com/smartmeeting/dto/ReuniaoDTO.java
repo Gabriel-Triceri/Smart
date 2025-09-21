@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,14 +23,19 @@ public class ReuniaoDTO {
     private Integer duracaoMinutos; // duração em minutos
     private String pauta;
     private String ata;
-    private Long salaId;
     private StatusReuniao status;
+    
+    // Campos para IDs (usados na criação/atualização)
+    private Long organizadorId;
+    private Long salaId;
+    private List<Long> participantesIds;
+    
+    // Campos para objetos completos (usados na resposta)
     private PessoaDTO organizador;
     private SalaDTO sala;
     private List<PessoaDTO> participantes;
-    private List<Long> participantesIds;
 
-    // Construtor manual para evitar erro de build
+    // Construtor completo para respostas
     public ReuniaoDTO(Long id,
                       LocalDateTime dataHoraInicio,
                       Integer duracaoMinutos,
@@ -49,6 +54,19 @@ public class ReuniaoDTO {
         this.organizador = organizador;
         this.sala = sala;
         this.participantes = participantes;
+        
+        // Preenche os IDs automaticamente a partir dos objetos
+        if (organizador != null) {
+            this.organizadorId = organizador.getId();
+        }
+        if (sala != null) {
+            this.salaId = sala.getId();
+        }
+        if (participantes != null) {
+            this.participantesIds = participantes.stream()
+                    .map(PessoaDTO::getId)
+                    .collect(Collectors.toList());
+        }
     }
 
     /**

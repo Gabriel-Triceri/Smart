@@ -20,4 +20,8 @@ public class PessoaDTO {
     private String email;
     private TipoUsuario papel;
     private String crachaId;
+
+    public Long getId() {
+        return this.id;
+    }
 }

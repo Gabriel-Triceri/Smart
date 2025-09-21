@@ -21,11 +21,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/salas/page.js"
     ],
-    "/(dashboard)/reunioes/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/reunioes/page.js"
-    ],
     "/(dashboard)/tarefas/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",

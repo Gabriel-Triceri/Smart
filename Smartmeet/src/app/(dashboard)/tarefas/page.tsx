@@ -3,7 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Plus, CheckCircle, Clock } from "lucide-react"
+import { Plus, CheckCircle, Clock, CheckSquare } from "lucide-react"
+import PageLayout from "@/components/layout/PageLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import TarefaTable from "./components/TarefaTable"
@@ -136,22 +137,43 @@ export default function TarefasPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <PageLayout
+        title="Gestão de Tarefas"
+        subtitle="Gerencie suas tarefas e atividades"
+        icon={CheckSquare}
+        headerAction={
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nova Tarefa</span>
+          </button>
+        }
+      >
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
         </div>
-      </div>
+      </PageLayout>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Gestão de Tarefas</h1>
-
-      </div>
-
+    <PageLayout
+      title="Gestão de Tarefas"
+      subtitle="Gerencie suas tarefas e atividades"
+      icon={CheckSquare}
+      headerAction={
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Nova Tarefa</span>
+        </button>
+      }
+    >
       <Card>
         <CardHeader>
           <CardTitle>Lista de Tarefas</CardTitle>
@@ -178,6 +200,6 @@ export default function TarefasPage() {
         handleSubmit={handleSubmit}
         resetForm={resetForm}
       />
-    </div>
+    </PageLayout>
   )
 }

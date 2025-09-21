@@ -4,7 +4,7 @@ package com.smartmeeting.enums;
  * Enum que representa os possíveis estados de uma tarefa no sistema.
  */
 public enum StatusTarefa {
-    PRE_REUNIAO("Tarefa a ser realizada antes da reunião"),
+    PRE_REUNIAO("Tarefa a ser realizada antes da reuni\u00E3o"),
     POS_REUNIAO("Tarefa a ser realizada após a reunião");
     
     private final String descricao;

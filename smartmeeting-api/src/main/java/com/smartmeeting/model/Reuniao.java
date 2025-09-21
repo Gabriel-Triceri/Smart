@@ -8,7 +8,6 @@ import lombok.experimental.Accessors;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Entity
 @Table(name = "REUNIAO")
 @Data
@@ -70,11 +69,14 @@ public class Reuniao {
     @JsonManagedReference
     private List<Presenca> presencas;
 
-    public LocalDateTime getDataHoraFim() {
-    if (dataHoraInicio != null && duracaoMinutos != null) {
+    @Version
+    @Column(name = "VERSION")
+    private Long version;
 
-        return dataHoraInicio.plusMinutes(duracaoMinutos);
+    public LocalDateTime getDataHoraFim() {
+        if (dataHoraInicio != null && duracaoMinutos != null) {
+            return dataHoraInicio.plusMinutes(duracaoMinutos);
+        }
+        return null;
     }
-    return null;
-}
 }

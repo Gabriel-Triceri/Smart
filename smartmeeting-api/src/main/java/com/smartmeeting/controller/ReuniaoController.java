@@ -1,10 +1,16 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.ReuniaoDTO;
+import com.smartmeeting.dto.PessoaDTO;
+import com.smartmeeting.dto.SalaDTO;
 import com.smartmeeting.model.Reuniao;
+import com.smartmeeting.model.Pessoa;
+import com.smartmeeting.model.Sala;
 import com.smartmeeting.service.ReuniaoService;
 import com.smartmeeting.service.email.EmailService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,26 +35,86 @@ public class ReuniaoController {
     @GetMapping
     public List<ReuniaoDTO> listar() {
         return service.listarTodas().stream()
-                .map(this::converterParaDTO) 
+                .map(this::converterParaDTO)
                 .collect(Collectors.toList());
     }
 
     /**
      * Converte uma entidade Reuniao para ReuniaoDTO
      * @param reuniao Entidade a ser convertida
-     * @return DTO com os dados básicos da reunião
+     * @return DTO com os dados básicos da reunião e relações preenchidas
      */
     private ReuniaoDTO converterParaDTO(Reuniao reuniao) {
         if (reuniao == null) {
             return null;
         }
-        
-        return new ReuniaoDTO()
+
+        // Campos básicos
+        ReuniaoDTO dto = new ReuniaoDTO()
                 .setId(reuniao.getId())
                 .setPauta(reuniao.getPauta())
                 .setDataHoraInicio(reuniao.getDataHoraInicio())
                 .setDuracaoMinutos(reuniao.getDuracaoMinutos())
-                .setStatus(reuniao.getStatus());
+                .setStatus(reuniao.getStatus())
+                .setAta(reuniao.getAta());
+
+        // Organizador
+        if (reuniao.getOrganizador() != null) {
+            Pessoa o = reuniao.getOrganizador();
+            PessoaDTO organizadorDTO = new PessoaDTO(
+                    o.getId(),
+                    o.getNome(),
+                    o.getEmail(),
+                    o.getTipoUsuario(),
+                    o.getCrachaId()
+            );
+            dto.setOrganizador(organizadorDTO);
+            dto.setOrganizadorId(o.getId());
+        } else {
+            dto.setOrganizador(null);
+            dto.setOrganizadorId(null);
+        }
+
+        // Sala
+        if (reuniao.getSala() != null) {
+            Sala s = reuniao.getSala();
+            SalaDTO salaDTO = new SalaDTO(
+                    s.getId(),
+                    s.getNome(),
+                    s.getCapacidade(),
+                    s.getLocalizacao(),
+                    s.getStatus()
+            );
+            dto.setSala(salaDTO);
+            dto.setSalaId(s.getId());
+        } else {
+            dto.setSala(null);
+            dto.setSalaId(null);
+        }
+
+        // Participantes (DTOs e IDs)
+        if (reuniao.getParticipantes() != null) {
+            List<PessoaDTO> participantesDTO = reuniao.getParticipantes().stream()
+                    .map((Pessoa p) -> new PessoaDTO(
+                            p.getId(),
+                            p.getNome(),
+                            p.getEmail(),
+                            p.getTipoUsuario(),
+                            p.getCrachaId()
+                    ))
+                    .collect(Collectors.toList());
+            List<Long> participantesIds = reuniao.getParticipantes().stream()
+                    .map(Pessoa::getId)
+                    .collect(Collectors.toList());
+
+            dto.setParticipantes(participantesDTO);
+            dto.setParticipantesIds(participantesIds);
+        } else {
+            dto.setParticipantes(null);
+            dto.setParticipantesIds(null);
+        }
+
+        return dto;
     }
 
     /**
@@ -82,12 +148,16 @@ public class ReuniaoController {
      * @return ResponseEntity contendo a reunião atualizada ou status 404 se não existir
      */
     @PutMapping("/{id}")
-    public ResponseEntity<ReuniaoDTO> atualizar(@PathVariable Long id, @RequestBody ReuniaoDTO dto) {
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody ReuniaoDTO dto) {
         try {
             ReuniaoDTO reuniaoAtualizada = service.atualizarDTO(id, dto);
             return ResponseEntity.ok(reuniaoAtualizada);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Erro de concorrência: Os dados foram modificados por outro usuário. Recarregue e tente novamente.");
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
         }
     }
 
@@ -97,12 +167,13 @@ public class ReuniaoController {
      * @return ResponseEntity com status 204 (No Content)
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    public ResponseEntity<?> deletar(@PathVariable Long id) {
         try {
             service.deletar(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Reunião não encontrada com ID: " + id);
         }
     }
 
@@ -112,12 +183,13 @@ public class ReuniaoController {
      * @return ResponseEntity contendo a reunião encerrada ou status 404 se não existir
      */
     @PostMapping("/{id}/encerrar")
-    public ResponseEntity<ReuniaoDTO> encerrar(@PathVariable Long id) {
+    public ResponseEntity<?> encerrar(@PathVariable Long id) {
         try {
             ReuniaoDTO reuniaoEncerrada = service.encerrarReuniaoDTO(id);
             return ResponseEntity.ok(reuniaoEncerrada);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
         }
     }
 

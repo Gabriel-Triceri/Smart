@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Plus, Building2, CheckCircle, XCircle, Clock } from "lucide-react"
+import PageLayout from "@/components/layout/PageLayout"
 import SalaTable from "./components/SalaTable"
 import SalaModal from "./components/SalaModal"
 import { salasService, Sala, CreateSala, UpdateSala } from "@/services/salasService"
@@ -123,38 +124,28 @@ export default function GestaoSalas() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-3">
-              <Building2 className="w-8 h-8 text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Gestão de Salas</h1>
-                <p className="text-sm text-gray-500">Gerencie as salas de reunião</p>
-              </div>
-            </div>
-            <button
-              onClick={() => openModal()}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Nova Sala</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SalaTable
-          salas={salas}
-          loading={loading}
-          getStatusIcon={getStatusIcon}
-          getStatusColor={getStatusColor}
-          handleDelete={(id) => handleDelete(id)}
-          openModal={openModal}
-        />
-      </div>
+    <PageLayout
+      title="Gestão de Salas"
+      subtitle="Gerencie as salas de reunião"
+      icon={Building2}
+      headerAction={
+        <button
+          onClick={() => openModal()}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Nova Sala</span>
+        </button>
+      }
+    >
+      <SalaTable
+        salas={salas}
+        loading={loading}
+        getStatusIcon={getStatusIcon}
+        getStatusColor={getStatusColor}
+        handleDelete={(id) => handleDelete(id)}
+        openModal={openModal}
+      />
 
       <SalaModal
         showModal={showModal}
@@ -164,6 +155,6 @@ export default function GestaoSalas() {
         handleSubmit={handleSubmit}
         closeModal={closeModal}
       />
-    </div>
+    </PageLayout>
   )
 }

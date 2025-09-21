@@ -20,4 +20,8 @@ public class SalaDTO {
     private Integer capacidade;
     private String localizacao;
     private SalaStatus status;
+
+    public Long getId() {
+        return this.id;
+    }
 }
