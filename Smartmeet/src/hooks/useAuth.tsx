@@ -3,8 +3,8 @@
 import { useState, useEffect, useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../context/AuthContext"
-import { authService } from "../services/authService"
-import { ROUTES } from "../utils/constants"
+import { authService } from "../services/auth.service"
+import { ROUTES } from "../utils/constants.util"
 
 export const useAuth = () => {
   const context = useContext(AuthContext)

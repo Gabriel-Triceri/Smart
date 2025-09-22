@@ -7,8 +7,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { authService } from "@/services/authService"
-import { validateEmail } from "@/utils/helpers"
+import { authService } from "@/services/auth.service"
+import { validateEmail } from "@/utils/helpers.util"
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("")

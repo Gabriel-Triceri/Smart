@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useState, useEffect, type ReactNode } from "react"
-import { authService } from "../services/authService"
+import { authService } from "../services/auth.service"
 
 interface User {
   id: string
