@@ -1,13 +1,13 @@
-export const API_BASE_URL = "http://localhost:8080/api"
+export const API_BASE_URL = "http://localhost:8080/api" as const
 
 export const ROUTES = {
   LOGIN: "/",
-  DASHBOARD: "/dashboard",
-  SALAS: "/dashboard/salas",
-  REUNIOES: "/dashboard/reunioes",
-  TAREFAS: "/dashboard/tarefas",
-  PESSOAS: "/dashboard/pessoas",
-  RELATORIOS: "/dashboard/relatorios",
+  DASHBOARD: "/dashboard", // página principal do dashboard
+  SALAS: "/salas",
+  REUNIOES: "/reunioes",
+  TAREFAS: "/tarefas",
+  PESSOAS: "/pessoas",
+  RELATORIOS: "/relatorios",
 } as const
 
 export const STATUS_SALA = {

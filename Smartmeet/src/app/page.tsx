@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { ROUTES } from "@/routes" // Importa o arquivo de rotas
 
 export default function HomePage() {
   const router = useRouter()
@@ -9,13 +10,13 @@ export default function HomePage() {
   useEffect(() => {
     // Verifica se o usuário está logado
     const token = localStorage.getItem("token")
-    
+
     if (token) {
       // Se tem token, redireciona para o dashboard
-      router.push("/dashboard")
+      router.push(ROUTES.DASHBOARD)
     } else {
       // Se não tem token, redireciona para o login
-      router.push("/login")
+      router.push(ROUTES.LOGIN)
     }
   }, [router])
 

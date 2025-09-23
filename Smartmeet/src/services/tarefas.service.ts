@@ -1,5 +1,5 @@
 // tarefasService.ts
-import { authService } from "./authService";
+import { authService } from "@/services/auth.service";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL as string) || "http://localhost:8080";
 

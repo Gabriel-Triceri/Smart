@@ -1,7 +1,6 @@
 Listagem de caminhos de pasta para o volume Acer
 O n·mero de sÚrie do volume Ú 9683-CDA3
 C:.
-|   .env
 |   .env.local
 |   components.json
 |   estrutura.txt
@@ -14,325 +13,6 @@ C:.
 |   README.md
 |   tsconfig.json
 |   
-+---.next
-|   |   app-build-manifest.json
-|   |   build-manifest.json
-|   |   package.json
-|   |   react-loadable-manifest.json
-|   |   trace
-|   |   
-|   +---cache
-|   |   |   config.json
-|   |   |   
-|   |   +---swc
-|   |   |   \---plugins
-|   |   |       \---v7_windows_x86_64_0.106.15
-|   |   \---webpack
-|   |       +---client-development
-|   |       |       0.pack.gz
-|   |       |       1.pack.gz
-|   |       |       10.pack.gz
-|   |       |       11.pack.gz
-|   |       |       12.pack.gz
-|   |       |       13.pack.gz
-|   |       |       14.pack.gz
-|   |       |       15.pack.gz
-|   |       |       16.pack.gz
-|   |       |       17.pack.gz
-|   |       |       18.pack.gz
-|   |       |       19.pack.gz
-|   |       |       2.pack.gz
-|   |       |       20.pack.gz
-|   |       |       21.pack.gz
-|   |       |       22.pack.gz
-|   |       |       3.pack.gz
-|   |       |       4.pack.gz
-|   |       |       5.pack.gz
-|   |       |       6.pack.gz
-|   |       |       7.pack.gz
-|   |       |       8.pack.gz
-|   |       |       9.pack.gz
-|   |       |       index.pack.gz
-|   |       |       index.pack.gz.old
-|   |       |       
-|   |       +---client-development-fallback
-|   |       |       0.pack.gz
-|   |       |       index.pack.gz
-|   |       |       index.pack.gz.old
-|   |       |       
-|   |       +---client-production
-|   |       |       0.pack
-|   |       |       1.pack
-|   |       |       2.pack
-|   |       |       index.pack
-|   |       |       index.pack.old
-|   |       |       
-|   |       +---edge-server-production
-|   |       |       0.pack
-|   |       |       index.pack
-|   |       |       
-|   |       +---server-development
-|   |       |       0.pack.gz
-|   |       |       1.pack.gz
-|   |       |       10.pack.gz
-|   |       |       11.pack.gz
-|   |       |       12.pack.gz
-|   |       |       13.pack.gz
-|   |       |       14.pack.gz
-|   |       |       15.pack.gz
-|   |       |       16.pack.gz
-|   |       |       17.pack.gz
-|   |       |       2.pack.gz
-|   |       |       3.pack.gz
-|   |       |       4.pack.gz
-|   |       |       5.pack.gz
-|   |       |       6.pack.gz
-|   |       |       7.pack.gz
-|   |       |       8.pack.gz
-|   |       |       9.pack.gz
-|   |       |       index.pack.gz
-|   |       |       index.pack.gz.old
-|   |       |       
-|   |       \---server-production
-|   |               0.pack
-|   |               1.pack
-|   |               2.pack
-|   |               3.pack
-|   |               4.pack
-|   |               index.pack
-|   |               index.pack.old
-|   |               
-|   +---server
-|   |   |   app-paths-manifest.json
-|   |   |   interception-route-rewrite-manifest.js
-|   |   |   middleware-build-manifest.js
-|   |   |   middleware-manifest.json
-|   |   |   middleware-react-loadable-manifest.js
-|   |   |   next-font-manifest.js
-|   |   |   next-font-manifest.json
-|   |   |   pages-manifest.json
-|   |   |   server-reference-manifest.js
-|   |   |   server-reference-manifest.json
-|   |   |   webpack-runtime.js
-|   |   |   
-|   |   +---app
-|   |   |   |   page.js
-|   |   |   |   page_client-reference-manifest.js
-|   |   |   |   
-|   |   |   +---(dashboard)
-|   |   |   |   +---dashboard
-|   |   |   |   |       page.js
-|   |   |   |   |       page_client-reference-manifest.js
-|   |   |   |   |       
-|   |   |   |   +---salas
-|   |   |   |   |       page.js
-|   |   |   |   |       page_client-reference-manifest.js
-|   |   |   |   |       
-|   |   |   |   \---tarefas
-|   |   |   |           page.js
-|   |   |   |           page_client-reference-manifest.js
-|   |   |   |           
-|   |   |   \---_not-found
-|   |   |           page.js
-|   |   |           page_client-reference-manifest.js
-|   |   |           
-|   |   \---vendor-chunks
-|   |           @floating-ui.js
-|   |           @radix-ui.js
-|   |           @swc.js
-|   |           @vercel.js
-|   |           aria-hidden.js
-|   |           class-variance-authority.js
-|   |           clsx.js
-|   |           cookie.js
-|   |           geist.js
-|   |           get-nonce.js
-|   |           lucide-react.js
-|   |           next.js
-|   |           react-remove-scroll-bar.js
-|   |           react-remove-scroll.js
-|   |           react-router-dom.js
-|   |           react-router.js
-|   |           react-style-singleton.js
-|   |           set-cookie-parser.js
-|   |           tailwind-merge.js
-|   |           tslib.js
-|   |           use-callback-ref.js
-|   |           use-sidecar.js
-|   |           
-|   +---static
-|   |   +---chunks
-|   |   |   |   app-pages-internals.js
-|   |   |   |   main-app.js
-|   |   |   |   polyfills.js
-|   |   |   |   webpack.js
-|   |   |   |   
-|   |   |   \---app
-|   |   |       |   layout.js
-|   |   |       |   page.js
-|   |   |       |   
-|   |   |       +---(dashboard)
-|   |   |       |   +---dashboard
-|   |   |       |   |       page.js
-|   |   |       |   |       
-|   |   |       |   +---salas
-|   |   |       |   |       page.js
-|   |   |       |   |       
-|   |   |       |   \---tarefas
-|   |   |       |           page.js
-|   |   |       |           
-|   |   |       \---_not-found
-|   |   |               page.js
-|   |   |               
-|   |   +---css
-|   |   |   \---app
-|   |   |           layout.css
-|   |   |           
-|   |   +---development
-|   |   |       _buildManifest.js
-|   |   |       _ssgManifest.js
-|   |   |       
-|   |   +---media
-|   |   |       028c0d39d2e8f589-s.p.woff2
-|   |   |       5b01f339abf2f1a5.p.woff2
-|   |   |       
-|   |   \---webpack
-|   |       |   01e7ee56dbead5fc.webpack.hot-update.json
-|   |       |   0455b4e9e2225eae.webpack.hot-update.json
-|   |       |   11c61126f9f6594b.webpack.hot-update.json
-|   |       |   14d422a2197f34ff.webpack.hot-update.json
-|   |       |   16ac758fbd74d8f3.webpack.hot-update.json
-|   |       |   2ce4659677f8ea79.webpack.hot-update.json
-|   |       |   3515973f3f80a0a0.webpack.hot-update.json
-|   |       |   35a7965c62c3f2a5.webpack.hot-update.json
-|   |       |   35c7533def58e9a8.webpack.hot-update.json
-|   |       |   3dc7a3c6e2ddf103.webpack.hot-update.json
-|   |       |   4c03cb65434316bb.webpack.hot-update.json
-|   |       |   4c2bb44ccfec86a4.webpack.hot-update.json
-|   |       |   5d52240cd094bd03.webpack.hot-update.json
-|   |       |   62c55fbdf3772ac1.webpack.hot-update.json
-|   |       |   633457081244afec._.hot-update.json
-|   |       |   667f91b5be9c99aa.webpack.hot-update.json
-|   |       |   6e1bd3c061e92a86.webpack.hot-update.json
-|   |       |   799c53fbca00d4d1.webpack.hot-update.json
-|   |       |   7da9486851f939d2.webpack.hot-update.json
-|   |       |   7fa79312ff8e3fb9.webpack.hot-update.json
-|   |       |   95df1060f8cf12f7.webpack.hot-update.json
-|   |       |   98ce563a850ec604.webpack.hot-update.json
-|   |       |   aba41456c7465d1f.webpack.hot-update.json
-|   |       |   b077af2e4dc8977b.webpack.hot-update.json
-|   |       |   c28b21a76ef52235.webpack.hot-update.json
-|   |       |   c3fd81399307c24d.webpack.hot-update.json
-|   |       |   cae9abf659f4d0fd.webpack.hot-update.json
-|   |       |   cb90d72a4bb83546.webpack.hot-update.json
-|   |       |   ccc5e7382bef4bd5.webpack.hot-update.json
-|   |       |   d1d6190e76512681.webpack.hot-update.json
-|   |       |   d3dbcf377f9313e5.webpack.hot-update.json
-|   |       |   d5de25d1563a33e8.webpack.hot-update.json
-|   |       |   d6cc8621809c9e92.webpack.hot-update.json
-|   |       |   df4b2c51d4369205.webpack.hot-update.json
-|   |       |   f2577ecf1e07ea7b.webpack.hot-update.json
-|   |       |   f92c2abb33cb902d.webpack.hot-update.json
-|   |       |   fe230e5b21e98284.webpack.hot-update.json
-|   |       |   webpack.01e7ee56dbead5fc.hot-update.js
-|   |       |   webpack.0455b4e9e2225eae.hot-update.js
-|   |       |   webpack.11c61126f9f6594b.hot-update.js
-|   |       |   webpack.14d422a2197f34ff.hot-update.js
-|   |       |   webpack.16ac758fbd74d8f3.hot-update.js
-|   |       |   webpack.2ce4659677f8ea79.hot-update.js
-|   |       |   webpack.3515973f3f80a0a0.hot-update.js
-|   |       |   webpack.35a7965c62c3f2a5.hot-update.js
-|   |       |   webpack.35c7533def58e9a8.hot-update.js
-|   |       |   webpack.3dc7a3c6e2ddf103.hot-update.js
-|   |       |   webpack.4c03cb65434316bb.hot-update.js
-|   |       |   webpack.4c2bb44ccfec86a4.hot-update.js
-|   |       |   webpack.5d52240cd094bd03.hot-update.js
-|   |       |   webpack.62c55fbdf3772ac1.hot-update.js
-|   |       |   webpack.667f91b5be9c99aa.hot-update.js
-|   |       |   webpack.6e1bd3c061e92a86.hot-update.js
-|   |       |   webpack.799c53fbca00d4d1.hot-update.js
-|   |       |   webpack.7da9486851f939d2.hot-update.js
-|   |       |   webpack.7fa79312ff8e3fb9.hot-update.js
-|   |       |   webpack.95df1060f8cf12f7.hot-update.js
-|   |       |   webpack.98ce563a850ec604.hot-update.js
-|   |       |   webpack.aba41456c7465d1f.hot-update.js
-|   |       |   webpack.b077af2e4dc8977b.hot-update.js
-|   |       |   webpack.c28b21a76ef52235.hot-update.js
-|   |       |   webpack.c3fd81399307c24d.hot-update.js
-|   |       |   webpack.cae9abf659f4d0fd.hot-update.js
-|   |       |   webpack.cb90d72a4bb83546.hot-update.js
-|   |       |   webpack.ccc5e7382bef4bd5.hot-update.js
-|   |       |   webpack.d1d6190e76512681.hot-update.js
-|   |       |   webpack.d3dbcf377f9313e5.hot-update.js
-|   |       |   webpack.d5de25d1563a33e8.hot-update.js
-|   |       |   webpack.d6cc8621809c9e92.hot-update.js
-|   |       |   webpack.df4b2c51d4369205.hot-update.js
-|   |       |   webpack.f2577ecf1e07ea7b.hot-update.js
-|   |       |   webpack.f92c2abb33cb902d.hot-update.js
-|   |       |   webpack.fe230e5b21e98284.hot-update.js
-|   |       |   
-|   |       \---app
-|   |           |   layout.01e7ee56dbead5fc.hot-update.js
-|   |           |   layout.0455b4e9e2225eae.hot-update.js
-|   |           |   layout.11c61126f9f6594b.hot-update.js
-|   |           |   layout.16ac758fbd74d8f3.hot-update.js
-|   |           |   layout.2ce4659677f8ea79.hot-update.js
-|   |           |   layout.3515973f3f80a0a0.hot-update.js
-|   |           |   layout.35a7965c62c3f2a5.hot-update.js
-|   |           |   layout.35c7533def58e9a8.hot-update.js
-|   |           |   layout.3dc7a3c6e2ddf103.hot-update.js
-|   |           |   layout.4c2bb44ccfec86a4.hot-update.js
-|   |           |   layout.62c55fbdf3772ac1.hot-update.js
-|   |           |   layout.667f91b5be9c99aa.hot-update.js
-|   |           |   layout.6e1bd3c061e92a86.hot-update.js
-|   |           |   layout.799c53fbca00d4d1.hot-update.js
-|   |           |   layout.7da9486851f939d2.hot-update.js
-|   |           |   layout.95df1060f8cf12f7.hot-update.js
-|   |           |   layout.98ce563a850ec604.hot-update.js
-|   |           |   layout.aba41456c7465d1f.hot-update.js
-|   |           |   layout.b077af2e4dc8977b.hot-update.js
-|   |           |   layout.c28b21a76ef52235.hot-update.js
-|   |           |   layout.cae9abf659f4d0fd.hot-update.js
-|   |           |   layout.cb90d72a4bb83546.hot-update.js
-|   |           |   layout.ccc5e7382bef4bd5.hot-update.js
-|   |           |   layout.d1d6190e76512681.hot-update.js
-|   |           |   layout.d3dbcf377f9313e5.hot-update.js
-|   |           |   layout.d5de25d1563a33e8.hot-update.js
-|   |           |   layout.d6cc8621809c9e92.hot-update.js
-|   |           |   layout.df4b2c51d4369205.hot-update.js
-|   |           |   layout.f92c2abb33cb902d.hot-update.js
-|   |           |   layout.fe230e5b21e98284.hot-update.js
-|   |           |   
-|   |           \---(dashboard)
-|   |               +---dashboard
-|   |               |       page.2ce4659677f8ea79.hot-update.js
-|   |               |       page.d3dbcf377f9313e5.hot-update.js
-|   |               |       
-|   |               +---salas
-|   |               |       page.01e7ee56dbead5fc.hot-update.js
-|   |               |       page.799c53fbca00d4d1.hot-update.js
-|   |               |       
-|   |               \---tarefas
-|   |                       page.95df1060f8cf12f7.hot-update.js
-|   |                       page.b077af2e4dc8977b.hot-update.js
-|   |                       
-|   \---types
-|       |   package.json
-|       |   
-|       \---app
-|           |   layout.ts
-|           |   page.ts
-|           |   
-|           \---(dashboard)
-|               +---dashboard
-|               |       page.ts
-|               |       
-|               +---salas
-|               |       page.ts
-|               |       
-|               \---tarefas
-|                       page.ts
-|                       
 +---node_modules
 |   |   .package-lock.json
 |   |   
@@ -31009,166 +30689,136 @@ C:.
 |               index.d.ts
 |               index.js
 |               
-+---public
-|       placeholder-logo.png
-|       placeholder-logo.svg
-|       placeholder-user.jpg
-|       placeholder.jpg
-|       placeholder.svg
-|       
-+---src
-|   |   estrutura.txt
-|   |   
-|   +---app
-|   |   |   globals.css
-|   |   |   layout.tsx
-|   |   |   page.tsx
-|   |   |   
-|   |   +---(auth)
-|   |   |   \---login
-|   |   |           page.tsx
-|   |   |           
-|   |   +---(dashboard)
-|   |   |   +---dashboard
-|   |   |   |       dashboard.page.tsx
-|   |   |   |       dashboard.widgets.tsx
-|   |   |   |       DashboardStatsCard.tsx
-|   |   |   |       RecentTasksCard.tsx
-|   |   |   |       UpcomingMeetingsCard.tsx
-|   |   |   |       
-|   |   |   +---pessoas
-|   |   |   |       pessoas.modal.tsx
-|   |   |   |       pessoas.page.tsx
-|   |   |   |       pessoas.table.tsx
-|   |   |   |       
-|   |   |   +---reunioes
-|   |   |   |       reunioes.modal.tsx
-|   |   |   |       reunioes.page.tsx
-|   |   |   |       reunioes.table.tsx
-|   |   |   |       
-|   |   |   +---salas
-|   |   |   |       salas.modal.tsx
-|   |   |   |       salas.page.tsx
-|   |   |   |       salas.table.tsx
-|   |   |   |       
-|   |   |   \---tarefas
-|   |   |           tarefas.modal.tsx
-|   |   |           tarefas.page.tsx
-|   |   |           tarefas.table.tsx
-|   |   |           
-|   |   \---api
-|   |       +---auth
-|   |       |       route.ts
-|   |       |       
-|   |       +---pessoas
-|   |       |       route.ts
-|   |       |       
-|   |       +---reunioes
-|   |       |   |   route.ts
-|   |       |   |   
-|   |       |   \---[id]
-|   |       |           route.ts
-|   |       |           
-|   |       +---salas
-|   |       |   |   route.ts
-|   |       |   |   
-|   |       |   \---[id]
-|   |       |           route.ts
-|   |       |           
-|   |       \---tarefas
-|   |           |   route.ts
-|   |           |   
-|   |           \---[id]
-|   |                   route.ts
-|   |                   
-|   +---components
-|   |   |   theme-provider.tsx
-|   |   |   
-|   |   +---layout
-|   |   |       DashboardLayout.tsx
-|   |   |       Header.tsx
-|   |   |       PageLayout.tsx
-|   |   |       Sidebar.tsx
-|   |   |       
-|   |   \---ui
-|   |           accordion.tsx
-|   |           alert-dialog.tsx
-|   |           alert.tsx
-|   |           aspect-ratio.tsx
-|   |           avatar.tsx
-|   |           badge.tsx
-|   |           breadcrumb.tsx
-|   |           button.tsx
-|   |           calendar.tsx
-|   |           card.tsx
-|   |           carousel.tsx
-|   |           chart.tsx
-|   |           checkbox.tsx
-|   |           collapsible.tsx
-|   |           command.tsx
-|   |           context-menu.tsx
-|   |           dialog.tsx
-|   |           drawer.tsx
-|   |           dropdown-menu.tsx
-|   |           form.tsx
-|   |           hover-card.tsx
-|   |           input-otp.tsx
-|   |           input.tsx
-|   |           label.tsx
-|   |           menubar.tsx
-|   |           navigation-menu.tsx
-|   |           pagination.tsx
-|   |           popover.tsx
-|   |           progress.tsx
-|   |           radio-group.tsx
-|   |           resizable.tsx
-|   |           scroll-area.tsx
-|   |           select.tsx
-|   |           separator.tsx
-|   |           sheet.tsx
-|   |           sidebar.tsx
-|   |           skeleton.tsx
-|   |           slider.tsx
-|   |           sonner.tsx
-|   |           switch.tsx
-|   |           table.tsx
-|   |           tabs.tsx
-|   |           textarea.tsx
-|   |           toast.tsx
-|   |           toaster.tsx
-|   |           toggle-group.tsx
-|   |           toggle.tsx
-|   |           tooltip.tsx
-|   |           use-mobile.tsx
-|   |           use-toast.ts
-|   |           
-|   +---context
-|   |       AuthContext.tsx
-|   |       
-|   +---hooks
-|   |       use-mobile.ts
-|   |       use-toast.ts
-|   |       useApi.tsx
-|   |       useAuth.tsx
-|   |       useForm.tsx
-|   |       useLocalStorage.tsx
-|   |       
-|   +---lib
-|   |       utils.ts
-|   |       
-|   +---services
-|   |       auth.service.ts
-|   |       pessoas.service.ts
-|   |       reunioes.service.ts
-|   |       salas.service.ts
-|   |       tarefas.service.ts
-|   |       
-|   +---styles
-|   |       globals.css
-|   |       
-|   +---types
-|   \---utils
-|           constants.util.ts
-|           helpers.util.ts
-|           
-\---utils
+\---src
+    |   estrutura.txt
+    |   
+    +---app
+    |   |   globals.css
+    |   |   layout.tsx
+    |   |   page.tsx
+    |   |   
+    |   +---(auth)
+    |   |   \---login
+    |   |           page.tsx
+    |   |           
+    |   \---(dashboard)
+    |       +---dashboard
+    |       |       dashboard.page.tsx
+    |       |       dashboard.widgets.tsx
+    |       |       
+    |       +---pessoas
+    |       |       pessoas.modal.tsx
+    |       |       pessoas.page.tsx
+    |       |       pessoas.table.tsx
+    |       |       
+    |       +---reunioes
+    |       |       reunioes.modal.tsx
+    |       |       reunioes.page.tsx
+    |       |       reunioes.table.tsx
+    |       |       
+    |       +---salas
+    |       |       salas.modal.tsx
+    |       |       salas.page.tsx
+    |       |       salas.table.tsx
+    |       |       
+    |       \---tarefas
+    |               tarefas.modal.tsx
+    |               tarefas.page.tsx
+    |               tarefas.table.tsx
+    |               
+    +---components
+    |   |   theme-provider.tsx
+    |   |   
+    |   +---dashboard
+    |   |       DashboardStatsCard.tsx
+    |   |       RecentTasksCard.tsx
+    |   |       UpcomingMeetingsCard.tsx
+    |   |       
+    |   +---layout
+    |   |       DashboardLayout.tsx
+    |   |       Header.tsx
+    |   |       PageLayout.tsx
+    |   |       Sidebar.tsx
+    |   |       
+    |   \---ui
+    |           accordion.tsx
+    |           alert-dialog.tsx
+    |           alert.tsx
+    |           aspect-ratio.tsx
+    |           avatar.tsx
+    |           badge.tsx
+    |           breadcrumb.tsx
+    |           button.tsx
+    |           calendar.tsx
+    |           card.tsx
+    |           carousel.tsx
+    |           chart.tsx
+    |           checkbox.tsx
+    |           collapsible.tsx
+    |           command.tsx
+    |           context-menu.tsx
+    |           dialog.tsx
+    |           drawer.tsx
+    |           dropdown-menu.tsx
+    |           form.tsx
+    |           hover-card.tsx
+    |           input-otp.tsx
+    |           input.tsx
+    |           label.tsx
+    |           menubar.tsx
+    |           navigation-menu.tsx
+    |           pagination.tsx
+    |           popover.tsx
+    |           progress.tsx
+    |           radio-group.tsx
+    |           resizable.tsx
+    |           scroll-area.tsx
+    |           select.tsx
+    |           separator.tsx
+    |           sheet.tsx
+    |           sidebar.tsx
+    |           skeleton.tsx
+    |           slider.tsx
+    |           sonner.tsx
+    |           switch.tsx
+    |           table.tsx
+    |           tabs.tsx
+    |           textarea.tsx
+    |           toast.tsx
+    |           toaster.tsx
+    |           toggle-group.tsx
+    |           toggle.tsx
+    |           tooltip.tsx
+    |           use-mobile.tsx
+    |           use-toast.ts
+    |           
+    +---context
+    |       AuthContext.tsx
+    |       
+    +---hooks
+    |       use-mobile.ts
+    |       use-toast.ts
+    |       useApi.tsx
+    |       useAuth.tsx
+    |       useForm.tsx
+    |       useLocalStorage.tsx
+    |       
+    +---lib
+    |       utils.ts
+    |       
+    +---services
+    |       auth.service.ts
+    |       pessoas.service.ts
+    |       reunioes.service.ts
+    |       salas.service.ts
+    |       tarefas.service.ts
+    |       
+    +---styles
+    |       globals.css
+    |       
+    \---utils
+            constants.util.ts
+            format-date-time.ts
+            get-status-color.ts
+            helpers.util.ts
+            

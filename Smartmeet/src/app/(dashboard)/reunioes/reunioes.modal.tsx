@@ -148,5 +148,3 @@ const ReuniaoModal: React.FC<ReuniaoModalProps> = ({
 }
 
 export default ReuniaoModal
-
-

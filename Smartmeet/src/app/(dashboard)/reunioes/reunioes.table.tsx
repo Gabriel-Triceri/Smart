@@ -8,15 +8,15 @@ interface ReuniaoTableProps {
   reunioes: Reuniao[]
   loading: boolean
   // tornamos opcionais porque fornecemos defaults mínimos abaixo
-  formatDateTime?: (dateTime: string) => string
-  getStatusColor?: (status: string) => string
+  formatDateTime?: (dateTime?: string) => string
+  getStatusColor?: (status?: string) => string
   handleDelete: (id: string) => void
   handleStatusChange: (id: string, novoStatus: string) => void
   openModal: (reuniao?: Reuniao) => void
 }
 
 const defaultFormatDateTime = (iso?: string) => {
-  if (!iso) return ""
+  if (!iso) return "-"
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
   return new Intl.DateTimeFormat("pt-BR", {
@@ -86,10 +86,10 @@ const ReuniaoTable: React.FC<ReuniaoTableProps> = ({
                 const duracao = (reuniao as any).duracao ?? (reuniao as any).duracaoMinutos ?? 0
                 return (
                   <tr key={reuniao.id} className="hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-900">{formatDateTime(reuniao.dataHora)}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{duracao} min</td>
-                    <td className="py-3 px-4 text-sm text-gray-900 max-w-xs truncate">{reuniao.titulo}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900 max-w-xs truncate">{reuniao.descricao}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900">{formatDateTime(reuniao.dataHora ?? reuniao.dataHoraInicio)}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900">{duracao ? `${duracao} min` : "-"}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900 max-w-xs truncate">{reuniao.titulo ?? reuniao.pauta}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900 max-w-xs truncate">{reuniao.descricao ?? reuniao.ata}</td>
                     <td className="py-3 px-4">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
@@ -99,13 +99,13 @@ const ReuniaoTable: React.FC<ReuniaoTableProps> = ({
                         {reuniao.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{reuniao.salaId}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{reuniao.organizadorId}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900">{(reuniao as any).sala?.nome ?? reuniao.salaId ?? "-"}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900">{(reuniao as any).organizador?.nome ?? reuniao.organizadorId ?? "-"}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         {reuniao.status === "AGENDADA" && (
                           <button
-                            onClick={() => handleStatusChange(reuniao.id, "EM_ANDAMENTO")}
+                            onClick={() => handleStatusChange(String(reuniao.id), "EM_ANDAMENTO")}
                             className="p-1 text-green-600 hover:bg-green-100 rounded"
                             title="Iniciar"
                           >
@@ -114,7 +114,7 @@ const ReuniaoTable: React.FC<ReuniaoTableProps> = ({
                         )}
                         {reuniao.status === "EM_ANDAMENTO" && (
                           <button
-                            onClick={() => handleStatusChange(reuniao.id, "FINALIZADA")}
+                            onClick={() => handleStatusChange(String(reuniao.id), "FINALIZADA")}
                             className="p-1 text-gray-600 hover:bg-gray-100 rounded"
                             title="Finalizar"
                           >
@@ -123,7 +123,7 @@ const ReuniaoTable: React.FC<ReuniaoTableProps> = ({
                         )}
                         {reuniao.status === "AGENDADA" && (
                           <button
-                            onClick={() => handleStatusChange(reuniao.id, "CANCELADA")}
+                            onClick={() => handleStatusChange(String(reuniao.id), "CANCELADA")}
                             className="p-1 text-red-600 hover:bg-red-100 rounded"
                             title="Cancelar"
                           >
@@ -138,7 +138,7 @@ const ReuniaoTable: React.FC<ReuniaoTableProps> = ({
                           <Edit size={16} />
                         </button>
                         <button
-                          onClick={() => handleDelete(reuniao.id)}
+                          onClick={() => handleDelete(String(reuniao.id))}
                           className="p-1 text-red-600 hover:bg-red-100 rounded"
                           title="Excluir"
                         >

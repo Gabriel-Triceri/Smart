@@ -1,5 +1,5 @@
 // Serviço de pessoas - responsável por gerenciar operações CRUD de usuários/pessoas
-import { authService } from "./authService"
+import { authService } from "@/services/auth.service"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL // Corrigido: define a URL da API
 
