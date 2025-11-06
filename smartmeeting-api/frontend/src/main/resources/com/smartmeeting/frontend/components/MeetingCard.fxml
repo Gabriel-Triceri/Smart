@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<HBox alignment="CENTER_LEFT" spacing="10" styleClass="meeting-card" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.components.MeetingCardController">
+    <padding>
+        <Insets bottom="10" left="15" right="15" top="10"/>
+    </padding>
+    <VBox HBox.hgrow="ALWAYS">
+        <Label fx:id="pautaLabel" styleClass="meeting-pauta" text="Pauta da Reunião"/>
+        <HBox spacing="10">
+            <Label fx:id="dateTimeLabel" styleClass="meeting-detail" text="Data e Hora"/>
+            <Label text="•" styleClass="meeting-detail"/>
+            <Label fx:id="salaLabel" styleClass="meeting-detail" text="Sala"/>
+        </HBox>
+    </VBox>
+    <Label fx:id="statusLabel" styleClass="meeting-status" text="Status"/>
+</HBox>

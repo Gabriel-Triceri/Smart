@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.components.StatCardController" styleClass="stat-card">
+    <Label fx:id="titleLabel" styleClass="stat-title" text="Título Padrão" />
+    <Label fx:id="valueLabel" styleClass="stat-value" text="0" />
+</VBox>

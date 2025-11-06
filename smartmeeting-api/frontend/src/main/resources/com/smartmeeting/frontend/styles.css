@@ -1,0 +1,589 @@
+/* Estilo para o painel esquerdo com gradiente */
+.left-panel {
+    -fx-background-color: linear-gradient(to bottom, #003D99, #007BFF);
+}
+
+/* Estilo para o título da marca */
+.brand-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+/* Estilo para o painel direito */
+.right-panel {
+    -fx-background-color: #ffffff;
+}
+
+/* Estilo para os rótulos do formulário (geral) */
+.form-label {
+    -fx-font-size: 14px; /* Tamanho original */
+    -fx-text-fill: #424242;
+}
+
+/* Estilo para os campos de entrada (geral) */
+.form-input {
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 8px; /* Tamanho original */
+    -fx-font-size: 14px; /* Tamanho original */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.form-input:focused {
+    -fx-border-color: #0057D9;
+}
+
+/* Estilo para o botão de login */
+.login-button {
+    -fx-background-color: #0057D9;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-padding: 10px 20px;
+}
+
+.login-button:hover {
+    -fx-background-color: #0047B3;
+}
+
+/* Estilo para o rótulo de status */
+.status-label {
+    -fx-text-fill: red;
+}
+
+/* --- Estilos da Tela Principal --- */
+
+.top-bar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 0 1 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+    -fx-padding: 15px 20px; /* Ajustado padding */
+}
+
+.h2-header-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.welcome-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #4B5563;
+    -fx-padding: 0 10px;
+}
+
+.logout-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #EF4444;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-padding: 5px 10px;
+}
+
+.logout-button:hover {
+    -fx-background-color: rgba(239, 68, 68, 0.1);
+}
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-padding: 5px;
+    -fx-background-radius: 50%;
+}
+
+.icon-button:hover {
+    -fx-background-color: #F3F4F6;
+}
+
+/* Estilos da Barra de Navegação Lateral */
+.left-panel {
+    -fx-background-color: linear-gradient(to bottom, #003D99, #007BFF);
+    -fx-padding: 20px 0px 0px 0px; /* Ajuste o padding para os botões */
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 20px;
+    -fx-alignment: center-left;
+    -fx-graphic-text-gap: 10px; /* Espaço entre ícone e texto */
+}
+
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-button:focused {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Estilos para os Cards de Estatísticas */
+.stat-card {
+    -fx-background-color: white;
+    -fx-padding: 20px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-alignment: center;
+    -fx-min-width: 180px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 5); /* Sombra suave */
+}
+
+.stat-title {
+    -fx-font-size: 14px;
+    -fx-text-fill: #616161;
+}
+
+.stat-value {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0057D9;
+}
+
+/* Estilo para TableView */
+.table-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #F3F4F6;
+    -fx-background-radius: 10px 10px 0 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .table-cell {
+    -fx-font-size: 13px;
+    -fx-text-fill: #4B5563;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 0 0 1 0;
+    -fx-alignment: CENTER; /* Centraliza o texto */
+}
+
+.table-row-cell {
+    -fx-min-height: 35px; /* Aumenta a altura da linha em aproximadamente 20% */
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #F0F4FF;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #E3F2FD;
+    -fx-text-fill: #111827;
+}
+
+/* Estilos para os MeetingCard (se aplicável, mantido para consistência) */
+.meeting-card {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);
+    -fx-spacing: 15px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.meeting-pauta {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.meeting-detail {
+    -fx-font-size: 12px;
+    -fx-text-fill: #4B5563;
+}
+
+.meeting-status {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 3px 8px;
+    -fx-background-radius: 10px; /* Ajustado para 10px */
+    -fx-text-fill: white; /* Todos os status terão texto branco */
+}
+
+/* Estilos para os diferentes status de reunião */
+.status-agendada {
+    -fx-background-color: #3B82F6;
+}
+
+.status-concluida {
+    -fx-background-color: #10B981;
+}
+
+.status-cancelada {
+    -fx-background-color: #EF4444;
+}
+
+.status-default {
+    -fx-background-color: #E0E0E0;
+    -fx-text-fill: #616161;
+}
+
+/* General Buttons (tamanho original) */
+.primary-button {
+    -fx-background-color: #0057D9; /* Blue */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-padding: 8px 15px; 
+    -fx-font-size: 14px; 
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.primary-button:hover {
+    -fx-background-color: #0047B3;
+}
+
+.success-button {
+    -fx-background-color: #10B981; /* Green */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-padding: 8px 15px; 
+    -fx-font-size: 14px; 
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.success-button:hover {
+    -fx-background-color: #0C8A62;
+}
+
+.secondary-button {
+    -fx-background-color: #E5E7EB; /* Light Grey */
+    -fx-text-fill: #374151;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-padding: 8px 15px; 
+    -fx-font-size: 14px; 
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.secondary-button:hover {
+    -fx-background-color: #D1D5DB;
+}
+
+.warning-button {
+    -fx-background-color: #FBC02D; /* Amber/Yellow for Edit */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-padding: 8px 15px;
+    -fx-font-size: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.warning-button:hover {
+    -fx-background-color: #F9A825;
+}
+
+.danger-button {
+    -fx-background-color: #EF4444; /* Red */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-padding: 8px 15px;
+    -fx-font-size: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.danger-button:hover {
+    -fx-background-color: #D32F2F;
+}
+
+/* Small action buttons for table cells */
+.action-button-small {
+    -fx-padding: 4px; /* Padding reduzido para ícones */
+    -fx-font-size: 14px; /* Tamanho da fonte para o ícone */
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 3, 0, 0, 1);
+    -fx-min-width: 28px; /* Tamanho mínimo para o botão */
+    -fx-min-height: 28px;
+    -fx-max-width: 28px;
+    -fx-max-height: 28px;
+}
+
+/* Headings */
+.h3 {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+/* Detail Panel Values */
+.detail-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: #4B5563;
+    -fx-wrap-text: true; /* Ensure text wraps in labels */
+}
+
+/* Dashboard Content VBox */
+.dashboard-content-vbox {
+    -fx-background-color: #F8F9FA; /* Light grey background */
+    -fx-padding: 20px;
+}
+
+/* Top filter bar */
+.filter-bar {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 10px; /* Reduzido em 20% de 15px */
+    -fx-spacing: 10px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+    -fx-margin: 0 0 16px 0; /* Espaçamento inferior */
+}
+
+/* Estilos específicos para elementos dentro da filter-bar */
+.filter-bar .filter-small-label {
+    -fx-font-size: 12px;
+}
+
+.filter-bar .filter-small-input {
+    -fx-padding: 6px;
+    -fx-font-size: 12px;
+}
+
+.filter-bar .filter-small-button {
+    -fx-padding: 6px 12px;
+    -fx-font-size: 12px;
+}
+
+/* DatePicker specific styles */
+.date-picker {
+    -fx-background-color: transparent;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: #0057D9;
+    -fx-background-radius: 10px;
+}
+
+.date-picker .arrow-button:hover {
+    -fx-background-color: #0047B3;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: white;
+}
+
+.date-picker .cell {
+    -fx-background-color: white;
+    -fx-text-fill: #424242;
+}
+
+.date-picker .cell:hover {
+    -fx-background-color: #F0F4FF;
+}
+
+.date-picker .cell:selected {
+    -fx-background-color: #0057D9;
+    -fx-text-fill: white;
+}
+
+.date-picker-popup .month-year-pane {
+    -fx-background-color: #0057D9;
+}
+
+.date-picker-popup .month-year-pane .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* Detail Panel Styling */
+.detail-panel {
+    -fx-background-color: #ffffff;
+    -fx-padding: 15px;
+    -fx-spacing: 10px;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 5, 0, 0, 2);
+}
+
+.detail-panel .h3 {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+    -fx-padding-bottom: 5px;
+}
+
+.detail-panel .separator {
+    -fx-background-color: #e0e0e0;
+    -fx-padding: 0 0 10px 0;
+}
+
+.detail-panel .form-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #374151;
+}
+
+.detail-panel .detail-value {
+    -fx-text-fill: #4B5563;
+}
+
+.detail-panel .text-area {
+    -fx-control-inner-background: #f9f9f9;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 5px;
+}
+
+/* Task List View Styling */
+.task-list-view {
+    -fx-background-color: #f9f9f9;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 5px;
+}
+
+.task-list-view .list-cell {
+    -fx-padding: 5px 10px;
+    -fx-font-size: 13px;
+    -fx-text-fill: #4B5563;
+    -fx-background-color: transparent;
+}
+
+.task-list-view .list-cell:filled:selected, .task-list-view .list-cell:filled:selected:hover {
+    -fx-background-color: #E3F2FD; /* Light blue selection */
+    -fx-text-fill: #111827;
+}
+
+.task-list-view .list-cell:filled:hover {
+    -fx-background-color: #F0F4FF; /* Very light blue on hover */
+}
+
+/* Estilos para o painel principal de detalhes */
+.detail-card-panel {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 5); /* Sombra leve */
+}
+
+/* Estilo para o título "Detalhes da Reunião" */
+.detail-card-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-fill: #1E1E2D; /* Cor do texto */
+    -fx-font-family: "System"; /* Fonte sem serifa, ajuste se tiver uma específica */
+}
+
+/* Estilo para os rótulos das informações (Pauta, Sala, etc.) */
+.detail-label {
+    -fx-text-fill: #5A5A5A; /* Cinza escuro */
+    -fx-font-size: 14px;
+    /* Adicione padding ou margin se precisar de espaçamento uniforme entre eles */
+    -fx-padding: 5px 0; /* Exemplo de padding vertical */
+}
+
+/* Estilo para os campos de texto e date picker (valores das informações) */
+.detail-value-input {
+    -fx-font-weight: 500;
+    -fx-text-fill: #222;
+    -fx-background-color: transparent; /* Para que o fundo do input não esconda o fundo do painel */
+    -fx-border-color: transparent; /* Remover borda padrão */
+    -fx-border-width: 0;
+    -fx-padding: 5px 0; /* Ajuste o padding conforme necessário */
+}
+
+/* Estilo específico para o campo de ata */
+.ata-textarea {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #DADADA; /* Bordas suaves */
+    -fx-border-radius: 5px;
+    -fx-padding: 8px; /* Leve preenchimento interno */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2); /* Sombra sutil */
+}
+
+.ata-textarea:focused {
+    -fx-border-color: #A0A0A0; /* Cor da borda ao focar */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 3); /* Sombra um pouco mais pronunciada ao focar */
+}
+
+/* Estilos para a seção de tarefas */
+.tasks-section {
+    -fx-background-color: transparent; /* Ou a cor de fundo do painel principal */
+    -fx-padding: 10px 0;
+}
+
+.tasks-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1E1E2D;
+    -fx-padding-bottom: 5px;
+}
+
+.task-item {
+    -fx-background-color: #F7F9FB; /* Retângulo cinza-claro */
+    -fx-background-radius: 5px;
+    -fx-padding: 8px 10px;
+    -fx-spacing: 10px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.task-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333;
+}
+
+/* Estilos para os botões inferiores */
+.edit-button {
+    -fx-background-color: #E6E6E6; /* Cinza claro */
+    -fx-text-fill: #333;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+    -fx-padding: 8px 15px;
+    -fx-font-size: 14px;
+}
+
+.end-button {
+    -fx-background-color: #FFD54F; /* Amarelo suave */
+    -fx-text-fill: #333;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+    -fx-padding: 8px 15px;
+    -fx-font-size: 14px;
+}
+
+.delete-button {
+    -fx-background-color: #E53935; /* Vermelho */
+    -fx-text-fill: #FFFFFF; /* Texto branco */
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);
+    -fx-padding: 8px 15px;
+    -fx-font-size: 14px;
+}
+
+/* Estilo para o status label (se ainda for usado) */
+.status-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: red; /* Ou outra cor para mensagens de status */
+}

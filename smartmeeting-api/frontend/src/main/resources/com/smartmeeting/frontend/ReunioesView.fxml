@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.ReunioesController" styleClass="dashboard-content-vbox" stylesheets="@styles.css">
+    <top>
+        <VBox spacing="10" style="-fx-padding: 10;">
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+                <Label text="Filtro por Data:" styleClass="form-label"/>
+                <DatePicker fx:id="startDatePicker" promptText="Data Início" styleClass="form-input"/>
+                <DatePicker fx:id="endDatePicker" promptText="Data Fim" styleClass="form-input"/>
+                <TextField fx:id="searchField" promptText="Pesquisar por organizador..." HBox.hgrow="ALWAYS" styleClass="form-input"/>
+                <Button text="Aplicar Filtro" onAction="#handleApplyFilter" styleClass="primary-button"/>
+                <Button text="Criar Reunião" onAction="#handleCreateReuniao" styleClass="success-button"/>
+                <Button text="Recarregar CSS" onAction="#handleReloadCss" styleClass="secondary-button"/> <!-- Botão temporário para recarregar CSS -->
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="reunioesTableView" VBox.vgrow="ALWAYS" styleClass="table-view">
+            <columns>
+                <TableColumn fx:id="pautaColumn" text="Pauta" prefWidth="250"/>
+                <TableColumn fx:id="salaColumn" text="Sala" prefWidth="150"/>
+                <TableColumn fx:id="dataHoraColumn" text="Data/Hora" prefWidth="180"/>
+                <TableColumn fx:id="participantesColumn" text="Participantes" prefWidth="150"/>
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+                <TableColumn fx:id="acoesColumn" text="Ações" prefWidth="150"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <!-- Painel Lateral de Detalhes -->
+    <right>
+        <VBox fx:id="detailPanel" prefWidth="400" spacing="10" styleClass="detail-panel" visible="false" managed="false">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <Label text="Detalhes da Reunião" styleClass="h3"/>
+            <Separator/>
+
+            <GridPane hgap="5" vgap="5">
+                <Label text="Pauta:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="form-label"/>
+                <Label fx:id="detailPauta" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="detail-value"/>
+
+                <Label text="Sala:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="form-label"/>
+                <Label fx:id="detailSala" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="detail-value"/>
+
+                <Label text="Data/Hora:" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="form-label"/>
+                <Label fx:id="detailDataHora" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="detail-value"/>
+
+                <Label text="Duração:" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="form-label"/>
+                <Label fx:id="detailDuracao" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="detail-value"/>
+
+                <Label text="Organizador:" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="form-label"/>
+                <Label fx:id="detailOrganizador" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="detail-value"/>
+
+                <Label text="Status:" GridPane.rowIndex="5" GridPane.columnIndex="0" styleClass="form-label"/>
+                <Label fx:id="detailStatus" GridPane.rowIndex="5" GridPane.columnIndex="1" styleClass="detail-value"/>
+
+                <Label text="Participantes:" GridPane.rowIndex="6" GridPane.columnIndex="0" styleClass="form-label"/>
+                <Label fx:id="detailParticipantes" GridPane.rowIndex="6" GridPane.columnIndex="1" styleClass="detail-value"/>
+
+                <Label text="Ata:" GridPane.rowIndex="7" GridPane.columnIndex="0" styleClass="form-label"/>
+                <TextArea fx:id="detailAta" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false" wrapText="true" prefHeight="100" styleClass="detail-value"/>
+            </GridPane>
+
+            <Label text="Tarefas:" styleClass="form-label"/>
+            <ListView fx:id="detailTarefasListView" prefHeight="100.0" styleClass="task-list-view"/>
+
+            <HBox spacing="5" alignment="CENTER_RIGHT">
+                <Button text="Editar" onAction="#handleEditSelectedReuniao" styleClass="secondary-button"/>
+                <Button text="Encerrar" onAction="#handleEncerrarReuniao" styleClass="warning-button"/>
+                <Button text="Excluir" onAction="#handleDeleteReuniao" styleClass="danger-button"/>
+            </HBox>
+        </VBox>
+    </right>
+</BorderPane>

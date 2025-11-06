@@ -1,0 +1,279 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SmartMeeting API",
+    "description": "API para gerenciamento de reuniões, salas e participantes",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Equipe SmartMeeting",
+      "url": "https://smartmeeting.com",
+      "email": "contato@smartmeeting.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    }
+  },
+  "host": "localhost:8080",
+  "schemes": ["http"],
+  "paths": {
+    "/tarefas/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/TarefaDTO" }
+          }
+        }
+      },
+      "put": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": { "$ref": "#/definitions/TarefaDTO" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/TarefaDTO" }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/salas/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/SalaDTO" }
+          }
+        }
+      },
+      "put": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": { "$ref": "#/definitions/SalaDTO" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/SalaDTO" }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/reunioes/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/ReuniaoDTO" }
+          }
+        }
+      },
+      "put": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": { "$ref": "#/definitions/ReuniaoDTO" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/ReuniaoDTO" }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/reunioes/{id}/presenca": {
+      "post": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "default": 1
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": { "$ref": "#/definitions/PresencaDTO" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/PresencaDTO" }
+          }
+        }
+      }
+    },
+    "/api/emails/teste": {
+      "get": {
+        "parameters": [
+          {
+            "name": "destinatario",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "example": "teste@exemplo.com",
+            "default": "teste@exemplo.com"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": { "$ref": "#/definitions/EmailDTO" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "TarefaDTO": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "example": 1 },
+        "titulo": { "type": "string", "example": "Reunião de alinhamento" },
+        "descricao": { "type": "string", "example": "Detalhes sobre a reunião" },
+        "status": { "type": "string", "example": "PENDENTE" }
+      }
+    },
+    "SalaDTO": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "example": 1 },
+        "nome": { "type": "string", "example": "Sala A" },
+        "capacidade": { "type": "integer", "example": 12 }
+      }
+    },
+    "ReuniaoDTO": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "example": 1 },
+        "pauta": { "type": "string", "example": "Reunião semanal" },
+        "status": { "type": "string", "example": "AGENDADA" }
+      }
+    },
+    "PresencaDTO": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "example": 1 },
+        "usuarioId": { "type": "integer", "example": 100 }
+      }
+    },
+    "EmailDTO": {
+      "type": "object",
+      "properties": {
+        "destinatario": { "type": "string", "example": "teste@exemplo.com" },
+        "status": { "type": "string", "example": "enviado" }
+      }
+    }
+  }
+}
