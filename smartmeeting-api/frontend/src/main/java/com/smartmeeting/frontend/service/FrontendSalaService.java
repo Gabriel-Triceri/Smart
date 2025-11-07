@@ -12,7 +12,7 @@ import java.util.List;
 
 public class FrontendSalaService {
 
-    private static final String BASE_URL = "http://localhost:8080/reunioes/salas";
+    private static final String BASE_URL = "http://localhost:8080/salas";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public List<SalaDTO> getAllSalas() throws IOException, InterruptedException {

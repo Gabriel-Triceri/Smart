@@ -21,6 +21,11 @@
     -fx-text-fill: #424242;
 }
 
+/* Reduz em ~10% o tamanho das labels apenas no formulário de criação */
+.small-form .form-label {
+    -fx-font-size: 12.6px;
+}
+
 /* Estilo para os campos de entrada (geral) */
 .form-input {
     -fx-border-color: #cccccc;
@@ -222,17 +227,16 @@
     -fx-background-color: #3B82F6;
 }
 
+.status-em-andamento {
+    -fx-background-color: #1E88E5; /* Azul intermediário para andamento */
+}
+
 .status-concluida {
     -fx-background-color: #10B981;
 }
 
-.status-cancelada {
-    -fx-background-color: #EF4444;
-}
-
-.status-default {
-    -fx-background-color: #E0E0E0;
-    -fx-text-fill: #616161;
+.status-finalizada {
+    -fx-background-color: #10B981; /* Alias para 'concluida' */
 }
 
 /* General Buttons (tamanho original) */
@@ -276,6 +280,12 @@
 
 .secondary-button:hover {
     -fx-background-color: #D1D5DB;
+}
+
+.btn-sm {
+    /* Reduz ~30% o tamanho dos botões */
+    -fx-padding: 6px 12px;
+    -fx-font-size: 12px;
 }
 
 .warning-button {
@@ -443,35 +453,6 @@
     -fx-text-fill: #4B5563;
 }
 
-.detail-panel .text-area {
-    -fx-control-inner-background: #f9f9f9;
-    -fx-border-color: #cccccc;
-    -fx-border-radius: 5px;
-    -fx-background-radius: 5px;
-    -fx-padding: 5px;
-}
-
-/* Task List View Styling */
-.task-list-view {
-    -fx-background-color: #f9f9f9;
-    -fx-border-color: #e0e0e0;
-    -fx-border-width: 1px;
-    -fx-border-radius: 5px;
-    -fx-background-radius: 5px;
-    -fx-padding: 5px;
-}
-
-.task-list-view .list-cell {
-    -fx-padding: 5px 10px;
-    -fx-font-size: 13px;
-    -fx-text-fill: #4B5563;
-    -fx-background-color: transparent;
-}
-
-.task-list-view .list-cell:filled:selected, .task-list-view .list-cell:filled:selected:hover {
-    -fx-background-color: #E3F2FD; /* Light blue selection */
-    -fx-text-fill: #111827;
-}
 
 .task-list-view .list-cell:filled:hover {
     -fx-background-color: #F0F4FF; /* Very light blue on hover */
@@ -485,20 +466,48 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 5); /* Sombra leve */
 }
 
-/* Estilo para o título "Detalhes da Reunião" */
-.detail-card-title {
-    -fx-font-size: 22px;
-    -fx-font-weight: bold;
-    -fx-fill: #1E1E2D; /* Cor do texto */
-    -fx-font-family: "System"; /* Fonte sem serifa, ajuste se tiver uma específica */
+/* ========== Modal Overlay para Reuniões ========== */
+.overlay-backdrop {
+    /* Fundo completamente branco para cobrir a tabela ao abrir detalhes */
+    -fx-background-color: #FFFFFF;
+    -fx-opacity: 1.0;
+}
+
+/* Cartão do modal de detalhes */
+.modal-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-color: #E5E7EB;
+    -fx-border-width: 1px;
+    -fx-padding: 20px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 20, 0, 0, 6);
+}
+
+/* Cabeçalho do modal (título + botão fechar) */
+.modal-header {
+    -fx-padding: 0 0 6px 0;
 }
 
 /* Estilo para os rótulos das informações (Pauta, Sala, etc.) */
 .detail-label {
     -fx-text-fill: #5A5A5A; /* Cinza escuro */
     -fx-font-size: 14px;
-    /* Adicione padding ou margin se precisar de espaçamento uniforme entre eles */
-    -fx-padding: 5px 0; /* Exemplo de padding vertical */
+    -fx-padding: 5px 0; /* Espaçamento vertical */
+}
+
+/* Ajustes visuais dentro do modal */
+.modal-card .form-label { -fx-text-fill: #374151; }
+.modal-card .detail-value { -fx-text-fill: #111827; }
+.modal-card .task-list-view {
+    -fx-background-color: #F9FAFB;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+.modal-card .h3 { -fx-font-size: 20px; }
+.modal-card .danger-button, .modal-card .warning-button, .modal-card .secondary-button {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);
 }
 
 /* Estilo para os campos de texto e date picker (valores das informações) */
@@ -506,7 +515,6 @@
     -fx-font-weight: 500;
     -fx-text-fill: #222;
     -fx-background-color: transparent; /* Para que o fundo do input não esconda o fundo do painel */
-    -fx-border-color: transparent; /* Remover borda padrão */
     -fx-border-width: 0;
     -fx-padding: 5px 0; /* Ajuste o padding conforme necessário */
 }

@@ -1,8 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox alignment="CENTER" spacing="20.0" style="-fx-background-color: red; -fx-padding: 50;" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.EditReuniaoController">
-    <Label text="TESTE: TELA DE EDIÇÃO CARREGADA!" style="-fx-font-size: 24px; -fx-text-fill: white;"/>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.EditReuniaoController"
+      alignment="TOP_LEFT" spacing="12"
+      stylesheets="@styles.css" styleClass="dashboard-content-vbox">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Editar Reunião" styleClass="h3"/>
+    <Separator/>
+
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints halignment="RIGHT" minWidth="140"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label text="Pauta:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="form-label"/>
+        <TextField fx:id="pautaField" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="form-input"/>
+
+        <Label text="Data:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="form-label"/>
+        <DatePicker fx:id="datePicker" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Hora (HH:mm):" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="form-label"/>
+        <TextField fx:id="timeField" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="form-input"/>
+
+        <Label text="Duração (min):" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="form-label"/>
+        <TextField fx:id="duracaoField" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="form-input"/>
+
+        <Label text="Sala:" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="form-label"/>
+        <TextField fx:id="salaField" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="form-input"/>
+
+        <Label text="Organizador:" GridPane.rowIndex="5" GridPane.columnIndex="0" styleClass="form-label"/>
+        <TextField fx:id="organizadorField" GridPane.rowIndex="5" GridPane.columnIndex="1" styleClass="form-input"/>
+
+        <Label text="Participantes (e-mails separados por vírgula):" GridPane.rowIndex="6" GridPane.columnIndex="0" styleClass="form-label"/>
+        <TextArea fx:id="participantesTextArea" prefRowCount="3" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+        <Label text="Ata:" GridPane.rowIndex="7" GridPane.columnIndex="0" styleClass="form-label"/>
+        <TextArea fx:id="ataTextArea" prefRowCount="5" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Label fx:id="statusLabel" visible="false" managed="false"/>
+
+    <HBox spacing="8" alignment="CENTER_RIGHT">
+        <Button fx:id="editButton" text="Editar" onAction="#handleEditReuniao" styleClass="edit-button"/>
+    </HBox>
+
+    <Separator/>
+    <Label text="Tarefas" styleClass="h4"/>
+    <VBox fx:id="tasksContainer" spacing="6"/>
 </VBox>

@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
@@ -35,7 +36,12 @@
 
             <Label text="Senha" styleClass="form-label"/>
             <PasswordField fx:id="passwordField" promptText="sua senha" styleClass="form-input"/>
+            <!-- Campo alternativo para exibir a senha em texto plano -->
+            <TextField fx:id="passwordVisibleField" promptText="sua senha" styleClass="form-input" managed="false" visible="false"/>
         </VBox>
+
+        <!-- Checkbox para mostrar/ocultar senha -->
+        <CheckBox fx:id="showPasswordCheck" text="Mostrar senha" />
 
         <VBox alignment="CENTER" spacing="10.0" maxWidth="300.0">
             <Button fx:id="loginButton" onAction="#handleLoginButtonAction" text="Entrar" styleClass="login-button" defaultButton="true" maxWidth="Infinity"/>

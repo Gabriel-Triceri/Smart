@@ -165,29 +165,7 @@ public class MainController {
     }
 
     private void setupReunioesListView() {
-        reunioesListView.setCellFactory(lv -> new ListCell<ReuniaoDTO>() {
-            @Override
-            protected void updateItem(ReuniaoDTO reuniao, boolean empty) {
-                super.updateItem(reuniao, empty);
-                if (empty || reuniao == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    try {
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("components/MeetingCard.fxml"));
-                        HBox meetingCard = loader.load();
-                        MeetingCardController controller = loader.getController();
-                        controller.setMeeting(reuniao);
-                        setGraphic(meetingCard);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        setText("Erro ao carregar reunião: " + reuniao.getPauta());
-                        setGraphic(null);
-                        Platform.runLater(() -> showAlert(AlertType.ERROR, "Erro de Carregamento", "Falha ao carregar card de reunião", "Não foi possível carregar o card para a reunião: " + reuniao.getPauta() + ". Detalhes: " + e.getMessage()));
-                    }
-                }
-            }
-        });
+        reunioesListView.setCellFactory(lv -> new com.smartmeeting.frontend.components.ReuniaoListCell());
     }
 
     private void loadDashboardData() {
@@ -213,7 +191,13 @@ public class MainController {
                 });
             } catch (Exception e) {
                 e.printStackTrace();
-                Platform.runLater(() -> showAlert(AlertType.ERROR, "Erro de Dashboard", "Falha ao carregar dados do dashboard", "Não foi possível obter os dados do dashboard. Verifique sua conexão e o backend. Detalhes: " + e.getMessage()));
+                String msg = e.getMessage() != null ? e.getMessage() : "";
+                if (msg.contains("HTTP 401")) {
+                    SessionManager.getInstance().logout();
+                    Platform.runLater(() -> MainApp.setRoot("LoginView"));
+                } else {
+                    Platform.runLater(() -> showAlert(AlertType.ERROR, "Erro de Dashboard", "Falha ao carregar dados do dashboard", "Não foi possível obter os dados do dashboard. Verifique sua conexão e o backend. Detalhes: " + msg));
+                }
             }
         }).start();
     }
@@ -228,7 +212,13 @@ public class MainController {
                 });
             } catch (Exception e) {
                 e.printStackTrace();
-                Platform.runLater(() -> showAlert(AlertType.ERROR, "Erro de Reuniões", "Falha ao carregar reuniões", "Não foi possível obter a lista de reuniões. Verifique sua conexão e o backend. Detalhes: " + e.getMessage()));
+                String msg = e.getMessage() != null ? e.getMessage() : "";
+                if (msg.contains("HTTP 401")) {
+                    SessionManager.getInstance().logout();
+                    Platform.runLater(() -> MainApp.setRoot("LoginView"));
+                } else {
+                    Platform.runLater(() -> showAlert(AlertType.ERROR, "Erro de Reuniões", "Falha ao carregar reuniões", "Não foi possível obter a lista de reuniões. Verifique sua conexão e o backend. Detalhes: " + msg));
+                }
             }
         }).start();
     }

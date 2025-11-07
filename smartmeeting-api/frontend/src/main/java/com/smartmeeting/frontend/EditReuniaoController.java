@@ -82,8 +82,8 @@ public class EditReuniaoController {
     public void setReuniaoToEdit(ReuniaoDTO reuniao) {
         this.reuniaoToEdit = reuniao;
         fillFormWithReuniaoData();
-        setEditable(false); // Inicia em modo de visualização
-        updateButtonVisibility(false); // Atualiza visibilidade dos botões
+        setEditable(true); // Abre já em modo de edição conforme solicitado
+        updateButtonVisibility(true); // Botão principal vira "Salvar"
     }
 
     @FXML
@@ -144,18 +144,26 @@ public class EditReuniaoController {
         if (isEditing) {
             editButton.setText("Salvar");
             editButton.getStyleClass().setAll("success-button"); // Ou uma classe para salvar
-            endButton.setVisible(false);
-            endButton.setManaged(false);
-            deleteButton.setVisible(false);
-            deleteButton.setManaged(false);
+            if (endButton != null) {
+                endButton.setVisible(false);
+                endButton.setManaged(false);
+            }
+            if (deleteButton != null) {
+                deleteButton.setVisible(false);
+                deleteButton.setManaged(false);
+            }
             // Adicionar um botão de "Cancelar Edição" se necessário
         } else {
             editButton.setText("Editar");
             editButton.getStyleClass().setAll("edit-button");
-            endButton.setVisible(true);
-            endButton.setManaged(true);
-            deleteButton.setVisible(true);
-            deleteButton.setManaged(true);
+            if (endButton != null) {
+                endButton.setVisible(true);
+                endButton.setManaged(true);
+            }
+            if (deleteButton != null) {
+                deleteButton.setVisible(true);
+                deleteButton.setManaged(true);
+            }
         }
     }
 
@@ -383,26 +391,38 @@ public class EditReuniaoController {
                 taskItem.getStyleClass().add("task-item");
                 taskItem.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
-                // Ícone (exemplo, você precisará ter o arquivo de imagem)
-                ImageView icon = new ImageView();
+                // Ícone (carrega se existir, senão segue sem ícone)
+                ImageView icon = null;
                 try {
-                    // Tente carregar o ícone de um recurso. Ajuste o caminho conforme necessário.
-                    icon.setImage(new Image(getClass().getResourceAsStream("/com/smartmeeting/frontend/icons/task-icon.png")));
+                    var primaryStream = getClass().getResourceAsStream("/com/smartmeeting/frontend/icons/task-icon.png");
+                    if (primaryStream != null) {
+                        icon = new ImageView(new Image(primaryStream));
+                    } else {
+                        var fallbackStream = getClass().getResourceAsStream("/com/smartmeeting/frontend/icons/default-task-icon.png");
+                        if (fallbackStream != null) {
+                            icon = new ImageView(new Image(fallbackStream));
+                        } else {
+                            System.err.println("Erro ao carregar ícone da tarefa: recursos não encontrados em /com/smartmeeting/frontend/icons/");
+                        }
+                    }
                 } catch (Exception e) {
                     System.err.println("Erro ao carregar ícone da tarefa: " + e.getMessage());
-                    // Fallback ou ícone padrão se o arquivo não for encontrado
-                    icon.setImage(new Image(getClass().getResourceAsStream("/com/smartmeeting/frontend/icons/default-task-icon.png")));
                 }
-                icon.setFitHeight(16);
-                icon.setFitWidth(16);
+                if (icon != null) {
+                    icon.setFitHeight(16);
+                    icon.setFitWidth(16);
+                }
 
                 Label taskLabel = new Label(task.getDescricao());
                 taskLabel.getStyleClass().add("task-text");
                 if (task.isConcluida()) {
                     taskLabel.setStyle("-fx-strikethrough: true; -fx-text-fill: #888;"); // Estilo para tarefa concluída
                 }
-
-                taskItem.getChildren().addAll(icon, taskLabel);
+                if (icon != null) {
+                    taskItem.getChildren().addAll(icon, taskLabel);
+                } else {
+                    taskItem.getChildren().add(taskLabel);
+                }
                 tasksContainer.getChildren().add(taskItem);
             }
         } else {

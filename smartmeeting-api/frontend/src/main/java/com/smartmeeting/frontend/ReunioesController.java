@@ -13,6 +13,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.AnchorPane;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -41,7 +42,7 @@ public class ReunioesController {
     @FXML
     private TableColumn<ReuniaoDTO, String> statusColumn;
     @FXML
-    private TableColumn<ReuniaoDTO, Void> acoesColumn;
+    private TableColumn<ReuniaoDTO, ReuniaoDTO> acoesColumn;
 
     @FXML
     private VBox detailPanel;
@@ -63,6 +64,9 @@ public class ReunioesController {
     private TextArea detailAta;
     @FXML
     private ListView<String> detailTarefasListView; // Novo campo para exibir as tarefas
+
+    @FXML
+    private AnchorPane overlayPane;
 
     private ReuniaoService reuniaoService = new ReuniaoService();
     private ObservableList<ReuniaoDTO> masterReunioesData = FXCollections.observableArrayList();
@@ -114,14 +118,17 @@ public class ReunioesController {
                             case "AGENDADA":
                                 statusLabel.getStyleClass().add("status-agendada");
                                 break;
-                            case "CONCLUIDA":
-                                statusLabel.getStyleClass().add("status-concluida");
+                            case "EM_ANDAMENTO":
+                                statusLabel.getStyleClass().add("status-em-andamento");
+                                break;
+                            case "FINALIZADA":
+                                statusLabel.getStyleClass().add("status-finalizada");
                                 break;
                             case "CANCELADA":
                                 statusLabel.getStyleClass().add("status-cancelada");
                                 break;
                             default:
-                                statusLabel.getStyleClass().add("status-default");
+                                statusLabel.getStyleClass().add("status-agendada"); // fallback
                                 break;
                         }
                         setGraphic(statusLabel);
@@ -132,7 +139,10 @@ public class ReunioesController {
         });
 
         // Coluna de Ações
-        acoesColumn.setCellFactory(param -> new TableCell<ReuniaoDTO, Void>() {
+        acoesColumn.setSortable(false);
+        // Garante que a coluna tenha um item por linha (o próprio ReuniaoDTO)
+        acoesColumn.setCellValueFactory(param -> new javafx.beans.property.ReadOnlyObjectWrapper<>(param.getValue()));
+        acoesColumn.setCellFactory(param -> new TableCell<ReuniaoDTO, ReuniaoDTO>() {
             private final Button encerrarButton = new Button("\u2713"); // Checkmark (verde)
             private final Button editButton = new Button("\u270F"); // Lápis (amarelo)
             private final Button deleteButton = new Button("\u2716"); // X (vermelho)
@@ -143,29 +153,30 @@ public class ReunioesController {
                 deleteButton.getStyleClass().addAll("danger-button", "action-button-small");
 
                 encerrarButton.setOnAction(event -> {
-                    ReuniaoDTO reuniao = getTableView().getItems().get(getIndex());
+                    ReuniaoDTO reuniao = getItem();
                     System.out.println("Encerrar Reunião: " + reuniao.getPauta());
                     // TODO: Implementar lógica de encerrar
                 });
                 editButton.setOnAction(event -> {
-                    ReuniaoDTO reuniao = getTableView().getItems().get(getIndex());
+                    ReuniaoDTO reuniao = getItem();
                     handleEditReuniao(reuniao); // Chama o novo método para editar
                 });
                 deleteButton.setOnAction(event -> {
-                    ReuniaoDTO reuniao = getTableView().getItems().get(getIndex());
+                    ReuniaoDTO reuniao = getItem();
                     System.out.println("Excluir Reunião: " + reuniao.getPauta());
                     // TODO: Implementar lógica de exclusão
                 });
             }
 
             @Override
-            protected void updateItem(Void item, boolean empty) {
+            protected void updateItem(ReuniaoDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) {
                     setGraphic(null);
                 } else {
                     HBox buttonsBox = new HBox(5, encerrarButton, editButton, deleteButton);
                     buttonsBox.setAlignment(javafx.geometry.Pos.CENTER); // Centraliza os botões na célula
+                    setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
                     setGraphic(buttonsBox);
                 }
             }
@@ -206,8 +217,14 @@ public class ReunioesController {
             detailTarefasListView.setItems(FXCollections.observableArrayList("Nenhuma tarefa disponível."));
         }
 
-        detailPanel.setVisible(true);
-        detailPanel.setManaged(true);
+        if (overlayPane != null) {
+            overlayPane.setVisible(true);
+            overlayPane.setManaged(true);
+        } else {
+            // fallback caso overlayPane não esteja no FXML (compatibilidade)
+            detailPanel.setVisible(true);
+            detailPanel.setManaged(true);
+        }
     }
 
     @FXML
@@ -235,8 +252,22 @@ public class ReunioesController {
     }
 
     @FXML
+    private void handleCloseDetails() {
+        if (overlayPane != null) {
+            overlayPane.setVisible(false);
+            overlayPane.setManaged(false);
+            reunioesTableView.getSelectionModel().clearSelection();
+        } else if (detailPanel != null) {
+            detailPanel.setVisible(false);
+            detailPanel.setManaged(false);
+            reunioesTableView.getSelectionModel().clearSelection();
+        }
+    }
+
+    @FXML
     private void handleCreateReuniao() {
-        MainApp.setRoot("CreateReuniaoView");
+        // Abre a tela de criação como diálogo, mantendo o programa ao fundo
+        MainApp.openDialog("CreateReuniaoView", "Criar Reunião", 700, 550, true);
     }
 
     // Novo método para lidar com a ação de edição do botão no painel de detalhes
@@ -268,7 +299,8 @@ public class ReunioesController {
                         Parent root = loader.load();
                         EditReuniaoController controller = loader.getController();
                         controller.setReuniaoToEdit(fullReuniaoDetails); // Pass the full details
-                        MainApp.setRoot(root, "EditReuniaoView"); // Use the new setRoot that accepts Parent
+                        // Abrir como diálogo não modal para manter o programa ao fundo
+                        MainApp.openDialogWithRoot(root, "Editar Reunião", 700, 550, false);
                     } catch (IOException e) {
                         e.printStackTrace();
                         showAlert(AlertType.ERROR, "Erro de Edição", "Falha ao abrir tela de edição", "Não foi possível carregar a tela de edição da reunião. Detalhes: " + e.getMessage());

@@ -9,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.CheckBox;
 
 import java.io.IOException;
 import java.util.Map;
@@ -19,6 +20,10 @@ public class LoginController {
     private TextField emailField;
     @FXML
     private PasswordField passwordField;
+    @FXML
+    private TextField passwordVisibleField;
+    @FXML
+    private CheckBox showPasswordCheck;
     @FXML
     private Button loginButton;
     @FXML
@@ -34,9 +39,26 @@ public class LoginController {
     }
 
     @FXML
+    public void initialize() {
+        // Sincroniza o texto entre os dois campos de senha
+        passwordVisibleField.textProperty().bindBidirectional(passwordField.textProperty());
+
+        // Listener para alternar visibilidade entre os campos
+        showPasswordCheck.selectedProperty().addListener((obs, oldV, show) -> {
+            passwordVisibleField.setVisible(show);
+            passwordVisibleField.setManaged(show);
+
+            passwordField.setVisible(!show);
+            passwordField.setManaged(!show);
+        });
+    }
+
+    @FXML
     private void handleLoginButtonAction() {
         String email = emailField.getText();
-        String password = passwordField.getText();
+        String password = (showPasswordCheck != null && showPasswordCheck.isSelected())
+                ? passwordVisibleField.getText()
+                : passwordField.getText();
 
         if (email.isEmpty() || password.isEmpty()) {
             showStatus("Email e senha não podem ser vazios.");
