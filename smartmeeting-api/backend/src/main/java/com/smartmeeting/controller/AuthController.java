@@ -14,12 +14,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Controller responsável pela autenticação de usuários
@@ -64,9 +67,23 @@ public class AuthController {
         // Gerar token JWT
         String jwt = tokenProvider.generateToken(authentication);
 
-        // Retornar token
-        Map<String, String> response = new HashMap<>();
+        // Extrair roles (sem prefixo ROLE_) e permissions das authorities
+        List<String> allAuthorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+        List<String> roles = allAuthorities.stream()
+                .filter(a -> a.startsWith("ROLE_"))
+                .map(a -> a.substring("ROLE_".length()))
+                .collect(Collectors.toList());
+        List<String> permissions = allAuthorities.stream()
+                .filter(a -> !a.startsWith("ROLE_"))
+                .collect(Collectors.toList());
+
+        // Retornar token + roles + permissions
+        Map<String, Object> response = new HashMap<>();
         response.put("token", jwt);
+        response.put("roles", roles);
+        response.put("permissions", permissions);
         return ResponseEntity.ok(response);
     }
 

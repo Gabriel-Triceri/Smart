@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.smartmeeting.enums.StatusReuniao;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Accessors(chain = true)
+@EqualsAndHashCode(callSuper = false)
 public class Reuniao extends Auditable { // Estende Auditable
 
     @Id

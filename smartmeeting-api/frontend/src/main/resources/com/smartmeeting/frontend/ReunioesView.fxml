@@ -3,8 +3,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import java.net.URL?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.ReunioesController" styleClass="dashboard-content-vbox" stylesheets="@styles.css">
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.ReunioesController" styleClass="dashboard-content-vbox" id="reunioes-root">
+    <stylesheets>
+        <URL value="@styles.css"/>
+        <URL value="@reunioes.css"/>
+    </stylesheets>
     <top>
         <VBox spacing="10" style="-fx-padding: 10;">
             <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
@@ -89,3 +94,4 @@
 
     <!-- Removido painel lateral: substituído por overlay central -->
 </BorderPane>
+

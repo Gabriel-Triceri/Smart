@@ -5,6 +5,7 @@ import com.smartmeeting.enums.TipoUsuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
@@ -16,13 +17,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class Pessoa extends Auditable { // Estende Auditable
+@EqualsAndHashCode(callSuper = false)
+public class Pessoa extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_PESSOA")
     @SequenceGenerator(name = "SQ_PESSOA", sequenceName = "SQ_PESSOA", allocationSize = 1, initialValue = 1)
     @Column(name = "ID_PESSOA")
-    @Accessors(chain = true)
     private Long id;
 
     @Column(name = "NOME_PESSOA", nullable = false)
@@ -60,4 +61,20 @@ public class Pessoa extends Auditable { // Estende Auditable
     @OneToMany(mappedBy = "destinatario", fetch = FetchType.LAZY)
     @JsonBackReference
     private List<Notificacao> notificacoesRecebidas;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "PESSOA_ROLE",
+            joinColumns = @JoinColumn(name = "ID_PESSOA"),
+            inverseJoinColumns = @JoinColumn(name = "ID_ROLE")
+    )
+    private List<Role> roles;
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
+    }
 }

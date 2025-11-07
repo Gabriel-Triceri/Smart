@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
+import com.smartmeeting.model.Role;
 
 @RestController
 @RequestMapping("/pessoas")
@@ -75,6 +77,30 @@ public class PessoaController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarPessoa(@PathVariable Long id) {
         pessoaService.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --- Roles de uma pessoa ---
+    @GetMapping("/{id}/roles")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<String>> listarRoles(@PathVariable Long id) {
+        List<String> roles = pessoaService.listarRoles(id).stream()
+                .map(Role::getNome)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(roles);
+    }
+
+    @PostMapping("/{id}/roles/{roleId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> adicionarRole(@PathVariable Long id, @PathVariable Long roleId) {
+        pessoaService.addRoleToPessoa(id, roleId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/roles/{roleId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> removerRole(@PathVariable Long id, @PathVariable Long roleId) {
+        pessoaService.removeRoleFromPessoa(id, roleId);
         return ResponseEntity.noContent().build();
     }
 }

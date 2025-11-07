@@ -15,6 +15,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
+import javafx.scene.layout.VBox;
+import javafx.scene.control.Label;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -32,15 +34,15 @@ public class CreateReuniaoController {
     @FXML
     private DatePicker datePicker;
     @FXML
-    private TextField timeField; // Para entrada de hora (HH:mm)
-    @FXML
     private TextField duracaoField;
     @FXML
     private ComboBox<SalaDTO> salaComboBox; // Alterado para ComboBox
     @FXML
     private ComboBox<PessoaDTO> organizadorComboBox; // Alterado para ComboBox
     @FXML
-    private ListView<PessoaDTO> participantesListView; // Alterado para ListView
+    private ListView<PessoaDTO> participantesDisponiveisListView;
+    @FXML
+    private ListView<PessoaDTO> participantesSelecionadosListView;
     @FXML
     private TextArea ataTextArea;
     @FXML
@@ -56,11 +58,35 @@ public class CreateReuniaoController {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
+    // Wizard state and panes
+    @FXML private VBox step1Pane;
+    @FXML private VBox step2Pane;
+    @FXML private VBox step3Pane;
+    @FXML private Button navPrevButton;
+    @FXML private Button navNextButton;
+    @FXML private Label wizardProgressLabel;
+    private int currentStep = 1;
+
+    private void updateStepUI() {
+        boolean s1 = currentStep == 1;
+        boolean s2 = currentStep == 2;
+        boolean s3 = currentStep == 3;
+
+        if (step1Pane != null) { step1Pane.setVisible(s1); step1Pane.setManaged(s1); }
+        if (step2Pane != null) { step2Pane.setVisible(s2); step2Pane.setManaged(s2); }
+        if (step3Pane != null) { step3Pane.setVisible(s3); step3Pane.setManaged(s3); }
+
+        if (navPrevButton != null) { navPrevButton.setVisible(!s1); navPrevButton.setManaged(!s1); }
+        if (navNextButton != null) { navNextButton.setVisible(!s3); navNextButton.setManaged(!s3); }
+        if (saveButton != null) { saveButton.setVisible(s3); saveButton.setManaged(s3); }
+
+        if (wizardProgressLabel != null) {
+            wizardProgressLabel.setText("Passo " + currentStep + " de 3");
+        }
+    }
+
     @FXML
     public void initialize() {
-        // Configurar ListView para seleção múltipla
-        participantesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
         // Carregar salas e pessoas em threads separadas para não bloquear a UI
         new Thread(() -> {
             try {
@@ -104,13 +130,24 @@ public class CreateReuniaoController {
                         }
                     });
 
-                    // Popular ListView de participantes
-                    participantesListView.setItems(observablePessoas);
-                    participantesListView.setCellFactory(lv -> new ListCell<PessoaDTO>() {
+                    // Popular listas de participantes (dual list)
+                    participantesDisponiveisListView.setItems(FXCollections.observableArrayList(observablePessoas));
+                    participantesDisponiveisListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+                    participantesSelecionadosListView.setItems(FXCollections.observableArrayList());
+                    participantesSelecionadosListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+                    // Renderização por nome
+                    participantesDisponiveisListView.setCellFactory(lv -> new ListCell<PessoaDTO>() {
                         @Override
                         protected void updateItem(PessoaDTO pessoa, boolean empty) {
                             super.updateItem(pessoa, empty);
-                            setText(empty ? "" : pessoa.getNome());
+                            setText(empty || pessoa == null ? "" : pessoa.getNome());
+                        }
+                    });
+                    participantesSelecionadosListView.setCellFactory(lv -> new ListCell<PessoaDTO>() {
+                        @Override
+                        protected void updateItem(PessoaDTO pessoa, boolean empty) {
+                            super.updateItem(pessoa, empty);
+                            setText(empty || pessoa == null ? "" : pessoa.getNome());
                         }
                     });
 
@@ -128,6 +165,53 @@ public class CreateReuniaoController {
                 });
             }
         }).start();
+
+        // inicia wizard no passo 1
+        updateStepUI();
+    }
+
+    @FXML
+    private void handleNextStep() {
+        if (currentStep == 1) {
+            // Validação mínima antes de avançar (opcional comentar se não quiser travar)
+            if (pautaField.getText() == null || pautaField.getText().isBlank() || datePicker.getValue() == null) {
+                showAlert(AlertType.WARNING, "Campos Obrigatórios", "Preencha os campos principais", "Informe Pauta e Data antes de continuar.");
+                return;
+            }
+        }
+        if (currentStep < 3) {
+            currentStep++;
+            updateStepUI();
+        }
+    }
+
+    @FXML
+    private void handlePrevStep() {
+        if (currentStep > 1) {
+            currentStep--;
+            updateStepUI();
+        }
+    }
+
+    @FXML
+    private void handleAddParticipants() {
+        ObservableList<PessoaDTO> selecionados = participantesDisponiveisListView.getSelectionModel().getSelectedItems();
+        if (selecionados == null || selecionados.isEmpty()) return;
+        // mover mantendo ordem
+        List<PessoaDTO> toMove = selecionados.stream().collect(Collectors.toList());
+        participantesSelecionadosListView.getItems().addAll(toMove);
+        participantesDisponiveisListView.getItems().removeAll(toMove);
+        participantesDisponiveisListView.getSelectionModel().clearSelection();
+    }
+
+    @FXML
+    private void handleRemoveParticipants() {
+        ObservableList<PessoaDTO> selecionados = participantesSelecionadosListView.getSelectionModel().getSelectedItems();
+        if (selecionados == null || selecionados.isEmpty()) return;
+        List<PessoaDTO> toMove = selecionados.stream().collect(Collectors.toList());
+        participantesDisponiveisListView.getItems().addAll(toMove);
+        participantesSelecionadosListView.getItems().removeAll(toMove);
+        participantesSelecionadosListView.getSelectionModel().clearSelection();
     }
 
     @FXML
@@ -135,26 +219,20 @@ public class CreateReuniaoController {
         // 1. Coletar dados
         String pauta = pautaField.getText();
         LocalDate date = datePicker.getValue();
-        String timeText = timeField.getText();
         String duracaoText = duracaoField.getText();
         SalaDTO salaSelecionada = salaComboBox.getSelectionModel().getSelectedItem(); // Obter sala selecionada
         PessoaDTO organizadorSelecionado = organizadorComboBox.getSelectionModel().getSelectedItem(); // Obter organizador selecionado
-        ObservableList<PessoaDTO> participantesSelecionados = participantesListView.getSelectionModel().getSelectedItems(); // Obter participantes selecionados
+        ObservableList<PessoaDTO> participantesSelecionados = participantesSelecionadosListView.getItems(); // Participantes selecionados
         String ata = ataTextArea.getText();
 
         // 2. Validação básica
-        if (pauta.isEmpty() || date == null || timeText.isEmpty() || duracaoText.isEmpty() || salaSelecionada == null || organizadorSelecionado == null) {
-            showAlert(AlertType.WARNING, "Campos Obrigatórios", "Preencha todos os campos obrigatórios.", "Pauta, Data, Hora, Duração, Sala e Organizador são obrigatórios.");
+        if (pauta.isEmpty() || date == null || duracaoText.isEmpty() || salaSelecionada == null || organizadorSelecionado == null) {
+            showAlert(AlertType.WARNING, "Campos Obrigatórios", "Preencha todos os campos obrigatórios.", "Pauta, Data, Duração, Sala e Organizador são obrigatórios.");
             return;
         }
 
-        LocalTime time;
-        try {
-            time = LocalTime.parse(timeText, TIME_FORMATTER);
-        } catch (DateTimeParseException e) {
-            showAlert(AlertType.WARNING, "Formato de Hora Inválido", "Formato de hora incorreto.", "Por favor, use o formato HH:mm (ex: 14:30) para a hora.");
-            return;
-        }
+        // Como não há campo de hora na UI, usar 00:00 como padrão
+        LocalTime time = LocalTime.MIDNIGHT;
 
         int duracaoMinutos;
         try {
@@ -207,7 +285,11 @@ public class CreateReuniaoController {
                 ReuniaoDTO reuniaoCriada = reuniaoService.createReuniao(novaReuniao);
                 Platform.runLater(() -> {
                     showAlert(AlertType.INFORMATION, "Sucesso", "Reunião Criada", "A reunião '" + reuniaoCriada.getPauta() + "' foi criada com sucesso!");
-                    // Navegar de volta para a tela de reuniões
+                    // Fechar o diálogo (se aberto via openDialog) e voltar para a lista de reuniões
+                    try {
+                        Stage stage = (Stage) saveButton.getScene().getWindow();
+                        if (stage != null) stage.close();
+                    } catch (Exception ignored) {}
                     MainApp.setRoot("ReunioesView");
                 });
             } catch (IOException e) {

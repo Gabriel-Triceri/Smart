@@ -117,6 +117,24 @@ public class MainController {
         if (contentArea != null && !contentArea.getChildren().isEmpty()) {
             initialDashboardContent = contentArea.getChildren().get(0);
         }
+
+        // Aplica regras de acesso (menus, labels)
+        applyAccessControls();
+    }
+
+    private void applyAccessControls() {
+        // Mostra nome do usuário se disponível
+        String userName = SessionManager.getInstance().getUserName();
+        if (userName != null && welcomeLabel != null) {
+            welcomeLabel.setText("Bem-vindo, " + userName);
+        }
+
+        // Exemplo: esconder "Pessoas" se não tiver GERENCIAR_USUARIOS
+        boolean canManageUsers = SessionManager.getInstance().hasPermission("GERENCIAR_USUARIOS") || SessionManager.getInstance().hasRole("ADMIN");
+        if (!canManageUsers && pessoasButton != null) {
+            pessoasButton.setVisible(false);
+            pessoasButton.setManaged(false);
+        }
     }
 
     private void setupIcons() {

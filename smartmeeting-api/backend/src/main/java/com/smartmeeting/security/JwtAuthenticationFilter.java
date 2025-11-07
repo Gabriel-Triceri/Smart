@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -56,17 +60,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     throw new RuntimeException("Token inválido ou expirado");
                 }
 
-                // Extrai username
+                // Extrai username e authorities (roles/permissions) do token
                 String username = tokenProvider.getUsernameFromJWT(token);
                 logger.debug("[JWT FILTER] Username extraído do token: {}", username);
+                List<String> roles = tokenProvider.getRoles(token);
+                List<String> permissions = tokenProvider.getPermissions(token);
 
-                // Carrega usuário
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                logger.debug("[JWT FILTER] UserDetails carregado: {}", userDetails.getUsername());
+                List<GrantedAuthority> authorities = new ArrayList<>();
+                if (roles != null) {
+                    for (String r : roles) {
+                        if (StringUtils.hasText(r)) {
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + r));
+                        }
+                    }
+                }
+                if (permissions != null) {
+                    for (String p : permissions) {
+                        if (StringUtils.hasText(p)) {
+                            authorities.add(new SimpleGrantedAuthority(p));
+                        }
+                    }
+                }
 
-                // Configura autenticação no contexto
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication;
+                if (authorities.isEmpty()) {
+                    // Fallback: carrega do banco e usa suas authorities
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    logger.debug("[JWT FILTER] Fallback UserDetails carregado: {}", userDetails.getUsername());
+                    authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                } else {
+                    // Usa authorities derivadas do token
+                    authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+                }
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 

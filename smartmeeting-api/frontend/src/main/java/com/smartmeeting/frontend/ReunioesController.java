@@ -2,6 +2,7 @@ package com.smartmeeting.frontend;
 
 import com.smartmeeting.dto.ReuniaoDTO;
 import com.smartmeeting.frontend.service.ReuniaoService;
+import com.smartmeeting.frontend.service.SessionManager;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -83,14 +84,6 @@ public class ReunioesController {
                 showReuniaoDetails(newSelection);
             }
         });
-
-        // TODO: Para estilizar o painel de detalhes e a lista de tarefas, você precisará:
-        // 1. Modificar o arquivo FXML correspondente (ex: ReunioesView.fxml) para:
-        //    - Adicionar um Label para "Tarefas:" e o ListView com fx:id="detailTarefasListView".
-        //    - Aplicar classes de estilo (ex: styleClass="detail-panel", styleClass="task-list-view")
-        //      aos elementos relevantes no FXML.
-        // 2. Modificar seu arquivo CSS (ex: application.css) para definir os estilos
-        //    para as classes CSS que você aplicou no FXML.
     }
 
     private void setupTableView() {
@@ -266,6 +259,11 @@ public class ReunioesController {
 
     @FXML
     private void handleCreateReuniao() {
+        // Permissão necessária: CRIAR_REUNIAO
+        if (!SessionManager.getInstance().hasPermission("CRIAR_REUNIAO") && !SessionManager.getInstance().hasRole("ADMIN")) {
+            showAlert(AlertType.WARNING, "Acesso Negado", "Permissão insuficiente", "Você não possui permissão para criar reuniões (necessária: CRIAR_REUNIAO).");
+            return;
+        }
         // Abre a tela de criação como diálogo, mantendo o programa ao fundo
         MainApp.openDialog("CreateReuniaoView", "Criar Reunião", 700, 550, true);
     }

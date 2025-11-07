@@ -1,0 +1,4 @@
+/* Estilos escopados para EditReuniaoView */
+
+#edit-reuniao-root .label { }
+#edit-reuniao-root .text-field, #edit-reuniao-root .text-area, #edit-reuniao-root .date-picker { }

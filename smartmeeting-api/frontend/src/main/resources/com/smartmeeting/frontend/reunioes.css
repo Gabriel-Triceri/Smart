@@ -1,0 +1,14 @@
+/* Estilos escopados para ReunioesView */
+
+#reunioes-root .filter-bar .label {
+    -fx-font-size: 12px;
+}
+
+#reunioes-root .filter-bar .text-field,
+#reunioes-root .filter-bar .date-picker,
+#reunioes-root .filter-bar .combo-box {
+    -fx-font-size: 12px;
+    -fx-padding: 6px;
+}
+
+#reunioes-root .table-view .table-cell { /* exemplo de ajuste local */ }

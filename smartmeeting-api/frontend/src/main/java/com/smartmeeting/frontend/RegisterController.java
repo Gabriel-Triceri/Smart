@@ -33,8 +33,6 @@ public class RegisterController {
 
     @FXML
     public void initialize() {
-        // Removido: roleComboBox.getItems().addAll(TipoUsuario.values());
-        // Removido: roleComboBox.setValue(TipoUsuario.PARTICIPANTE);
     }
 
     private void showStatus(String message, boolean isError) {

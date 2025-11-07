@@ -12,6 +12,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.CheckBox;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class LoginController {
@@ -71,11 +72,16 @@ public class LoginController {
         new Thread(() -> {
             try {
                 String responseBody = authService.login(email, password);
-                Map<String, String> responseMap = objectMapper.readValue(responseBody, Map.class);
-                String token = responseMap.get("token");
+                Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
+                String token = responseMap.get("token") != null ? responseMap.get("token").toString() : null;
+                @SuppressWarnings("unchecked") List<String> roles = (List<String>) responseMap.get("roles");
+                @SuppressWarnings("unchecked") List<String> permissions = (List<String>) responseMap.get("permissions");
 
                 if (token != null && !token.isEmpty()) {
                     SessionManager.getInstance().setJwtToken(token);
+                    SessionManager.getInstance().setUserName(email); // usa email como nome até termos endpoint de perfil
+                    SessionManager.getInstance().setRoles(roles);
+                    SessionManager.getInstance().setPermissions(permissions);
                     Platform.runLater(() -> {
                         showStatus("Login bem-sucedido!");
                         MainApp.setRoot("MainView"); // Navega para a tela principal

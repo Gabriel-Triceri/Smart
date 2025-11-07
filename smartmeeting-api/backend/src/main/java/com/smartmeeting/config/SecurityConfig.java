@@ -25,7 +25,7 @@ import com.smartmeeting.security.JwtAuthenticationEntryPoint;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // 🔒 Habilita a segurança baseada em métodos
+@EnableMethodSecurity(prePostEnabled = true) // 🔒 Habilita @PreAuthorize/@PostAuthorize
 public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;

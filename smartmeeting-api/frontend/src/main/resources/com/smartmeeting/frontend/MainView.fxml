@@ -4,8 +4,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
+<?import java.net.URL?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.MainController" prefHeight="720.0" prefWidth="1280.0">
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.MainController" prefHeight="720.0" prefWidth="1280.0" id="main-root">
+    <stylesheets>
+        <URL value="@styles.css"/>
+        <URL value="@main.css"/>
+    </stylesheets>
 
     <!-- Barra Superior -->
     <top>

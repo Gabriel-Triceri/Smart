@@ -10,7 +10,11 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<HBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.RegisterController" prefHeight="500.0" prefWidth="700.0">
+<HBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.RegisterController" prefHeight="500.0" prefWidth="700.0" id="register-root">
+    <stylesheets>
+        <String>@styles.css</String>
+        <String>@register.css</String>
+    </stylesheets>
 
     <!-- Painel Esquerdo (Branding) -->
     <VBox fx:id="leftPanel" alignment="CENTER" prefWidth="250.0" styleClass="left-panel">
@@ -59,3 +63,4 @@
         </HBox>
     </VBox>
 </HBox>
+

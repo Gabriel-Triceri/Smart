@@ -3,10 +3,14 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import java.net.URL?>
 
 <VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.EditReuniaoController"
-      alignment="TOP_LEFT" spacing="12"
-      stylesheets="@styles.css" styleClass="dashboard-content-vbox">
+      alignment="TOP_LEFT" spacing="12" id="edit-reuniao-root" styleClass="dashboard-content-vbox">
+    <stylesheets>
+        <URL value="@styles.css"/>
+        <URL value="@edit-reuniao.css"/>
+    </stylesheets>
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>

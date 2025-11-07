@@ -12,6 +12,7 @@ import com.smartmeeting.service.PessoaService;
 import com.smartmeeting.service.email.EmailService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -134,6 +135,7 @@ public class ReuniaoController {
      * Cria uma nova reunião
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('CRIAR_REUNIAO')")
     public ResponseEntity<ReuniaoDTO> criar(@Valid @RequestBody ReuniaoDTO dto) {
         ReuniaoDTO reuniaoCriada = service.salvarDTO(dto);
         return ResponseEntity.ok(converterParaDTO(service.toEntity(reuniaoCriada)));

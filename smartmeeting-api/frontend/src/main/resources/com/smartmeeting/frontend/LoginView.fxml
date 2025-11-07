@@ -10,8 +10,13 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import java.net.URL?>
 
-<HBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.LoginController" prefHeight="400.0" prefWidth="600.0">
+<HBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.LoginController" prefHeight="400.0" prefWidth="600.0" id="login-root">
+    <stylesheets>
+        <URL value="@styles.css"/>
+        <URL value="@login.css"/>
+    </stylesheets>
 
     <!-- Painel Esquerdo (Branding) -->
     <VBox fx:id="leftPanel" alignment="CENTER" prefWidth="250.0" styleClass="left-panel">
@@ -59,3 +64,4 @@
         </HBox>
     </VBox>
 </HBox>
+

@@ -9,7 +9,6 @@
     -fx-font-weight: bold;
     -fx-text-fill: white;
 }
-
 /* Estilo para o painel direito */
 .right-panel {
     -fx-background-color: #ffffff;
@@ -19,11 +18,6 @@
 .form-label {
     -fx-font-size: 14px; /* Tamanho original */
     -fx-text-fill: #424242;
-}
-
-/* Reduz em ~10% o tamanho das labels apenas no formulário de criação */
-.small-form .form-label {
-    -fx-font-size: 12.6px;
 }
 
 /* Estilo para os campos de entrada (geral) */
@@ -175,11 +169,11 @@
     -fx-text-fill: #4B5563;
     -fx-border-color: #E5E7EB;
     -fx-border-width: 0 0 1 0;
-    -fx-alignment: CENTER; /* Centraliza o texto */
+    -fx-alignment: CENTER;
 }
 
 .table-row-cell {
-    -fx-min-height: 35px; /* Aumenta a altura da linha em aproximadamente 20% */
+    -fx-min-height: 35px;
 }
 
 .table-row-cell:hover {
@@ -218,8 +212,8 @@
     -fx-font-size: 11px;
     -fx-font-weight: bold;
     -fx-padding: 3px 8px;
-    -fx-background-radius: 10px; /* Ajustado para 10px */
-    -fx-text-fill: white; /* Todos os status terão texto branco */
+    -fx-background-radius: 10px;
+    -fx-text-fill: white;
 }
 
 /* Estilos para os diferentes status de reunião */

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -15,6 +16,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Componente responsável por gerar e validar tokens JWT
@@ -70,10 +74,24 @@ public class JwtTokenProvider {
 
         logger.debug("[DEBUG] Gerando token para {} com exp {}ms", userPrincipal.getUsername(), jwtExpirationMs);
 
+        // Extrai roles (sem prefixo ROLE_) e permissions das authorities do principal
+        List<String> allAuthorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+        List<String> roles = allAuthorities.stream()
+                .filter(a -> a.startsWith("ROLE_"))
+                .map(a -> a.substring("ROLE_".length()))
+                .collect(Collectors.toList());
+        List<String> permissions = allAuthorities.stream()
+                .filter(a -> !a.startsWith("ROLE_"))
+                .collect(Collectors.toList());
+
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
+                .claim("roles", roles)
+                .claim("permissions", permissions)
                 .signWith(signingKey, SignatureAlgorithm.HS512) // ainda válido
                 .compact();
     }
@@ -100,5 +118,33 @@ public class JwtTokenProvider {
             logger.error("[ERROR] Token inválido: {}", ex.getMessage(), ex);
         }
         return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRoles(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        Object val = claims.get("roles");
+        if (val instanceof List<?> list) {
+            return (List<String>) list;
+        }
+        return List.of();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getPermissions(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        Object val = claims.get("permissions");
+        if (val instanceof List<?> list) {
+            return (List<String>) list;
+        }
+        return List.of();
     }
 }

@@ -5,9 +5,12 @@ import com.smartmeeting.dto.PessoaDTO;
 import com.smartmeeting.exception.BadRequestException;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Pessoa;
+import com.smartmeeting.model.Role;
 import com.smartmeeting.repository.PessoaRepository;
+import com.smartmeeting.repository.RoleRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,10 +20,12 @@ import java.util.stream.Collectors;
 public class PessoaService {
 
     private final PessoaRepository repository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public PessoaService(PessoaRepository repository, PasswordEncoder passwordEncoder) {
+    public PessoaService(PessoaRepository repository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -98,5 +103,48 @@ public class PessoaService {
             throw new ResourceNotFoundException("Pessoa não encontrada com ID: " + id);
         }
         repository.deleteById(id);
+    }
+
+    public List<Role> listarRoles(Long pessoaId) {
+        Pessoa pessoa = repository.findById(pessoaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + pessoaId));
+        return pessoa.getRoles() != null ? pessoa.getRoles() : java.util.List.of();
+    }
+
+    @Transactional
+    public void addRoleToPessoa(Long pessoaId, Long roleId) {
+        Pessoa pessoa = repository.findById(pessoaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + pessoaId));
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + roleId));
+
+        List<Role> roles = pessoa.getRoles();
+        if (roles == null) {
+            roles = new java.util.ArrayList<>();
+        }
+        boolean exists = roles.stream().anyMatch(r -> r.getId().equals(roleId));
+        if (!exists) {
+            roles.add(role);
+            pessoa.setRoles(roles);
+            repository.save(pessoa);
+        }
+    }
+
+    @Transactional
+    public void removeRoleFromPessoa(Long pessoaId, Long roleId) {
+        Pessoa pessoa = repository.findById(pessoaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + pessoaId));
+        // valida existência do role
+        roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + roleId));
+
+        List<Role> roles = pessoa.getRoles();
+        if (roles != null && !roles.isEmpty()) {
+            boolean changed = roles.removeIf(r -> r.getId().equals(roleId));
+            if (changed) {
+                pessoa.setRoles(roles);
+                repository.save(pessoa);
+            }
+        }
     }
 }
