@@ -40,7 +40,7 @@
             <TextField fx:id="emailField" promptText="seu@email.com" styleClass="form-input"/>
 
             <Label text="Senha" styleClass="form-label"/>
-            <PasswordField fx:id="passwordField" promptText="sua senha" styleClass="form-input"/>
+            <PasswordField fx:id="passwordField" promptText="password" styleClass="form-input"/>
             <!-- Campo alternativo para exibir a senha em texto plano -->
             <TextField fx:id="passwordVisibleField" promptText="sua senha" styleClass="form-input" managed="false" visible="false"/>
         </VBox>

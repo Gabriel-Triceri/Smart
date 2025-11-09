@@ -1,4 +1,117 @@
-/* Estilos escopados para EditReuniaoView */
+/* CSS Moderno para o Modal de Edição de Reunião */
 
-#edit-reuniao-root .label { }
-#edit-reuniao-root .text-field, #edit-reuniao-root .text-area, #edit-reuniao-root .date-picker { }
+/* --- Layout Principal (Modal) --- */
+.modal-scroll-pane {
+    -fx-background-color: rgba(0, 0, 0, 0.4); /* Fundo semi-transparente para o efeito de modal */
+}
+
+.modal-content {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 20, 0, 0, 0);
+    -fx-max-width: 800px; /* Garante que o modal não fique muito largo */
+}
+
+/* --- Seções do Formulário (TitledPane) --- */
+.form-section {
+    -fx-background-color: transparent;
+    -fx-text-fill: #111827; /* Cor do título da seção */
+}
+.form-section > .title {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+}
+.form-section > .content {
+    -fx-background-color: transparent;
+    -fx-padding: 20px 5px 5px 5px; /* Espaçamento interno da seção */
+    -fx-border-color: transparent;
+}
+
+/* --- Labels e Campos do Formulário --- */
+.field-group {
+    -fx-spacing: 6px; /* Espaço entre o label e o campo */
+}
+
+.form-label-above {
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #374151;
+}
+
+.form-input, .form-textarea, .combo-box {
+    -fx-font-size: 14px;
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #d1d5db;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 10px 12px;
+}
+
+.form-input:focused, .form-textarea:focused, .combo-box:focused {
+    -fx-border-color: #4f46e5; /* Roxo no foco */
+    -fx-background-color: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(79, 70, 229, 0.2), 4, 0, 0, 0);
+}
+
+.form-input-disabled {
+    -fx-background-color: #eef2ff; /* Fundo levemente roxo para campos desabilitados */
+    -fx-opacity: 1.0; /* Garante que o texto não fique esmaecido */
+    -fx-text-fill: #3730a3;
+    -fx-font-weight: 500;
+}
+
+/* --- Botões --- */
+.primary-button {
+    -fx-background-color: #4f46e5; /* Roxo */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-radius: 8px;
+    -fx-padding: 12px 24px;
+    -fx-cursor: hand;
+}
+.primary-button:hover {
+    -fx-background-color: #4338ca;
+}
+
+.secondary-button {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #4b5563;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5px;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-border-radius: 8px;
+    -fx-padding: 12px 24px;
+    -fx-cursor: hand;
+}
+.secondary-button:hover {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #9ca3af;
+}
+
+.secondary-button-small {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill: #374151;
+    -fx-font-weight: 500;
+    -fx-font-size: 12px;
+    -fx-border-radius: 6px;
+    -fx-padding: 6px 12px;
+    -fx-cursor: hand;
+}
+.secondary-button-small:hover {
+    -fx-background-color: #e5e7eb;
+}
+
+/* --- Outros --- */
+.separator-modern {
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1 0 0 0;
+}
+
+.status-label {
+    -fx-text-fill: #4f46e5;
+    -fx-font-size: 14px;
+}

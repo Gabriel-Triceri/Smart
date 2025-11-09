@@ -10,6 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
+<?import java.lang.String?>
 <HBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartmeeting.frontend.RegisterController" prefHeight="500.0" prefWidth="700.0" id="register-root">
     <stylesheets>
         <String>@styles.css</String>

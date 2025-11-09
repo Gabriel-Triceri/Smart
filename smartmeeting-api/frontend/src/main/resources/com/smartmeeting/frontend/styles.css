@@ -213,7 +213,7 @@
     -fx-font-weight: bold;
     -fx-padding: 3px 8px;
     -fx-background-radius: 10px;
-    -fx-text-fill: white;
+    -fx-text-fill: #e80000;
 }
 
 /* Estilos para os diferentes status de reunião */
@@ -222,15 +222,15 @@
 }
 
 .status-em-andamento {
-    -fx-background-color: #1E88E5; /* Azul intermediário para andamento */
+    -fx-background-color: #000000; /* Azul intermediário para andamento */
 }
 
 .status-concluida {
-    -fx-background-color: #10B981;
+    -fx-background-color: #000000;
 }
 
 .status-finalizada {
-    -fx-background-color: #10B981; /* Alias para 'concluida' */
+    -fx-background-color: rgba(0, 0, 0, 0); /* Alias para 'concluida' */
 }
 
 /* General Buttons (tamanho original) */

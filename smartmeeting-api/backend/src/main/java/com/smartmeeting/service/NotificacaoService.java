@@ -31,7 +31,6 @@ public class NotificacaoService {
         NotificacaoDTO dto = new NotificacaoDTO();
         dto.setId(notificacao.getId());
         dto.setMensagem(notificacao.getMensagem());
-        dto.setDataEnvio(notificacao.getDataEnvio());
         dto.setTipo(notificacao.getTipo());
         dto.setDestinatarioId(notificacao.getDestinatario() != null ? notificacao.getDestinatario().getId() : null);
         return dto;
@@ -44,7 +43,6 @@ public class NotificacaoService {
         if (dto == null) return null;
         Notificacao notificacao = new Notificacao();
         notificacao.setMensagem(dto.getMensagem());
-        notificacao.setDataEnvio(dto.getDataEnvio());
         notificacao.setTipo(dto.getTipo());
 
         if (dto.getDestinatarioId() != null) {
@@ -79,7 +77,6 @@ public class NotificacaoService {
         return repository.findById(id)
                 .map(notificacao -> {
                     notificacao.setMensagem(dtoAtualizada.getMensagem());
-                    notificacao.setDataEnvio(dtoAtualizada.getDataEnvio());
                     notificacao.setTipo(dtoAtualizada.getTipo());
 
                     if (dtoAtualizada.getDestinatarioId() != null) {

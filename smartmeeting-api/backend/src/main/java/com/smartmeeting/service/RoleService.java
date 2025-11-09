@@ -4,6 +4,7 @@ import com.smartmeeting.exception.BadRequestException;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Permission;
 import com.smartmeeting.model.Role;
+import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.PermissionRepository;
 import com.smartmeeting.repository.RoleRepository;
 import org.springframework.stereotype.Service;
@@ -18,10 +19,12 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final PessoaRepository pessoaRepository;
 
-    public RoleService(RoleRepository roleRepository, PermissionRepository permissionRepository) {
+    public RoleService(RoleRepository roleRepository, PermissionRepository permissionRepository, PessoaRepository pessoaRepository) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
+        this.pessoaRepository = pessoaRepository;
     }
 
     // --- CRUD básicos ---
@@ -44,16 +47,7 @@ public class RoleService {
         }
         // valida e materializa permissões, se fornecidas
         if (role.getPermissions() != null) {
-            List<Long> ids = role.getPermissions().stream()
-                    .map(Permission::getId)
-                    .collect(Collectors.toList());
-            List<Permission> managed = new ArrayList<>();
-            for (Long pid : ids) {
-                Permission p = permissionRepository.findById(pid)
-                        .orElseThrow(() -> new ResourceNotFoundException("Permissão não encontrada com ID: " + pid));
-                managed.add(p);
-            }
-            role.setPermissions(managed);
+            role.setPermissions(findAndValidatePermissions(role.getPermissions()));
         }
         return roleRepository.save(role);
     }
@@ -74,28 +68,25 @@ public class RoleService {
 
         // valida e atualiza permissões se fornecidas
         if (updated.getPermissions() != null) {
-            List<Long> ids = updated.getPermissions().stream()
-                    .map(Permission::getId)
-                    .collect(Collectors.toList());
-            List<Permission> managed = new ArrayList<>();
-            for (Long pid : ids) {
-                Permission p = permissionRepository.findById(pid)
-                        .orElseThrow(() -> new ResourceNotFoundException("Permissão não encontrada com ID: " + pid));
-                managed.add(p);
-            }
-            existing.setPermissions(managed);
+            existing.setPermissions(findAndValidatePermissions(updated.getPermissions()));
         }
 
         return roleRepository.save(existing);
     }
 
-    @Transactional
-    public void delete(Long id) {
-        if (!roleRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + id);
-        }
-        roleRepository.deleteById(id);
-    }
+//    @Transactional
+//    public void delete(Long id) {
+//        Role roleToDelete = roleRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + id));
+//
+//        // Desassocia a role de todas as pessoas antes de deletar para evitar erro de FK
+//        pessoaRepository.findAllByRolesContaining(roleToDelete).forEach(pessoa -> {
+//            pessoa.getRoles().remove(roleToDelete);
+//            pessoaRepository.save(pessoa);
+//        });
+//
+//        roleRepository.deleteById(id);
+//    }
 
     @Transactional
     public Role addPermissionToRole(Long roleId, Long permissionId) {
@@ -124,5 +115,23 @@ public class RoleService {
             role.getPermissions().removeIf(p -> p.getId().equals(permissionId));
         }
         return roleRepository.save(role);
+    }
+
+    /**
+     * Busca e valida uma lista de permissões a partir de seus IDs.
+     * Garante que todas as permissões existam no banco de dados.
+     *
+     * @param permissions A lista de permissões (geralmente não gerenciadas) com IDs.
+     * @return Uma lista de entidades Permission gerenciadas pelo JPA.
+     * @throws ResourceNotFoundException se alguma permissão não for encontrada.
+     */
+    private List<Permission> findAndValidatePermissions(List<Permission> permissions) {
+        if (permissions == null || permissions.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Long> ids = permissions.stream().map(Permission::getId).collect(Collectors.toList());
+        List<Permission> managedPermissions = permissionRepository.findAllById(ids);
+        if (managedPermissions.size() != ids.size()) throw new ResourceNotFoundException("Uma ou mais permissões não foram encontradas.");
+        return managedPermissions;
     }
 }

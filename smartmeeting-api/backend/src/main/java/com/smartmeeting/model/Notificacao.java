@@ -8,8 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.time.LocalDateTime;
-
 @Table(name = "NOTIFICACAO")
 @Entity
 @Data
@@ -27,9 +25,6 @@ public class Notificacao extends Auditable { // Estende Auditable
 
     @Column(name = "MENSAGEM_NOTIFICACAO", nullable = false)
     private String mensagem;
-
-    @Column(name = "DATAENVIO_NOTIFICACAO", nullable = false)
-    private LocalDateTime dataEnvio;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "TIPO_NOTIFICACAO", nullable = false)

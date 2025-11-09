@@ -3,6 +3,7 @@ package com.smartmeeting.service;
 import com.smartmeeting.exception.BadRequestException;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Permission;
+import com.smartmeeting.repository.RoleRepository;
 import com.smartmeeting.repository.PermissionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +14,11 @@ import java.util.List;
 public class PermissionService {
 
     private final PermissionRepository permissionRepository;
+    private final RoleRepository roleRepository;
 
-    public PermissionService(PermissionRepository permissionRepository) {
+    public PermissionService(PermissionRepository permissionRepository, RoleRepository roleRepository) {
         this.permissionRepository = permissionRepository;
+        this.roleRepository = roleRepository;
     }
 
     // --- CRUD básicos ---
@@ -57,9 +60,17 @@ public class PermissionService {
 
     @Transactional
     public void delete(Long id) {
-        if (!permissionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Permissão não encontrada com ID: " + id);
-        }
-        permissionRepository.deleteById(id);
+        Permission permissionToDelete = permissionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Permissão não encontrada com ID: " + id));
+
+        // Remove a permissão de todas as roles que a utilizam antes de deletar
+        roleRepository.findAll().forEach(role -> {
+            boolean removed = role.getPermissions().removeIf(p -> p.getId().equals(id));
+            if (removed) {
+                roleRepository.save(role);
+            }
+        });
+
+        permissionRepository.delete(permissionToDelete);
     }
 }

@@ -16,9 +16,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
 
 import java.io.IOException;
-import java.time.LocalDate;
+import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
@@ -31,9 +30,7 @@ public class EditReuniaoController {
     @FXML
     private TextField pautaField;
     @FXML
-    private DatePicker datePicker;
-    @FXML
-    private TextField timeField;
+    private TextField dataHoraField;
     @FXML
     private TextField duracaoField;
     @FXML
@@ -56,7 +53,7 @@ public class EditReuniaoController {
     private VBox tasksContainer;
 
     private ReuniaoService reuniaoService = new ReuniaoService();
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private ReuniaoDTO reuniaoToEdit; // Reunião que está sendo visualizada/editada
 
     // Classe interna simples para representar uma Tarefa (substituir por DTO real se existir)
@@ -95,13 +92,17 @@ public class EditReuniaoController {
         }
         // Inicialmente, os campos são não editáveis. Isso será ajustado em setReuniaoToEdit.
         setEditable(false);
+
+        // Configura a ação do botão de exclusão, que estava faltando
+        if (deleteButton != null) {
+            deleteButton.setOnAction(event -> handleDeleteReuniao());
+        }
     }
 
     private void fillFormWithReuniaoData() {
         if (reuniaoToEdit != null) {
             pautaField.setText(reuniaoToEdit.getPauta());
-            datePicker.setValue(reuniaoToEdit.getDataHoraInicio().toLocalDate());
-            timeField.setText(reuniaoToEdit.getDataHoraInicio().toLocalTime().format(TIME_FORMATTER));
+            dataHoraField.setText(reuniaoToEdit.getDataHoraInicio().format(DATE_TIME_FORMATTER));
             duracaoField.setText(String.valueOf(reuniaoToEdit.getDuracaoMinutos()));
             salaField.setText(reuniaoToEdit.getSala() != null ? reuniaoToEdit.getSala().getNome() : "");
             organizadorField.setText(reuniaoToEdit.getOrganizador() != null ? reuniaoToEdit.getOrganizador().getNome() : "");
@@ -125,8 +126,7 @@ public class EditReuniaoController {
 
     private void setEditable(boolean editable) {
         pautaField.setEditable(editable);
-        datePicker.setDisable(!editable);
-        timeField.setEditable(editable);
+        dataHoraField.setEditable(editable);
         duracaoField.setEditable(editable);
         salaField.setEditable(editable);
         // organizadorField.setEditable(editable); // Pode ser desabilitado se for sempre o usuário logado
@@ -180,8 +180,7 @@ public class EditReuniaoController {
     private void handleSaveReuniao() {
         // 1. Coletar dados (similar ao CreateReuniaoController)
         String pauta = pautaField.getText();
-        LocalDate date = datePicker.getValue();
-        String timeText = timeField.getText();
+        String dataHoraText = dataHoraField.getText();
         String duracaoText = duracaoField.getText();
         String salaNome = salaField.getText();
         String organizadorNome = organizadorField.getText();
@@ -189,16 +188,16 @@ public class EditReuniaoController {
         String ata = ataTextArea.getText();
 
         // 2. Validação básica
-        if (pauta.isEmpty() || date == null || timeText.isEmpty() || duracaoText.isEmpty() || salaNome.isEmpty() || organizadorNome.isEmpty()) {
-            showAlert(AlertType.WARNING, "Campos Obrigatórios", "Preencha todos os campos obrigatórios.", "Pauta, Data, Hora, Duração, Sala e Organizador são obrigatórios.");
+        if (pauta.isEmpty() || dataHoraText.isEmpty() || duracaoText.isEmpty() || salaNome.isEmpty() || organizadorNome.isEmpty()) {
+            showAlert(AlertType.WARNING, "Campos Obrigatórios", "Preencha todos os campos obrigatórios.", "Pauta, Data e Hora, Duração, Sala e Organizador são obrigatórios.");
             return;
         }
 
-        LocalTime time;
+        LocalDateTime dataHoraInicio;
         try {
-            time = LocalTime.parse(timeText, TIME_FORMATTER);
+            dataHoraInicio = LocalDateTime.parse(dataHoraText, DATE_TIME_FORMATTER);
         } catch (DateTimeParseException e) {
-            showAlert(AlertType.WARNING, "Formato de Hora Inválido", "Formato de hora incorreto.", "Por favor, use o formato HH:mm (ex: 14:30) para a hora.");
+            showAlert(AlertType.WARNING, "Formato de Data/Hora Inválido", "Formato de data ou hora incorreto.", "Por favor, use o formato dd/MM/yyyy HH:mm (ex: 25/12/2024 14:30).");
             return;
         }
 
@@ -213,8 +212,6 @@ public class EditReuniaoController {
             showAlert(AlertType.WARNING, "Duração Inválida", "Formato de duração incorreto.", "Por favor, insira um número inteiro para a duração em minutos.");
             return;
         }
-
-        LocalDateTime dataHoraInicio = LocalDateTime.of(date, time);
 
         // 3. Atualizar DTO existente
         if (reuniaoToEdit == null) {
@@ -298,7 +295,7 @@ public class EditReuniaoController {
         }).start();
     }
 
-    @FXML
+    @FXML // Adicionando a anotação que faltava
     private void handleEndReuniao() {
         if (reuniaoToEdit == null || reuniaoToEdit.getId() == null) {
             showAlert(AlertType.ERROR, "Erro", "Reunião não selecionada", "Nenhuma reunião para encerrar.");
@@ -394,23 +391,19 @@ public class EditReuniaoController {
                 // Ícone (carrega se existir, senão segue sem ícone)
                 ImageView icon = null;
                 try {
-                    var primaryStream = getClass().getResourceAsStream("/com/smartmeeting/frontend/icons/task-icon.png");
-                    if (primaryStream != null) {
-                        icon = new ImageView(new Image(primaryStream));
-                    } else {
-                        var fallbackStream = getClass().getResourceAsStream("/com/smartmeeting/frontend/icons/default-task-icon.png");
-                        if (fallbackStream != null) {
-                            icon = new ImageView(new Image(fallbackStream));
-                        } else {
-                            System.err.println("Erro ao carregar ícone da tarefa: recursos não encontrados em /com/smartmeeting/frontend/icons/");
-                        }
+                    InputStream iconStream = getClass().getResourceAsStream("/com/smartmeeting/frontend/icons/task-icon.png");
+                    if (iconStream == null) {
+                        // Tenta carregar um ícone de fallback se o principal não for encontrado
+                        iconStream = getClass().getResourceAsStream("/com/smartmeeting/frontend/icons/default-task-icon.png");
+                    }
+
+                    if (iconStream != null) {
+                        icon = new ImageView(new Image(iconStream));
+                        icon.setFitHeight(16);
+                        icon.setFitWidth(16);
                     }
                 } catch (Exception e) {
-                    System.err.println("Erro ao carregar ícone da tarefa: " + e.getMessage());
-                }
-                if (icon != null) {
-                    icon.setFitHeight(16);
-                    icon.setFitWidth(16);
+                    // O erro de carregamento é ignorado silenciosamente para não quebrar a UI
                 }
 
                 Label taskLabel = new Label(task.getDescricao());
@@ -418,6 +411,7 @@ public class EditReuniaoController {
                 if (task.isConcluida()) {
                     taskLabel.setStyle("-fx-strikethrough: true; -fx-text-fill: #888;"); // Estilo para tarefa concluída
                 }
+
                 if (icon != null) {
                     taskItem.getChildren().addAll(icon, taskLabel);
                 } else {

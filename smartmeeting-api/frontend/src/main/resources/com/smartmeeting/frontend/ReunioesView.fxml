@@ -19,7 +19,6 @@
                 <TextField fx:id="searchField" promptText="Pesquisar por organizador..." HBox.hgrow="ALWAYS" styleClass="form-input filter-small-input"/>
                 <Button text="Aplicar Filtro" onAction="#handleApplyFilter" styleClass="primary-button"/>
                 <Button text="Criar Reunião" onAction="#handleCreateReuniao" styleClass="success-button"/>
-                <Button text="Recarregar CSS" onAction="#handleReloadCss" styleClass="secondary-button"/> <!-- Botão temporário para recarregar CSS -->
             </HBox>
         </VBox>
     </top>

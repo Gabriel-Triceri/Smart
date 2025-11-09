@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ReunioesController {
@@ -156,8 +157,28 @@ public class ReunioesController {
                 });
                 deleteButton.setOnAction(event -> {
                     ReuniaoDTO reuniao = getItem();
-                    System.out.println("Excluir Reunião: " + reuniao.getPauta());
-                    // TODO: Implementar lógica de exclusão
+                    if (reuniao == null) return;
+
+                    Alert alert = new Alert(AlertType.CONFIRMATION);
+                    alert.setTitle("Confirmar Exclusão");
+                    alert.setHeaderText("Excluir Reunião: " + reuniao.getPauta());
+                    alert.setContentText("Você tem certeza que deseja excluir esta reunião? Esta ação não pode ser desfeita.");
+
+                    Optional<ButtonType> result = alert.showAndWait();
+                    if (result.isPresent() && result.get() == ButtonType.OK) {
+                        new Thread(() -> {
+                            try {
+                                reuniaoService.deleteReuniao(reuniao.getId());
+                                Platform.runLater(() -> {
+                                    masterReunioesData.remove(reuniao);
+                                    reunioesTableView.refresh();
+                                });
+                            } catch (IOException e) {
+                                Platform.runLater(() -> showAlert(AlertType.ERROR, "Erro de Exclusão", "Não foi possível excluir a reunião.", "Verifique sua conexão e permissões. Detalhes: " + e.getMessage()));
+                                e.printStackTrace();
+                            }
+                        }).start();
+                    }
                 });
             }
 
@@ -338,10 +359,5 @@ public class ReunioesController {
         alert.setHeaderText(header);
         alert.setContentText(content);
         alert.showAndWait();
-    }
-
-    @FXML
-    private void handleReloadCss() {
-        MainApp.reloadCss();
     }
 }
