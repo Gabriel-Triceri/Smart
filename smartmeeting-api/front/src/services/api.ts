@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { authService } from './authService';
-import type { DashboardData } from '../types/dashboard';
+import type { DashboardData, EstatisticasGerais, UsoSalas, HistoricoMetricasDiarias } from '../types/dashboard';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -12,18 +11,6 @@ const api = axios.create({
     },
 });
 
-// Interceptor para adicionar o token de autenticação
-api.interceptors.request.use(
-    (config) => {
-        const token = authService.getToken();
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
 // Interceptor para tratamento de erros
 api.interceptors.response.use(
     (response) => response,
@@ -34,49 +21,69 @@ api.interceptors.response.use(
 );
 
 export const dashboardService = {
-    /**
-     * Busca dados do dashboard:
-     * - Total de reuniões do sistema
-     * - Total de reuniões de uma pessoa (opcional, via pessoaId)
-     * - Total de salas e salas em uso
-     */
-    async getDashboardData(pessoaId?: number): Promise<DashboardData> {
-        // Fetch total meetings
-        const totalSistemaResponse = await api.get<{ totalReunioes: number }>('/reunioes/total');
-        const totalSistema = totalSistemaResponse.data.totalReunioes;
+    async getEstatisticasGerais(): Promise<EstatisticasGerais> {
+        const response = await api.get<EstatisticasGerais>('/dashboard/estatisticas-gerais');
+        return response.data;
+    },
 
-        // Fetch total rooms
-        const totalSalasResponse = await api.get<{ totalSalas: number }>('/salas/total');
-        const totalSalas = totalSalasResponse.data.totalSalas;
+    async getUsoSalas(): Promise<UsoSalas[]> {
+        const response = await api.get<UsoSalas[]>('/dashboard/uso-salas');
+        return response.data;
+    },
 
-        // Fetch occupied rooms
-        const salasEmUsoResponse = await api.get<{ salasEmUso: number }>('/salas/em-uso');
-        const salasEmUso = salasEmUsoResponse.data.salasEmUso;
+    async getMetricasReunioes(periodo: 'semana' | 'mes' = 'semana'): Promise<HistoricoMetricasDiarias[]> {
+        const response = await api.get<HistoricoMetricasDiarias[]>('/dashboard/metricas-reunioes', {
+            params: { periodo },
+        });
+        return response.data;
+    },
 
-        // Total de reuniões por pessoa, caso pessoaId seja informado
-        let totalPorPessoa = 0;
-        if (pessoaId) {
-            const totalPessoaResponse = await api.get<{ totalReunioes: number }>(`/reunioes/total/${pessoaId}`);
-            totalPorPessoa = totalPessoaResponse.data.totalReunioes;
-        }
+    async getDashboardCompleto(): Promise<DashboardData> {
+        const [estatisticas, usoSalas, metricas] = await Promise.all([
+            this.getEstatisticasGerais(),
+            this.getUsoSalas(),
+            this.getMetricasReunioes(),
+        ]);
 
         return {
-            estatisticas: {
-                totalReunioes: totalSistema,
-                taxaPresenca: 0, // Placeholder
-                salasEmUso: salasEmUso,
-                totalSalas: totalSalas,
-                reunioesHoje: 0, // Placeholder
-                proximasReunioes: 0, // Placeholder
-                alertasPendentes: 0, // Placeholder
-                mediaParticipantes: totalPorPessoa,
-                tempoMedioReuniao: 0, // Placeholder
-            },
-            usoSalas: [], // Placeholder
-            metricas: [], // Placeholder
-            reunioesHoje: [], // Placeholder
-            proximasReunioes: [], // Placeholder
-            alertas: [], // Placeholder
+            estatisticas,
+            usoSalas,
+            metricas,
+            reunioesHoje: await this.getReunioesMock('hoje'),
+            proximasReunioes: await this.getProximasMock(),
+            alertas: await this.getAlertasMock(),
         };
     },
+
+    // Métodos mock para dados de exemplo (substituir por endpoints reais)
+    async getReunioesMock(tipo: 'hoje' | 'proximas') {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        if (tipo === 'hoje') {
+            return [
+                { id: '1', titulo: 'Sprint Planning', sala: 'Sala A', horario: '09:00', participantes: 8, status: 'concluida' as const },
+                { id: '2', titulo: 'Review Semanal', sala: 'Sala B', horario: '14:00', participantes: 12, status: 'em-andamento' as const },
+                { id: '3', titulo: 'Daily Stand-up', sala: 'Sala C', horario: '16:00', participantes: 6, status: 'agendada' as const },
+            ];
+        }
+        return [];
+    },
+
+    async getProximasMock() {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        return [
+            { id: '1', titulo: 'Reunião de Vendas', sala: 'Sala A', horario: '10:00', dataHora: '2025-11-15T10:00:00', participantes: 5, organizador: 'João Silva' },
+            { id: '2', titulo: 'Apresentação Q4', sala: 'Sala B', horario: '15:00', dataHora: '2025-11-15T15:00:00', participantes: 15, organizador: 'Maria Santos' },
+        ];
+    },
+
+    async getAlertasMock() {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        return [
+            { id: '1', tipo: 'warning' as const, mensagem: 'Sala A com manutenção agendada', timestamp: '2025-11-14T08:00:00', lido: false },
+            { id: '2', tipo: 'info' as const, mensagem: 'Nova reunião agendada para amanhã', timestamp: '2025-11-14T09:30:00', lido: false },
+            { id: '3', tipo: 'success' as const, mensagem: 'Backup realizado com sucesso', timestamp: '2025-11-14T03:00:00', lido: true },
+        ];
+    },
 };
+
+export default api;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  X, Calendar, Clock, MapPin, Video, Users, User, 
+  X, Calendar, Clock, MapPin, Video, Users,
   FileText, CheckCircle, Circle, AlertTriangle, 
   Edit, Trash2, ExternalLink, Bell, BellOff 
 } from 'lucide-react';

@@ -1,8 +1,8 @@
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import type { MetricasReunioes, UsoSalas } from '../types/dashboard';
+import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import type { HistoricoMetricasDiarias, UsoSalas } from '../types/dashboard';
 
 interface TimelineChartProps {
-  data: MetricasReunioes[];
+  data: HistoricoMetricasDiarias[];
   loading?: boolean;
 }
 
@@ -104,7 +104,7 @@ export function RoomUsageChart({ data, loading }: RoomUsageChartProps) {
             fill="#8884d8"
             dataKey="value"
           >
-            {chartData.map((entry, index) => (
+            {chartData.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
@@ -123,7 +123,7 @@ export function RoomUsageChart({ data, loading }: RoomUsageChartProps) {
 }
 
 interface ProductivityChartProps {
-  data: MetricasReunioes[];
+  data: HistoricoMetricasDiarias[];
   loading?: boolean;
 }
 

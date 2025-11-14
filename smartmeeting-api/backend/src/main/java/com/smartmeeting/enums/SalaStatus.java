@@ -6,7 +6,8 @@ package com.smartmeeting.enums;
 public enum SalaStatus {
     LIVRE("Sala disponível para uso"),
     OCUPADA("Sala em uso no momento"),
-    RESERVADA("Sala reservada para uso futuro");
+    RESERVADA("Sala reservada para uso futuro"),
+    MANUTENCAO("Sala em manutenção"); // Adicionado o status MANUTENCAO
     
     private final String descricao;
     
@@ -35,6 +36,6 @@ public enum SalaStatus {
      * @return true se a sala estiver ocupada ou reservada, false caso contrário
      */
     public boolean isIndisponivel() {
-        return this == OCUPADA || this == RESERVADA;
+        return this == OCUPADA || this == RESERVADA || this == MANUTENCAO; // Atualizado para incluir MANUTENCAO
     }
 }

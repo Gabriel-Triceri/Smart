@@ -2,7 +2,8 @@ package com.smartmeeting.service;
 
 
 import com.smartmeeting.dto.SalaDTO;
-import com.smartmeeting.enums.SalaStatus; // Corrected import
+import com.smartmeeting.dto.SalaStatisticsDTO; // Importar o novo DTO
+import com.smartmeeting.enums.SalaStatus;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Sala;
 import com.smartmeeting.repository.SalaRepository;
@@ -96,5 +97,26 @@ public class SalaService {
     public long getSalasEmUso() {
         // Assuming StatusSala.OCUPADA is the correct enum value for "occupied" rooms
         return repository.countByStatus(SalaStatus.OCUPADA);
+    }
+
+    // --- Novo método para obter estatísticas de salas ---
+    public SalaStatisticsDTO getSalaStatistics() {
+        List<Sala> todasSalas = repository.findAll();
+
+        long total = todasSalas.size();
+        long disponiveis = todasSalas.stream()
+                .filter(s -> s.getStatus() == SalaStatus.LIVRE) // Corrigido para LIVRE
+                .count();
+        long ocupadas = todasSalas.stream()
+                .filter(s -> s.getStatus() == SalaStatus.OCUPADA)
+                .count();
+        long manutencao = todasSalas.stream()
+                .filter(s -> s.getStatus() == SalaStatus.MANUTENCAO) // Corrigido para MANUTENCAO
+                .count();
+
+        // Utilização média (placeholder por enquanto)
+        double utilizacaoMedia = 0.0; // Lógica mais complexa necessária para cálculo real
+
+        return new SalaStatisticsDTO(total, disponiveis, ocupadas, manutencao, utilizacaoMedia);
     }
 }

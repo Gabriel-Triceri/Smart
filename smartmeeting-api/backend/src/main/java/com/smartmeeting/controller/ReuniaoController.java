@@ -3,6 +3,7 @@ package com.smartmeeting.controller;
 import com.smartmeeting.dto.ReuniaoDTO;
 import com.smartmeeting.dto.PessoaDTO;
 import com.smartmeeting.dto.SalaDTO;
+import com.smartmeeting.dto.ReuniaoStatisticsDTO; // Importar o novo DTO
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Sala;
@@ -213,5 +214,14 @@ public class ReuniaoController {
     public ResponseEntity<Map<String, Long>> getTotalReunioesByPessoa(@PathVariable("pessoaId") Long pessoaId) {
         long totalReunioes = service.getTotalReunioesByPessoa(pessoaId);
         return ResponseEntity.ok(Map.of("totalReunioes", totalReunioes));
+    }
+
+    /**
+     * API de estatísticas de reuniões
+     */
+    @GetMapping("/statistics")
+    public ResponseEntity<ReuniaoStatisticsDTO> getReuniaoStatistics() {
+        ReuniaoStatisticsDTO statistics = service.getReuniaoStatistics();
+        return ResponseEntity.ok(statistics);
     }
 }

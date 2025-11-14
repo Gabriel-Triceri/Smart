@@ -1,6 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Reuniao, ReuniaoFormData, FiltroReunioes, StatisticsReunioes } from '../types/meetings';
+import { Reuniao, ReuniaoFormData, FiltroReunioes, StatisticsReunioes, ReuniaoCreateDTO } from '../types/meetings';
 import { meetingsApi } from '../services/meetingsApi';
+
+// Helper para transformar o FormData em CreateDTO
+const toCreateDTO = (data: ReuniaoFormData): ReuniaoCreateDTO => {
+    const dataHoraInicio = `${data.data}T${data.horaInicio}:00`;
+    const inicio = new Date(dataHoraInicio);
+    const fim = new Date(`${data.data}T${data.horaFim}:00`);
+    const duracaoMinutos = (fim.getTime() - inicio.getTime()) / (1000 * 60);
+
+    return {
+        pauta: data.titulo,
+        descricao: data.descricao,
+        dataHoraInicio,
+        duracaoMinutos,
+        salaId: data.salaId,
+        participantes: data.participantes,
+        tipo: data.tipo,
+        prioridade: data.prioridade,
+        lembretes: data.lembretes,
+        observacoes: data.observacoes,
+        ata: data.ata,
+        status: 'agendada',
+    };
+};
 
 export const useMeetings = () => {
   const [reunioes, setReunioes] = useState<Reuniao[]>([]);
@@ -56,7 +79,8 @@ export const useMeetings = () => {
     setError(null);
     
     try {
-      const novaReuniao = await meetingsApi.createReuniao(data);
+      const dto = toCreateDTO(data);
+      const novaReuniao = await meetingsApi.createReuniao(dto);
       setReunioes(prev => [novaReuniao, ...prev]);
       loadStatistics(); // Atualizar estatísticas
       return novaReuniao;
@@ -75,7 +99,25 @@ export const useMeetings = () => {
     setError(null);
     
     try {
-      const reuniaoAtualizada = await meetingsApi.updateReuniao(id, data);
+      // Para atualização, o DTO pode ser parcial e não necessita de todos os campos
+      const dto: Partial<ReuniaoCreateDTO> = {};
+      if (data.titulo) dto.pauta = data.titulo;
+      if (data.descricao) dto.descricao = data.descricao;
+      if (data.data && data.horaInicio) dto.dataHoraInicio = `${data.data}T${data.horaInicio}:00`;
+      if (data.data && data.horaInicio && data.horaFim) {
+          const inicio = new Date(`${data.data}T${data.horaInicio}:00`);
+          const fim = new Date(`${data.data}T${data.horaFim}:00`);
+          dto.duracaoMinutos = (fim.getTime() - inicio.getTime()) / (1000 * 60);
+      }
+      if (data.salaId) dto.salaId = data.salaId;
+      if (data.participantes) dto.participantes = data.participantes;
+      if (data.tipo) dto.tipo = data.tipo;
+      if (data.prioridade) dto.prioridade = data.prioridade;
+      if (typeof data.lembretes === 'boolean') dto.lembretes = data.lembretes;
+      if (data.observacoes) dto.observacoes = data.observacoes;
+      if (data.ata) dto.ata = data.ata;
+
+      const reuniaoAtualizada = await meetingsApi.updateReuniao(id, dto);
       setReunioes(prev => prev.map(r => r.id === id ? reuniaoAtualizada : r));
       loadStatistics(); // Atualizar estatísticas
       return reuniaoAtualizada;

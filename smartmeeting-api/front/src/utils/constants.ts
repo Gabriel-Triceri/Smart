@@ -4,7 +4,7 @@
 
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
@@ -14,7 +14,7 @@ export const API_CONFIG = {
 export const REFRESH_INTERVALS = {
   DASHBOARD: 5 * 60 * 1000, // 5 minutos
   METRICS: 2 * 60 * 1000, // 2 minutos
-  ALERTS: 1 * 60 * 1000, // 1 minuto
+  ALERTS: 60 * 1000, // 1 minuto
 } as const;
 
 // Status das reuniões
@@ -161,23 +161,3 @@ export const DEFAULTS = {
   MAX_PARTICIPANTS: 50,
   MIN_PARTICIPANTS: 2,
 } as const;
-
-export default {
-  API_CONFIG,
-  REFRESH_INTERVALS,
-  MEETING_STATUS,
-  ROOM_STATUS,
-  ALERT_TYPES,
-  STATUS_COLORS,
-  ALERT_COLORS,
-  CHART_COLORS,
-  BREAKPOINTS,
-  ANIMATION_DURATIONS,
-  PAGINATION,
-  STORAGE_KEYS,
-  DATE_FORMATS,
-  ERROR_MESSAGES,
-  SUCCESS_MESSAGES,
-  CHAR_LIMITS,
-  DEFAULTS,
-};

@@ -3,6 +3,7 @@ package com.smartmeeting.service;
 import com.smartmeeting.dto.ReuniaoDTO;
 import com.smartmeeting.dto.PessoaDTO;
 import com.smartmeeting.dto.SalaDTO;
+import com.smartmeeting.dto.ReuniaoStatisticsDTO; // Importar o novo DTO
 import com.smartmeeting.enums.StatusReuniao;
 import com.smartmeeting.exception.ConflictException;
 import com.smartmeeting.exception.ResourceNotFoundException;
@@ -10,7 +11,7 @@ import com.smartmeeting.model.Presenca;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Sala;
-import com.smartmeeting.model.Tarefa; // Adicionado import para Tarefa
+import com.smartmeeting.model.Tarefa;
 import com.smartmeeting.repository.PresencaRepository;
 import com.smartmeeting.repository.ReuniaoRepository;
 import com.smartmeeting.repository.PessoaRepository;
@@ -19,7 +20,10 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -179,6 +183,69 @@ public class ReuniaoService {
         // This method will require a custom query in ReuniaoRepository
         // It will count meetings where the given pessoaId is either the organizer or a participant.
         return repository.countByOrganizadorIdOrParticipantesId(pessoaId);
+    }
+
+    // --- Novo método para obter estatísticas de reuniões ---
+    public ReuniaoStatisticsDTO getReuniaoStatistics() {
+        List<Reuniao> todasReunioes = repository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+
+        long totalReunioes = todasReunioes.size();
+        long reunioesAgendadas = todasReunioes.stream()
+                .filter(r -> r.getStatus() == StatusReuniao.AGENDADA)
+                .count();
+        long reunioesEmAndamento = todasReunioes.stream()
+                .filter(r -> r.getStatus() == StatusReuniao.EM_ANDAMENTO)
+                .count();
+        long reunioesFinalizadas = todasReunioes.stream()
+                .filter(r -> r.getStatus() == StatusReuniao.FINALIZADA)
+                .count();
+        long reunioesCanceladas = todasReunioes.stream()
+                .filter(r -> r.getStatus() == StatusReuniao.CANCELADA)
+                .count();
+
+        List<ReuniaoDTO> proximasReunioesList = todasReunioes.stream()
+                .filter(r -> r.getDataHoraInicio().isAfter(now) && r.getStatus() == StatusReuniao.AGENDADA)
+                .sorted(Comparator.comparing(Reuniao::getDataHoraInicio))
+                .limit(5)
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+
+        long proximasReunioesCount = todasReunioes.stream()
+                .filter(r -> r.getDataHoraInicio().isAfter(now) && r.getStatus() == StatusReuniao.AGENDADA)
+                .count();
+
+        // Sala mais usada
+        String salaMaisUsada = todasReunioes.stream()
+                .filter(r -> r.getSala() != null)
+                .collect(Collectors.groupingBy(r -> r.getSala().getNome(), Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse("N/A");
+
+        // Salas em uso (status EM_ANDAMENTO)
+        long salasEmUso = todasReunioes.stream()
+                .filter(r -> r.getStatus() == StatusReuniao.EM_ANDAMENTO && r.getSala() != null)
+                .map(r -> r.getSala().getId())
+                .distinct()
+                .count();
+
+        // Taxa de participação (placeholder)
+        double taxaParticipacao = 0.0; // Implementar lógica de cálculo real se necessário
+
+        return new ReuniaoStatisticsDTO(
+                totalReunioes,
+                reunioesAgendadas,
+                reunioesEmAndamento,
+                reunioesFinalizadas,
+                reunioesCanceladas,
+                proximasReunioesCount,
+                salaMaisUsada,
+                salasEmUso,
+                taxaParticipacao,
+                proximasReunioesList
+        );
     }
 
     // --- Conversão DTO -> Entity ---

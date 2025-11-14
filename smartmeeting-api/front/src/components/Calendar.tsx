@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, 
   Clock, MapPin, Users, Video, GripVertical 
 } from 'lucide-react';
 import { Reuniao, CalendarioView } from '../types/meetings';
-import { format, startOfWeek, addDays, addWeeks, addMonths, subWeeks, subMonths, isSameDay, isSameWeek, isSameMonth, startOfDay } from 'date-fns';
+import { format, startOfWeek, addDays, isSameDay,  isSameMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface CalendarProps {

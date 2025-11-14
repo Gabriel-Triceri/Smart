@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Calendar, Clock, MapPin, Video, FileText,
+  Calendar, Clock, MapPin, FileText,
   Save, X, Loader2
 } from 'lucide-react';
 import { ParticipanteAutocomplete } from './ParticipanteAutocomplete';
-import { ReuniaoFormData, Participante, Sala, ReuniaoCreateDTO } from '../types/meetings';
+import { ReuniaoFormData, Participante, Sala } from '../types/meetings';
 import { meetingsApi } from '../services/meetingsApi';
 
 interface MeetingFormProps {
   initialData?: Partial<ReuniaoFormData>;
-  onSubmit: (data: ReuniaoCreateDTO) => Promise<void>;
+  onSubmit: (data: ReuniaoFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -30,7 +30,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     participantes: [],
     tipo: 'presencial',
     prioridade: 'media',
-    // linkReuniao: '', // Removed
+    linkReuniao: '',
     lembretes: true,
     observacoes: '',
     ata: ''
@@ -41,26 +41,42 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isValidating, setIsValidating] = useState(false);
 
-  // Carregar dados iniciais
+  // Carregar salas ao montar o componente
   useEffect(() => {
-    if (initialData) {
-      setFormData(prev => ({ ...prev, ...initialData }));
-      if (initialData.participantes) {
-        setParticipantesSelecionados([]);
+    const loadSalas = async () => {
+      try {
+        const salasData = await meetingsApi.getAllSalas();
+        setSalas(salasData);
+      } catch (error) {
+        console.error('Erro ao carregar salas:', error);
       }
-    }
+    };
+    void loadSalas();
+  }, []);
 
-    loadSalas();
+  // Carregar dados iniciais da reunião
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (initialData) {
+        setFormData(prev => ({ ...prev, ...initialData }));
+        if (initialData.participantes && initialData.participantes.length > 0) {
+          try {
+            // Assumindo que searchParticipantes('') retorna todos os participantes
+            const todosParticipantes = await meetingsApi.searchParticipantes('');
+            const participantesAtuais = todosParticipantes.filter(p =>
+              initialData.participantes?.includes(p.id)
+            );
+            setParticipantesSelecionados(participantesAtuais);
+          } catch (error) {
+            console.error('Erro ao carregar participantes:', error);
+          }
+        } else {
+          setParticipantesSelecionados([]);
+        }
+      }
+    };
+    void loadInitialData();
   }, [initialData]);
-
-  const loadSalas = async () => {
-    try {
-      const salasData = await meetingsApi.getSalasDisponiveis('2025-11-14', '08:00', '18:00');
-      setSalas(salasData);
-    } catch (error) {
-      console.error('Erro ao carregar salas:', error);
-    }
-  };
 
   // Validação em tempo real
   const validateField = (name: string, value: any): string => {
@@ -129,28 +145,10 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
 
     setIsValidating(true);
     try {
-      const dataHoraInicio = `${formData.data}T${formData.horaInicio}:00`;
-
-      const inicio = new Date(`${formData.data}T${formData.horaInicio}`);
-      const fim = new Date(`${formData.data}T${formData.horaFim}`);
-      const duracaoMinutos = (fim.getTime() - inicio.getTime()) / (1000 * 60);
-
-      const payload: ReuniaoCreateDTO = {
-        pauta: formData.titulo,
-        descricao: formData.descricao,
-        dataHoraInicio: dataHoraInicio,
-        duracaoMinutos: duracaoMinutos,
-        salaId: formData.salaId,
+      await onSubmit({
+        ...formData,
         participantes: participantesSelecionados.map(p => p.id),
-        tipo: formData.tipo,
-        prioridade: formData.prioridade,
-        lembretes: formData.lembretes,
-        observacoes: formData.observacoes,
-        ata: formData.ata,
-        status: 'AGENDADA', // Automatically set status to 'agendada'
-      };
-
-      await onSubmit(payload);
+      });
     } catch (error) {
       console.error('Erro ao salvar reunião:', error);
     } finally {
