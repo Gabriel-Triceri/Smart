@@ -85,6 +85,7 @@ export function TaskCard({
     };
 
     const getInitials = (name: string) => {
+        if (!name) return ''; // Handle null or undefined name
         return name
             .split(' ')
             .map(n => n.charAt(0))
@@ -94,6 +95,7 @@ export function TaskCard({
     };
 
     const getAvatarColor = (name: string) => {
+        if (!name) return 'bg-gray-500'; // Default color for null/undefined name
         const colors = [
             'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500',
             'bg-indigo-500', 'bg-yellow-500', 'bg-red-500', 'bg-teal-500'
@@ -142,9 +144,9 @@ export function TaskCard({
               {tarefa.status === StatusTarefa.REVIEW && 'Em Revisão'}
           </span>
 
-                    <div className={`px-2 py-1 rounded border text-xs font-medium ${PRIORITY_COLORS[tarefa.prioridade]}`}>
+                    <div className={`px-2 py-1 rounded border text-xs font-medium ${tarefa.prioridade ? PRIORITY_COLORS[tarefa.prioridade] : 'bg-gray-100 text-gray-800 border-gray-200'}`}>
                         <Flag className="w-3 h-3 inline mr-1" />
-                        {tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)}
+                        {tarefa.prioridade ? (tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)) : 'N/A'}
                     </div>
                 </div>
 
@@ -288,7 +290,7 @@ export function TaskCard({
                                 key={responsavel.id}
                                 className={`
                   w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium
-                  ${getAvatarColor(responsavel.nome)}
+                  ${getAvatarColor(responsavel.nome || '')}
                 `}
                                 title={responsavel.nome}
                             >
@@ -300,7 +302,7 @@ export function TaskCard({
                                         onError={() => setImageErrors(prev => ({ ...prev, [responsavel.id]: true }))}
                                     />
                                 ) : (
-                                    getInitials(responsavel.nome)
+                                    getInitials(responsavel.nome || '')
                                 )}
                             </div>
                         ))}
@@ -312,15 +314,15 @@ export function TaskCard({
             </div>
 
             {/* Indicadores de Attachments e Comentários */}
-            {!compact && (tarefa.anexos.length > 0 || tarefa.comentarios.length > 0) && (
+            {!compact && ((tarefa.anexos && tarefa.anexos.length > 0) || (tarefa.comentarios && tarefa.comentarios.length > 0)) && (
                 <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-gray-100">
-                    {tarefa.anexos.length > 0 && (
+                    {tarefa.anexos && tarefa.anexos.length > 0 && (
                         <div className="flex items-center text-xs text-gray-500">
                             <Paperclip className="w-3 h-3 mr-1" />
                             <span>{tarefa.anexos.length}</span>
                         </div>
                     )}
-                    {tarefa.comentarios.length > 0 && (
+                    {tarefa.comentarios && tarefa.comentarios.length > 0 && (
                         <div className="flex items-center text-xs text-gray-500">
                             <MessageSquare className="w-3 h-3 mr-1" />
                             <span>{tarefa.comentarios.length}</span>

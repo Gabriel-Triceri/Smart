@@ -180,7 +180,7 @@ export function TaskManager() {
                             {Object.entries(statistics.porPrioridade).map(([prioridade, count]) => (
                                 <div key={prioridade} className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">
-                    {prioridade.charAt(0).toUpperCase() + prioridade.slice(1)}
+                    {prioridade ? (prioridade.charAt(0).toUpperCase() + prioridade.slice(1)) : 'N/A'}
                   </span>
                                     <div className="flex items-center space-x-2">
                                         <div className="w-32 bg-gray-200 rounded-full h-2">
@@ -230,7 +230,7 @@ export function TaskManager() {
                                                         tarefa.prioridade === PrioridadeTarefa.ALTA ? 'bg-orange-100 text-orange-800' :
                                                             tarefa.prioridade === PrioridadeTarefa.MEDIA ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
                                             }`}>
-                        {tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)}
+                        {tarefa.prioridade ? (tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)) : 'N/A'}
                       </span>
                                         </div>
                                     </div>

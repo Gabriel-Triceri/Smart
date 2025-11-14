@@ -1,5 +1,7 @@
 package com.smartmeeting.model;
 
+import com.smartmeeting.enums.PrioridadeTarefa;
+import com.smartmeeting.enums.PrioridadeTarefaConverter; // Importar o novo converter
 import com.smartmeeting.enums.StatusTarefa;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,8 +40,10 @@ public class Tarefa extends Auditable { // Estende Auditable
     @Column(name = "STATUS_TAREFA", nullable = false)
     private StatusTarefa statusTarefa;
 
+    // Usar o converter customizado para PrioridadeTarefa
+    @Convert(converter = PrioridadeTarefaConverter.class)
     @Column(name = "PRIORIDADE_TAREFA")
-    private String prioridade;
+    private PrioridadeTarefa prioridade;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_RESPONSAVEL", foreignKey = @ForeignKey(name = "FK_TAREFA_PESSOA"))
@@ -57,7 +61,7 @@ public class Tarefa extends Auditable { // Estende Auditable
                 ", prazo=" + prazo +
                 ", concluida=" + concluida +
                 ", statusTarefa=" + statusTarefa +
-                ", prioridade='" + prioridade + '\'' +
+                ", prioridade=" + prioridade +
                 ", responsavelId=" + (responsavel != null ? responsavel.getId() : null) +
                 ", reuniaoId=" + (reuniao != null ? reuniao.getId() : null) +
                 '}';

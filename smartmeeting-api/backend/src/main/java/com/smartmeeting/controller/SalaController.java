@@ -35,7 +35,7 @@ public class SalaController {
      * @return ResponseEntity contendo a sala encontrada ou status 404 se não existir
      */
     @GetMapping("/{id}")
-    public ResponseEntity<SalaDTO> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<SalaDTO> buscarPorId(@PathVariable(name = "id") Long id) {
         // O service lançará ResourceNotFoundException se não encontrar, que será tratada pelo GlobalExceptionHandler
         SalaDTO dto = service.buscarPorId(id);
         return ResponseEntity.ok(dto);
@@ -59,7 +59,7 @@ public class SalaController {
      * @return ResponseEntity contendo a sala atualizada ou status 404 se não existir
      */
     @PutMapping("/{id}")
-    public ResponseEntity<SalaDTO> atualizar(@PathVariable Long id, @Valid @RequestBody SalaDTO dto) {
+    public ResponseEntity<SalaDTO> atualizar(@PathVariable(name = "id") Long id, @Valid @RequestBody SalaDTO dto) {
         SalaDTO atualizado = service.atualizar(id, dto);
         return ResponseEntity.ok(atualizado);
     }
@@ -70,7 +70,7 @@ public class SalaController {
      * @return ResponseEntity com status 204 (No Content) ou 404 se não encontrada
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    public ResponseEntity<Void> deletar(@PathVariable(name = "id") Long id) {
         service.deletar(id);
         return ResponseEntity.noContent().build();
     }
@@ -95,5 +95,24 @@ public class SalaController {
     public ResponseEntity<Map<String, Long>> getSalasEmUso() {
         long salasEmUso = service.getSalasEmUso();
         return ResponseEntity.ok(Map.of("salasEmUso", salasEmUso));
+    }
+
+    /**
+     * API para obter estatísticas gerais sobre as salas.
+     * Endpoint: GET /salas/statistics
+     * Retorno: JSON com dados estatísticos, por exemplo: { "totalSalas": 10, "salasEmUso": 3, "salasDisponiveis": 7 }
+     */
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Long>> getSalaStatistics() {
+        // Implementar a lógica para obter estatísticas da sala no serviço
+        // Por exemplo:
+        long totalSalas = service.getTotalSalas();
+        long salasEmUso = service.getSalasEmUso();
+        long salasDisponiveis = totalSalas - salasEmUso; // Exemplo de cálculo
+        return ResponseEntity.ok(Map.of(
+                "totalSalas", totalSalas,
+                "salasEmUso", salasEmUso,
+                "salasDisponiveis", salasDisponiveis
+        ));
     }
 }

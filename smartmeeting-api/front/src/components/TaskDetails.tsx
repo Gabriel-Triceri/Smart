@@ -257,7 +257,7 @@ export function TaskDetails({
                                     Responsáveis
                                 </h3>
                                 <div className="space-y-2">
-                                    {tarefa.responsaveis.map((responsavel) => (
+                                    {(tarefa.responsaveis ?? []).map((responsavel) => (
                                         <div
                                             key={responsavel.id}
                                             className="flex items-center space-x-3 p-2 rounded-lg bg-gray-50"
@@ -334,14 +334,14 @@ export function TaskDetails({
                             )}
 
                             {/* Tags */}
-                            {tarefa.tags && tarefa.tags.length > 0 && (
+                            {(tarefa.tags ?? []).length > 0 && (
                                 <div className="mb-6">
                                     <h4 className="text-sm font-medium text-gray-700 mb-3">
                                         <Tag className="w-4 h-4 inline mr-1" />
                                         Tags
                                     </h4>
                                     <div className="flex flex-wrap gap-2">
-                                        {tarefa.tags.map((tag, index) => (
+                                        {(tarefa.tags ?? []).map((tag, index) => (
                                             <span
                                                 key={index}
                                                 className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
@@ -358,7 +358,7 @@ export function TaskDetails({
                                 <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm font-medium text-gray-700">
                                         <Paperclip className="w-4 h-4 inline mr-1" />
-                                        Anexos ({tarefa.anexos.length})
+                                        Anexos ({(tarefa.anexos ?? []).length})
                                     </h4>
                                     {onAttachFile && (
                                         <button
@@ -407,9 +407,9 @@ export function TaskDetails({
                                 )}
 
                                 {/* Lista de Anexos */}
-                                {tarefa.anexos.length > 0 ? (
+                                {(tarefa.anexos ?? []).length > 0 ? (
                                     <div className="space-y-2">
-                                        {tarefa.anexos.map((anexo) => (
+                                        {(tarefa.anexos ?? []).map((anexo) => (
                                             <div
                                                 key={anexo.id}
                                                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -450,14 +450,14 @@ export function TaskDetails({
                             <div className="p-4 border-b border-gray-200 bg-white">
                                 <h3 className="text-lg font-medium text-gray-900 flex items-center">
                                     <MessageSquare className="w-5 h-5 mr-2" />
-                                    Comentários ({tarefa.comentarios.length})
+                                    Comentários ({(tarefa.comentarios ?? []).length})
                                 </h3>
                             </div>
 
                             {/* Lista de Comentários */}
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                {tarefa.comentarios.length > 0 ? (
-                                    tarefa.comentarios.map((comentario) => (
+                                {(tarefa.comentarios ?? []).length > 0 ? (
+                                    (tarefa.comentarios ?? []).map((comentario) => (
                                         <div
                                             key={comentario.id}
                                             className="bg-white rounded-lg p-3 shadow-sm"
