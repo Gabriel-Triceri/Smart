@@ -55,6 +55,7 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
+        System.out.println("DEBUG: Tentativa de login para o email: " + loginDTO.getEmail()); // DEBUG PRINT
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginDTO.getEmail(),

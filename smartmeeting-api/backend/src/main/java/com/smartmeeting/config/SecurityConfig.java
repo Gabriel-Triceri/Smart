@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider; // Adicionado
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,6 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.smartmeeting.security.JwtAuthenticationFilter;
 import com.smartmeeting.security.JwtAuthenticationEntryPoint;
+import com.smartmeeting.security.CustomUserDetailsService; // Adicionado
 
 @Configuration
 @EnableWebSecurity
@@ -30,11 +32,14 @@ public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomUserDetailsService customUserDetailsService; // Adicionado
 
     public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                          JwtAuthenticationFilter jwtAuthenticationFilter) {
+                          JwtAuthenticationFilter jwtAuthenticationFilter,
+                          CustomUserDetailsService customUserDetailsService) { // Adicionado
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.customUserDetailsService = customUserDetailsService; // Adicionado
     }
 
     @Bean
@@ -45,6 +50,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
+                                "/api/auth/**",
                                 "/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -60,6 +66,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+                http.authenticationProvider(authenticationProvider());
+
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -70,6 +78,15 @@ public class SecurityConfig {
         // DelegatingPasswordEncoder aceita hashes com identificador como {bcrypt}, {noop}, etc.
         // Isso permite que as senhas seedadas com {noop} funcionem e novos registros sejam salvos com {bcrypt}.
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    // Adicionado: Define um DaoAuthenticationProvider explícito
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
