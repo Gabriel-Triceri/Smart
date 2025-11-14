@@ -10,6 +10,7 @@ import com.smartmeeting.model.Presenca;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Sala;
+import com.smartmeeting.model.Tarefa; // Adicionado import para Tarefa
 import com.smartmeeting.repository.PresencaRepository;
 import com.smartmeeting.repository.ReuniaoRepository;
 import com.smartmeeting.repository.PessoaRepository;
@@ -30,10 +31,10 @@ public class ReuniaoService {
     private final PessoaRepository pessoaRepository;
     private final SalaRepository salaRepository;
 
-    public ReuniaoService(ReuniaoRepository repository, 
-                         PresencaRepository presencaRepository,
-                         PessoaRepository pessoaRepository,
-                         SalaRepository salaRepository) {
+    public ReuniaoService(ReuniaoRepository repository,
+                          PresencaRepository presencaRepository,
+                          PessoaRepository pessoaRepository,
+                          SalaRepository salaRepository) {
         this.repository = repository;
         this.presencaRepository = presencaRepository;
         this.pessoaRepository = pessoaRepository;
@@ -143,24 +144,25 @@ public class ReuniaoService {
                         }
                         if (dto.getOrganizadorId() != null) {
                             Pessoa organizador = pessoaRepository.findById(dto.getOrganizadorId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Organizador não encontrado com ID: " + dto.getOrganizadorId()));
+                                    .orElseThrow(() -> new ResourceNotFoundException("Organizador não encontrado"));
                             reuniaoExistente.setOrganizador(organizador);
                         }
                         if (dto.getSalaId() != null) {
                             Sala sala = salaRepository.findById(dto.getSalaId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada com ID: " + dto.getSalaId()));
+                                    .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada"));
                             reuniaoExistente.setSala(sala);
                         }
-                        if (dto.getParticipantesIds() != null) {
-                            List<Pessoa> participantes = pessoaRepository.findAllById(dto.getParticipantesIds());
+                        // Alterado para usar o novo campo 'participantes' do DTO
+                        if (dto.getParticipantes() != null) {
+                            List<Pessoa> participantes = pessoaRepository.findAllById(dto.getParticipantes());
                             reuniaoExistente.setParticipantes(participantes);
                         }
 
                         return toDTO(repository.save(reuniaoExistente));
                     })
-                    .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + id));
+                    .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada"));
         } catch (ObjectOptimisticLockingFailureException e) {
-            throw new ConflictException("Erro de concorrência: os dados foram modificados por outro usuário. Recarregue e tente novamente.");
+            throw new ConflictException("Erro de concorrência");
         }
     }
 
@@ -168,99 +170,86 @@ public class ReuniaoService {
         return toDTO(encerrarReuniao(id));
     }
 
-    // --- Conversão DTO ↔ Entidade ---
+    // --- Métodos de Contagem ---
+    public long getTotalReunioes() {
+        return repository.count();
+    }
+
+    public long getTotalReunioesByPessoa(Long pessoaId) {
+        // This method will require a custom query in ReuniaoRepository
+        // It will count meetings where the given pessoaId is either the organizer or a participant.
+        return repository.countByOrganizadorIdOrParticipantesId(pessoaId);
+    }
+
+    // --- Conversão DTO -> Entity ---
     @Transactional
     public Reuniao toEntity(ReuniaoDTO dto) {
         if (dto == null) return null;
 
-        String ata = dto.getAta();
-        if (ata == null || ata.isBlank()) {
-            ata = "Sem ata";
-        }
-
-        // Removido .setId(dto.getId()) para garantir que novas entidades sejam criadas
         Reuniao reuniao = new Reuniao()
                 .setDataHoraInicio(dto.getDataHoraInicio())
                 .setDuracaoMinutos(dto.getDuracaoMinutos())
                 .setPauta(dto.getPauta())
-                .setAta(ata)
+                .setAta(dto.getAta())
                 .setStatus(dto.getStatus());
 
         if (dto.getOrganizadorId() != null) {
-            Pessoa organizador = pessoaRepository.findById(dto.getOrganizadorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Organizador não encontrado com ID: " + dto.getOrganizadorId()));
-            reuniao.setOrganizador(organizador);
+            reuniao.setOrganizador(
+                    pessoaRepository.findById(dto.getOrganizadorId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Organizador não encontrado"))
+            );
         }
 
         if (dto.getSalaId() != null) {
-            Sala sala = salaRepository.findById(dto.getSalaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada com ID: " + dto.getSalaId()));
-            reuniao.setSala(sala);
+            reuniao.setSala(
+                    salaRepository.findById(dto.getSalaId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada"))
+            );
         }
 
-        if (dto.getParticipantesIds() != null && !dto.getParticipantesIds().isEmpty()) {
-            List<Pessoa> participantes = pessoaRepository.findAllById(dto.getParticipantesIds());
-            reuniao.setParticipantes(participantes);
+        // Alterado para usar o novo campo 'participantes' do DTO
+        if (dto.getParticipantes() != null) {
+            reuniao.setParticipantes(
+                    pessoaRepository.findAllById(dto.getParticipantes())
+            );
         }
 
         return reuniao;
     }
 
+    // --- Conversão Entity -> DTO ---
     public ReuniaoDTO toDTO(Reuniao r) {
         if (r == null) return null;
 
-        PessoaDTO organizadorDTO = null;
-        if (r.getOrganizador() != null) {
-            Pessoa o = r.getOrganizador();
-            organizadorDTO = new PessoaDTO(
-                    o.getId(),
-                    o.getNome(),
-                    o.getEmail(),
-                    o.getTipoUsuario(),
-                    o.getCrachaId()
-            );
-        }
+        // Converte a lista de entidades Pessoa para lista de PessoaDTO para 'participantesDetalhes'
+        List<PessoaDTO> participantesDetalhes = r.getParticipantes() != null
+                ? r.getParticipantes().stream()
+                        .map(p -> new PessoaDTO(p.getId(), p.getNome(), p.getEmail(), p.getTipoUsuario(), p.getCrachaId()))
+                        .collect(Collectors.toList())
+                : null;
 
-        SalaDTO salaDTO = null;
-        if (r.getSala() != null) {
-            Sala s = r.getSala();
-            salaDTO = new SalaDTO(
-                    s.getId(),
-                    s.getNome(),
-                    s.getCapacidade(),
-                    s.getLocalizacao(),
-                    s.getStatus()
-            );
-        }
+        // Converte a lista de entidades Pessoa para lista de IDs para 'participantes'
+        List<Long> participantesIds = r.getParticipantes() != null
+                ? r.getParticipantes().stream().map(Pessoa::getId).collect(Collectors.toList())
+                : null;
 
-        List<PessoaDTO> participantesDTO = null;
-        if (r.getParticipantes() != null) {
-            participantesDTO = r.getParticipantes().stream()
-                    .map((Pessoa p) -> new PessoaDTO(
-                            p.getId(),
-                            p.getNome(),
-                            p.getEmail(),
-                            p.getTipoUsuario(),
-                            p.getCrachaId()
-                    ))
-                    .collect(Collectors.toList());
-        }
+        Long organizadorId = r.getOrganizador() != null ? r.getOrganizador().getId() : null;
+        Long salaId = r.getSala() != null ? r.getSala().getId() : null;
 
-        List<Long> participantesIds = null;
-        if (r.getParticipantes() != null) {
-            participantesIds = r.getParticipantes().stream()
-                    .map(Pessoa::getId)
-                    .collect(Collectors.toList());
-        }
+        // Converte Organizador e Sala para DTOs para 'organizador' e 'sala'
+        PessoaDTO organizadorDTO = r.getOrganizador() != null
+                ? new PessoaDTO(r.getOrganizador().getId(), r.getOrganizador().getNome(), r.getOrganizador().getEmail(), r.getOrganizador().getTipoUsuario(), r.getOrganizador().getCrachaId())
+                : null;
+        SalaDTO salaDTO = r.getSala() != null
+                ? new SalaDTO(r.getSala().getId(), r.getSala().getNome(), r.getSala().getCapacidade(), r.getSala().getLocalizacao(), r.getSala().getStatus())
+                : null;
 
-        Long organizadorId = null;
-        if (r.getOrganizador() != null) {
-            organizadorId = r.getOrganizador().getId();
-        }
-
-        Long salaId = null;
-        if (r.getSala() != null) {
-            salaId = r.getSala().getId();
+        // Converte List<Tarefa> para List<String> para o DTO
+        List<String> tarefasStrings = null;
+        if (r.getTarefas() != null) {
+            tarefasStrings = r.getTarefas().stream()
+                               .map(Tarefa::getDescricao) // Assumindo que Tarefa tem getDescricao()
+                               .collect(Collectors.toList());
         }
 
         ReuniaoDTO dto = new ReuniaoDTO(
@@ -272,13 +261,13 @@ public class ReuniaoService {
                 r.getStatus(),
                 organizadorDTO,
                 salaDTO,
-                participantesDTO,
-                null // Adicionado 'null' para o campo 'tarefas'
+                participantesDetalhes,
+                tarefasStrings // Passando List<String>
         );
 
         dto.setOrganizadorId(organizadorId);
         dto.setSalaId(salaId);
-        dto.setParticipantesIds(participantesIds);
+        dto.setParticipantes(participantesIds);
 
         return dto;
     }

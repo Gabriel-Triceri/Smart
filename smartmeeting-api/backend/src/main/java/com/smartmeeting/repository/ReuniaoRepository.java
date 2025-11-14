@@ -47,4 +47,7 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
     
     @Query("SELECT MAX(r.duracaoMinutos) FROM Reuniao r WHERE r.status = :status")
     Integer maxDuracaoMinutosByStatus(@Param("status") StatusReuniao status);
+
+    @Query("SELECT COUNT(DISTINCT r) FROM Reuniao r LEFT JOIN r.participantes p WHERE r.organizador.id = :pessoaId OR p.id = :pessoaId")
+    long countByOrganizadorIdOrParticipantesId(@Param("pessoaId") Long pessoaId);
 }

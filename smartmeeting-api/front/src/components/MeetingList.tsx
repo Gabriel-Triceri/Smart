@@ -81,10 +81,23 @@ export const MeetingList: React.FC<MeetingListProps> = ({
 
     // Ordenação por data (mais recentes primeiro)
     resultado.sort((a, b) => {
-      if (a.data !== b.data) {
-        return new Date(b.data).getTime() - new Date(a.data).getTime();
+      const dateA = new Date(a.data);
+      const dateB = new Date(b.data);
+
+      const timeA = dateA.getTime();
+      const timeB = dateB.getTime();
+
+      // If either date is invalid, prioritize valid dates.
+      // If both are invalid, their relative order doesn't matter for date comparison.
+      if (isNaN(timeA) && isNaN(timeB)) return 0; // Both invalid, maintain original order
+      if (isNaN(timeA)) return 1; // a is invalid, b is valid, b comes first (a is "later")
+      if (isNaN(timeB)) return -1; // b is invalid, a is valid, a comes first (b is "later")
+
+      if (timeA !== timeB) {
+        return timeB - timeA; // Sort by date (most recent first)
       }
-      return a.horaInicio.localeCompare(b.horaInicio);
+      // If dates are the same or both invalid, sort by horaInicio
+      return (a.horaInicio ?? '').localeCompare(b.horaInicio ?? '');
     });
 
     return resultado;

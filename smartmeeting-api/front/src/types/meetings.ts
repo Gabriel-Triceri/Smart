@@ -44,6 +44,7 @@ export interface Reuniao {
   anexos?: string[];
   lembretes: boolean;
   observacoes?: string;
+  ata?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -58,9 +59,27 @@ export interface ReuniaoFormData {
   participantes: string[];
   tipo: 'presencial' | 'online' | 'hibrida';
   prioridade: 'baixa' | 'media' | 'alta' | 'critica';
-  linkReuniao?: string;
+  // linkReuniao?: string; // Removed
   lembretes: boolean;
   observacoes?: string;
+  ata?: string;
+}
+
+// New DTO for creating a meeting, matching backend expectations
+export interface ReuniaoCreateDTO {
+  pauta: string;
+  descricao?: string;
+  dataHoraInicio: string; // LocalDateTime format (YYYY-MM-DDTHH:MM:SS)
+  duracaoMinutos: number;
+  salaId: string;
+  participantes: string[]; // Array of participant IDs
+  tipo: 'presencial' | 'online' | 'hibrida';
+  prioridade: 'baixa' | 'media' | 'alta' | 'critica';
+  // linkReuniao?: string; // Removed
+  lembretes: boolean;
+  observacoes?: string;
+  ata?: string;
+  status: 'agendada'; // Added status with default value
 }
 
 export interface FiltroReunioes {

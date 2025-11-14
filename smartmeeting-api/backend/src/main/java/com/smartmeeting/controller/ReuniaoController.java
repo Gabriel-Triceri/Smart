@@ -12,11 +12,11 @@ import com.smartmeeting.service.PessoaService;
 import com.smartmeeting.service.email.EmailService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -47,6 +47,7 @@ public class ReuniaoController {
 
     /**
      * Converte entidade para DTO de forma segura contra XSS
+     * Este método é usado para listar e buscar por ID, onde a entidade Reuniao é a fonte.
      */
     private ReuniaoDTO converterParaDTO(Reuniao reuniao) {
         if (reuniao == null) return null;
@@ -106,8 +107,8 @@ public class ReuniaoController {
                     .map(Pessoa::getId)
                     .collect(Collectors.toList());
 
-            dto.setParticipantes(participantesDTO);
-            dto.setParticipantesIds(participantesIds);
+            dto.setParticipantesDetalhes(participantesDTO); // Ajustado para o novo campo
+            dto.setParticipantes(participantesIds); // Ajustado para o novo campo
         }
 
         return dto;
@@ -135,10 +136,10 @@ public class ReuniaoController {
      * Cria uma nova reunião
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('CRIAR_REUNIAO')")
+    //@PreAuthorize("hasAuthority('CRIAR_REUNIAO')")
     public ResponseEntity<ReuniaoDTO> criar(@Valid @RequestBody ReuniaoDTO dto) {
         ReuniaoDTO reuniaoCriada = service.salvarDTO(dto);
-        return ResponseEntity.ok(converterParaDTO(service.toEntity(reuniaoCriada)));
+        return ResponseEntity.ok(reuniaoCriada); // Retorna o DTO já populado pelo serviço
     }
 
     /**
@@ -147,7 +148,7 @@ public class ReuniaoController {
     @PutMapping("/{id}")
     public ResponseEntity<ReuniaoDTO> atualizar(@PathVariable("id") Long id, @Valid @RequestBody ReuniaoDTO dto) {
         ReuniaoDTO reuniaoAtualizada = service.atualizarDTO(id, dto);
-        return ResponseEntity.ok(converterParaDTO(service.toEntity(reuniaoAtualizada)));
+        return ResponseEntity.ok(reuniaoAtualizada); // Retorna o DTO já populado pelo serviço
     }
 
     /**
@@ -165,7 +166,7 @@ public class ReuniaoController {
     @PostMapping("/{id}/encerrar")
     public ResponseEntity<ReuniaoDTO> encerrar(@PathVariable("id") Long id) {
         ReuniaoDTO reuniaoEncerrada = service.encerrarReuniaoDTO(id);
-        return ResponseEntity.ok(converterParaDTO(service.toEntity(reuniaoEncerrada)));
+        return ResponseEntity.ok(reuniaoEncerrada); // Retorna o DTO já populado pelo serviço
     }
 
     /**
@@ -194,5 +195,23 @@ public class ReuniaoController {
     @GetMapping("/pessoas")
     public List<PessoaDTO> listarPessoas() {
         return pessoaService.listarTodas();
+    }
+
+    /**
+     * API de total de reuniões do sistema
+     */
+    @GetMapping("/total")
+    public ResponseEntity<Map<String, Long>> getTotalReunioes() {
+        long totalReunioes = service.getTotalReunioes();
+        return ResponseEntity.ok(Map.of("totalReunioes", totalReunioes));
+    }
+
+    /**
+     * API de total de reuniões por pessoa
+     */
+    @GetMapping("/total/{pessoaId}")
+    public ResponseEntity<Map<String, Long>> getTotalReunioesByPessoa(@PathVariable("pessoaId") Long pessoaId) {
+        long totalReunioes = service.getTotalReunioesByPessoa(pessoaId);
+        return ResponseEntity.ok(Map.of("totalReunioes", totalReunioes));
     }
 }

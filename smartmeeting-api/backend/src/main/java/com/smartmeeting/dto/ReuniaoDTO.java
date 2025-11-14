@@ -29,12 +29,12 @@ public class ReuniaoDTO {
     // Campos para IDs (usados na criação/atualização)
     private Long organizadorId;
     private Long salaId;
-    private List<Long> participantesIds;
+    private List<Long> participantes; // Renomeado de participantesIds para participantes
     
     // Campos para objetos completos (usados na resposta)
     private PessoaDTO organizador;
     private SalaDTO sala;
-    private List<PessoaDTO> participantes;
+    private List<PessoaDTO> participantesDetalhes; // Renomeado de participantes para participantesDetalhes
 
     // Construtor completo para respostas
     public ReuniaoDTO(Long id,
@@ -45,7 +45,7 @@ public class ReuniaoDTO {
                       StatusReuniao status,
                       PessoaDTO organizador,
                       SalaDTO sala,
-                      List<PessoaDTO> participantes,
+                      List<PessoaDTO> participantesDetalhes, // Ajustado para participantesDetalhes
                       List<String> tarefas) { // Adicionado tarefas ao construtor
         this.id = id;
         this.dataHoraInicio = dataHoraInicio;
@@ -55,7 +55,7 @@ public class ReuniaoDTO {
         this.status = status;
         this.organizador = organizador;
         this.sala = sala;
-        this.participantes = participantes;
+        this.participantesDetalhes = participantesDetalhes; // Ajustado para participantesDetalhes
         this.tarefas = tarefas; // Inicializa tarefas
         
         // Preenche os IDs automaticamente a partir dos objetos
@@ -65,8 +65,8 @@ public class ReuniaoDTO {
         if (sala != null) {
             this.salaId = sala.getId();
         }
-        if (participantes != null) {
-            this.participantesIds = participantes.stream()
+        if (participantesDetalhes != null) { // Ajustado para participantesDetalhes
+            this.participantes = participantesDetalhes.stream()
                     .map(PessoaDTO::getId)
                     .collect(Collectors.toList());
         }

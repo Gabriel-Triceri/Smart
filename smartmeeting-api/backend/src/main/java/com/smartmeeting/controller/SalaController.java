@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/salas")
@@ -72,5 +73,27 @@ public class SalaController {
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         service.deletar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * API para obter o total de salas cadastradas no sistema.
+     * Endpoint: GET /salas/total
+     * Retorno: JSON com a quantidade total de salas, por exemplo: { "totalSalas": 10 }
+     */
+    @GetMapping("/total")
+    public ResponseEntity<Map<String, Long>> getTotalSalas() {
+        long totalSalas = service.getTotalSalas();
+        return ResponseEntity.ok(Map.of("totalSalas", totalSalas));
+    }
+
+    /**
+     * API para obter a quantidade de salas atualmente em uso.
+     * Endpoint: GET /salas/em-uso
+     * Retorno: JSON com a quantidade de salas ocupadas, por exemplo: { "salasEmUso": 3 }
+     */
+    @GetMapping("/em-uso")
+    public ResponseEntity<Map<String, Long>> getSalasEmUso() {
+        long salasEmUso = service.getSalasEmUso();
+        return ResponseEntity.ok(Map.of("salasEmUso", salasEmUso));
     }
 }

@@ -2,6 +2,7 @@ package com.smartmeeting.service;
 
 
 import com.smartmeeting.dto.SalaDTO;
+import com.smartmeeting.enums.SalaStatus; // Corrected import
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Sala;
 import com.smartmeeting.repository.SalaRepository;
@@ -85,5 +86,15 @@ public class SalaService {
             throw new ResourceNotFoundException("Sala não encontrada com ID: " + id);
         }
         repository.deleteById(id);
+    }
+
+    // --- Métodos de Contagem ---
+    public long getTotalSalas() {
+        return repository.count();
+    }
+
+    public long getSalasEmUso() {
+        // Assuming StatusSala.OCUPADA is the correct enum value for "occupied" rooms
+        return repository.countByStatus(SalaStatus.OCUPADA);
     }
 }

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = false, exclude = {"participante", "reuniao"}) // Excluir campos de relacionamento
 public class Presenca extends Auditable { // Estende Auditable
 
     @Id

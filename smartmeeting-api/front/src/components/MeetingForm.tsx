@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, Clock, MapPin, Video, Users, FileText, 
-  AlertTriangle, Save, X, Loader2 
+import {
+  Calendar, Clock, MapPin, Video, FileText,
+  Save, X, Loader2
 } from 'lucide-react';
 import { ParticipanteAutocomplete } from './ParticipanteAutocomplete';
-import { ReuniaoFormData, Participante, Sala } from '../types/meetings';
+import { ReuniaoFormData, Participante, Sala, ReuniaoCreateDTO } from '../types/meetings';
 import { meetingsApi } from '../services/meetingsApi';
 
 interface MeetingFormProps {
   initialData?: Partial<ReuniaoFormData>;
-  onSubmit: (data: ReuniaoFormData) => Promise<void>;
+  onSubmit: (data: ReuniaoCreateDTO) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -30,9 +30,10 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     participantes: [],
     tipo: 'presencial',
     prioridade: 'media',
-    linkReuniao: '',
+    // linkReuniao: '', // Removed
     lembretes: true,
-    observacoes: ''
+    observacoes: '',
+    ata: ''
   });
 
   const [participantesSelecionados, setParticipantesSelecionados] = useState<Participante[]>([]);
@@ -44,9 +45,11 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
   useEffect(() => {
     if (initialData) {
       setFormData(prev => ({ ...prev, ...initialData }));
+      if (initialData.participantes) {
+        setParticipantesSelecionados([]);
+      }
     }
-    
-    // Carregar salas disponíveis
+
     loadSalas();
   }, [initialData]);
 
@@ -80,18 +83,6 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
         return '';
       case 'salaId':
         return !value ? 'Selecione uma sala' : '';
-      case 'tipo':
-        if (value === 'online' || value === 'hibrida') {
-          return formData.linkReuniao ? '' : 'Link da reunião é obrigatório para este tipo';
-        }
-        return '';
-      case 'linkReuniao':
-        if (formData.tipo === 'online' || formData.tipo === 'hibrida') {
-          const urlRegex = /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
-          return !value?.trim() ? 'Link é obrigatório para reuniões online' : 
-                 !urlRegex.test(value) ? 'Insira um link válido' : '';
-        }
-        return '';
       default:
         return '';
     }
@@ -99,8 +90,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
 
   const handleInputChange = (name: string, value: any) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Validação em tempo real
+
     setTimeout(() => {
       const error = validateField(name, value);
       setErrors(prev => ({ ...prev, [name]: error }));
@@ -114,11 +104,10 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
       if (error) newErrors[key] = error;
     });
 
-    // Validação de duração da reunião
     if (formData.horaInicio && formData.horaFim) {
-      const inicio = new Date(`2000-01-01T${formData.horaInicio}`);
-      const fim = new Date(`2000-01-01T${formData.horaFim}`);
-      const duracao = (fim.getTime() - inicio.getTime()) / (1000 * 60); // em minutos
+      const inicio = new Date(`${formData.data}T${formData.horaInicio}`);
+      const fim = new Date(`${formData.data}T${formData.horaFim}`);
+      const duracao = (fim.getTime() - inicio.getTime()) / (1000 * 60);
 
       if (duracao < 15) {
         newErrors.horaFim = 'Reunião deve ter pelo menos 15 minutos';
@@ -133,17 +122,35 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsValidating(true);
     try {
-      await onSubmit({
-        ...formData,
-        participantes: participantesSelecionados.map(p => p.id)
-      });
+      const dataHoraInicio = `${formData.data}T${formData.horaInicio}:00`;
+
+      const inicio = new Date(`${formData.data}T${formData.horaInicio}`);
+      const fim = new Date(`${formData.data}T${formData.horaFim}`);
+      const duracaoMinutos = (fim.getTime() - inicio.getTime()) / (1000 * 60);
+
+      const payload: ReuniaoCreateDTO = {
+        pauta: formData.titulo,
+        descricao: formData.descricao,
+        dataHoraInicio: dataHoraInicio,
+        duracaoMinutos: duracaoMinutos,
+        salaId: formData.salaId,
+        participantes: participantesSelecionados.map(p => p.id),
+        tipo: formData.tipo,
+        prioridade: formData.prioridade,
+        lembretes: formData.lembretes,
+        observacoes: formData.observacoes,
+        ata: formData.ata,
+        status: 'AGENDADA', // Automatically set status to 'agendada'
+      };
+
+      await onSubmit(payload);
     } catch (error) {
       console.error('Erro ao salvar reunião:', error);
     } finally {
@@ -198,7 +205,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
             onChange={(e) => handleInputChange('descricao', e.target.value)}
             placeholder="Descreva o objetivo da reunião"
             rows={3}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
                      focus:ring-2 focus:ring-blue-500 focus:border-transparent
                      dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
                      transition-colors"
@@ -304,29 +311,6 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
           </div>
         </div>
 
-        {/* Link da reunião (condicional) */}
-        {(formData.tipo === 'online' || formData.tipo === 'hibrida') && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <Video className="inline w-4 h-4 mr-1" />
-              Link da Reunião *
-            </label>
-            <input
-              type="url"
-              value={formData.linkReuniao}
-              onChange={(e) => handleInputChange('linkReuniao', e.target.value)}
-              placeholder="https://meet.google.com/..."
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                       dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
-                       ${errors.linkReuniao ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
-                       transition-colors`}
-            />
-            {errors.linkReuniao && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.linkReuniao}</p>
-            )}
-          </div>
-        )}
-
         {/* Sala */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -399,7 +383,25 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
               onChange={(e) => handleInputChange('observacoes', e.target.value)}
               placeholder="Observações adicionais..."
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
+                       focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                       dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
+                       transition-colors"
+            />
+          </div>
+
+          {/* Ata da Reunião */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FileText className="inline w-4 h-4 mr-1" />
+              Ata da Reunião
+            </label>
+            <textarea
+              value={formData.ata}
+              onChange={(e) => handleInputChange('ata', e.target.value)}
+              placeholder="Registre a ata da reunião aqui..."
+              rows={5}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
                        focus:ring-2 focus:ring-blue-500 focus:border-transparent
                        dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
                        transition-colors"
@@ -412,7 +414,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 
+            className="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700
                      hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
           >
             Cancelar
@@ -420,7 +422,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
           <button
             type="submit"
             disabled={isLoading || isValidating}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg 
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg
                      transition-colors disabled:opacity-50 disabled:cursor-not-allowed
                      flex items-center gap-2"
           >
