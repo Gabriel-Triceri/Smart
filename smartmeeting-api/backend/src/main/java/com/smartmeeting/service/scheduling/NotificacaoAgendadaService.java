@@ -97,7 +97,8 @@ public class NotificacaoAgendadaService {
     public void enviarLembretesTarefasPendentes() {
         log.info("Enviando lembretes de tarefas pendentes");
         
-        List<Tarefa> tarefasPendentes = tarefaRepository.findByStatusTarefa(StatusTarefa.POS_REUNIAO);
+        // Busca todas as tarefas que não estão com o status "Concluída"
+        List<Tarefa> tarefasPendentes = tarefaRepository.findByStatusTarefaNot(StatusTarefa.DONE);
         
         int emailsEnviados = 0;
         for (Tarefa tarefa : tarefasPendentes) {

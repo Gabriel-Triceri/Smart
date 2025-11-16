@@ -1,27 +1,38 @@
 package com.smartmeeting.dto;
 
 import com.smartmeeting.enums.SalaStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.Accessors;
+
+import java.util.List;
 
 /**
  * DTO para transferência de dados de Sala
- * Contém informações sobre salas de reunião, incluindo nome, capacidade e localização
+ * Contém informações esperadas pelo frontend
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Accessors(chain = true)
+
 public class SalaDTO {
+
     private Long id;
     private String nome;
     private Integer capacidade;
     private String localizacao;
+
     private SalaStatus status;
 
-    public Long getId() {
-        return this.id;
-    }
+    private List<String> equipamentos; // Ex: ["Projetor", "TV"]
+    private String categoria;
+    private String andar;
+    private Boolean disponibilidade;
+
+    private String imagem;
+    private String observacoes;
+
+
 }

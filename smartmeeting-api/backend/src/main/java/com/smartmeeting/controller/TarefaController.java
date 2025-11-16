@@ -6,12 +6,15 @@ import com.smartmeeting.dto.NotificacaoTarefaDTO;
 import com.smartmeeting.dto.TarefaDTO;
 import com.smartmeeting.dto.TarefaStatisticsDTO; // Importar o novo DTO
 import com.smartmeeting.dto.TemplateTarefaDTO; // Importar o novo DTO
+import com.smartmeeting.dto.MovimentacaoTarefaRequest; // Importar o novo DTO de requisição
+import com.smartmeeting.dto.MovimentacaoTarefaDTO; // Importar o novo DTO de movimentação
 import com.smartmeeting.service.TarefaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
-
+import java.util.Map;
+import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/tarefas")
 public class TarefaController {
@@ -143,5 +146,148 @@ public class TarefaController {
     public ResponseEntity<KanbanBoardDTO> getKanbanBoard(@RequestParam(required = false, name = "reuniaoId") Long reuniaoId) {
         KanbanBoardDTO kanbanBoard = tarefaService.getKanbanBoard(reuniaoId);
         return ResponseEntity.ok(kanbanBoard);
+    }
+
+    /**
+     * API para mover uma tarefa para um novo status ou posição.
+     * Endpoint: POST /tarefas/{id}/mover
+     * @param id Identificador da tarefa a ser movida.
+     * @param request DTO contendo o novo status e/ou nova posição.
+     * @return ResponseEntity contendo a tarefa atualizada.
+     */
+    @PostMapping("/{id:\\d+}/mover")
+    public ResponseEntity<TarefaDTO> moverTarefa(@PathVariable(name = "id") Long id, @Valid @RequestBody MovimentacaoTarefaRequest request) {
+        TarefaDTO tarefaAtualizada = tarefaService.moverTarefa(id, request.getNewStatus(), request.getNewPosition());
+        return ResponseEntity.ok(tarefaAtualizada);
+    }
+
+    /**
+     * API para registrar uma movimentação de tarefa (ex: no Kanban).
+     * Endpoint: POST /tarefas/movimentacoes
+     * @param dto DTO contendo os detalhes da movimentação.
+     * @return ResponseEntity com status 200 (OK) após o registro.
+     */
+    @PostMapping("/movimentacoes")
+    public ResponseEntity<Void> registrarMovimentacao(@Valid @RequestBody MovimentacaoTarefaDTO dto) {
+        tarefaService.registrarMovimentacao(dto);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * API para adicionar comentário a uma tarefa
+     */
+    @PostMapping("/{id}/comentarios")
+    public ResponseEntity<Map<String, Object>> adicionarComentario(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, Object> requestBody) {
+        String conteudo = (String) requestBody.get("conteudo");
+        @SuppressWarnings("unchecked")
+        List<String> mencoes = (List<String>) requestBody.get("mencoes");
+
+        Map<String, Object> comentario = tarefaService.adicionarComentario(id, conteudo, mencoes);
+        return ResponseEntity.ok(comentario);
+    }
+
+    /**
+     * API para anexar arquivo a uma tarefa
+     */
+    @PostMapping(value = "/{id}/anexos", consumes = "multipart/form-data")
+    public ResponseEntity<Map<String, Object>> anexarArquivo(
+            @PathVariable("id") Long id,
+            @RequestParam("arquivo") MultipartFile arquivo) {
+        Map<String, Object> anexo = tarefaService.anexarArquivo(id, arquivo);
+        return ResponseEntity.ok(anexo);
+    }
+
+    /**
+     * API para atribuir tarefa a responsável
+     */
+    @PostMapping("/{id}/atribuir")
+    public ResponseEntity<TarefaDTO> atribuirTarefa(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, Object> requestBody) {
+        Long responsavelId = Long.valueOf(requestBody.get("responsavelId").toString());
+        Boolean principal = (Boolean) requestBody.get("principal");
+
+        TarefaDTO tarefaAtualizada = tarefaService.atribuirResponsavel(id, responsavelId, principal);
+        return ResponseEntity.ok(tarefaAtualizada);
+    }
+
+    /**
+     * API para atualizar progresso da tarefa
+     */
+    @PatchMapping("/{id}/progresso")
+    public ResponseEntity<TarefaDTO> atualizarProgresso(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, Integer> requestBody) {
+        Integer progresso = requestBody.get("progresso");
+        TarefaDTO tarefaAtualizada = tarefaService.atualizarProgresso(id, progresso);
+        return ResponseEntity.ok(tarefaAtualizada);
+    }
+
+    /**
+     * API para duplicar tarefa
+     */
+    @PostMapping("/{id}/duplicar")
+    public ResponseEntity<TarefaDTO> duplicarTarefa(
+            @PathVariable("id") Long id,
+            @RequestBody(required = false) Map<String, Object> modificacoes) {
+        TarefaDTO novaTarefa = tarefaService.duplicarTarefa(id, modificacoes);
+        return ResponseEntity.ok(novaTarefa);
+    }
+
+    /**
+     * API para buscar tarefas por termo
+     */
+    @GetMapping("/buscar")
+    public ResponseEntity<List<TarefaDTO>> buscarTarefas(
+            @RequestParam String q,
+            @RequestParam(required = false) Map<String, Object> filtros) {
+        List<TarefaDTO> tarefas = tarefaService.buscarPorTexto(q, filtros);
+        return ResponseEntity.ok(tarefas);
+    }
+
+    /**
+     * API para obter tarefas vencendo
+     */
+    @GetMapping("/vencendo")
+    public ResponseEntity<List<TarefaDTO>> getTarefasVencendo(@RequestParam(defaultValue = "3") Integer dias) {
+        List<TarefaDTO> tarefas = tarefaService.getTarefasVencendo(dias);
+        return ResponseEntity.ok(tarefas);
+    }
+
+    /**
+     * API para obter tarefas do usuário atual
+     */
+    @GetMapping("/minhas")
+    public ResponseEntity<List<TarefaDTO>> getMinhasTarefas() {
+        List<TarefaDTO> tarefas = tarefaService.getTarefasDoUsuarioAtual();
+        return ResponseEntity.ok(tarefas);
+    }
+
+    /**
+     * API para criar tarefas por template
+     */
+    @PostMapping("/templates/{templateId}/criar")
+    public ResponseEntity<List<TarefaDTO>> criarTarefasPorTemplate(
+            @PathVariable("templateId") Long templateId,
+            @RequestBody Map<String, Object> dados) {
+        @SuppressWarnings("unchecked")
+        List<Long> responsaveisIds = (List<Long>) dados.get("responsaveisIds");
+        @SuppressWarnings("unchecked")
+        List<String> datasVencimento = (List<String>) dados.get("datasVencimento");
+        Long reuniaoId = dados.get("reuniaoId") != null ? Long.valueOf(dados.get("reuniaoId").toString()) : null;
+
+        List<TarefaDTO> tarefas = tarefaService.criarTarefasPorTemplate(templateId, responsaveisIds, datasVencimento, reuniaoId);
+        return ResponseEntity.ok(tarefas);
+    }
+
+    /**
+     * API para marcar notificação como lida
+     */
+    @PatchMapping("/notifications/{id}/lida")
+    public ResponseEntity<Void> marcarNotificacaoLida(@PathVariable("id") Long id) {
+        tarefaService.marcarNotificacaoLida(id);
+        return ResponseEntity.ok().build();
     }
 }

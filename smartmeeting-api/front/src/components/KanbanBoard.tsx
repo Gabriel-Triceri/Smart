@@ -1,19 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Filter, Search, Settings, RefreshCw } from 'lucide-react';
-import { Tarefa, StatusTarefa, KanbanBoard as KanbanBoardType } from '../types/meetings';
+import { Plus, Filter, Search, RefreshCw } from 'lucide-react';
+import { Tarefa, StatusTarefa, Assignee, FiltroTarefas } from '../types/meetings';
 import { TaskCard } from './TaskCard';
 import { TaskForm } from './TaskForm';
-import { TaskDetails } from './TaskDetails';
 import { TaskFilters } from './TaskFilters';
+
 
 interface KanbanBoardProps {
     tarefas: Tarefa[];
     onMoveTask: (tarefaId: string, novoStatus: StatusTarefa) => void;
-    onEditTask: (tarefa: Tarefa) => void;
     onDeleteTask: (tarefaId: string) => void;
     onDuplicateTask: (tarefaId: string) => void;
     onCreateTask: (data: any) => Promise<void>;
+    onViewTask: (tarefa: Tarefa) => void; // Added onViewTask prop
     loading?: boolean;
+    assignees: Assignee[];
 }
 
 const COLUMNS = [
@@ -50,22 +51,26 @@ const COLUMNS = [
 export function KanbanBoard({
                                 tarefas,
                                 onMoveTask,
-                                onEditTask,
                                 onDeleteTask,
                                 onDuplicateTask,
                                 onCreateTask,
-                                loading = false
+                                onViewTask, // Destructure new prop
+                                loading = false,
+                                assignees
                             }: KanbanBoardProps) {
     const [draggedItem, setDraggedItem] = useState<Tarefa | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState({
-        responsavel: '',
-        prioridade: '',
-        dataVencimento: '',
-        tags: ''
+    const [filters, setFilters] = useState<FiltroTarefas>({
+        responsavelId: undefined,
+        prioridade: [],
+        dataVencimentoInicio: undefined,
+        dataVencimentoFim: undefined,
+        tags: undefined,
+        status: undefined,
+        busca: undefined // Changed from searchText to busca
     });
 
     const boardRef = useRef<HTMLDivElement>(null);
@@ -76,16 +81,17 @@ export function KanbanBoard({
             tarefa.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
             tarefa.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesResponsavel = !filters.responsavel ||
-            tarefa.responsaveis.some(r => r.nome.toLowerCase().includes(filters.responsavel.toLowerCase()));
+        const matchesResponsavel = !filters.responsavelId ||
+            tarefa.responsaveis.some(r => r.id === filters.responsavelId);
 
-        const matchesPrioridade = !filters.prioridade || tarefa.prioridade === filters.prioridade;
+        const matchesPrioridade = filters.prioridade === undefined || filters.prioridade.length === 0 ||
+            (tarefa.prioridade && filters.prioridade.includes(tarefa.prioridade));
 
-        const matchesDataVencimento = !filters.dataVencimento ||
-            (tarefa.dataVencimento && tarefa.dataVencimento.startsWith(filters.dataVencimento));
+        const matchesDataVencimento = (!filters.dataVencimentoInicio || (tarefa.dataVencimento && new Date(tarefa.dataVencimento) >= new Date(filters.dataVencimentoInicio))) &&
+            (!filters.dataVencimentoFim || (tarefa.dataVencimento && new Date(tarefa.dataVencimento) <= new Date(filters.dataVencimentoFim)));
 
         const matchesTags = !filters.tags ||
-            tarefa.tags?.some(tag => tag.toLowerCase().includes(filters.tags.toLowerCase()));
+            tarefa.tags?.some(tag => filters.tags?.includes(tag));
 
         return matchesSearch && matchesResponsavel && matchesPrioridade &&
             matchesDataVencimento && matchesTags;
@@ -125,9 +131,9 @@ export function KanbanBoard({
         setShowTaskForm(true);
     };
 
+    // Updated handleViewTask to use the prop
     const handleViewTask = (tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        // setShowDetails(true); // TODO: implementar modal de detalhes
+        onViewTask(tarefa);
     };
 
     return (
@@ -232,7 +238,7 @@ export function KanbanBoard({
                                                 onEdit={handleEditTask}
                                                 onDelete={onDeleteTask}
                                                 onDuplicate={onDuplicateTask}
-                                                onClick={handleViewTask}
+                                                onClick={handleViewTask} // Pass the updated handleViewTask
                                                 compact={false}
                                             />
                                         </div>
@@ -284,6 +290,7 @@ export function KanbanBoard({
                     tarefa={selectedTask}
                     onClose={() => setShowTaskForm(false)}
                     onSubmit={onCreateTask}
+                    assignees={assignees}
                 />
             )}
         </div>

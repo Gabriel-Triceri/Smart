@@ -1,8 +1,8 @@
 import React from 'react';
 import {
-    Users, Monitor, Wifi, Phone, Video,
+    Users, Monitor, Wifi, Phone, Video, Trash2,
     MapPin, Clock, Settings, AlertTriangle,
-    CheckCircle, XCircle, Wrench
+    CheckCircle, Wrench
 } from 'lucide-react';
 import { Sala } from '../types/meetings';
 
@@ -10,12 +10,8 @@ interface SalasGridProps {
     salas: Sala[];
     onSalaClick: (sala: Sala) => void;
     onEditSala: (sala: Sala) => void;
+    onDeleteSala: (sala: Sala) => void;
     onBookingSala?: (sala: Sala) => void;
-    filtros?: {
-        categoria?: string;
-        status?: string;
-        capacidade?: number;
-    };
 }
 
 const getStatusIcon = (status: Sala['status']) => {
@@ -99,17 +95,10 @@ export const SalasGrid: React.FC<SalasGridProps> = ({
                                                         salas,
                                                         onSalaClick,
                                                         onEditSala,
-                                                        onBookingSala,
-                                                        filtros
+                                                        onDeleteSala,
+                                                        onBookingSala
                                                     }) => {
-    const salasFiltradas = salas.filter(sala => {
-        if (filtros?.categoria && sala.categoria !== filtros.categoria) return false;
-        if (filtros?.status && sala.status !== filtros.status) return false;
-        if (filtros?.capacidade && sala.capacidade < filtros.capacidade) return false;
-        return true;
-    });
-
-    if (salasFiltradas.length === 0) {
+    if (salas.length === 0) {
         return (
             <div className="text-center py-12">
                 <div className="text-gray-400 text-lg mb-2">
@@ -125,7 +114,7 @@ export const SalasGrid: React.FC<SalasGridProps> = ({
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {salasFiltradas.map((sala) => (
+            {salas.map((sala) => (
                 <div
                     key={sala.id}
                     className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer group"
@@ -205,7 +194,7 @@ export const SalasGrid: React.FC<SalasGridProps> = ({
                     </div>
 
                     {/* Ações */}
-                    <div className="p-4 pt-0 flex gap-2">
+                    <div className="p-4 pt-0 flex items-center gap-2">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -214,6 +203,16 @@ export const SalasGrid: React.FC<SalasGridProps> = ({
                             className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                         >
                             Editar
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteSala(sala);
+                            }}
+                            className="p-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                            title="Excluir sala"
+                        >
+                            <Trash2 className="w-4 h-4" />
                         </button>
                         {onBookingSala && (
                             <button

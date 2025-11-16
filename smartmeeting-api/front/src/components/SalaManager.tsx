@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Plus, Search, Filter, Grid, Map, Calendar,
-    RefreshCw, Settings, Users, Building, MapPin
+    Plus, Search, Filter, Grid, Map,
+    RefreshCw, Building
 } from 'lucide-react';
 import { Sala } from '../types/meetings';
 import { useSalas } from '../hooks/useSalas';
@@ -353,17 +353,13 @@ export const SalaManager: React.FC = () => {
                         salas={salasFiltradas}
                         onSalaClick={handleSalaClick}
                         onEditSala={handleEditSala}
-                        filtros={{
-                            categoria: filtrosLocais.categoria as any,
-                            status: filtrosLocais.status as any,
-                            capacidade: filtrosLocais.capacidade ? parseInt(filtrosLocais.capacidade) : undefined
-                        }}
+                        onDeleteSala={handleDeleteSala}
                     />
                 ) : (
                     <MapaSalas
                         salas={salasFiltradas}
                         onSalaClick={handleSalaClick}
-                        salaSelecionada={salaSelecionada}
+                        salaSelecionada={salaSelecionada || undefined}
                     />
                 )}
             </main>
@@ -371,7 +367,7 @@ export const SalaManager: React.FC = () => {
             {/* Modais */}
             {modalType === 'form' && (
                 <SalaForm
-                    sala={salaEmEdicao || undefined}
+                    sala={salaEmEdicao ? (salaEmEdicao as Sala) : undefined}
                     isOpen={true}
                     onClose={() => {
                         setModalType(null);

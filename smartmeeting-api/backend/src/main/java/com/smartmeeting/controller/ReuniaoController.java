@@ -1,15 +1,13 @@
 package com.smartmeeting.controller;
 
-import com.smartmeeting.dto.ReuniaoDTO;
-import com.smartmeeting.dto.PessoaDTO;
-import com.smartmeeting.dto.SalaDTO;
-import com.smartmeeting.dto.ReuniaoStatisticsDTO; // Importar o novo DTO
+import com.smartmeeting.dto.*;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Sala;
 import com.smartmeeting.service.ReuniaoService;
 import com.smartmeeting.service.SalaService;
 import com.smartmeeting.service.PessoaService;
+import com.smartmeeting.service.TarefaService;
 import com.smartmeeting.service.email.EmailService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.ResponseEntity;
@@ -28,12 +26,14 @@ public class ReuniaoController {
     private final EmailService emailService;
     private final SalaService salaService;
     private final PessoaService pessoaService;
+    private final TarefaService tarefaService;
 
-    public ReuniaoController(ReuniaoService service, EmailService emailService, SalaService salaService, PessoaService pessoaService) {
+    public ReuniaoController(ReuniaoService service, EmailService emailService, SalaService salaService, PessoaService pessoaService, TarefaService tarefaService) {
         this.service = service;
         this.emailService = emailService;
         this.salaService = salaService;
         this.pessoaService = pessoaService;
+        this.tarefaService = tarefaService;
     }
 
     /**
@@ -82,13 +82,18 @@ public class ReuniaoController {
         // Sala
         if (reuniao.getSala() != null) {
             Sala s = reuniao.getSala();
-            SalaDTO salaDTO = new SalaDTO(
-                    s.getId(),
-                    escape(s.getNome()),
-                    s.getCapacidade(),
-                    escape(s.getLocalizacao()),
-                    s.getStatus()
-            );
+            SalaDTO salaDTO = new SalaDTO()
+                    .setId(s.getId())
+                    .setNome(escape(s.getNome()))
+                    .setCapacidade(s.getCapacidade())
+                    .setLocalizacao(escape(s.getLocalizacao()))
+                    .setStatus(s.getStatus())
+                    .setEquipamentos(null) // equipamentos
+                    .setCategoria(null) // categoria
+                    .setAndar(null) // andar
+                    .setDisponibilidade(null) // disponibilidade
+                    .setImagem(null) // imagem
+                    .setObservacoes(null); // observacoes
             dto.setSala(salaDTO);
             dto.setSalaId(s.getId());
         }
@@ -119,7 +124,11 @@ public class ReuniaoController {
      * Utilitário para escapar strings potencialmente perigosas
      */
     private String escape(String valor) {
-        return valor == null ? null : StringEscapeUtils.escapeHtml4(valor);
+        if (valor == null) {
+            return null;
+        }
+        // Usar método mais seguro e moderno
+        return StringEscapeUtils.escapeHtml4(valor);
     }
 
     /**
@@ -223,5 +232,12 @@ public class ReuniaoController {
     public ResponseEntity<ReuniaoStatisticsDTO> getReuniaoStatistics() {
         ReuniaoStatisticsDTO statistics = service.getReuniaoStatistics();
         return ResponseEntity.ok(statistics);
+    }
+    /**
+     * API de tarefas por reunião
+     */
+    @GetMapping("/{id}/tarefas")
+    public ResponseEntity<List<TarefaDTO>> getTarefasPorReuniao(@PathVariable Long id) {
+        return ResponseEntity.ok(tarefaService.getTarefasPorReuniao(id));
     }
 }

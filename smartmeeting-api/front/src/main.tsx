@@ -6,25 +6,32 @@ import LoginPage from './pages/Login.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import './index.css';
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <ProtectedRoute />,
-    children: [
-      {
-        path: '/',
-        element: <App />,
-      },
+const router = createBrowserRouter(
+    [
+        {
+            path: '/',
+            element: <ProtectedRoute />,
+            children: [
+                {
+                    path: '/',
+                    element: <App />,
+                },
+            ],
+        },
+        {
+            path: '/login',
+            element: <LoginPage />,
+        },
     ],
-  },
-  {
-    path: '/login',
-    element: <LoginPage />,
-  },
-]);
+    {
+        future: {
+            v7_startTransition: true,
+        },
+    }
+);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
+    <React.StrictMode>
+        <RouterProvider router={router} />
+    </React.StrictMode>
 );

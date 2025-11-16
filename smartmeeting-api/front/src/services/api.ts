@@ -1,11 +1,11 @@
 import axios from 'axios';
 import type { DashboardData, EstatisticasGerais, UsoSalas, HistoricoMetricasDiarias } from '../types/dashboard';
+import APP_CONSTANTS from "../config/constants.ts";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const api = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 10000,
+    baseURL: APP_CONSTANTS.API_BASE_URL,
+    timeout: APP_CONSTANTS.API_TIMEOUT,
     headers: {
         'Content-Type': 'application/json',
     },

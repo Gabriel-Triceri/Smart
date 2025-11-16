@@ -64,10 +64,6 @@ export const MapaSalas: React.FC<MapaSalasProps> = ({
             return sala.coordenadas;
         }
 
-        // Gerar coordenadas baseadas na categoria e índice
-        const categorias = ['executiva', 'reuniao', 'treinamento', 'auditorio', 'pequena'];
-        const categoriaIndex = categorias.indexOf(sala.categoria);
-
         // Layout padrão do andar
         const colunas = 4;
         const espacamento = 120;

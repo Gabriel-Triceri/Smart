@@ -3,24 +3,21 @@ package com.smartmeeting.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.smartmeeting.enums.SalaStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString; // Importar ToString
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.util.List;
 
-@Table(name = "SALA")
 @Entity
-@Data
+@Table(name = "SALA")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = {"reunioes"}) // Excluir campos de relacionamento
-@ToString(exclude = {"reunioes"}) // Excluir campos de relacionamento do toString
-public class Sala extends Auditable { // Estende Auditable
+@EqualsAndHashCode(callSuper = false, exclude = {"reunioes"})
+@ToString(exclude = {"reunioes"})
+public class Sala extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_SALA")
@@ -41,9 +38,18 @@ public class Sala extends Auditable { // Estende Auditable
     @Column(name = "STATUS_SALA", nullable = false)
     private SalaStatus status;
 
+    @ElementCollection
+    @CollectionTable(name = "sala_equipamentos", joinColumns = @JoinColumn(name = "sala_id"))
+    @Column(name = "equipamento")
+    private List<String> equipamentos;
+
+    private String categoria;
+    private String andar;
+    private String imagem;
+    private String observacoes;
+
     @OneToMany(mappedBy = "sala", fetch = FetchType.LAZY)
     @JsonBackReference
     private List<Reuniao> reunioes;
-
 
 }

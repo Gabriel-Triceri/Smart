@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     LayoutGrid,
     List,
@@ -33,20 +33,17 @@ export function TaskManager() {
         tarefaSelecionada,
         exibirFormulario,
         exibirDetalhes,
-        exibirKanban,
         criarTarefa,
         atualizarTarefa,
         deletarTarefa,
         moverTarefa,
         aplicarFiltros,
         buscarTarefas,
-        getTarefasVencendo,
-        getMinhasTarefas,
         setTarefaSelecionada,
         setExibirFormulario,
         setExibirDetalhes,
-        setExibirKanban,
-        setFiltros
+        setFiltros,
+        assigneesDisponiveis
     } = useTarefas();
 
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
@@ -78,6 +75,10 @@ export function TaskManager() {
     const handleEditTask = (tarefa: any) => {
         setTarefaSelecionada(tarefa);
         setExibirFormulario(true);
+    };
+
+    const handleUpdateTaskStatus = async (tarefaId: string, status: StatusTarefa) => {
+        await moverTarefa(tarefaId, status);
     };
 
     const totalNotificacoesNaoLidas = notificacoes.filter(n => !n.lida).length;
@@ -157,7 +158,6 @@ export function TaskManager() {
                       {status === 'in_progress' && 'Em Andamento'}
                       {status === 'review' && 'Em Revisão'}
                       {status === 'done' && 'Concluído'}
-                      {status === 'blocked' && 'Bloqueado'}
                   </span>
                                     <div className="flex items-center space-x-2">
                                         <div className="w-32 bg-gray-200 rounded-full h-2">
@@ -209,7 +209,7 @@ export function TaskManager() {
         <div className="p-6">
             <div className="space-y-6">
                 {tarefas
-                    .sort((a, b) => new Date(a.dataVencimento || '').getTime() - new Date(b.dataVencimento || '').getTime())
+                    .sort((a, b) => new Date(a.prazo_tarefa || '').getTime() - new Date(b.prazo_tarefa || '').getTime())
                     .map((tarefa) => (
                         <div key={tarefa.id} className="flex items-start space-x-4">
                             <div className="flex-shrink-0">
@@ -222,7 +222,7 @@ export function TaskManager() {
                                         <p className="text-sm text-gray-600 mt-1">{tarefa.descricao}</p>
                                         <div className="flex items-center space-x-4 mt-2">
                       <span className="text-sm text-gray-500">
-                        Vencimento: {tarefa.dataVencimento ? new Date(tarefa.dataVencimento).toLocaleDateString('pt-BR') : 'Não definido'}
+                        Vencimento: {tarefa.prazo_tarefa ? new Date(tarefa.prazo_tarefa).toLocaleDateString('pt-BR') : 'Não definido'}
                       </span>
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${
                                                 tarefa.prioridade === PrioridadeTarefa.URGENTE ? 'bg-purple-100 text-purple-800' :
@@ -409,11 +409,12 @@ export function TaskManager() {
                     <KanbanBoard
                         tarefas={tarefas}
                         onMoveTask={moverTarefa}
-                        onEditTask={handleEditTask}
                         onDeleteTask={deletarTarefa}
                         onDuplicateTask={() => {}}
                         onCreateTask={handleCreateTask}
+                        onViewTask={handleViewTask} // Pass handleViewTask to KanbanBoard
                         loading={loading}
+                        assignees={assigneesDisponiveis}
                     />
                 )}
 
@@ -431,6 +432,7 @@ export function TaskManager() {
                         (data) => handleUpdateTask(tarefaSelecionada.id, data) :
                         handleCreateTask
                     }
+                    assignees={assigneesDisponiveis}
                 />
             )}
 
@@ -443,14 +445,14 @@ export function TaskManager() {
                     }}
                     onEdit={handleEditTask}
                     onDelete={deletarTarefa}
-                    onAddComment={async (tarefaId, conteudo) => {
+                    onAddComment={async (_, __) => {
                         // TODO: implementar adicionar comentário
                     }}
-                    onAttachFile={async (tarefaId, arquivo) => {
+                    onAttachFile={async (_, __) => {
                         // TODO: implementar anexar arquivo
                     }}
-                    onUpdateStatus={moverTarefa}
-                    onUpdateProgress={async (tarefaId, progresso) => {
+                    onUpdateStatus={handleUpdateTaskStatus}
+                    onUpdateProgress={async (_, __) => {
                         // TODO: implementar atualizar progresso
                     }}
                 />

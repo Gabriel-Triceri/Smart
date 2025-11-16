@@ -6,8 +6,6 @@ import {
     User,
     Flag,
     Tag,
-    Paperclip,
-    MessageSquare,
     Save,
     Loader2
 } from 'lucide-react';
@@ -16,10 +14,8 @@ import {
     TarefaFormData,
     Assignee,
     PrioridadeTarefa,
-    StatusTarefa
 } from '../types/meetings';
-import { format, addDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+
 
 interface TaskFormProps {
     tarefa?: Tarefa | null;
@@ -54,7 +50,7 @@ export function TaskForm({
         descricao: '',
         responsavelPrincipalId: '',
         responsaveisIds: [],
-        dataVencimento: '',
+        prazo_tarefa: '',
         dataInicio: '',
         prioridade: PrioridadeTarefa.MEDIA,
         tags: [],
@@ -76,11 +72,11 @@ export function TaskForm({
                 titulo: tarefa.titulo,
                 descricao: tarefa.descricao || '',
                 responsavelPrincipalId: tarefa.responsavelPrincipalId,
-                responsaveisIds: tarefa.responsaveis.map(r => r.id),
-                dataVencimento: tarefa.dataVencimento ? tarefa.dataVencimento.split('T')[0] : '',
+                responsaveisIds: (tarefa.responsaveis ?? []).map(r => r.id),
+                prazo_tarefa: tarefa.prazo_tarefa ? tarefa.prazo_tarefa.split('T')[0] : '',
                 dataInicio: tarefa.dataInicio ? tarefa.dataInicio.split('T')[0] : '',
-                prioridade: tarefa.prioridade,
-                tags: [...tarefa.tags],
+                prioridade: tarefa.prioridade || PrioridadeTarefa.MEDIA, // Added fallback here
+                tags: [...(tarefa.tags ?? [])],
                 estimadoHoras: tarefa.estimadoHoras,
                 reuniaoId: tarefa.reuniaoId,
                 cor: tarefa.cor || ''
@@ -99,9 +95,9 @@ export function TaskForm({
             newErrors.responsavelPrincipalId = 'Responsável principal é obrigatório';
         }
 
-        if (formData.dataInicio && formData.dataVencimento) {
-            if (new Date(formData.dataInicio) >= new Date(formData.dataVencimento)) {
-                newErrors.dataVencimento = 'Data de vencimento deve ser posterior à data de início';
+        if (formData.dataInicio && formData.prazo_tarefa) {
+            if (new Date(formData.dataInicio) >= new Date(formData.prazo_tarefa)) {
+                newErrors.prazo_tarefa = 'Data de vencimento deve ser posterior à data de início';
             }
         }
 
@@ -116,7 +112,11 @@ export function TaskForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!validateForm()) return;
+        if (!validateForm()) {
+            // Display a more prominent error message if validation fails
+            alert('Por favor, preencha todos os campos obrigatórios e corrija os erros.');
+            return;
+        }
 
         setLoading(true);
         try {
@@ -124,6 +124,7 @@ export function TaskForm({
             onClose();
         } catch (error) {
             console.error('Erro ao salvar tarefa:', error);
+            alert('Ocorreu um erro ao salvar a tarefa. Por favor, tente novamente.'); // More user-friendly error
         } finally {
             setLoading(false);
         }
@@ -131,7 +132,7 @@ export function TaskForm({
 
     const handleAddTag = (tag: string) => {
         const trimmedTag = tag.trim();
-        if (trimmedTag && !formData.tags?.includes(trimmedTag)) {
+        if (trimmedTag && !(formData.tags ?? []).includes(trimmedTag)) {
             setFormData(prev => ({
                 ...prev,
                 tags: [...(prev.tags || []), trimmedTag]
@@ -146,7 +147,7 @@ export function TaskForm({
     const handleRemoveTag = (tagToRemove: string) => {
         setFormData(prev => ({
             ...prev,
-            tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
+            tags: (prev.tags ?? []).filter(tag => tag !== tagToRemove)
         }));
     };
 
@@ -268,7 +269,7 @@ export function TaskForm({
 
                                 {showAssigneesDropdown && (
                                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                                        {selectedAssignees.map((assignee) => (
+                                        {assignees.map((assignee) => (
                                             <button
                                                 key={assignee.id}
                                                 type="button"
@@ -373,15 +374,15 @@ export function TaskForm({
                             </label>
                             <input
                                 type="date"
-                                value={formData.dataVencimento}
-                                onChange={(e) => setFormData(prev => ({ ...prev, dataVencimento: e.target.value }))}
+                                value={formData.prazo_tarefa}
+                                onChange={(e) => setFormData(prev => ({ ...prev, prazo_tarefa: e.target.value }))}
                                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                    errors.dataVencimento ? 'border-red-500' : 'border-gray-300'
+                                    errors.prazo_tarefa ? 'border-red-500' : 'border-gray-300'
                                 }`}
                                 min={formData.dataInicio || undefined}
                             />
-                            {errors.dataVencimento && (
-                                <p className="mt-1 text-sm text-red-600">{errors.dataVencimento}</p>
+                            {errors.prazo_tarefa && (
+                                <p className="mt-1 text-sm text-red-600">{errors.prazo_tarefa}</p>
                             )}
                         </div>
                     </div>
@@ -419,9 +420,9 @@ export function TaskForm({
                         </label>
 
                         {/* Tags existentes */}
-                        {formData.tags && formData.tags.length > 0 && (
+                        {(formData.tags ?? []).length > 0 && (
                             <div className="flex flex-wrap gap-2 mb-3">
-                                {formData.tags.map((tag, index) => (
+                                {(formData.tags ?? []).map((tag, index) => (
                                     <span
                                         key={index}
                                         className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded"
@@ -468,7 +469,7 @@ export function TaskForm({
                             <div className="text-xs text-gray-600 mb-2">Sugestões:</div>
                             <div className="flex flex-wrap gap-1">
                                 {availableTags
-                                    .filter(tag => !formData.tags?.includes(tag))
+                                    .filter(tag => !(formData.tags ?? []).includes(tag))
                                     .slice(0, 8)
                                     .map(tag => (
                                         <button

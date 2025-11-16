@@ -157,7 +157,6 @@ export const MeetingList: React.FC<MeetingListProps> = ({
   const canEncerrar = (reuniao: Reuniao) => {
     const agora = new Date();
     const dataReuniao = new Date(reuniao.data);
-    const horaFim = new Date(`${reuniao.data}T${reuniao.horaFim}`);
     
     return reuniao.status === 'agendada' && agora >= new Date(dataReuniao.setHours(parseInt(reuniao.horaInicio.split(':')[0]), parseInt(reuniao.horaInicio.split(':')[1])));
   };

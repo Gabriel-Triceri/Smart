@@ -128,6 +128,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                       {getStatusLabel(reuniao.status)}
                     </span>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPrioridadeColor(reuniao.prioridade)}`}>
+                      {getPrioridadeIcon(reuniao.prioridade)}
                       {reuniao.prioridade.charAt(0).toUpperCase() + reuniao.prioridade.slice(1)}
                     </span>
                     <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400">
@@ -470,9 +471,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {tarefa.prioridade === 'critica' && (
-                              <AlertTriangle className="w-4 h-4 text-red-500" />
-                            )}
+                            {getPrioridadeIcon(tarefa.prioridade)}
                             <button
                               onClick={() => removeTarefa(tarefa.id)}
                               className="text-gray-400 hover:text-red-500 transition-colors"

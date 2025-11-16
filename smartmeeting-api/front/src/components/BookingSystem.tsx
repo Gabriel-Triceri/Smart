@@ -186,7 +186,7 @@ export const BookingSystem: React.FC<BookingSystemProps> = ({
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
                                     <option value="">Selecione...</option>
-                                    {horariosLivres.map(horario => (
+                                    {horarios.map(horario => (
                                         <option key={horario} value={horario}>
                                             {horario}
                                         </option>

@@ -4,12 +4,9 @@ import {
     TarefaFormData,
     FiltroTarefas,
     StatisticsTarefas,
-    ComentarioTarefa,
-    AnexoTarefa,
     NotificacaoTarefa,
     Assignee,
     StatusTarefa,
-    PrioridadeTarefa,
     KanbanBoard,
     TemplateTarefa,
     MovimentacaoTarefa
@@ -30,7 +27,7 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
 
     // Estados de controle
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError, ] = useState<string | null>(null);
     const [statistics, setStatistics] = useState<StatisticsTarefas | null>(null);
     const [notificacoes, setNotificacoes] = useState<NotificacaoTarefa[]>([]);
     const [filtros, setFiltros] = useState<FiltroTarefas>(filtrosIniciais || {});
@@ -61,7 +58,7 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
             ] = await Promise.all([
                 reuniaoId
                     ? meetingsApi.getTarefasPorReuniao(reuniaoId)
-                    : meetingsApi.getAllTarefas(filtros),
+                    : meetingsApi.getAllTarefas(),
                 meetingsApi.getKanbanBoard(reuniaoId),
                 meetingsApi.getTemplatesTarefas(),
                 meetingsApi.getAssigneesDisponiveis(),
@@ -151,8 +148,8 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
 
             // Registrar movimentação
             const movimentacao: MovimentacaoTarefa = {
-                tarefaId,
-                statusAnterior: tarefa.status,
+                tarefaId: Number(tarefaId), // Convert string to number
+                statusAnterior: tarefa.status ?? StatusTarefa.TODO, // Provide a default if null/undefined
                 statusNovo: novoStatus,
                 usuarioId: 'current-user', // TODO: pegar do contexto
                 usuarioNome: 'Usuário Atual',
@@ -284,7 +281,7 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
     // Templates
     const criarTarefasPorTemplate = useCallback(async (templateId: string, dados: {
         responsaveisIds?: string[];
-        datasVencimento?: string[];
+        prazo_tarefa?: string[];
     }) => {
         try {
             const novasTarefas = await meetingsApi.criarTarefasPorTemplate(templateId, {

@@ -17,4 +17,8 @@ public class DashboardDTO {
     private List<TaxaPresencaDTO> taxasPresenca;
     private List<ProdutividadeOrganizadorDTO> produtividadeOrganizadores;
     private MetricasReunioesDTO metricasReunioes;
+
+    private List<ReuniaoResumoDTO> reunioesHoje;
+    private List<ReuniaoResumoDTO> proximasReunioes;
+    private List<AlertaDTO> alertas;
 }

@@ -1,6 +1,6 @@
-import React from 'react';
-import { Filter, X, Calendar, User, Flag, Tag, Search } from 'lucide-react';
-import { FiltroTarefas, Tarefa, StatusTarefa, PrioridadeTarefa, Assignee } from '../types/meetings';
+import { Filter, X, Calendar, User, Flag, Tag, Search, ListChecks, LucideIcon } from 'lucide-react';
+import { FiltroTarefas, Tarefa, Assignee } from '../types/meetings';
+import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '../config/taskConfig';
 
 interface TaskFiltersProps {
     filters: FiltroTarefas;
@@ -34,14 +34,7 @@ export function TaskFilters({
 
     const hasActiveFilters = Object.keys(filters).length > 0;
 
-    // Extrair valores únicos dos dados
-    const uniqueStatuses = [...new Set(tarefas.map(t => t.status))];
-    const uniquePriorities = [...new Set(tarefas.map(t => t.prioridade))];
     const uniqueTags = [...new Set(tarefas.flatMap(t => t.tags || []))];
-
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     return (
         <div className="space-y-4">
@@ -86,136 +79,44 @@ export function TaskFilters({
                 )}
             </div>
 
-            {/* Responsáveis */}
-            <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                    <User className="w-3 h-3 inline mr-1" />
-                    Responsáveis
-                </label>
-                <select
-                    value={filters.responsaveis?.join(',') || ''}
-                    onChange={(e) => updateFilter(
-                        'responsaveis',
-                        e.target.value ? e.target.value.split(',') : undefined
-                    )}
-                    className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Todos os responsáveis</option>
-                    {assignees.map(assignee => (
-                        <option key={assignee.id} value={assignee.id}>
-                            {assignee.nome}
-                        </option>
-                    ))}
-                </select>
-                {filters.responsaveis && (
-                    <button
-                        onClick={() => clearFilter('responsaveis')}
-                        className="text-xs text-gray-500 hover:text-gray-700 mt-1 flex items-center"
-                    >
-                        <X className="w-3 h-3 mr-1" />
-                        Limpar responsáveis
-                    </button>
-                )}
-            </div>
+            <FilterSelectField
+                label="Responsáveis"
+                icon={User}
+                filterKey="responsaveis"
+                value={filters.responsaveis}
+                options={assignees.map(a => ({ value: a.id, label: a.nome }))}
+                updateFilter={updateFilter}
+                clearFilter={clearFilter}
+            />
+            <FilterSelectField
+                label="Status"
+                icon={ListChecks}
+                filterKey="status"
+                value={filters.status}
+                options={STATUS_OPTIONS}
+                updateFilter={updateFilter}
+                clearFilter={clearFilter}
+            />
 
-            {/* Status */}
-            <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Status
-                </label>
-                <select
-                    value={filters.status?.join(',') || ''}
-                    onChange={(e) => updateFilter(
-                        'status',
-                        e.target.value ? e.target.value.split(',') as StatusTarefa[] : undefined
-                    )}
-                    className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Todos os status</option>
-                    {uniqueStatuses.map(status => (
-                        <option key={status} value={status}>
-                            {status === StatusTarefa.TODO && 'A Fazer'}
-                            {status === StatusTarefa.IN_PROGRESS && 'Em Andamento'}
-                            {status === StatusTarefa.REVIEW && 'Em Revisão'}
-                            {status === StatusTarefa.DONE && 'Concluído'}
-                            {status === StatusTarefa.BLOCKED && 'Bloqueado'}
-                        </option>
-                    ))}
-                </select>
-                {filters.status && (
-                    <button
-                        onClick={() => clearFilter('status')}
-                        className="text-xs text-gray-500 hover:text-gray-700 mt-1 flex items-center"
-                    >
-                        <X className="w-3 h-3 mr-1" />
-                        Limpar status
-                    </button>
-                )}
-            </div>
+            <FilterSelectField
+                label="Prioridade"
+                icon={Flag}
+                filterKey="prioridade"
+                value={filters.prioridade}
+                options={PRIORITY_OPTIONS}
+                updateFilter={updateFilter}
+                clearFilter={clearFilter}
+            />
 
-            {/* Prioridade */}
-            <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                    <Flag className="w-3 h-3 inline mr-1" />
-                    Prioridade
-                </label>
-                <select
-                    value={filters.prioridade?.join(',') || ''}
-                    onChange={(e) => updateFilter(
-                        'prioridade',
-                        e.target.value ? e.target.value.split(',') as PrioridadeTarefa[] : undefined
-                    )}
-                    className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Todas as prioridades</option>
-                    {uniquePriorities.map(prioridade => (
-                        <option key={prioridade} value={prioridade}>
-                            {prioridade.charAt(0).toUpperCase() + prioridade.slice(1)}
-                        </option>
-                    ))}
-                </select>
-                {filters.prioridade && (
-                    <button
-                        onClick={() => clearFilter('prioridade')}
-                        className="text-xs text-gray-500 hover:text-gray-700 mt-1 flex items-center"
-                    >
-                        <X className="w-3 h-3 mr-1" />
-                        Limpar prioridade
-                    </button>
-                )}
-            </div>
-
-            {/* Tags */}
-            <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                    <Tag className="w-3 h-3 inline mr-1" />
-                    Tags
-                </label>
-                <select
-                    value={filters.tags?.join(',') || ''}
-                    onChange={(e) => updateFilter(
-                        'tags',
-                        e.target.value ? e.target.value.split(',') : undefined
-                    )}
-                    className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Todas as tags</option>
-                    {uniqueTags.map(tag => (
-                        <option key={tag} value={tag}>
-                            {tag}
-                        </option>
-                    ))}
-                </select>
-                {filters.tags && (
-                    <button
-                        onClick={() => clearFilter('tags')}
-                        className="text-xs text-gray-500 hover:text-gray-700 mt-1 flex items-center"
-                    >
-                        <X className="w-3 h-3 mr-1" />
-                        Limpar tags
-                    </button>
-                )}
-            </div>
+            <FilterSelectField
+                label="Tags"
+                icon={Tag}
+                filterKey="tags"
+                value={filters.tags}
+                options={uniqueTags.map(tag => ({ value: tag, label: tag }))}
+                updateFilter={updateFilter}
+                clearFilter={clearFilter}
+            />
 
             {/* Data de Vencimento */}
             <div>
@@ -247,8 +148,8 @@ export function TaskFilters({
                         <div>
                             <input
                                 type="date"
-                                value={filters.dataVencimentoInicio || ''}
-                                onChange={(e) => updateFilter('dataVencimentoInicio', e.target.value)}
+                                value={filters.prazo_tarefaInicio || ''}
+                                onChange={(e) => updateFilter('prazo_tarefaInicio', e.target.value)}
                                 placeholder="De"
                                 className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -256,21 +157,21 @@ export function TaskFilters({
                         <div>
                             <input
                                 type="date"
-                                value={filters.dataVencimentoFim || ''}
-                                onChange={(e) => updateFilter('dataVencimentoFim', e.target.value)}
+                                value={filters.prazo_tarefaFim || ''}
+                                onChange={(e) => updateFilter('prazo_tarefaFim', e.target.value)}
                                 placeholder="Até"
                                 className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
                     </div>
 
-                    {(filters.vencendo || filters.atrasadas || filters.dataVencimentoInicio || filters.dataVencimentoFim) && (
+                    {(filters.vencendo || filters.atrasadas || filters.prazo_tarefaInicio || filters.prazo_tarefaFim) && (
                         <button
                             onClick={() => {
                                 clearFilter('vencendo');
                                 clearFilter('atrasadas');
-                                clearFilter('dataVencimentoInicio');
-                                clearFilter('dataVencimentoFim');
+                                clearFilter('prazo_tarefaInicio');
+                                clearFilter('prazo_tarefaFim');
                             }}
                             className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
                         >
@@ -349,6 +250,54 @@ export function TaskFilters({
     );
 }
 
+interface FilterSelectFieldProps {
+    label: string;
+    icon: LucideIcon;
+    filterKey: keyof FiltroTarefas;
+    value: string[] | undefined;
+    options: { value: string; label: string }[];
+    updateFilter: (key: keyof FiltroTarefas, value: any) => void;
+    clearFilter: (key: keyof FiltroTarefas) => void;
+}
+
+function FilterSelectField({ label, icon: Icon, filterKey, value, options, updateFilter, clearFilter }: FilterSelectFieldProps) {
+    return (
+        <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+                <Icon className="w-3 h-3 inline mr-1" />
+                {label}
+            </label>
+            <select
+                // O select padrão não suporta múltiplos valores facilmente via `value`.
+                // Esta implementação permite selecionar um por vez.
+                // Para multi-select, seria necessário um componente customizado (ex: com checkboxes).
+                value={value?.[0] || ''}
+                onChange={(e) => updateFilter(
+                    filterKey,
+                    e.target.value ? [e.target.value] : undefined
+                )}
+                className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            >
+                <option value="">{`Todos os ${label.toLowerCase()}`}</option>
+                {options.map(option => (
+                    <option key={option.value} value={option.value}>
+                        {option.label}
+                    </option>
+                ))}
+            </select>
+            {value && (
+                <button
+                    onClick={() => clearFilter(filterKey)}
+                    className="text-xs text-gray-500 hover:text-gray-700 mt-1 flex items-center"
+                >
+                    <X className="w-3 h-3 mr-1" />
+                    {`Limpar ${label.toLowerCase()}`}
+                </button>
+            )}
+        </div>
+    );
+}
+
 // Função auxiliar para labels dos filtros
 function getFilterLabel(key: string, value: any): string {
     switch (key) {
@@ -362,9 +311,9 @@ function getFilterLabel(key: string, value: any): string {
             return `Prioridade: ${Array.isArray(value) ? value.length : 1}`;
         case 'tags':
             return `Tags: ${Array.isArray(value) ? value.length : 1}`;
-        case 'dataVencimentoInicio':
+        case 'prazo_tarefaInicio':
             return `De: ${value}`;
-        case 'dataVencimentoFim':
+        case 'prazo_tarefaFim':
             return `Até: ${value}`;
         case 'vencendo':
             return 'Vencendo em 3 dias';

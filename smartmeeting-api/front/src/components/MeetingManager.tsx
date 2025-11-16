@@ -34,26 +34,49 @@ export const MeetingManager: React.FC = () => {
     const [selectedReuniao, setSelectedReuniao] = useState<Reuniao | null>(null);
     const [reuniaoEmEdicao, setReuniaoEmEdicao] = useState<Partial<ReuniaoFormData> | null>(null);
 
+    // Helpers para formatar data/hora a partir de dataHoraInicio + duracaoMinutos
+    const formatDate = (d: Date) => {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
+    const formatTime = (d: Date) => {
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        return `${hh}:${mm}`;
+    };
+
+    const parseReuniaoToForm = (reuniao: Reuniao): Partial<ReuniaoFormData> => {
+        // garante que temos dataHoraInicio; fallback para agora
+        const start = reuniao.dataHoraInicio ? new Date(reuniao.dataHoraInicio) : new Date();
+        const dur = reuniao.duracaoMinutos ?? 60;
+        const end = new Date(start.getTime() + dur * 60 * 1000);
+
+        return {
+            titulo: reuniao.titulo,
+            pauta: reuniao.pauta, // campo correto
+            data: formatDate(start),
+            horaInicio: formatTime(start),
+            horaFim: formatTime(end),
+            salaId: reuniao.sala?.id ?? undefined,
+            participantes: (reuniao.participantes ?? []).map(p => String(p.id)), // string[] para UI
+            tipo: reuniao.tipo,
+            prioridade: reuniao.prioridade,
+            linkReuniao: reuniao.linkReuniao,
+            lembretes: reuniao.lembretes,
+            observacoes: reuniao.observacoes
+        };
+    };
+
     const handleCreateReuniao = () => {
         setReuniaoEmEdicao(null);
         setModalType('form');
     };
 
     const handleEditReuniao = (reuniao: Reuniao) => {
-        setReuniaoEmEdicao({
-            titulo: reuniao.titulo,
-            descricao: reuniao.descricao,
-            data: reuniao.data,
-            horaInicio: reuniao.horaInicio,
-            horaFim: reuniao.horaFim,
-            salaId: reuniao.sala.id,
-            participantes: reuniao.participantes.map(p => p.id),
-            tipo: reuniao.tipo,
-            prioridade: reuniao.prioridade,
-            linkReuniao: reuniao.linkReuniao,
-            lembretes: reuniao.lembretes,
-            observacoes: reuniao.observacoes
-        });
+        setReuniaoEmEdicao(parseReuniaoToForm(reuniao));
         setSelectedReuniao(reuniao);
         setModalType('form');
     };
@@ -67,7 +90,8 @@ export const MeetingManager: React.FC = () => {
         let sucesso = false;
 
         if (reuniaoEmEdicao && selectedReuniao) {
-            sucesso = !!(await updateReuniao(selectedReuniao.id, data));
+            // update espera id como string na API — converter
+            sucesso = !!(await updateReuniao(String(selectedReuniao.id), data));
         } else {
             sucesso = !!(await createReuniao(data));
         }
@@ -81,7 +105,7 @@ export const MeetingManager: React.FC = () => {
 
     const handleDeleteReuniao = async () => {
         if (selectedReuniao) {
-            const sucesso = await deleteReuniao(selectedReuniao.id);
+            const sucesso = await deleteReuniao(String(selectedReuniao.id));
             if (sucesso) {
                 setModalType(null);
                 setSelectedReuniao(null);
@@ -92,9 +116,11 @@ export const MeetingManager: React.FC = () => {
     const handleEncerrarReuniao = async () => {
         if (selectedReuniao) {
             const observacoes = prompt('Observações sobre o encerramento da reunião (opcional):');
-            const sucesso = await encerrarReuniao(selectedReuniao.id, observacoes || undefined);
-            if (sucesso) {
-                setSelectedReuniao(sucesso);
+            // encerrarReuniao espera id string — converter
+            const resultado = await encerrarReuniao(String(selectedReuniao.id), observacoes || undefined);
+            if (resultado) {
+                // resultado é a reunião atualizada (Reuniao) — atualiza seleção
+                setSelectedReuniao(resultado);
             }
         }
     };
@@ -118,7 +144,8 @@ export const MeetingManager: React.FC = () => {
 
     const handleDragReuniao = async (reuniao: Reuniao, novaData: Date) => {
         const dataFormatada = novaData.toISOString().split('T')[0];
-        await updateReuniao(reuniao.id, { data: dataFormatada });
+        // update espera id string
+        await updateReuniao(String(reuniao.id), { data: dataFormatada } as Partial<ReuniaoFormData>);
     };
 
     const tabs = [

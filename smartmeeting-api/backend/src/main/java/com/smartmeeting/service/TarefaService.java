@@ -3,6 +3,7 @@ package com.smartmeeting.service;
 import com.smartmeeting.dto.AssigneeDTO; // Importar o novo DTO
 import com.smartmeeting.dto.KanbanBoardDTO;
 import com.smartmeeting.dto.KanbanColumnDTO;
+import com.smartmeeting.dto.MovimentacaoTarefaDTO; // Importar o novo DTO de movimentação
 import com.smartmeeting.dto.NotificacaoTarefaDTO;
 import com.smartmeeting.dto.TarefaDTO;
 import com.smartmeeting.dto.TarefaStatisticsDTO;
@@ -15,6 +16,7 @@ import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.model.Tarefa;
 import com.smartmeeting.model.TemplateTarefa;
+import org.springframework.web.multipart.MultipartFile;
 import com.smartmeeting.repository.NotificacaoTarefaRepository;
 import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.ReuniaoRepository;
@@ -29,6 +31,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -177,6 +180,22 @@ public class TarefaService {
         return toDTO(atualizado);
     }
 
+    /**
+     * Lista todas as tarefas de uma reunião específica
+     * @param reuniaoId ID da reunião para filtrar as tarefas
+     * @return Lista de TarefaDTO pertencentes à reunião
+     */
+    public List<TarefaDTO> getTarefasPorReuniao(Long reuniaoId) {
+        // Verifica se a reunião existe
+        reuniaoRepository.findById(reuniaoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + reuniaoId));
+
+        // Busca as tarefas da reunião e converte para DTO
+        return tarefaRepository.findByReuniaoId(reuniaoId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public void deletar(Long id) {
         if (!tarefaRepository.existsById(id)) {
             throw new ResourceNotFoundException("Tarefa não encontrada com ID: " + id);
@@ -322,9 +341,7 @@ public class TarefaService {
                             case IN_PROGRESS: cor = "#2196F3"; ordem = 2; break; // Azul
                             case REVIEW: cor = "#9C27B0"; ordem = 3; break; // Roxo
                             case DONE: cor = "#4CAF50"; ordem = 4; break; // Verde
-                            case BLOCKED: cor = "#F44336"; ordem = 5; break; // Vermelho
-                            case POS_REUNIAO: cor = "#607D8B"; ordem = 6; break; // Cinza (novo status)
-                            default: cor = "#BDBDBD"; ordem = 7; break; // Cinza claro
+                            default: throw new IllegalStateException("Status de tarefa inesperado: " + status);
                         }
                         logger.trace("Creating KanbanColumnDTO for status {}: {} tasks", status, tarefasDaColuna.size());
                         return new KanbanColumnDTO(status, status.getDescricao(), tarefasDaColuna, null, cor, ordem);
@@ -363,5 +380,349 @@ public class TarefaService {
                 null, // Avatar não está na entidade Pessoa
                 null  // Departamento não está na entidade Pessoa
         );
+    }
+
+    /**
+     * Move uma tarefa para um novo status e, opcionalmente, uma nova posição.
+     * @param id O ID da tarefa a ser movida.
+     * @param newStatus O novo status da tarefa.
+     * @param newPosition A nova posição da tarefa dentro do status (opcional).
+     * @return A TarefaDTO atualizada.
+     */
+    @Transactional
+    public TarefaDTO moverTarefa(Long id, StatusTarefa newStatus, Integer newPosition) {
+        Tarefa tarefa = tarefaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + id));
+
+        logger.info("Movendo tarefa ID {} de status {} para {}", id, tarefa.getStatusTarefa(), newStatus);
+
+        tarefa.setStatusTarefa(newStatus);
+        // Se houver necessidade de reordenar tarefas dentro de um status, a lógica seria implementada aqui.
+        // Por enquanto, apenas a mudança de status é tratada.
+        // tarefa.setPosition(newPosition); // Se a entidade Tarefa tivesse um campo 'position'
+
+        Tarefa updatedTarefa = tarefaRepository.save(tarefa);
+        return toDTO(updatedTarefa);
+    }
+
+    /**
+     * Registra uma movimentação de tarefa.
+     * Por enquanto, apenas loga a movimentação. Pode ser estendido para persistência futura.
+     * @param dto DTO contendo os detalhes da movimentação.
+     */
+    public void registrarMovimentacao(MovimentacaoTarefaDTO dto) {
+        logger.info("Movimentação de Tarefa Registrada: Tarefa ID={}, De Status={}, Para Status={}, Usuário={}, Timestamp={}",
+                dto.getTarefaId(), dto.getStatusAnterior(), dto.getStatusNovo(), dto.getUsuarioNome(), dto.getTimestamp());
+        // Futuramente, aqui poderia haver a lógica para salvar a movimentação em um banco de dados
+        // Ex: movimentacaoTarefaRepository.save(toEntity(dto));
+    }
+
+    /**
+     * Adiciona um comentário a uma tarefa
+     * @param tarefaId ID da tarefa
+     * @param conteudo Conteúdo do comentário
+     * @param mencoes Lista de menções (usernames ou IDs de usuários)
+     * @return Map com informações do comentário criado
+     */
+    @Transactional
+    public Map<String, Object> adicionarComentario(Long tarefaId, String conteudo, List<String> mencoes) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        // Validação básica
+        if (conteudo == null || conteudo.trim().isEmpty()) {
+            throw new IllegalArgumentException("O conteúdo do comentário não pode ser vazio");
+        }
+
+        // Log da ação
+        logger.info("Adicionando comentário à tarefa ID {}: {}", tarefaId, conteudo.substring(0, Math.min(50, conteudo.length())));
+
+        // Simular criação de comentário (para implementação futura seria necessário uma entidade Comentário)
+        Map<String, Object> comentario = Map.of(
+                "id", System.currentTimeMillis(), // ID temporário
+                "tarefaId", tarefaId,
+                "conteudo", conteudo,
+                "mencoes", mencoes != null ? mencoes : List.of(),
+                "autor", "Usuário Atual", // Em implementação real, pegaria do contexto de segurança
+                "dataCriacao", LocalDateTime.now(),
+                "status", "criado"
+        );
+
+        return comentario;
+    }
+
+    /**
+     * Anexa um arquivo a uma tarefa
+     * @param tarefaId ID da tarefa
+     * @param arquivo Arquivo a ser anexado
+     * @return Map com informações do anexo
+     */
+    @Transactional
+    public Map<String, Object> anexarArquivo(Long tarefaId, MultipartFile arquivo) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        if (arquivo == null || arquivo.isEmpty()) {
+            throw new IllegalArgumentException("O arquivo não pode ser vazio");
+        }
+
+        logger.info("Anexando arquivo {} à tarefa ID {}", arquivo.getOriginalFilename(), tarefaId);
+
+        // Simular upload de arquivo (em implementação real, salvaria em storage)
+        Map<String, Object> anexo = Map.of(
+                "id", System.currentTimeMillis(),
+                "tarefaId", tarefaId,
+                "nomeArquivo", arquivo.getOriginalFilename(),
+                "tamanho", arquivo.getSize(),
+                "tipo", arquivo.getContentType(),
+                "urlDownload", "/api/arquivos/" + System.currentTimeMillis(), // URL simulada
+                "dataUpload", LocalDateTime.now(),
+                "status", "anexado"
+        );
+
+        return anexo;
+    }
+
+    /**
+     * Atribui uma tarefa a um responsável
+     * @param tarefaId ID da tarefa
+     * @param responsavelId ID do responsável
+     * @param principal Indica se é responsável principal
+     * @return TarefaDTO atualizada
+     */
+    @Transactional
+    public TarefaDTO atribuirResponsavel(Long tarefaId, Long responsavelId, Boolean principal) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        Pessoa responsavel = pessoaRepository.findById(responsavelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
+
+        tarefa.setResponsavel(responsavel);
+
+        logger.info("Atribuindo tarefa ID {} ao responsável ID {} (principal: {})", tarefaId, responsavelId, principal);
+
+        Tarefa atualizada = tarefaRepository.save(tarefa);
+        return toDTO(atualizada);
+    }
+
+    /**
+     * Atualiza o progresso de uma tarefa
+     * @param tarefaId ID da tarefa
+     * @param progresso Novo progresso (0-100)
+     * @return TarefaDTO atualizada
+     */
+    @Transactional
+    public TarefaDTO atualizarProgresso(Long tarefaId, Integer progresso) {
+        if (progresso == null || progresso < 0 || progresso > 100) {
+            throw new IllegalArgumentException("Progresso deve estar entre 0 e 100");
+        }
+
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        logger.info("Atualizando progresso da tarefa ID {} para {}%", tarefaId, progresso);
+
+        // Atualizar status baseado no progresso
+        if (progresso == 100) {
+            tarefa.setStatusTarefa(StatusTarefa.DONE);
+            tarefa.setConcluida(true);
+        } else if (progresso > 0) {
+            tarefa.setStatusTarefa(StatusTarefa.IN_PROGRESS);
+            tarefa.setConcluida(false);
+        } else {
+            tarefa.setStatusTarefa(StatusTarefa.TODO);
+            tarefa.setConcluida(false);
+        }
+
+        Tarefa atualizada = tarefaRepository.save(tarefa);
+        return toDTO(atualizada);
+    }
+
+    /**
+     * Duplica uma tarefa
+     * @param tarefaId ID da tarefa original
+     * @param modificacoes Modificações opcionais para a nova tarefa
+     * @return Nova tarefa criada
+     */
+    @Transactional
+    public TarefaDTO duplicarTarefa(Long tarefaId, Map<String, Object> modificacoes) {
+        Tarefa tarefaOriginal = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        logger.info("Duplicando tarefa ID {}", tarefaId);
+
+        // Criar nova tarefa baseada na original
+        Tarefa novaTarefa = new Tarefa();
+        novaTarefa.setDescricao(tarefaOriginal.getDescricao() + " (Cópia)");
+        novaTarefa.setPrazo(tarefaOriginal.getPrazo());
+        novaTarefa.setStatusTarefa(StatusTarefa.TODO);
+        novaTarefa.setConcluida(false);
+        novaTarefa.setPrioridade(tarefaOriginal.getPrioridade());
+
+        // Manter o mesmo responsável se especificado
+        if (tarefaOriginal.getResponsavel() != null) {
+            novaTarefa.setResponsavel(tarefaOriginal.getResponsavel());
+        }
+
+        // Aplicar modificações se fornecidas
+        if (modificacoes != null) {
+            if (modificacoes.containsKey("descricao")) {
+                novaTarefa.setDescricao((String) modificacoes.get("descricao"));
+            }
+            if (modificacoes.containsKey("prazo")) {
+                novaTarefa.setPrazo((LocalDate) modificacoes.get("prazo"));
+            }
+            if (modificacoes.containsKey("responsavelId")) {
+                Long responsavelId = Long.valueOf(modificacoes.get("responsavelId").toString());
+                Pessoa responsavel = pessoaRepository.findById(responsavelId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
+                novaTarefa.setResponsavel(responsavel);
+            }
+        }
+
+        Tarefa salva = tarefaRepository.save(novaTarefa);
+        return toDTO(salva);
+    }
+
+    /**
+     * Busca tarefas por texto
+     * @param termo Termo de busca
+     * @param filtros Filtros adicionais
+     * @return Lista de tarefas encontradas
+     */
+    public List<TarefaDTO> buscarPorTexto(String termo, Map<String, Object> filtros) {
+        if (termo == null || termo.trim().isEmpty()) {
+            return listarTodas();
+        }
+
+        logger.info("Buscando tarefas com termo: {}", termo);
+
+        // Busca simples por descrição (em implementação real seria mais robusta)
+        List<Tarefa> tarefas = tarefaRepository.findAll().stream()
+                .filter(t -> t.getDescricao() != null &&
+                        t.getDescricao().toLowerCase().contains(termo.toLowerCase()))
+                .collect(Collectors.toList());
+
+        // Aplicar filtros se fornecidos
+        if (filtros != null && !filtros.isEmpty()) {
+            if (filtros.containsKey("status")) {
+                String status = (String) filtros.get("status");
+                tarefas = tarefas.stream()
+                        .filter(t -> t.getStatusTarefa() != null &&
+                                t.getStatusTarefa().name().equals(status))
+                        .collect(Collectors.toList());
+            }
+            if (filtros.containsKey("responsavelId")) {
+                Long responsavelId = Long.valueOf(filtros.get("responsavelId").toString());
+                tarefas = tarefas.stream()
+                        .filter(t -> t.getResponsavel() != null &&
+                                t.getResponsavel().getId().equals(responsavelId))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        return tarefas.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Obtém tarefas que estão vencendo
+     * @param dias Número de dias para considerar como "vencendo"
+     * @return Lista de tarefas vencendo
+     */
+    public List<TarefaDTO> getTarefasVencendo(Integer dias) {
+        if (dias == null || dias < 0) {
+            dias = 3; // Default de 3 dias
+        }
+
+        LocalDate dataLimite = LocalDate.now().plusDays(dias);
+
+        logger.info("Buscando tarefas vencendo nos próximos {} dias", dias);
+
+        List<Tarefa> tarefas = tarefaRepository.findAll().stream()
+                .filter(t -> t.getPrazo() != null &&
+                        !t.isConcluida() &&
+                        t.getPrazo().isBefore(dataLimite) &&
+                        t.getPrazo().isAfter(LocalDate.now()))
+                .collect(Collectors.toList());
+
+        return tarefas.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Obtém tarefas do usuário atual
+     * @return Lista de tarefas do usuário atual
+     */
+    public List<TarefaDTO> getTarefasDoUsuarioAtual() {
+        // Em implementação real, pegaria o usuário do contexto de segurança
+        // Por enquanto, retorna todas as tarefas como placeholder
+        logger.info("Buscando tarefas do usuário atual");
+
+        // TODO: Implementar busca por usuário autenticado
+        return listarTodas();
+    }
+
+    /**
+     * Cria tarefas por template
+     * @param templateId ID do template
+     * @param responsaveisIds Lista de IDs dos responsáveis
+     * @param datasVencimento Lista de datas de vencimento
+     * @param reuniaoId ID da reunião (opcional)
+     * @return Lista de tarefas criadas
+     */
+    @Transactional
+    public List<TarefaDTO> criarTarefasPorTemplate(Long templateId, List<Long> responsaveisIds,
+                                                   List<String> datasVencimento, Long reuniaoId) {
+        TemplateTarefa template = templateTarefaRepository.findById(templateId)
+                .orElseThrow(() -> new ResourceNotFoundException("Template não encontrado com ID: " + templateId));
+
+        logger.info("Criando {} tarefas a partir do template ID {}", responsaveisIds.size(), templateId);
+
+        List<TarefaDTO> tarefasCriadas = new ArrayList<>();
+
+        for (int i = 0; i < responsaveisIds.size(); i++) {
+            Long responsavelId = responsaveisIds.get(i);
+            Pessoa responsavel = pessoaRepository.findById(responsavelId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
+
+            Tarefa tarefa = new Tarefa();
+            tarefa.setDescricao(template.getTitulo());
+            tarefa.setPrazo(datasVencimento != null && i < datasVencimento.size() ?
+                    LocalDate.parse(datasVencimento.get(i)) : LocalDate.now().plusDays(7));
+            tarefa.setStatusTarefa(StatusTarefa.TODO);
+            tarefa.setConcluida(false);
+            tarefa.setPrioridade(template.getPrioridade());
+            tarefa.setResponsavel(responsavel);
+
+            if (reuniaoId != null) {
+                Reuniao reuniao = reuniaoRepository.findById(reuniaoId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + reuniaoId));
+                tarefa.setReuniao(reuniao);
+            }
+
+            Tarefa salva = tarefaRepository.save(tarefa);
+            tarefasCriadas.add(toDTO(salva));
+        }
+
+        return tarefasCriadas;
+    }
+
+    /**
+     * Marca uma notificação como lida
+     * @param notificacaoId ID da notificação
+     */
+    @Transactional
+    public void marcarNotificacaoLida(Long notificacaoId) {
+        NotificacaoTarefa notificacao = notificacaoTarefaRepository.findById(notificacaoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notificação não encontrada com ID: " + notificacaoId));
+
+        logger.info("Marcando notificação ID {} como lida", notificacaoId);
+
+        notificacao.setLida(true);
+        notificacaoTarefaRepository.save(notificacao);
     }
 }

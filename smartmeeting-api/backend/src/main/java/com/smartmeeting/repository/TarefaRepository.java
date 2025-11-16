@@ -24,7 +24,16 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
      */
     List<Tarefa> findByStatusTarefa(StatusTarefa status);
     
+    /**
+     * Busca tarefas que não possuem um determinado status
+     * @param status Status da tarefa a ser excluído da busca (enum StatusTarefa)
+     * @return Lista de tarefas com status diferente do especificado
+     */
+    List<Tarefa> findByStatusTarefaNot(StatusTarefa status);
+
     List<Tarefa> findByPrazoBetween(LocalDate inicio, LocalDate fim);
 
     long countByConcluida(boolean concluida);
 }
+
+

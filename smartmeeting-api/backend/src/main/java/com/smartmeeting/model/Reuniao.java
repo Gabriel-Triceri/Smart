@@ -21,7 +21,7 @@ public class Reuniao extends Auditable { // Estende Auditable
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_REUNIAO")
-    @SequenceGenerator(name = "SQ_REUNIAO", sequenceName = "SQ_REUNIAO", allocationSize = 1, initialValue = 1)
+    @SequenceGenerator(name = "SQ_REUNIAO", sequenceName = "SQ_REUNIAO", allocationSize = 1)
     @Column(name = "ID_REUNIAO")
     private Long id;
 

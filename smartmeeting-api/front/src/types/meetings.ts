@@ -1,27 +1,28 @@
 export interface Participante {
-  id: string;
-  nome: string;
-  email: string;
-  departamento: string;
-  avatar?: string;
-  status: 'confirmado' | 'pendente' | 'recusado';
-  organizacao?: string;
+    id: number;
+    nome: string;
+    email: string;
+    tipoUsuario: string;
+    crachaId?: string;
+    avatar?: string;
+    status: 'confirmado' | 'pendente' | 'recusado';
+    organizacao?: string;
 }
 
 export interface Sala {
-    id: string;
+    id: number;
     nome: string;
     capacidade: number;
     equipamentos: string[];
     disponibilidade: boolean;
     localizacao: string;
-    status: 'disponivel' | 'ocupada' | 'manutencao' | 'reservada';
+    status: SalaStatus;
     categoria: 'executiva' | 'reuniao' | 'treinamento' | 'auditorio' | 'pequena';
-    cor: string; // Cor para categorização visual
+    cor: string;
     andar?: string;
-    coordenadas?: { x: number; y: number }; // Para mapa visual
+    coordenadas?: { x: number; y: number };
     recursos: RecursoSala[];
-    tarifa?: number; // Para salas comerciais
+    tarifa?: number;
     observacoes?: string;
     bloqueios?: BloqueioSala[];
     createdAt: string;
@@ -45,7 +46,7 @@ export interface BloqueioSala {
 }
 
 export interface DisponibilidadeSala {
-    salaId: string;
+    salaId: number;
     data: string;
     horarios: HorarioDisponivel[];
 }
@@ -61,111 +62,114 @@ export interface HorarioDisponivel {
 export interface FiltroSalas {
     capacidade?: number;
     categoria?: string;
-    status?: string;
+    status?: SalaStatus;
     disponivel?: boolean;
     andares?: string[];
     recursos?: string[];
 }
 
 export interface TarefaReuniao {
-  id: string;
-  titulo: string;
-  responsavel: string;
-  concluida: boolean;
-  prazo: string;
-  prioridade: 'baixa' | 'media' | 'alta' | 'critica';
+    id: string;
+    titulo: string;
+    responsavel: string;
+    concluida: boolean;
+    prazo: string;
+    prioridade: 'baixa' | 'media' | 'alta' | 'critica';
 }
 
 export interface Reuniao {
-  id: string;
-  titulo: string;
-  descricao?: string;
-  data: string;
-  horaInicio: string;
-  horaFim: string;
-  sala: Sala;
-  organizador: Participante;
-  participantes: Participante[];
-  status: 'agendada' | 'em_andamento' | 'finalizada' | 'cancelada' | 'expirada';
-  tipo: 'presencial' | 'online' | 'hibrida';
-  prioridade: 'baixa' | 'media' | 'alta' | 'critica';
-  tarefaReuniao?: TarefaReuniao[];
-  linkReuniao?: string;
-  anexos?: string[];
-  lembretes: boolean;
-  observacoes?: string;
-  ata?: string;
-  createdAt: string;
-  updatedAt: string;
+    id: number;
+    titulo: string;
+    pauta: string;
+    dataHoraInicio: string;
+    duracaoMinutos: number;
+    sala: Sala;
+    organizador: Participante;
+    participantes: Participante[];
+    status: StatusReuniao;
+    tipo: 'presencial' | 'online' | 'hibrida';
+    prioridade: 'baixa' | 'media' | 'alta' | 'critica';
+    tarefaReuniao?: TarefaReuniao[];
+    linkReuniao?: string;
+    anexos?: string[];
+    lembretes: boolean;
+    observacoes?: string;
+    ata?: string;
+    createdAt: string;
+    updatedAt: string;
+
+    salaId?: number;
+    organizadorId?: number;
+    participantesIds?: number[];
 }
 
 export interface ReuniaoFormData {
-  titulo: string;
-  descricao: string;
-  data: string;
-  horaInicio: string;
-  horaFim: string;
-  salaId: string;
-  participantes: string[];
-  tipo: 'presencial' | 'online' | 'hibrida';
-  prioridade: 'baixa' | 'media' | 'alta' | 'critica';
-  lembretes: boolean;
-  observacoes?: string;
-  ata?: string;
-  linkReuniao?: string;                // NOVA propriedade
+    titulo: string;
+    pauta: string;
+
+    data: string;
+    horaInicio: string;
+    horaFim: string;
+
+    salaId: number;
+    participantes: (string | number)[];
+    tipo: 'presencial' | 'online' | 'hibrida';
+    prioridade: 'baixa' | 'media' | 'alta' | 'critica';
+    lembretes: boolean;
+    observacoes?: string;
+    ata?: string;
+    linkReuniao?: string;
 }
 
-// New DTO for creating a meeting, matching backend expectations
 export interface ReuniaoCreateDTO {
-  pauta: string;
-  descricao?: string;
-  dataHoraInicio: string; // LocalDateTime format (YYYY-MM-DDTHH:MM:SS)
-  duracaoMinutos: number;
-  salaId: string;
-  participantes: string[]; // Array of participant IDs
-  tipo: 'presencial' | 'online' | 'hibrida';
-  prioridade: 'baixa' | 'media' | 'alta' | 'critica';
-  // linkReuniao?: string; // Removed
-  lembretes: boolean;
-  observacoes?: string;
-  ata?: string;
-  status: 'agendada'; // Added status with default value
+    titulo: string;
+    pauta: string;
+    dataHoraInicio: string;
+    duracaoMinutos: number;
+    salaId: number;
+    participantes: number[]; // CORRIGIDO → Apenas tipo
+    tipo: 'presencial' | 'online' | 'hibrida';
+    prioridade: 'baixa' | 'media' | 'alta' | 'critica';
+    lembretes: boolean;
+    observacoes?: string;
+    ata?: string;
+    status: StatusReuniao;
 }
 
 export interface FiltroReunioes {
-  status?: Reuniao['status'][];
-  dataInicio?: string;
-  dataFim?: string;
-  organizador?: string;
-  sala?: string;
-  tipo?: Reuniao['tipo'][];
-  prioridade?: Reuniao['prioridade'][];
-  busca?: string;
+    status?: StatusReuniao[];
+    dataInicio?: string;
+    dataFim?: string;
+    organizador?: string;
+    sala?: string;
+    tipo?: Reuniao['tipo'][];
+    prioridade?: Reuniao['prioridade'][];
+    busca?: string;
 }
 
 export interface CalendarioView {
-  tipo: 'day' | 'week' | 'month';
-  dataReferencia: Date;
+    tipo: 'day' | 'week' | 'month';
+    dataReferencia: Date;
 }
 
 export interface StatisticsReunioes {
-  totalReunioes: number;              // Era 'total'
-  reunioesAgendadas: number;           // Era 'agendadas'
-  reunioesEmAndamento: number;         // Era 'emAndamento'
-  reunioesFinalizadas: number;         // Era 'finalizadas'
-  reunioesCanceladas: number;          // Era 'canceladas'
-  proximasReunioes: number;            // Era 'proximas24h'
-  salaMaisUsada: string;
-  salasEmUso: number;                  // NOVA propriedade
-  taxaParticipacao: number;
-  proximasReunioesList?: Reuniao[];    // Lista das próximas reuniões
+    totalReunioes: number;
+    reunioesAgendadas: number;
+    reunioesEmAndamento: number;
+    reunioesFinalizadas: number;
+    reunioesCanceladas: number;
+    proximasReunioes: number;
+    salaMaisUsada: string;
+    salasEmUso: number;
+    taxaParticipacao: number;
+    proximasReunioesList?: Reuniao[];
 }
+
 export enum StatusTarefa {
     TODO = 'todo',
     IN_PROGRESS = 'in_progress',
-    DONE = 'done',
-    BLOCKED = 'blocked',
-    REVIEW = 'review'
+    REVIEW = 'review',
+    DONE = 'done'
 }
 
 export enum PrioridadeTarefa {
@@ -174,6 +178,20 @@ export enum PrioridadeTarefa {
     ALTA = 'alta',
     CRITICA = 'critica',
     URGENTE = 'urgente'
+}
+
+export enum StatusReuniao {
+    AGENDADA = 'AGENDADA',
+    EM_ANDAMENTO = 'EM_ANDAMENTO',
+    FINALIZADA = 'FINALIZADA',
+    CANCELADA = 'CANCELADA'
+}
+
+export enum SalaStatus {
+    LIVRE = 'LIVRE',
+    OCUPADA = 'OCUPADA',
+    RESERVADA = 'RESERVADA',
+    MANUTENCAO = 'MANUTENCAO'
 }
 
 export interface Assignee {
@@ -188,7 +206,7 @@ export interface Mencao {
     id: string;
     usuarioId: string;
     usuarioNome: string;
-    posicao: number; // Posição no texto da menção
+    posicao: number;
 }
 
 export interface ComentarioTarefa {
@@ -198,7 +216,7 @@ export interface ComentarioTarefa {
     autorNome: string;
     autorAvatar?: string;
     conteudo: string;
-    mencoes?: Mencao[]; // @username mentions
+    mencoes?: Mencao[];
     anexos?: AnexoTarefa[];
     createdAt: string;
     updatedAt: string;
@@ -233,35 +251,35 @@ export interface Tarefa {
     descricao?: string;
     status: StatusTarefa;
     prioridade: PrioridadeTarefa;
-    responsaveis: Assignee[]; // Múltiplos responsáveis
+    responsaveis: Assignee[];
     responsavelPrincipalId: string;
-    dataVencimento?: string;
+    prazo_tarefa?: string;
     dataInicio?: string;
     tags?: string[];
     estimadoHoras?: number;
     horasTrabalhadas: number;
-    reuniaoId?: string; // Vinculação com reunião
-    tarefaPaiId?: string; // Para subtarefas
+    reuniaoId?: string;
+    tarefaPaiId?: string;
     subtarefas?: Tarefa[];
-    dependencias?: string[]; // IDs de tarefas dependentes
-    progresso: number; // 0-100%
+    dependencias?: string[];
+    progresso: number;
     comentarios: ComentarioTarefa[];
     anexos: AnexoTarefa[];
-    cor?: string; // Cor customizada para visual
+    cor?: string;
     criadaPor: string;
     criadaPorNome: string;
     atualizadaPor?: string;
     atualizadaPorNome?: string;
     createdAt: string;
     updatedAt: string;
-    deletedAt?: string; // Para soft delete
+    deletedAt?: string;
 }
 
 export interface KanbanColumn {
     id: StatusTarefa;
     titulo: string;
     tarefas: Tarefa[];
-    limiteMaximo?: number; // Para limitar tarefas na coluna
+    limiteMaximo?: number;
     cor: string;
     ordem: number;
 }
@@ -282,8 +300,8 @@ export interface TarefaFormData {
     descricao?: string;
     responsavelPrincipalId: string;
     responsaveisIds: string[];
-    dataVencimento?: string;
-    dataInicio?: string;
+    prazo_tarefa: string;
+    dataInicio: string;
     prioridade: PrioridadeTarefa;
     tags?: string[];
     estimadoHoras?: number;
@@ -294,18 +312,19 @@ export interface TarefaFormData {
 
 export interface FiltroTarefas {
     responsaveis?: string[];
+    responsavelId?: string;
     status?: StatusTarefa[];
     prioridade?: PrioridadeTarefa[];
     reuniaoId?: string;
     tags?: string[];
-    dataVencimentoInicio?: string;
-    dataVencimentoFim?: string;
+    prazo_tarefaInicio?: string;
+    prazo_tarefaFim?: string;
     busca?: string;
     atribuidasPorMim?: boolean;
-    vencendo?: boolean; // Tarefas vencendo em 3 dias
+    vencendo?: boolean;
     atrasadas?: boolean;
     semResponsavel?: boolean;
-    proximas?: number; // Para "Minhas próximas tarefas"
+    proximas?: number;
 }
 
 export interface StatisticsTarefas {
@@ -316,12 +335,12 @@ export interface StatisticsTarefas {
     taxaConclusao: number;
     tarefasVencendo: number;
     tarefasAtrasadas: number;
-    mediaTempoConclusao: number; // em horas
+    mediaTempoConclusao: number;
     produtividadeSemana: Array<{ data: string; concluidas: number }>;
 }
 
 export interface MovimentacaoTarefa {
-    tarefaId: string;
+    tarefaId: number;
     statusAnterior: StatusTarefa;
     statusNovo: StatusTarefa;
     colunaAnterior?: string;
@@ -332,12 +351,11 @@ export interface MovimentacaoTarefa {
     comentario?: string;
 }
 
-
 export interface TemplateTarefa {
     titulo: string;
     descricao?: string;
     prioridade: PrioridadeTarefa;
     tags?: string[];
     estimadaHoras?: number;
-    dependencias?: string[]; // indices das tarefas template
+    dependencias?: string[];
 }

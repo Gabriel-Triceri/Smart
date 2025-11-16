@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
     Calendar,
     Clock,
-    User,
     Paperclip,
     MessageSquare,
     AlertTriangle,
@@ -41,16 +40,14 @@ const STATUS_COLORS = {
     [StatusTarefa.TODO]: 'bg-gray-100 text-gray-800',
     [StatusTarefa.IN_PROGRESS]: 'bg-blue-100 text-blue-800',
     [StatusTarefa.DONE]: 'bg-green-100 text-green-800',
-    [StatusTarefa.BLOCKED]: 'bg-red-100 text-red-800',
-    [StatusTarefa.REVIEW]: 'bg-purple-100 text-purple-800'
+    [StatusTarefa.REVIEW]: 'bg-purple-100 text-purple-800',
 };
 
 const STATUS_ICONS = {
     [StatusTarefa.TODO]: '○',
     [StatusTarefa.IN_PROGRESS]: '◐',
     [StatusTarefa.DONE]: '✓',
-    [StatusTarefa.BLOCKED]: '⛔',
-    [StatusTarefa.REVIEW]: '◉'
+    [StatusTarefa.REVIEW]: '◉',
 };
 
 export function TaskCard({
@@ -113,7 +110,7 @@ export function TaskCard({
         setShowMenu(!showMenu);
     };
 
-    const dateStatus = tarefa.dataVencimento ? getDateStatus(tarefa.dataVencimento) : null;
+    const dateStatus = tarefa.prazo_tarefa ? getDateStatus(tarefa.prazo_tarefa) : null;
     const isOverdue = dateStatus === 'overdue';
     const isDueSoon = dateStatus === 'due-soon';
 
@@ -136,13 +133,13 @@ export function TaskCard({
             {/* Header da Card */}
             <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center space-x-2 flex-1 min-w-0">
-          <span className={`text-sm ${STATUS_COLORS[tarefa.status]} px-2 py-1 rounded-full text-xs font-medium`}>
-            {STATUS_ICONS[tarefa.status]} {tarefa.status === StatusTarefa.TODO && 'A Fazer'}
-              {tarefa.status === StatusTarefa.IN_PROGRESS && 'Em Andamento'}
-              {tarefa.status === StatusTarefa.DONE && 'Concluída'}
-              {tarefa.status === StatusTarefa.BLOCKED && 'Bloqueada'}
-              {tarefa.status === StatusTarefa.REVIEW && 'Em Revisão'}
-          </span>
+                    <span className={`text-sm ${STATUS_COLORS[tarefa.status]} px-2 py-1 rounded-full text-xs font-medium`}>
+                        {STATUS_ICONS[tarefa.status]}
+                        {tarefa.status === StatusTarefa.TODO && ' A Fazer'}
+                        {tarefa.status === StatusTarefa.IN_PROGRESS && ' Em Andamento'}
+                        {tarefa.status === StatusTarefa.DONE && ' Concluída'}
+                        {tarefa.status === StatusTarefa.REVIEW && ' Em Revisão'}
+                    </span>
 
                     <div className={`px-2 py-1 rounded border text-xs font-medium ${tarefa.prioridade ? PRIORITY_COLORS[tarefa.prioridade] : 'bg-gray-100 text-gray-800 border-gray-200'}`}>
                         <Flag className="w-3 h-3 inline mr-1" />
@@ -152,7 +149,9 @@ export function TaskCard({
 
                 <div className="flex items-center space-x-1">
                     {tarefa.estimadoHoras && tarefa.horasTrabalhadas > tarefa.estimadoHoras && (
-                        <AlertTriangle className="w-4 h-4 text-yellow-500" title="Tempo超额" />
+                        <span title="Tempo de trabalho excedeu o estimado">
+                            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                        </span>
                     )}
 
                     <div className="relative">
@@ -257,7 +256,7 @@ export function TaskCard({
             <div className="flex items-center justify-between text-xs text-gray-500">
                 <div className="flex items-center space-x-3">
                     {/* Prazo */}
-                    {tarefa.dataVencimento && (
+                    {tarefa.prazo_tarefa && (
                         <div className={`flex items-center ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-yellow-600' : ''}`}>
                             <Calendar className="w-3 h-3 mr-1" />
                             <span className={`
@@ -265,7 +264,7 @@ export function TaskCard({
                 ${dateStatus === 'overdue' ? 'text-red-600' : ''}
                 ${dateStatus === 'due-soon' ? 'text-yellow-600' : ''}
               `}>
-                {formatDate(tarefa.dataVencimento)}
+                {formatDate(tarefa.prazo_tarefa)}
               </span>
                         </div>
                     )}
@@ -285,7 +284,7 @@ export function TaskCard({
                 {/* Responsáveis */}
                 {showAssignee && tarefa.responsaveis && tarefa.responsaveis.length > 0 && (
                     <div className="flex items-center space-x-1">
-                        {tarefa.responsaveis.slice(0, 3).map((responsavel, index) => (
+                        {tarefa.responsaveis.slice(0, 3).map((responsavel) => (
                             <div
                                 key={responsavel.id}
                                 className={`
