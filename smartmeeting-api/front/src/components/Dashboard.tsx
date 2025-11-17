@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
     Calendar,
     Users,
@@ -11,76 +10,13 @@ import MetricCard from './MetricCard';
 import ThemeToggle from './ThemeToggle';
 import { TimelineChart, RoomUsageChart, ProductivityChart } from './Charts';
 import { TodayMeetingsWidget, UpcomingMeetingsWidget, AlertsWidget } from './Widgets';
-import { dashboardService } from '../services/api';
-import type { DashboardData } from '../types/dashboard';
+import useDashboardData from '../hooks/useDashboardData';
 
 export default function Dashboard() {
-    const [data, setData] = useState<DashboardData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-
-    const fetchDashboardData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            // Simula dados para demonstração (substituir pela chamada real à API)
-            const mockData: DashboardData = {
-                estatisticas: {
-                    totalReunioes: 142,
-                    taxaPresenca: 87.5,
-                    salasEmUso: 8,
-                    totalSalas: 12,
-                    reunioesHoje: 15,
-                    proximasReunioes: 23,
-                    alertasPendentes: 3,
-                    mediaParticipantes: 8.4,
-                    tempoMedioReuniao: 45,
-                },
-                usoSalas: [
-                    { id: '1', nome: 'Sala A', utilizacao: 85, totalReunioes: 28, capacidade: 10, status: 'ocupada' },
-                    { id: '2', nome: 'Sala B', utilizacao: 92, totalReunioes: 31, capacidade: 15, status: 'ocupada' },
-                    { id: '3', nome: 'Sala C', utilizacao: 67, totalReunioes: 22, capacidade: 8, status: 'disponivel' },
-                    { id: '4', nome: 'Sala D', utilizacao: 78, totalReunioes: 25, capacidade: 12, status: 'ocupada' },
-                    { id: '5', nome: 'Sala E', utilizacao: 45, totalReunioes: 15, capacidade: 6, status: 'disponivel' },
-                    { id: '6', nome: 'Sala F', utilizacao: 58, totalReunioes: 19, capacidade: 20, status: 'disponivel' },
-                ],
-                metricas: [
-                    { data: '07/11', reunioes: 18, participantes: 145, presencas: 128 },
-                    { data: '08/11', reunioes: 22, participantes: 178, presencas: 156 },
-                    { data: '09/11', reunioes: 16, participantes: 132, presencas: 118 },
-                    { data: '10/11', reunioes: 20, participantes: 165, presencas: 142 },
-                    { data: '11/11', reunioes: 25, participantes: 198, presencas: 175 },
-                    { data: '12/11', reunioes: 19, participantes: 152, presencas: 134 },
-                    { data: '13/11', reunioes: 22, participantes: 184, presencas: 165 },
-                ],
-                reunioesHoje: await dashboardService.getReunioesMock('hoje'),
-                proximasReunioes: await dashboardService.getProximasMock(),
-                alertas: await dashboardService.getAlertasMock(),
-            };
-
-            setData(mockData);
-            setLastUpdate(new Date());
-        } catch (err) {
-            setError('Erro ao carregar dados do dashboard');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchDashboardData();
-
-        // Atualiza a cada 5 minutos
-        const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
-
-        return () => clearInterval(interval);
-    }, []);
+    const { data, loading, error, lastUpdate, refresh } = useDashboardData();
 
     const handleRefresh = () => {
-        fetchDashboardData();
+        void refresh();
     };
 
     return (

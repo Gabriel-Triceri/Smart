@@ -15,12 +15,11 @@ import java.time.LocalDateTime;
 public class ReuniaoResumoDTO {
     private Long id;
     private String titulo;
-    private LocalDateTime dataHoraInicio;
-    private LocalDateTime dataReuniao;
-    private Integer duracaoMinutos;
-    private StatusReuniao status;
-    private String salaNome;
-    private String organizadorNome;
-    private Integer totalParticipantes;
+    private String sala;
+    private String horario;
+    private String dataHora;
+    private Integer participantes;
+    private String organizador;
+    private String status;
 }
 

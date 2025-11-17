@@ -67,7 +67,6 @@ public class Reuniao extends Auditable { // Estende Auditable
             foreignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_REUNIAO"),
             inverseForeignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_PESSOA")
     )
-    @JsonManagedReference // Adicionado para o lado gerenciador do relacionamento bidirecional
     private List<Pessoa> participantes;
 
     @OneToMany(mappedBy = "reuniao", fetch = FetchType.LAZY)

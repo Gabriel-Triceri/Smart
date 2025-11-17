@@ -7,7 +7,7 @@ import {
 import { Reuniao, TarefaReuniao, StatusReuniao } from '../types/meetings';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getReuniaoData, getReuniaoHoraInicio, getReuniaoHoraFim } from '../utils/reuniaoHelpers';
+import {  getReuniaoHoraInicio, getReuniaoHoraFim } from '../utils/reuniaoHelpers';
 
 interface MeetingDetailsModalProps {
     reuniao: Reuniao;

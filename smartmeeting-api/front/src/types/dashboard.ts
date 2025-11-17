@@ -16,7 +16,7 @@ export interface UsoSalas {
     utilizacao: number;
     totalReunioes: number;
     capacidade: number;
-    status: 'ocupada' | 'disponivel';
+    status: 'ocupada' | 'disponivel' | 'reservada' | 'manutencao';
 }
 
 export interface HistoricoMetricasDiarias {

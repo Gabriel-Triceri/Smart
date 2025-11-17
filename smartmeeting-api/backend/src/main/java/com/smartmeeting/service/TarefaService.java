@@ -264,9 +264,11 @@ public class TarefaService {
         long total = todasTarefas.size();
 
         Map<StatusTarefa, Long> porStatus = todasTarefas.stream()
+                .map(this::withDefaultStatus)
                 .collect(Collectors.groupingBy(Tarefa::getStatusTarefa, Collectors.counting()));
 
         Map<PrioridadeTarefa, Long> porPrioridade = todasTarefas.stream()
+                .map(this::withDefaultPrioridade)
                 .collect(Collectors.groupingBy(Tarefa::getPrioridade, Collectors.counting()));
 
         List<TarefaStatisticsDTO.ResponsavelStatsDTO> porResponsavel = todasTarefas.stream()
@@ -369,6 +371,20 @@ public class TarefaService {
         return pessoaRepository.findAll().stream()
                 .map(this::toAssigneeDTO)
                 .collect(Collectors.toList());
+    }
+
+    private Tarefa withDefaultStatus(Tarefa tarefa) {
+        if (tarefa.getStatusTarefa() == null) {
+            tarefa.setStatusTarefa(StatusTarefa.TODO);
+        }
+        return tarefa;
+    }
+
+    private Tarefa withDefaultPrioridade(Tarefa tarefa) {
+        if (tarefa.getPrioridade() == null) {
+            tarefa.setPrioridade(PrioridadeTarefa.MEDIA);
+        }
+        return tarefa;
     }
 
     public AssigneeDTO toAssigneeDTO(Pessoa pessoa) {

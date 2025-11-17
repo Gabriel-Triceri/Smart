@@ -40,7 +40,7 @@ public class PessoaService {
         dto.setId(pessoa.getId());
         dto.setNome(pessoa.getNome());
         dto.setEmail(pessoa.getEmail());
-        dto.setPapel(pessoa.getTipoUsuario());
+        dto.setTipoUsuario(pessoa.getTipoUsuario());
         dto.setCrachaId(pessoa.getCrachaId());
         return dto;
     }
@@ -91,7 +91,7 @@ public class PessoaService {
                     }
                     pessoa.setNome(dtoAtualizada.getNome());
                     pessoa.setEmail(dtoAtualizada.getEmail());
-                    pessoa.setTipoUsuario(dtoAtualizada.getPapel());
+                    pessoa.setTipoUsuario(dtoAtualizada.getTipoUsuario());
                     Pessoa atualizado = repository.save(pessoa);
                     return toDTO(atualizado);
                 })

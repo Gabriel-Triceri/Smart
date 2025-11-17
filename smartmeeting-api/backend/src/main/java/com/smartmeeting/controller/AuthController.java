@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
+import jakarta.validation.Valid;
 
 /**
  * Controller responsável pela autenticação de usuários
@@ -54,7 +55,7 @@ public class AuthController {
      * @return Token JWT
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginDTO) {
         System.out.println("DEBUG: Tentativa de login para o email: " + loginDTO.getEmail()); // DEBUG PRINT
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -94,7 +95,7 @@ public class AuthController {
      * @return Mensagem de sucesso ou erro
      */
     @PostMapping("/registro")
-    public ResponseEntity<?> registro(@RequestBody RegistroDTO registroDTO) {
+    public ResponseEntity<?> registro(@Valid @RequestBody RegistroDTO registroDTO) {
         // Verificar se o email já existe
         if (pessoaRepository.existsByEmail(registroDTO.getEmail())) {
             throw new ConflictException("Email já está em uso.");
@@ -113,5 +114,70 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("mensagem", "Usuário registrado com sucesso"));
+    }
+
+    /**
+     * Endpoint para renovação de token JWT
+     * @param requestBody Map contendo o token atual
+     * @return Novo token JWT
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody Map<String, String> requestBody) {
+        String token = requestBody.get("token");
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Token é obrigatório"));
+        }
+
+        try {
+            // Validar o token atual
+            if (!tokenProvider.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Token inválido ou expirado"));
+            }
+
+            // Extrair informações do usuário do token
+            String email = tokenProvider.getUsernameFromJWT(token);
+
+            // Buscar usuário no banco de dados
+            Pessoa pessoa = pessoaRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+            // Criar nova autenticação
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            pessoa.getEmail(),
+                            null // Não precisamos da senha para refresh
+                    )
+            );
+
+            // Gerar novo token
+            String newJwt = tokenProvider.generateToken(authentication);
+
+            // Extrair roles e permissions
+            List<String> allAuthorities = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
+            List<String> roles = allAuthorities.stream()
+                    .filter(a -> a.startsWith("ROLE_"))
+                    .map(a -> a.substring("ROLE_".length()))
+                    .collect(Collectors.toList());
+            List<String> permissions = allAuthorities.stream()
+                    .filter(a -> !a.startsWith("ROLE_"))
+                    .collect(Collectors.toList());
+
+            // Retornar novo token + roles + permissions
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", newJwt);
+            response.put("roles", roles);
+            response.put("permissions", permissions);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Erro ao renovar token: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Não foi possível renovar o token"));
+        }
     }
 }

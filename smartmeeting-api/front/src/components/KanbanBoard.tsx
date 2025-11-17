@@ -1,10 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Filter, Search, RefreshCw } from 'lucide-react';
-import { Tarefa, StatusTarefa, Assignee, FiltroTarefas } from '../types/meetings';
+import { RefreshCw } from 'lucide-react';
+import { Tarefa, StatusTarefa, Assignee } from '../types/meetings';
 import { TaskCard } from './TaskCard';
 import { TaskForm } from './TaskForm';
-import { TaskFilters } from './TaskFilters';
-
 
 interface KanbanBoardProps {
     tarefas: Tarefa[];
@@ -12,7 +10,7 @@ interface KanbanBoardProps {
     onDeleteTask: (tarefaId: string) => void;
     onDuplicateTask: (tarefaId: string) => void;
     onCreateTask: (data: any) => Promise<void>;
-    onViewTask: (tarefa: Tarefa) => void; // Added onViewTask prop
+    onViewTask: (tarefa: Tarefa) => void;
     loading?: boolean;
     assignees: Assignee[];
 }
@@ -54,52 +52,18 @@ export function KanbanBoard({
                                 onDeleteTask,
                                 onDuplicateTask,
                                 onCreateTask,
-                                onViewTask, // Destructure new prop
+                                onViewTask,
                                 loading = false,
                                 assignees
                             }: KanbanBoardProps) {
     const [draggedItem, setDraggedItem] = useState<Tarefa | null>(null);
-    const [showFilters, setShowFilters] = useState(false);
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filters, setFilters] = useState<FiltroTarefas>({
-        responsavelId: undefined,
-        prioridade: [],
-        prazo_tarefaInicio: undefined,
-        prazo_tarefaFim: undefined,
-        tags: undefined,
-        status: undefined,
-        busca: undefined
-    });
 
     const boardRef = useRef<HTMLDivElement>(null);
 
-    // Filtrar tarefas
-    const filteredTarefas = tarefas.filter(tarefa => {
-        const matchesSearch = !searchTerm ||
-            tarefa.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            tarefa.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
-
-        const matchesResponsavel = !filters.responsavelId ||
-            (tarefa.responsaveis ?? []).some(r => r.id === filters.responsavelId);
-
-        const matchesPrioridade = filters.prioridade === undefined || filters.prioridade.length === 0 ||
-            (tarefa.prioridade && filters.prioridade.includes(tarefa.prioridade));
-
-        const matchesPrazoTarefa = (!filters.prazo_tarefaInicio || (tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) >= new Date(filters.prazo_tarefaInicio))) &&
-            (!filters.prazo_tarefaFim || (tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) <= new Date(filters.prazo_tarefaFim)));
-
-        const matchesTags = !filters.tags ||
-            (tarefa.tags ?? []).some(tag => filters.tags?.includes(tag));
-
-        return matchesSearch && matchesResponsavel && matchesPrioridade &&
-            matchesPrazoTarefa && matchesTags;
-    });
-
-    // Agrupar tarefas por status
     const tarefasPorStatus = COLUMNS.reduce((acc, column) => {
-        acc[column.id] = filteredTarefas.filter(tarefa => tarefa.status === column.id);
+        acc[column.id] = tarefas.filter(tarefa => tarefa.status === column.id);
         return acc;
     }, {} as Record<StatusTarefa, Tarefa[]>);
 
@@ -121,17 +85,11 @@ export function KanbanBoard({
         setDraggedItem(null);
     };
 
-    const handleCreateTask = () => {
-        setSelectedTask(null);
-        setShowTaskForm(true);
-    };
-
     const handleEditTask = (tarefa: Tarefa) => {
         setSelectedTask(tarefa);
         setShowTaskForm(true);
     };
 
-    // Updated handleViewTask to use the prop
     const handleViewTask = (tarefa: Tarefa) => {
         onViewTask(tarefa);
     };
@@ -141,57 +99,8 @@ export function KanbanBoard({
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <h2 className="text-xl font-semibold text-gray-900">Kanban Board</h2>
-                        {loading && <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />}
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                        {/* Busca */}
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Buscar tarefas..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        {/* Filtros */}
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`p-2 rounded-lg border transition-colors ${
-                                showFilters
-                                    ? 'bg-blue-100 border-blue-300 text-blue-700'
-                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                            }`}
-                        >
-                            <Filter className="w-5 h-5" />
-                        </button>
-
-                        {/* Nova Tarefa */}
-                        <button
-                            onClick={handleCreateTask}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>Nova Tarefa</span>
-                        </button>
-                    </div>
+                    {loading && <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />}
                 </div>
-
-                {/* Painel de Filtros */}
-                {showFilters && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                        <TaskFilters
-                            filters={filters}
-                            onFiltersChange={setFilters}
-                            tarefas={tarefas}
-                        />
-                    </div>
-                )}
             </div>
 
             {/* Board */}
@@ -208,14 +117,14 @@ export function KanbanBoard({
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, column.id)}
                             >
-                                {/* Header da Coluna */}
+                                {/* Header */}
                                 <div className={`px-4 py-3 ${column.headerColor} rounded-t-lg border-b`}>
                                     <div className="flex items-center justify-between">
                                         <h3 className="font-medium">{column.title}</h3>
                                         <div className="flex items-center space-x-2">
-                      <span className="bg-white bg-opacity-50 px-2 py-1 rounded text-sm font-medium">
-                        {columnTasks.length}
-                      </span>
+                                            <span className="bg-white bg-opacity-50 px-2 py-1 rounded text-sm font-medium">
+                                                {columnTasks.length}
+                                            </span>
                                             {isOverLimit && (
                                                 <span className="text-red-600 text-sm font-medium">!</span>
                                             )}
@@ -238,45 +147,27 @@ export function KanbanBoard({
                                                 onEdit={handleEditTask}
                                                 onDelete={onDeleteTask}
                                                 onDuplicate={onDuplicateTask}
-                                                onClick={handleViewTask} // Pass the updated handleViewTask
+                                                onClick={handleViewTask}
                                                 compact={false}
                                             />
                                         </div>
                                     ))}
 
-                                    {/* Drop Zone Visual */}
                                     {draggedItem && (
                                         <div className="border-2 border-dashed border-blue-400 rounded-lg p-4 text-center text-blue-600 bg-blue-50">
                                             Solte a tarefa aqui
                                         </div>
                                     )}
 
-                                    {/* Empty State */}
                                     {columnTasks.length === 0 && !draggedItem && (
                                         <div className="text-center text-gray-500 py-8">
                                             <div className="text-sm">Nenhuma tarefa</div>
-                                            <button
-                                                onClick={handleCreateTask}
-                                                className="text-blue-600 hover:text-blue-700 text-sm mt-2 underline"
-                                            >
-                                                Criar primeira tarefa
-                                            </button>
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Add Task Button */}
                                 <div className="p-4 border-t border-opacity-50">
-                                    <button
-                                        onClick={() => {
-                                            setSelectedTask(null);
-                                            setShowTaskForm(true);
-                                        }}
-                                        className="w-full p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded border border-dashed transition-colors flex items-center justify-center space-x-2"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        <span className="text-sm">Adicionar tarefa</span>
-                                    </button>
+                                    {/* Empty footer */}
                                 </div>
                             </div>
                         );

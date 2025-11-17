@@ -66,7 +66,7 @@ echo.
 echo Proximos passos:
 echo.
 echo 1. Configure a URL da API no arquivo .env
-echo    VITE_API_URL=http://localhost:8080/api
+echo    VITE_API_BASE_URL=http://localhost:8080/api
 echo.
 echo 2. Inicie o servidor:
 echo    npm run dev

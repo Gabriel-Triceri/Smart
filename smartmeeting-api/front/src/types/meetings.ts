@@ -301,8 +301,8 @@ export interface TarefaFormData {
     descricao?: string;
     responsavelPrincipalId: string;
     responsaveisIds: string[];
-    prazo_tarefa: string;
-    dataInicio: string;
+    prazo_tarefa?: string;
+    dataInicio?: string;
     prioridade: PrioridadeTarefa;
     tags?: string[];
     estimadoHoras?: number;

@@ -6,8 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.Map;
-import java.util.HashMap;
+
 import java.util.List;
 
 @RestController
@@ -30,18 +29,9 @@ public class DashboardController {
      * API para obter dashboard completo (compatível com frontend)
      */
     @GetMapping("/completo")
-    public ResponseEntity<Map<String, Object>> getDashboardCompleto() {
+    public ResponseEntity<DashboardDTO> getDashboardCompleto() {
         DashboardDTO dashboard = dashboardService.obterDashboardCompleto();
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("estatisticas", dashboard.getEstatisticasGerais());
-        response.put("usoSalas", dashboard.getUsoSalas());
-        response.put("metricas", dashboard.getMetricasReunioes());
-        response.put("reunioesHoje", dashboard.getReunioesHoje());
-        response.put("proximasReunioes", dashboard.getProximasReunioes());
-        response.put("alertas", dashboard.getAlertas());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(dashboard);
     }
 
     @GetMapping("/estatisticas-gerais")
@@ -69,8 +59,8 @@ public class DashboardController {
     }
 
     @GetMapping("/metricas-reunioes")
-    public ResponseEntity<MetricasReunioesDTO> obterMetricasReunioes() {
-        MetricasReunioesDTO metricas = dashboardService.obterMetricasReunioes();
+    public ResponseEntity<List<MetricasReunioesDTO>> obterMetricasReunioes() {
+        List<MetricasReunioesDTO> metricas = dashboardService.obterMetricasReunioes();
         return ResponseEntity.ok(metricas);
     }
 }

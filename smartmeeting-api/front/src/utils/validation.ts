@@ -1,4 +1,4 @@
-import { ReuniaoFormData, StatusReuniao } from '../types/meetings';
+import { ReuniaoFormData } from '../types/meetings';
 import { DateTimeUtils } from './dateTimeUtils';
 
 export interface ValidationResult {

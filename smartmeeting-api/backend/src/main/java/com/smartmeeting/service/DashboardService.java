@@ -6,7 +6,6 @@ import com.smartmeeting.enums.StatusReuniao;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.model.Sala;
-import com.smartmeeting.model.Tarefa;
 import com.smartmeeting.repository.*;
 
 import org.springframework.stereotype.Service;
@@ -14,8 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +26,9 @@ public class DashboardService {
     private static final int DIAS_UTEIS_MES = 22;
     private static final int HORAS_TRABALHO_DIA = 8;
     private static final int MINUTOS_POR_HORA = 60;
+    private static final int HISTORICO_DIAS = 7;
+    private static final DateTimeFormatter DIA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM");
+    private static final DateTimeFormatter HORA_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ReuniaoRepository reuniaoRepository;
     private final SalaRepository salaRepository;
@@ -49,48 +53,68 @@ public class DashboardService {
     // DASHBOARD COMPLETO
     // ====================================
     public DashboardDTO obterDashboardCompleto() {
+        List<ReuniaoResumoDTO> reunioesHoje = obterReunioesHoje();
+        List<ReuniaoResumoDTO> proximasReunioes = obterProximasReunioes();
+        List<AlertaDTO> alertas = obterAlertas();
+
         return new DashboardDTO()
-                .setEstatisticasGerais(obterEstatisticasGerais())
+                .setEstatisticas(buildEstatisticas(reunioesHoje.size(), proximasReunioes.size(), alertas.size()))
                 .setUsoSalas(obterUsoSalas())
-                .setTaxasPresenca(obterTaxasPresenca())
-                .setProdutividadeOrganizadores(obterProdutividadeOrganizadores())
-                .setMetricasReunioes(obterMetricasReunioes())
-                .setReunioesHoje(obterReunioesHoje())
-                .setProximasReunioes(obterProximasReunioes())
-                .setAlertas(obterAlertas());
+                .setMetricas(obterMetricasReunioes())
+                .setReunioesHoje(reunioesHoje)
+                .setProximasReunioes(proximasReunioes)
+                .setAlertas(alertas);
     }
 
     // ====================================
     // ESTATÍSTICAS GERAIS
     // ====================================
     public EstatisticasGeraisDTO obterEstatisticasGerais() {
-        long totalAgendadas = reuniaoRepository.countByStatus(StatusReuniao.AGENDADA);
-        long totalFinalizadas = reuniaoRepository.countByStatus(StatusReuniao.FINALIZADA);
-        long totalCanceladas = reuniaoRepository.countByStatus(StatusReuniao.CANCELADA);
-        long totalEmAndamento = reuniaoRepository.countByStatus(StatusReuniao.EM_ANDAMENTO);
+        List<ReuniaoResumoDTO> reunioesHoje = obterReunioesHoje();
+        List<ReuniaoResumoDTO> proximasReunioes = obterProximasReunioes();
+        List<AlertaDTO> alertas = obterAlertas();
+        return buildEstatisticas(reunioesHoje.size(), proximasReunioes.size(), alertas.size());
+    }
 
+    private EstatisticasGeraisDTO buildEstatisticas(long reunioesHoje,
+                                                   long proximasReunioes,
+                                                   long alertasPendentes) {
+        long totalReunioes = reuniaoRepository.count();
         long totalSalas = salaRepository.count();
-        long salasDisponiveis = salaRepository.countByStatus(SalaStatus.LIVRE);
-        long totalPessoas = pessoaRepository.count();
+        long salasEmUso = salaRepository.countByStatus(SalaStatus.OCUPADA);
 
-        long tarefasPendentes = tarefaRepository.countByConcluida(false);
-        long tarefasConcluidas = tarefaRepository.countByConcluida(true);
+        List<Reuniao> finalizadas = reuniaoRepository.findByStatus(StatusReuniao.FINALIZADA);
 
-        long totalTarefas = tarefasPendentes + tarefasConcluidas;
-        double taxaConclusao = totalTarefas == 0 ? 0.0 :
-                Math.round((tarefasConcluidas * 100.0 / totalTarefas) * 100.0) / 100.0;
+        double tempoMedio = finalizadas.stream()
+                .mapToInt(Reuniao::getDuracaoMinutos)
+                .average()
+                .orElse(0.0);
+
+        double mediaParticipantes = finalizadas.stream()
+                .mapToInt(r -> r.getParticipantes() != null ? r.getParticipantes().size() : 0)
+                .average()
+                .orElse(0.0);
+
+        long totalConvidados = finalizadas.stream()
+                .mapToLong(r -> r.getParticipantes() != null ? r.getParticipantes().size() : 0)
+                .sum();
+
+        long presencasRegistradas = finalizadas.stream()
+                .mapToLong(presencaRepository::countByReuniao)
+                .sum();
+
+        double taxaPresenca = totalConvidados == 0 ? 0.0 : (presencasRegistradas * 100.0) / totalConvidados;
 
         return new EstatisticasGeraisDTO()
-                .setTotalReunioesAgendadas(totalAgendadas)
-                .setTotalReunioesFinalizadas(totalFinalizadas)
-                .setTotalReunioesCanceladas(totalCanceladas)
-                .setTotalReunioesEmAndamento(totalEmAndamento)
+                .setTotalReunioes(totalReunioes)
+                .setTaxaPresenca(roundTwoDecimals(taxaPresenca))
+                .setSalasEmUso(salasEmUso)
                 .setTotalSalas(totalSalas)
-                .setTotalSalasDisponiveis(salasDisponiveis)
-                .setTotalPessoas(totalPessoas)
-                .setTotalTarefasPendentes(tarefasPendentes)
-                .setTotalTarefasConcluidas(tarefasConcluidas)
-                .setTaxaConclusaoTarefas(taxaConclusao);
+                .setReunioesHoje(reunioesHoje)
+                .setProximasReunioes(proximasReunioes)
+                .setAlertasPendentes(alertasPendentes)
+                .setMediaParticipantes(roundTwoDecimals(mediaParticipantes))
+                .setTempoMedioReuniao(roundTwoDecimals(tempoMedio));
     }
 
     // ====================================
@@ -109,23 +133,52 @@ public class DashboardService {
         Integer totalMinutosUso =
                 reuniaoRepository.sumDuracaoMinutosBySalaIdAndStatus(sala.getId(), StatusReuniao.FINALIZADA);
 
-        if (totalMinutosUso == null) totalMinutosUso = 0;
+        if (totalMinutosUso == null) {
+            totalMinutosUso = 0;
+        }
 
         double taxaOcupacao = calcularTaxaOcupacao(totalMinutosUso);
 
         return new UsoSalaDTO()
-                .setSalaId(sala.getId())
-                .setSalaNome(sala.getNome())
-                .setSalaLocalizacao(sala.getLocalizacao())
-                .setTotalReunioesRealizadas(totalReunioesRealizadas)
-                .setTotalMinutosUso(totalMinutosUso)
-                .setTaxaOcupacao(taxaOcupacao);
+                .setId(String.valueOf(sala.getId()))
+                .setNome(sala.getNome())
+                .setTotalReunioes(totalReunioesRealizadas)
+                .setCapacidade(sala.getCapacidade())
+                .setUtilizacao(roundTwoDecimals(taxaOcupacao))
+                .setStatus(mapearStatusSala(sala.getStatus()));
     }
 
     private double calcularTaxaOcupacao(int minutosUsados) {
         int minutosDisponiveisMes = DIAS_UTEIS_MES * HORAS_TRABALHO_DIA * MINUTOS_POR_HORA;
-        double taxa = minutosUsados == 0 ? 0.0 : (minutosUsados * 100.0) / minutosDisponiveisMes;
-        return Math.round(taxa * 100.0) / 100.0;
+        return minutosUsados == 0 ? 0.0 : (minutosUsados * 100.0) / minutosDisponiveisMes;
+    }
+
+    private double roundTwoDecimals(double valor) {
+        return Math.round(valor * 100.0) / 100.0;
+    }
+
+    private String formatarStatus(StatusReuniao status) {
+        if (status == null) {
+            return "agendada";
+        }
+        return switch (status) {
+            case EM_ANDAMENTO -> "em-andamento";
+            case FINALIZADA -> "concluida";
+            case CANCELADA -> "cancelada";
+            default -> "agendada";
+        };
+    }
+
+    private String mapearStatusSala(SalaStatus status) {
+        if (status == null) {
+            return "desconhecido";
+        }
+        return switch (status) {
+            case LIVRE -> "disponivel";
+            case OCUPADA -> "ocupada";
+            case RESERVADA -> "reservada";
+            case MANUTENCAO -> "manutencao";
+        };
     }
 
     // ====================================
@@ -203,43 +256,40 @@ public class DashboardService {
     // ====================================
     // MÉTRICAS DE REUNIÕES
     // ====================================
-    public MetricasReunioesDTO obterMetricasReunioes() {
+    public List<MetricasReunioesDTO> obterMetricasReunioes() {
+        LocalDate hoje = LocalDate.now();
+        LocalDate inicio = hoje.minusDays(HISTORICO_DIAS - 1);
 
-        Double mediaDuracao = reuniaoRepository.avgDuracaoMinutosByStatus(StatusReuniao.FINALIZADA);
-        Integer minDuracao = reuniaoRepository.minDuracaoMinutosByStatus(StatusReuniao.FINALIZADA);
-        Integer maxDuracao = reuniaoRepository.maxDuracaoMinutosByStatus(StatusReuniao.FINALIZADA);
+        LocalDateTime inicioPeriodo = inicio.atStartOfDay();
+        LocalDateTime fimPeriodo = hoje.atTime(23, 59, 59);
 
-        if (mediaDuracao == null || minDuracao == null || maxDuracao == null) {
-            return new MetricasReunioesDTO()
-                    .setDuracaoMediaMinutos(0.0)
-                    .setDuracaoMinimaMinutos(0)
-                    .setDuracaoMaximaMinutos(0)
-                    .setMediaParticipantesPorReuniao(0.0)
-                    .setTotalParticipantesUnicos(0);
+        List<Reuniao> reunioesPeriodo = reuniaoRepository.findByDataHoraInicioBetween(inicioPeriodo, fimPeriodo);
+
+        Map<LocalDate, List<Reuniao>> reunioesPorDia = reunioesPeriodo.stream()
+                .collect(Collectors.groupingBy(r -> r.getDataHoraInicio().toLocalDate()));
+
+        List<MetricasReunioesDTO> metricas = new ArrayList<>();
+
+        for (int i = 0; i < HISTORICO_DIAS; i++) {
+            LocalDate dia = inicio.plusDays(i);
+            List<Reuniao> reunioesDoDia = reunioesPorDia.getOrDefault(dia, List.of());
+
+            int totalReunioesDia = reunioesDoDia.size();
+            int totalParticipantesDia = reunioesDoDia.stream()
+                    .mapToInt(r -> r.getParticipantes() != null ? r.getParticipantes().size() : 0)
+                    .sum();
+            int totalPresencasDia = reunioesDoDia.stream()
+                    .mapToInt(r -> r.getPresencas() != null ? r.getPresencas().size() : 0)
+                    .sum();
+
+            metricas.add(new MetricasReunioesDTO()
+                    .setData(dia.format(DIA_FORMATTER))
+                    .setReunioes(totalReunioesDia)
+                    .setParticipantes(totalParticipantesDia)
+                    .setPresencas(totalPresencasDia));
         }
 
-        List<Reuniao> finalizadas = reuniaoRepository.findByStatus(StatusReuniao.FINALIZADA);
-
-        double mediaParticipantes =
-                finalizadas.stream()
-                        .mapToInt(r -> r.getParticipantes() != null ? r.getParticipantes().size() : 0)
-                        .average()
-                        .orElse(0.0);
-
-        int participantesUnicos =
-                (int) finalizadas.stream()
-                        .filter(r -> r.getParticipantes() != null)
-                        .flatMap(r -> r.getParticipantes().stream())
-                        .map(Pessoa::getId)
-                        .distinct()
-                        .count();
-
-        return new MetricasReunioesDTO()
-                .setDuracaoMediaMinutos(Math.round(mediaDuracao * 100.0) / 100.0)
-                .setDuracaoMinimaMinutos(minDuracao)
-                .setDuracaoMaximaMinutos(maxDuracao)
-                .setMediaParticipantesPorReuniao(Math.round(mediaParticipantes * 100.0) / 100.0)
-                .setTotalParticipantesUnicos(participantesUnicos);
+        return metricas;
     }
 
     // ====================================
@@ -267,43 +317,37 @@ public class DashboardService {
     // ALERTAS (CORRIGIDO)
     // ====================================
     public List<AlertaDTO> obterAlertas() {
-
-        List<AlertaDTO> alertas = new ArrayList<>();
-
-        // Reuniões do dia
+        LocalDate hoje = LocalDate.now();
         List<Reuniao> reunioesHoje = reuniaoRepository.findByDataHoraInicioBetween(
-                LocalDate.now().atStartOfDay(),
-                LocalDate.now().atTime(23, 59, 59)
+                hoje.atStartOfDay(),
+                hoje.atTime(23, 59, 59)
         );
 
-        for (Reuniao r : reunioesHoje) {
-            alertas.add(new AlertaDTO()
-                    .setTipo("reuniao_hoje")
-                    .setTitulo("Reunião Hoje")
-                    .setMensagem("Reunião: " + r.getPauta())
-                    .setPrioridade("media")
-                    .setDataCriacao(LocalDateTime.now())
-                    .setDadosAdicionais("{\"reuniaoId\": " + r.getId() + "}")
-            );
-        }
-
-        return alertas;
+        return reunioesHoje.stream()
+                .map(reuniao -> new AlertaDTO()
+                        .setId("reuniao-" + reuniao.getId())
+                        .setTipo("warning")
+                        .setMensagem(String.format("Reunião \"%s\" às %s",
+                                reuniao.getPauta(),
+                                reuniao.getDataHoraInicio().format(HORA_FORMATTER)))
+                        .setTimestamp(reuniao.getDataHoraInicio().toString())
+                        .setLido(false))
+                .collect(Collectors.toList());
     }
 
     // ====================================
     // CONVERSOR CORRIGIDO
     // ====================================
-    private ReuniaoResumoDTO toReuniaoResumoDTO(Reuniao r) {
+    private ReuniaoResumoDTO toReuniaoResumoDTO(Reuniao reuniao) {
+        LocalDateTime inicio = reuniao.getDataHoraInicio();
         return new ReuniaoResumoDTO()
-                .setId(r.getId())
-                .setTitulo(r.getPauta() != null ? r.getPauta() : "Sem pauta")
-                .setDataHoraInicio(r.getDataHoraInicio())
-                .setDuracaoMinutos(r.getDuracaoMinutos())
-                .setStatus(r.getStatus())
-                .setSalaNome(r.getSala() != null ? r.getSala().getNome() : null)
-                .setOrganizadorNome(r.getOrganizador() != null ? r.getOrganizador().getNome() : null)
-                .setTotalParticipantes(
-                        r.getParticipantes() != null ? r.getParticipantes().size() : 0
-                );
+                .setId(reuniao.getId())
+                .setTitulo(reuniao.getPauta() != null ? reuniao.getPauta() : "Sem pauta")
+                .setSala(reuniao.getSala() != null ? reuniao.getSala().getNome() : null)
+                .setHorario(inicio != null ? inicio.format(HORA_FORMATTER) : null)
+                .setDataHora(inicio != null ? inicio.toString() : null)
+                .setParticipantes(reuniao.getParticipantes() != null ? reuniao.getParticipantes().size() : 0)
+                .setOrganizador(reuniao.getOrganizador() != null ? reuniao.getOrganizador().getNome() : null)
+                .setStatus(formatarStatus(reuniao.getStatus()));
     }
 }

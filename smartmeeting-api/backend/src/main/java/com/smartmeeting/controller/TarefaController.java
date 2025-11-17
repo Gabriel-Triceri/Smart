@@ -66,6 +66,8 @@ public class TarefaController {
     @PostMapping
     public ResponseEntity<TarefaDTO> criar(@Valid @RequestBody TarefaDTO dto) {
         TarefaDTO salvo = tarefaService.criar(dto);
+        System.out.println(salvo);
+        System.out.println(dto);
         return ResponseEntity.ok(salvo);
     }
 

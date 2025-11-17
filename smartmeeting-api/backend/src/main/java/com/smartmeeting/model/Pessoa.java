@@ -1,6 +1,7 @@
 package com.smartmeeting.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.smartmeeting.enums.TipoUsuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -45,11 +46,11 @@ public class Pessoa extends Auditable {
     private TipoUsuario tipoUsuario;
 
     @OneToMany(mappedBy = "organizador", fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonIgnore
     private List<Reuniao> reunioesOrganizadas;
 
     @ManyToMany(mappedBy = "participantes", fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonIgnore
     private List<Reuniao> reunioesParticipadas;
 
     @OneToMany(mappedBy = "responsavel", fetch = FetchType.LAZY)

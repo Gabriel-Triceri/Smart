@@ -12,12 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class DashboardDTO {
-    private EstatisticasGeraisDTO estatisticasGerais;
+    private EstatisticasGeraisDTO estatisticas;
     private List<UsoSalaDTO> usoSalas;
-    private List<TaxaPresencaDTO> taxasPresenca;
-    private List<ProdutividadeOrganizadorDTO> produtividadeOrganizadores;
-    private MetricasReunioesDTO metricasReunioes;
-
+    private List<MetricasReunioesDTO> metricas;
     private List<ReuniaoResumoDTO> reunioesHoje;
     private List<ReuniaoResumoDTO> proximasReunioes;
     private List<AlertaDTO> alertas;

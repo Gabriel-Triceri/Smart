@@ -45,16 +45,18 @@ export function TaskForm({
                              assignees = [],
                              reuniaoId
                          }: TaskFormProps) {
+
+    // prazo_tarefa, dataInicio e estimadoHoras iniciam como string vazia
     const [formData, setFormData] = useState<TarefaFormData>({
         titulo: '',
         descricao: '',
         responsavelPrincipalId: '',
         responsaveisIds: [],
-        prazo_tarefa: '',
-        dataInicio: '',
+        prazo_tarefa: '',       // <- não undefined
+        dataInicio: '',         // <- não undefined
         prioridade: PrioridadeTarefa.MEDIA,
         tags: [],
-        estimadoHoras: undefined,
+        estimadoHoras: '',      // <- manter como string para evitar uncontrolled -> controlled
         reuniaoId: reuniaoId,
         cor: ''
     });
@@ -73,11 +75,15 @@ export function TaskForm({
                 descricao: tarefa.descricao || '',
                 responsavelPrincipalId: tarefa.responsavelPrincipalId,
                 responsaveisIds: (tarefa.responsaveis ?? []).map(r => r.id),
+                // garantir string (não undefined)
                 prazo_tarefa: tarefa.prazo_tarefa ? tarefa.prazo_tarefa.split('T')[0] : '',
                 dataInicio: tarefa.dataInicio ? tarefa.dataInicio.split('T')[0] : '',
-                prioridade: tarefa.prioridade || PrioridadeTarefa.MEDIA, // Added fallback here
+                prioridade: tarefa.prioridade || PrioridadeTarefa.MEDIA,
                 tags: [...(tarefa.tags ?? [])],
-                estimadoHoras: tarefa.estimadoHoras,
+                // estimadoHoras armazenado como string no estado para inputs controlados
+                estimadoHoras: tarefa.estimadoHoras !== undefined && tarefa.estimadoHoras !== null
+                    ? String(tarefa.estimadoHoras)
+                    : '',
                 reuniaoId: tarefa.reuniaoId,
                 cor: tarefa.cor || ''
             });
@@ -95,13 +101,15 @@ export function TaskForm({
             newErrors.responsavelPrincipalId = 'Responsável principal é obrigatório';
         }
 
-        if (formData.dataInicio && formData.prazo_tarefa) {
+        if (!formData.prazo_tarefa) {
+            newErrors.prazo_tarefa = 'Data de vencimento é obrigatória';
+        } else if (formData.dataInicio && formData.prazo_tarefa) {
             if (new Date(formData.dataInicio) >= new Date(formData.prazo_tarefa)) {
                 newErrors.prazo_tarefa = 'Data de vencimento deve ser posterior à data de início';
             }
         }
 
-        if (formData.estimadoHoras && formData.estimadoHoras <= 0) {
+        if (formData.estimadoHoras && Number(formData.estimadoHoras) <= 0) {
             newErrors.estimadoHoras = 'Tempo estimado deve ser maior que zero';
         }
 
@@ -113,18 +121,38 @@ export function TaskForm({
         e.preventDefault();
 
         if (!validateForm()) {
-            // Display a more prominent error message if validation fails
             alert('Por favor, preencha todos os campos obrigatórios e corrija os erros.');
             return;
         }
 
         setLoading(true);
         try {
-            await onSubmit(formData);
+            // --- GARANTIR QUE PRAZO_NUNCA SEJA NULL/UNDEFINED ---
+            // Mantemos o formato 'YYYY-MM-DD' que o input date fornece.
+            const usedPrazo = formData.prazo_tarefa && formData.prazo_tarefa.trim()
+                ? formData.prazo_tarefa.trim()
+                : new Date().toISOString().split('T')[0];
+
+            // converter estimadoHoras de volta para number se houver
+            const estimadoNumber = formData.estimadoHoras && formData.estimadoHoras !== ''
+                ? Number(formData.estimadoHoras)
+                : undefined;
+
+            const payload: TarefaFormData = {
+                ...formData,
+                // sobrescreve para ter garantia de não-null
+                prazo_tarefa: usedPrazo,
+                // normaliza estimadoHoras para number | undefined
+                estimadoHoras: estimadoNumber as any
+            };
+
+            // enviar payload corrigido
+            await onSubmit(payload);
+
             onClose();
         } catch (error) {
             console.error('Erro ao salvar tarefa:', error);
-            alert('Ocorreu um erro ao salvar a tarefa. Por favor, tente novamente.'); // More user-friendly error
+            alert('Ocorreu um erro ao salvar a tarefa. Por favor, tente novamente.');
         } finally {
             setLoading(false);
         }
@@ -179,10 +207,6 @@ export function TaskForm({
             responsavelPrincipalId: assigneeId
         }));
     };
-
-    const selectedAssignees = assignees.filter(a =>
-        formData.responsaveisIds.includes(a.id)
-    );
 
     const principalAssignee = assignees.find(a => a.id === formData.responsavelPrincipalId);
 
@@ -370,7 +394,7 @@ export function TaskForm({
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <Calendar className="w-4 h-4 inline mr-1" />
-                                Data de Vencimento
+                                Data de Vencimento *
                             </label>
                             <input
                                 type="date"
@@ -397,11 +421,8 @@ export function TaskForm({
                             type="number"
                             min="0.5"
                             step="0.5"
-                            value={formData.estimadoHoras || ''}
-                            onChange={(e) => setFormData(prev => ({
-                                ...prev,
-                                estimadoHoras: e.target.value ? parseFloat(e.target.value) : undefined
-                            }))}
+                            value={formData.estimadoHoras}
+                            onChange={(e) => setFormData(prev => ({ ...prev, estimadoHoras: e.target.value }))}
                             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                                 errors.estimadoHoras ? 'border-red-500' : 'border-gray-300'
                             }`}
@@ -427,15 +448,15 @@ export function TaskForm({
                                         key={index}
                                         className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded"
                                     >
-                    {tag}
+                                        {tag}
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveTag(tag)}
                                             className="ml-2 text-blue-600 hover:text-blue-800"
                                         >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </span>
                                 ))}
                             </div>
                         )}
@@ -532,3 +553,5 @@ export function TaskForm({
         </div>
     );
 }
+
+export default TaskForm;

@@ -56,6 +56,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
+                                "/tarefas",
+                                "/tarefas/",
                                 "/webjars/**",
                                 "/h2-console/**" // ✅ permite acesso ao console do H2
                         ).permitAll()
@@ -66,7 +68,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-                http.authenticationProvider(authenticationProvider());
+        http.authenticationProvider(authenticationProvider());
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -97,7 +99,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "https://3000-ieoksv0ct41for8oic153-28527b58.manus.computer"));
+        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3001", "https://3000-ieoksv0ct41for8oic153-28527b58.manus.computer"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

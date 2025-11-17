@@ -25,12 +25,12 @@ public class ReuniaoDTO {
     private String ata;
     private StatusReuniao status;
     private List<String> tarefas; // Adicionado campo para tarefas
-    
+
     // Campos para IDs (usados na criação/atualização)
     private Long organizadorId;
     private Long salaId;
     private List<Long> participantes; // Renomeado de participantesIds para participantes
-    
+
     // Campos para objetos completos (usados na resposta)
     private PessoaDTO organizador;
     private SalaDTO sala;
@@ -57,7 +57,7 @@ public class ReuniaoDTO {
         this.sala = sala;
         this.participantesDetalhes = participantesDetalhes; // Ajustado para participantesDetalhes
         this.tarefas = tarefas; // Inicializa tarefas
-        
+
         // Preenche os IDs automaticamente a partir dos objetos
         if (organizador != null) {
             this.organizadorId = organizador.getId();

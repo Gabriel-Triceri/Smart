@@ -9,11 +9,13 @@
     "lint": "eslint . --ext ts,tsx"
   },
   "dependencies": {
+    "@types/react-beautiful-dnd": "^13.1.8",
     "axios": "^1.6.2",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.30.2",
     "recharts": "^2.10.3"
@@ -33,5 +35,16 @@
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
     "vite": "^5.0.8"
+  },
+  "mcpServers": {
+    "TestSprite": {
+      "command": "npx",
+      "args": [
+        "@testsprite/testsprite-mcp@latest"
+      ],
+      "env": {
+        "API_KEY": "sk-user-Utz5_O6PU5hCAUeKIgIuKUMAzufMds9jDZExA2oSXQ2NLcVgCW1lHywvk9azIQt_rDSsoMS1_GinoJG0Gmi-PWnwG-e6aTteEN__VVM-lxXj8uLaXrkvo2456mH-xKgg2fw\nAdicone "
+      }
+    }
   }
 }

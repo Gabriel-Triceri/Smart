@@ -13,10 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class AlertaDTO {
+    private String id;
     private String tipo;
-    private String titulo;
     private String mensagem;
-    private String prioridade; // baixa | media | alta
-    private LocalDateTime dataCriacao;
-    private String dadosAdicionais; // JSON string
+    private String timestamp;
+    private boolean lido;
 }

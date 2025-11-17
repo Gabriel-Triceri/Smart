@@ -10,9 +10,8 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class MetricasReunioesDTO {
-    private Double duracaoMediaMinutos;
-    private Integer duracaoMinimaMinutos;
-    private Integer duracaoMaximaMinutos;
-    private Double mediaParticipantesPorReuniao;
-    private Integer totalParticipantesUnicos;
+    private String data;
+    private Integer reunioes;
+    private Integer participantes;
+    private Integer presencas;
 }

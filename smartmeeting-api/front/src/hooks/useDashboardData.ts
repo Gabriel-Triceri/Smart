@@ -30,7 +30,6 @@ export function useDashboardData(
             setLoading(true);
             setError(null);
 
-            // Aqui você pode substituir pela chamada real à API
             const dashboardData = await dashboardService.getDashboardCompleto();
 
             setData(dashboardData);

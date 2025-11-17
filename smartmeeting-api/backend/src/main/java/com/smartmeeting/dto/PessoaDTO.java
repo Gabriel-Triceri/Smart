@@ -18,7 +18,7 @@ public class PessoaDTO {
     private Long id;
     private String nome;
     private String email;
-    private TipoUsuario papel;
+    private TipoUsuario tipoUsuario;
     private String crachaId;
 
     public Long getId() {

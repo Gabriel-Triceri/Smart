@@ -1,48 +1,4 @@
-import APP_CONSTANTS from "../config/constants";
-import axios, {
-    InternalAxiosRequestConfig,
-    AxiosError,
-    AxiosResponse
-} from "axios";
-
-const api = axios.create({
-    baseURL: APP_CONSTANTS.API_BASE_URL,
-    timeout: APP_CONSTANTS.API_TIMEOUT,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
-
-// Interceptor para adicionar token automaticamente
-api.interceptors.request.use(
-    (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-        const token = localStorage.getItem("authToken");
-
-        // Axios 1.6+ precisa garantir que headers exista
-        config.headers = config.headers ?? {};
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-
-        return config;
-    },
-    (error: AxiosError) => Promise.reject(error)
-);
-
-// Interceptor de resposta (tratamento de erros)
-api.interceptors.response.use(
-    (response: AxiosResponse) => response,
-    (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("userRoles");
-            localStorage.removeItem("userPermissions");
-            window.location.href = "/login";
-        }
-        return Promise.reject(error);
-    }
-);
+import api from './httpClient';
 
 interface LoginResponse {
     token: string;
@@ -105,10 +61,29 @@ export const authService = {
 
     refreshToken: async (): Promise<boolean> => {
         try {
-            const response = await api.post("/auth/refresh");
+            const currentToken = localStorage.getItem("authToken");
+
+            if (!currentToken) {
+                console.error("Token atual não encontrado");
+                authService.logout();
+                return false;
+            }
+
+            const response = await api.post("/auth/refresh", {
+                token: currentToken
+            });
 
             if (response.data.token) {
                 localStorage.setItem("authToken", response.data.token);
+
+                // Atualizar roles e permissions se retornados
+                if (response.data.roles) {
+                    localStorage.setItem("userRoles", JSON.stringify(response.data.roles));
+                }
+                if (response.data.permissions) {
+                    localStorage.setItem("userPermissions", JSON.stringify(response.data.permissions));
+                }
+
                 return true;
             }
 
@@ -120,5 +95,3 @@ export const authService = {
         }
     },
 };
-
-export default api;

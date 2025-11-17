@@ -154,7 +154,6 @@ export class DateTimeUtils {
      */
     static formatDateTimeForDisplay(dateTimeString: string): { data: string; horaInicio: string; horaFim: string; duracao: number } {
         const inicio = new Date(dateTimeString);
-        const fim = new Date(inicio);
         // Nota: duração não está disponível diretamente, seria necessário传入
 
         return {

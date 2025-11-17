@@ -1,6 +1,7 @@
 package com.smartmeeting.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.smartmeeting.enums.SalaStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -49,7 +50,7 @@ public class Sala extends Auditable {
     private String observacoes;
 
     @OneToMany(mappedBy = "sala", fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonIgnore
     private List<Reuniao> reunioes;
 
 }

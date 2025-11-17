@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
     Reuniao,
     Participante,
@@ -21,41 +20,166 @@ import {
     KanbanBoard,
     TemplateTarefa,
     MovimentacaoTarefa,
-    SalaStatus
+    SalaStatus,
+    PrioridadeTarefa,
+    KanbanColumn
 } from '../types/meetings';
 
 import { DateTimeUtils } from '../utils/dateTimeUtils';
 import { ReuniaoValidation, FilterValidation, IdValidation } from '../utils/validation';
-import APP_CONSTANTS from "../config/constants.ts";
+import api from './httpClient';
 
-const api = axios.create({
-    baseURL: APP_CONSTANTS.API_BASE_URL,
-    timeout: APP_CONSTANTS.API_TIMEOUT,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-// Interceptor para adicionar o token
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-// Interceptor para erros
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        console.error('API Error:', error);
-        return Promise.reject(error);
+const generateClientId = () => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
     }
-);
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const normalizePrioridade = (value?: string): PrioridadeTarefa => {
+    if (!value) {
+        return PrioridadeTarefa.MEDIA;
+    }
+
+    const normalized = value.toLowerCase() as PrioridadeTarefa;
+    if (Object.values(PrioridadeTarefa).includes(normalized)) {
+        return normalized;
+    }
+    return PrioridadeTarefa.MEDIA;
+};
+
+const normalizeStatus = (value?: string): StatusTarefa => {
+    if (!value) {
+        return StatusTarefa.TODO;
+    }
+    switch (value.toLowerCase()) {
+    case StatusTarefa.IN_PROGRESS:
+        return StatusTarefa.IN_PROGRESS;
+    case StatusTarefa.REVIEW:
+        return StatusTarefa.REVIEW;
+    case StatusTarefa.DONE:
+        return StatusTarefa.DONE;
+    default:
+        return StatusTarefa.TODO;
+    }
+};
+
+const normalizeAssignees = (task: any, fallbackIds: string[] = []): Assignee[] => {
+    if (Array.isArray(task.responsaveis) && task.responsaveis.length > 0) {
+        return task.responsaveis.map((assignee: any) => ({
+            id: String(assignee.id ?? assignee.responsavelId ?? ''),
+            nome: assignee.nome ?? assignee.responsavelNome ?? 'Responsável',
+            email: assignee.email ?? '',
+            departamento: assignee.departamento,
+            avatar: assignee.avatar
+        }));
+    }
+
+    if (task.responsavel) {
+        return [{
+            id: String(task.responsavel.id ?? ''),
+            nome: task.responsavel.nome ?? 'Responsável',
+            email: task.responsavel.email ?? '',
+            departamento: task.responsavel.departamento,
+            avatar: task.responsavel.avatar
+        }];
+    }
+
+    if (fallbackIds.length > 0) {
+        return fallbackIds.map((id) => ({
+            id,
+            nome: `Responsável ${id}`,
+            email: '',
+        }));
+    }
+
+    return [];
+};
+
+const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
+    const titulo = task.titulo ?? fallback?.titulo ?? task.descricao ?? 'Nova tarefa';
+    const descricao = task.descricao ?? fallback?.descricao ?? '';
+    const prazo = task.prazo_tarefa ?? task.prazo ?? fallback?.prazo_tarefa ?? '';
+    const prioridade = normalizePrioridade(task.prioridade ?? fallback?.prioridade);
+    const status = normalizeStatus(task.status ?? task.statusTarefa);
+    const responsavelPrincipalId = String(task.responsavelPrincipalId ?? task.responsavelId ?? fallback?.responsavelPrincipalId ?? '');
+    const responsaveis = normalizeAssignees(task, fallback?.responsaveisIds ?? []);
+
+    return {
+        id: String(task.id ?? task.tarefaId ?? generateClientId()),
+        titulo,
+        descricao,
+        status,
+        prioridade,
+        responsaveis,
+        responsavelPrincipalId,
+        prazo_tarefa: prazo,
+        dataInicio: task.dataInicio ?? fallback?.dataInicio ?? '',
+        tags: task.tags ?? fallback?.tags ?? [],
+        estimadoHoras: task.estimadoHoras ?? fallback?.estimadoHoras,
+        horasTrabalhadas: task.horasTrabalhadas ?? 0,
+        reuniaoId: task.reuniaoId ? String(task.reuniaoId) : fallback?.reuniaoId,
+        tarefaPaiId: task.tarefaPaiId ? String(task.tarefaPaiId) : fallback?.tarefaPaiId,
+        subtarefas: task.subtarefas ?? [],
+        dependencias: task.dependencias ?? [],
+        progresso: task.progresso ?? 0,
+        comentarios: task.comentarios ?? [],
+        anexos: task.anexos ?? [],
+        cor: task.cor ?? fallback?.cor,
+        criadaPor: task.criadaPor ?? 'Sistema',
+        criadaPorNome: task.criadaPorNome ?? 'Sistema',
+        atualizadaPor: task.atualizadaPor,
+        atualizadaPorNome: task.atualizadaPorNome,
+        createdAt: task.createdAt ?? new Date().toISOString(),
+        updatedAt: task.updatedAt ?? new Date().toISOString(),
+        deletedAt: task.deletedAt
+    };
+};
+
+const normalizeTaskArray = (tarefas: any[]): Tarefa[] => tarefas.map((tarefa) => mapBackendTask(tarefa));
+
+const mapTarefaFormToBackend = (
+    data: Partial<TarefaFormData>,
+    { includeDefaults = false }: { includeDefaults?: boolean } = {}
+) => {
+    const payload: Record<string, unknown> = {};
+
+    const titulo = data.titulo?.trim();
+    const descricao = data.descricao?.trim();
+    if (titulo || descricao) {
+        payload.descricao = [titulo, descricao].filter(Boolean).join(' - ');
+    } else if (includeDefaults) {
+        payload.descricao = 'Tarefa sem descrição';
+    }
+
+    const prazo = data.prazo_tarefa?.trim();
+    if (prazo) {
+        payload.prazo = prazo;
+    } else if (includeDefaults) {
+        payload.prazo = new Date().toISOString().split('T')[0];
+    }
+
+    if (data.prioridade) {
+        payload.prioridade = data.prioridade.toUpperCase();
+    } else if (includeDefaults) {
+        payload.prioridade = PrioridadeTarefa.MEDIA.toUpperCase();
+    }
+
+    if (data.responsavelPrincipalId) {
+        payload.responsavelId = Number(data.responsavelPrincipalId);
+    }
+
+    if (data.reuniaoId) {
+        payload.reuniaoId = Number(data.reuniaoId);
+    }
+
+    if (includeDefaults) {
+        payload.statusTarefa = StatusTarefa.TODO;
+        payload.concluida = false;
+    }
+
+    return payload;
+};
 
 export const meetingsApi = {
 
@@ -372,12 +496,20 @@ export const meetingsApi = {
 
     async getAllTarefas(filtros?: FiltroTarefas): Promise<Tarefa[]> {
         const response = await api.get('/tarefas', { params: filtros });
-        return response.data;
+        return normalizeTaskArray(response.data ?? []);
     },
 
     async createTarefa(data: TarefaFormData): Promise<Tarefa> {
-        const response = await api.post('/tarefas', data);
-        return response.data;
+        const backendPayload = mapTarefaFormToBackend(data, { includeDefaults: true });
+        const cleanedData = Object.entries(backendPayload).reduce((acc, [key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                acc[key] = value;
+            }
+            return acc;
+        }, {} as Record<string, unknown>);
+
+        const response = await api.post('/tarefas', cleanedData);
+        return mapBackendTask(response.data, data);
     },
 
     async updateTarefa(id: string, data: Partial<TarefaFormData>): Promise<Tarefa> {
@@ -385,8 +517,16 @@ export const meetingsApi = {
             throw new Error('ID da tarefa inválido');
         }
 
-        const response = await api.put(`/tarefas/${id}`, data);
-        return response.data;
+        const backendPayload = mapTarefaFormToBackend(data);
+        const cleanedData = Object.entries(backendPayload).reduce((acc, [key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                acc[key] = value;
+            }
+            return acc;
+        }, {} as Record<string, unknown>);
+
+        const response = await api.put(`/tarefas/${id}`, cleanedData);
+        return mapBackendTask(response.data, data);
     },
 
     async deleteTarefa(id: string): Promise<void> {
@@ -407,7 +547,7 @@ export const meetingsApi = {
             newPosition: newPosition
         });
 
-        return response.data;
+        return mapBackendTask(response.data);
     },
 
     async registrarMovimentacao(movimentacao: MovimentacaoTarefa): Promise<void> {
@@ -457,7 +597,7 @@ export const meetingsApi = {
             principal
         });
 
-        return response.data;
+        return mapBackendTask(response.data);
     },
 
     async getTarefasPorReuniao(reuniaoId: string): Promise<Tarefa[]> {
@@ -466,7 +606,7 @@ export const meetingsApi = {
         }
 
         const response = await api.get(`/reunioes/${reuniaoId}/tarefas`);
-        return response.data;
+        return normalizeTaskArray(response.data ?? []);
     },
 
     async getKanbanBoard(reuniaoId?: string): Promise<KanbanBoard> {
@@ -474,7 +614,16 @@ export const meetingsApi = {
             params: reuniaoId ? { reuniaoId } : {}
         });
 
-        return response.data;
+        const board = response.data;
+        const colunas = (board.colunas ?? []).map((coluna: KanbanColumn) => ({
+            ...coluna,
+            tarefas: normalizeTaskArray(coluna.tarefas ?? [])
+        }));
+
+        return {
+            ...board,
+            colunas
+        };
     },
 
     async getTemplatesTarefas(): Promise<TemplateTarefa[]> {
@@ -488,7 +637,7 @@ export const meetingsApi = {
         prazo_tarefa?: string[];
     }): Promise<Tarefa[]> {
         const response = await api.post(`/tarefas/templates/${templateId}/criar`, dados);
-        return response.data;
+        return normalizeTaskArray(response.data ?? []);
     },
 
     async atualizarProgresso(tarefaId: string, progresso: number): Promise<Tarefa> {
@@ -497,7 +646,7 @@ export const meetingsApi = {
         }
 
         const response = await api.patch(`/tarefas/${tarefaId}/progresso`, { progresso });
-        return response.data;
+        return mapBackendTask(response.data);
     },
 
     async getNotificacoesTarefas(): Promise<NotificacaoTarefa[]> {
@@ -517,19 +666,19 @@ export const meetingsApi = {
         const response = await api.get('/tarefas/buscar', {
             params: { q: termo, ...filtros }
         });
-        return response.data;
+        return normalizeTaskArray(response.data ?? []);
     },
 
     async getTarefasVencendo(dias = 3): Promise<Tarefa[]> {
         const response = await api.get('/tarefas/vencendo', {
             params: { dias }
         });
-        return response.data;
+        return normalizeTaskArray(response.data ?? []);
     },
 
     async getMinhasTarefas(): Promise<Tarefa[]> {
         const response = await api.get('/tarefas/minhas');
-        return response.data;
+        return normalizeTaskArray(response.data ?? []);
     },
 
     async getStatisticsTarefas(): Promise<StatisticsTarefas> {
@@ -544,6 +693,6 @@ export const meetingsApi = {
 
         const response = await api.post(`/tarefas/${tarefaId}/duplicar`, modificacoes);
 
-        return response.data;
+        return mapBackendTask(response.data);
     },
 };

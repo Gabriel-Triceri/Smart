@@ -10,10 +10,10 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class UsoSalaDTO {
-    private Long salaId;
-    private String salaNome;
-    private String salaLocalizacao;
-    private Long totalReunioesRealizadas;
-    private Integer totalMinutosUso;
-    private Double taxaOcupacao;
+    private String id;
+    private String nome;
+    private Double utilizacao;
+    private Long totalReunioes;
+    private Integer capacidade;
+    private String status;
 }

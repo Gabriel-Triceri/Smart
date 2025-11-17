@@ -10,14 +10,13 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class EstatisticasGeraisDTO {
-    private Long totalReunioesAgendadas;
-    private Long totalReunioesFinalizadas;
-    private Long totalReunioesCanceladas;
-    private Long totalReunioesEmAndamento;
-    private Long totalSalas;
-    private Long totalSalasDisponiveis;
-    private Long totalPessoas;
-    private Long totalTarefasPendentes;
-    private Long totalTarefasConcluidas;
-    private Double taxaConclusaoTarefas;
+    private long totalReunioes;
+    private double taxaPresenca;
+    private long salasEmUso;
+    private long totalSalas;
+    private long reunioesHoje;
+    private long proximasReunioes;
+    private long alertasPendentes;
+    private double mediaParticipantes;
+    private double tempoMedioReuniao;
 }

@@ -62,7 +62,7 @@ cp .env.example .env
 
 Edite o arquivo `.env` com a URL da sua API:
 ```env
-VITE_API_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
 4. **Inicie o servidor de desenvolvimento**
