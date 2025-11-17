@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     LayoutGrid,
     List,
@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useTarefas } from '../hooks/useTarefas';
 import { KanbanBoard } from './KanbanBoard';
-import { TaskCard } from './TaskCard';
 import { TaskForm } from './TaskForm';
 import { TaskDetails } from './TaskDetails';
 import { TaskFilters } from './TaskFilters';
@@ -82,6 +81,18 @@ export function TaskManager() {
     };
 
     const totalNotificacoesNaoLidas = notificacoes.filter(n => !n.lida).length;
+
+    // CORREÇÃO 1: evita que cliques no header vazem para elementos abaixo
+    // CORREÇÃO 2 (melhoria): só fecha o modal / limpa seleção se a tarefa selecionada não existir mais
+    useEffect(() => {
+        if (!tarefaSelecionada) return;
+
+        const existe = tarefas.some(t => String(t.id) === String(tarefaSelecionada.id));
+        if (!existe) {
+            setExibirDetalhes(false);
+            setTarefaSelecionada(null);
+        }
+    }, [tarefas, tarefaSelecionada, setTarefaSelecionada, setExibirDetalhes]);
 
     const renderEstatisticas = () => {
         if (!statistics) return null;
@@ -153,12 +164,12 @@ export function TaskManager() {
                         <div className="space-y-3">
                             {Object.entries(statistics.porStatus).map(([status, count]) => (
                                 <div key={status} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    {status === 'todo' && 'A Fazer'}
-                      {status === 'in_progress' && 'Em Andamento'}
-                      {status === 'review' && 'Em Revisão'}
-                      {status === 'done' && 'Concluído'}
-                  </span>
+                                    <span className="text-sm text-gray-600">
+                                        {status === 'todo' && 'A Fazer'}
+                                        {status === 'in_progress' && 'Em Andamento'}
+                                        {status === 'review' && 'Em Revisão'}
+                                        {status === 'done' && 'Concluído'}
+                                    </span>
                                     <div className="flex items-center space-x-2">
                                         <div className="w-32 bg-gray-200 rounded-full h-2">
                                             <div
@@ -179,9 +190,9 @@ export function TaskManager() {
                         <div className="space-y-3">
                             {Object.entries(statistics.porPrioridade).map(([prioridade, count]) => (
                                 <div key={prioridade} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    {prioridade ? (prioridade.charAt(0).toUpperCase() + prioridade.slice(1)) : 'N/A'}
-                  </span>
+                                    <span className="text-sm text-gray-600">
+                                        {prioridade ? (prioridade.charAt(0).toUpperCase() + prioridade.slice(1)) : 'N/A'}
+                                    </span>
                                     <div className="flex items-center space-x-2">
                                         <div className="w-32 bg-gray-200 rounded-full h-2">
                                             <div
@@ -221,17 +232,17 @@ export function TaskManager() {
                                         <h4 className="text-lg font-medium text-gray-900">{tarefa.titulo}</h4>
                                         <p className="text-sm text-gray-600 mt-1">{tarefa.descricao}</p>
                                         <div className="flex items-center space-x-4 mt-2">
-                      <span className="text-sm text-gray-500">
-                        Vencimento: {tarefa.prazo_tarefa ? new Date(tarefa.prazo_tarefa).toLocaleDateString('pt-BR') : 'Não definido'}
-                      </span>
+                                            <span className="text-sm text-gray-500">
+                                                Vencimento: {tarefa.prazo_tarefa ? new Date(tarefa.prazo_tarefa).toLocaleDateString('pt-BR') : 'Não definido'}
+                                            </span>
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${
                                                 tarefa.prioridade === PrioridadeTarefa.URGENTE ? 'bg-purple-100 text-purple-800' :
                                                     tarefa.prioridade === PrioridadeTarefa.CRITICA ? 'bg-red-100 text-red-800' :
                                                         tarefa.prioridade === PrioridadeTarefa.ALTA ? 'bg-orange-100 text-orange-800' :
                                                             tarefa.prioridade === PrioridadeTarefa.MEDIA ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
                                             }`}>
-                        {tarefa.prioridade ? (tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)) : 'N/A'}
-                      </span>
+                                                {tarefa.prioridade ? (tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)) : 'N/A'}
+                                            </span>
                                         </div>
                                     </div>
                                     <button
@@ -249,26 +260,48 @@ export function TaskManager() {
     );
 
     const renderLista = () => (
-        <div className="p-6">
+        <div className="p-6 h-full overflow-y-auto">
             <div className="grid grid-cols-1 gap-4">
                 {tarefas.map((tarefa) => (
-                    <TaskCard
-                        key={tarefa.id}
-                        tarefa={tarefa}
-                        onMove={moverTarefa}
-                        onEdit={handleEditTask}
-                        onDelete={deletarTarefa}
-                        onClick={handleViewTask}
-                    />
+                    <div key={tarefa.id} className="bg-white p-4 rounded-lg shadow-sm border flex justify-between items-center">
+                        <div>
+                            <h4 className="font-medium text-gray-900">{tarefa.titulo}</h4>
+                            <p className="text-sm text-gray-600">{tarefa.descricao}</p>
+                        </div>
+                        <div>
+                            <button
+                                onClick={() => handleViewTask(tarefa)}
+                                className="text-blue-600 hover:text-blue-700 text-sm mr-4"
+                            >
+                                Ver Detalhes
+                            </button>
+                            <button
+                                onClick={() => handleEditTask(tarefa)}
+                                className="text-gray-600 hover:text-gray-900 text-sm"
+                            >
+                                Editar
+                            </button>
+                        </div>
+                    </div>
                 ))}
             </div>
         </div>
     );
 
+    const changeViewMode = (mode: ViewMode) => {
+        setViewMode(mode);
+        setExibirDetalhes(false);
+        setExibirFormulario(false);
+        setTarefaSelecionada(null);
+    };
+
     return (
         <div className="h-full flex flex-col bg-gray-50">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div
+                className="bg-white border-b border-gray-200 px-6 py-4 relative z-20"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <h1 className="text-2xl font-semibold text-gray-900">Gestão de Tarefas</h1>
@@ -286,8 +319,8 @@ export function TaskManager() {
                             <Bell className="w-5 h-5" />
                             {totalNotificacoesNaoLidas > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {totalNotificacoesNaoLidas}
-                </span>
+                                    {totalNotificacoesNaoLidas}
+                                </span>
                             )}
                         </button>
 
@@ -318,7 +351,7 @@ export function TaskManager() {
                 {/* Navigation Tabs */}
                 <div className="flex items-center space-x-6 mt-6">
                     <button
-                        onClick={() => setViewMode('kanban')}
+                        onClick={() => changeViewMode('kanban')}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                             viewMode === 'kanban'
                                 ? 'bg-blue-100 text-blue-700'
@@ -330,7 +363,7 @@ export function TaskManager() {
                     </button>
 
                     <button
-                        onClick={() => setViewMode('lista')}
+                        onClick={() => changeViewMode('lista')}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                             viewMode === 'lista'
                                 ? 'bg-blue-100 text-blue-700'
@@ -342,7 +375,7 @@ export function TaskManager() {
                     </button>
 
                     <button
-                        onClick={() => setViewMode('timeline')}
+                        onClick={() => changeViewMode('timeline')}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                             viewMode === 'timeline'
                                 ? 'bg-blue-100 text-blue-700'
@@ -354,7 +387,7 @@ export function TaskManager() {
                     </button>
 
                     <button
-                        onClick={() => setViewMode('estatisticas')}
+                        onClick={() => changeViewMode('estatisticas')}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                             viewMode === 'estatisticas'
                                 ? 'bg-blue-100 text-blue-700'

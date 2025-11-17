@@ -5,7 +5,7 @@ import {
     Edit, Trash2, ExternalLink, Bell, BellOff
 } from 'lucide-react';
 import { Reuniao, TarefaReuniao, StatusReuniao } from '../types/meetings';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {  getReuniaoHoraInicio, getReuniaoHoraFim } from '../utils/reuniaoHelpers';
 
@@ -28,6 +28,11 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                                         }) => {
     const [activeTab, setActiveTab] = useState<'info' | 'participantes' | 'tarefas'>('info');
     const [tarefas, setTarefas] = useState<TarefaReuniao[]>(reuniao.tarefaReuniao || []);
+
+    const formatDateSafe = (date: string | Date, formatString: string) => {
+        const d = new Date(date);
+        return isValid(d) ? format(d, formatString, { locale: ptBR }) : 'Data inválida';
+    };
 
     const getStatusIcon = (status: string) => {
         switch (status) {
@@ -249,7 +254,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                 <div>
                                                     <p className="text-sm text-gray-500 dark:text-gray-400">Data</p>
                                                     <p className="font-medium text-gray-900 dark:text-white">
-                                                        {format(new Date(reuniao.dataHoraInicio), 'EEEE, dd \'de\' MMMM \'de\' yyyy', { locale: ptBR })}
+                                                        {formatDateSafe(reuniao.dataHoraInicio, 'EEEE, dd \'de\' MMMM \'de\' yyyy')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -291,7 +296,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400">Equipamentos</p>
                                                 <div className="flex flex-wrap gap-1 mt-1">
-                                                    {reuniao.sala.equipamentos.map((equipamento, index) => (
+                                                    {(reuniao.sala.equipamentos || []).map((equipamento, index) => (
                                                         <span
                                                             key={index}
                                                             className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-full"
@@ -336,13 +341,13 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                     <div>
                                         <p className="text-sm text-gray-500 dark:text-gray-400">Criado em</p>
                                         <p className="text-sm text-gray-900 dark:text-white">
-                                            {format(new Date(reuniao.createdAt), 'dd/MM/yyyy \'às\' HH:mm', { locale: ptBR })}
+                                            {formatDateSafe(reuniao.createdAt, 'dd/MM/yyyy \'às\' HH:mm')}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-500 dark:text-gray-400">Última atualização</p>
                                         <p className="text-sm text-gray-900 dark:text-white">
-                                            {format(new Date(reuniao.updatedAt), 'dd/MM/yyyy \'às\' HH:mm', { locale: ptBR })}
+                                            {formatDateSafe(reuniao.updatedAt, 'dd/MM/yyyy \'às\' HH:mm')}
                                         </p>
                                     </div>
                                 </div>
@@ -372,10 +377,10 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                 {/* Participantes */}
                                 <div>
                                     <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                                        Participantes ({reuniao.participantes.length})
+                                        Participantes ({(reuniao.participantes || []).length})
                                     </h4>
                                     <div className="space-y-3">
-                                        {reuniao.participantes.map((participante) => (
+                                        {(reuniao.participantes || []).map((participante) => (
                                             <div key={participante.id} className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
                                                 <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center text-white font-medium">
                                                     {participante.nome.charAt(0).toUpperCase()}

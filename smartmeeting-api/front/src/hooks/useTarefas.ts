@@ -27,12 +27,12 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
 
     // Estados de controle
     const [loading, setLoading] = useState(false);
-    const [error, setError, ] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [statistics, setStatistics] = useState<StatisticsTarefas | null>(null);
     const [notificacoes, setNotificacoes] = useState<NotificacaoTarefa[]>([]);
     const [filtros, setFiltros] = useState<FiltroTarefas>(filtrosIniciais || {});
 
-    // Estados para modal/formulário
+    // Estados UI
     const [tarefaSelecionada, setTarefaSelecionada] = useState<Tarefa | null>(null);
     const [exibirFormulario, setExibirFormulario] = useState(false);
     const [exibirDetalhes, setExibirDetalhes] = useState(false);
@@ -85,6 +85,13 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
             console.error('Erro ao carregar notificações:', err);
         }
     }, []);
+
+    // 🔧 **CORREÇÃO APLICADA AQUI**
+    // Evita que o modal de detalhes reabra sozinho após recarregar tarefas
+    useEffect(() => {
+        setExibirDetalhes(false);
+        setTarefaSelecionada(null);
+    }, [tarefas]);
 
     // CRUD de Tarefas
     const criarTarefa = useCallback(async (data: TarefaFormData) => {
@@ -141,17 +148,15 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         try {
             const tarefaAtualizada = await meetingsApi.moverTarefa(tarefaId, novoStatus, newPosition);
 
-            // Atualizar estado local
             setTarefas(prev => prev.map(t =>
                 t.id === tarefaId ? tarefaAtualizada : t
             ));
 
-            // Registrar movimentação
             const movimentacao: MovimentacaoTarefa = {
-                tarefaId: Number(tarefaId), // Convert string to number
-                statusAnterior: tarefa.status ?? StatusTarefa.TODO, // Provide a default if null/undefined
+                tarefaId: Number(tarefaId),
+                statusAnterior: tarefa.status ?? StatusTarefa.TODO,
                 statusNovo: novoStatus,
-                usuarioId: 'current-user', // TODO: pegar do contexto
+                usuarioId: 'current-user',
                 usuarioNome: 'Usuário Atual',
                 timestamp: new Date().toISOString()
             };
@@ -352,7 +357,6 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
     }, []);
 
     return {
-        // Estados
         tarefas,
         kanbanBoard,
         templates,
@@ -367,8 +371,6 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         exibirDetalhes,
         exibirKanban,
 
-        // Ações
-        carregarDados,
         criarTarefa,
         atualizarTarefa,
         deletarTarefa,
@@ -386,7 +388,9 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         getMinhasTarefas,
         atualizarStatistics,
 
-        // Controles de UI
+        carregarDados,
+
+        // Controles UI
         setTarefaSelecionada,
         setExibirFormulario,
         setExibirDetalhes,
