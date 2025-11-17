@@ -23,7 +23,6 @@ export const MeetingManager: React.FC = () => {
         createReuniao,
         updateReuniao,
         deleteReuniao,
-        encerrarReuniao,
         loadReunioes
     } = useMeetings();
 
@@ -90,8 +89,7 @@ export const MeetingManager: React.FC = () => {
         let sucesso = false;
 
         if (reuniaoEmEdicao && selectedReuniao) {
-            // update espera id como string na API — converter
-            sucesso = !!(await updateReuniao(String(selectedReuniao.id), data));
+            sucesso = !!(await updateReuniao(selectedReuniao.id, data));
         } else {
             sucesso = !!(await createReuniao(data));
         }
@@ -105,7 +103,7 @@ export const MeetingManager: React.FC = () => {
 
     const handleDeleteReuniao = async () => {
         if (selectedReuniao) {
-            const sucesso = await deleteReuniao(String(selectedReuniao.id));
+            const sucesso = await deleteReuniao(selectedReuniao.id);
             if (sucesso) {
                 setModalType(null);
                 setSelectedReuniao(null);
@@ -114,15 +112,9 @@ export const MeetingManager: React.FC = () => {
     };
 
     const handleEncerrarReuniao = async () => {
-        if (selectedReuniao) {
-            const observacoes = prompt('Observações sobre o encerramento da reunião (opcional):');
-            // encerrarReuniao espera id string — converter
-            const resultado = await encerrarReuniao(String(selectedReuniao.id), observacoes || undefined);
-            if (resultado) {
-                // resultado é a reunião atualizada (Reuniao) — atualiza seleção
-                setSelectedReuniao(resultado);
-            }
-        }
+        // Funcionalidade de encerrar reunião temporariamente desabilitada
+        // TODO: Implementar quando o backend disponibilizar o endpoint
+        console.log('Encerrar reunião - funcionalidade em desenvolvimento');
     };
 
     const handleToggleLembrete = () => {
@@ -144,8 +136,7 @@ export const MeetingManager: React.FC = () => {
 
     const handleDragReuniao = async (reuniao: Reuniao, novaData: Date) => {
         const dataFormatada = novaData.toISOString().split('T')[0];
-        // update espera id string
-        await updateReuniao(String(reuniao.id), { data: dataFormatada } as Partial<ReuniaoFormData>);
+        await updateReuniao(reuniao.id, { data: dataFormatada } as Partial<ReuniaoFormData>);
     };
 
     const tabs = [

@@ -22,12 +22,7 @@ const router = createBrowserRouter(
             path: '/login',
             element: <LoginPage />,
         },
-    ],
-    {
-        future: {
-            v7_startTransition: true,
-        },
-    }
+    ]
 );
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

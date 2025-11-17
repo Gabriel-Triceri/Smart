@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     X, Plus, Trash2, Save, Monitor, Video, Phone, Headphones, Cable, Settings
 } from 'lucide-react';
-import { Sala, RecursoSala } from '../types/meetings';
+import { Sala, RecursoSala, SalaStatus } from '../types/meetings';
 
 interface SalaFormProps {
     sala?: Sala;
@@ -51,7 +51,7 @@ export const SalaForm: React.FC<SalaFormProps> = ({
         capacidade: 4,
         localizacao: '',
         categoria: 'reuniao',
-        status: 'disponivel',
+        status: SalaStatus.LIVRE,
         equipamentos: [],
         recursos: [],
         cor: categorias[1].cor,
@@ -73,7 +73,7 @@ export const SalaForm: React.FC<SalaFormProps> = ({
                 capacidade: 4,
                 localizacao: '',
                 categoria: 'reuniao',
-                status: 'disponivel',
+                status: SalaStatus.LIVRE,
                 equipamentos: [],
                 recursos: [],
                 cor: categorias[1].cor,

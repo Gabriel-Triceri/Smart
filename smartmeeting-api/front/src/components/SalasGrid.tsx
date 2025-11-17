@@ -4,7 +4,7 @@ import {
     MapPin, Clock, Settings, AlertTriangle,
     CheckCircle, Wrench
 } from 'lucide-react';
-import { Sala } from '../types/meetings';
+import { Sala, SalaStatus } from '../types/meetings';
 
 interface SalasGridProps {
     salas: Sala[];
@@ -16,13 +16,13 @@ interface SalasGridProps {
 
 const getStatusIcon = (status: Sala['status']) => {
     switch (status) {
-        case 'disponivel':
+        case SalaStatus.LIVRE:
             return <CheckCircle className="w-5 h-5 text-green-500" />;
-        case 'ocupada':
+        case SalaStatus.OCUPADA:
             return <Users className="w-5 h-5 text-red-500" />;
-        case 'manutencao':
+        case SalaStatus.MANUTENCAO:
             return <Wrench className="w-5 h-5 text-yellow-500" />;
-        case 'reservada':
+        case SalaStatus.RESERVADA:
             return <Clock className="w-5 h-5 text-blue-500" />;
         default:
             return <AlertTriangle className="w-5 h-5 text-gray-500" />;
@@ -31,13 +31,13 @@ const getStatusIcon = (status: Sala['status']) => {
 
 const getStatusColor = (status: Sala['status']) => {
     switch (status) {
-        case 'disponivel':
+        case SalaStatus.LIVRE:
             return 'bg-green-50 border-green-200 text-green-800';
-        case 'ocupada':
+        case SalaStatus.OCUPADA:
             return 'bg-red-50 border-red-200 text-red-800';
-        case 'manutencao':
+        case SalaStatus.MANUTENCAO:
             return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-        case 'reservada':
+        case SalaStatus.RESERVADA:
             return 'bg-blue-50 border-blue-200 text-blue-800';
         default:
             return 'bg-gray-50 border-gray-200 text-gray-800';
@@ -153,10 +153,10 @@ export const SalasGrid: React.FC<SalasGridProps> = ({
 
                         {/* Status da sala */}
                         <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(sala.status)}`}>
-                            {sala.status === 'disponivel' && 'Disponível'}
-                            {sala.status === 'ocupada' && 'Ocupada'}
-                            {sala.status === 'manutencao' && 'Manutenção'}
-                            {sala.status === 'reservada' && 'Reservada'}
+                            {sala.status === SalaStatus.LIVRE && 'Disponível'}
+                            {sala.status === SalaStatus.OCUPADA && 'Ocupada'}
+                            {sala.status === SalaStatus.MANUTENCAO && 'Manutenção'}
+                            {sala.status === SalaStatus.RESERVADA && 'Reservada'}
                         </div>
                     </div>
 
@@ -221,7 +221,7 @@ export const SalasGrid: React.FC<SalasGridProps> = ({
                                     onBookingSala(sala);
                                 }}
                                 className="flex-1 px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
-                                disabled={sala.status === 'ocupada' || sala.status === 'manutencao'}
+                                disabled={sala.status === SalaStatus.OCUPADA || sala.status === SalaStatus.MANUTENCAO}
                             >
                                 Reservar
                             </button>

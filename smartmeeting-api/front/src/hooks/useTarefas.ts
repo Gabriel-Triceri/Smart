@@ -134,12 +134,12 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
     }, [tarefaSelecionada]);
 
     // Movimentação no Kanban
-    const moverTarefa = useCallback(async (tarefaId: string, novoStatus: StatusTarefa, colunaDestino?: string) => {
+    const moverTarefa = useCallback(async (tarefaId: string, novoStatus: StatusTarefa, newPosition?: number) => {
         const tarefa = tarefas.find(t => t.id === tarefaId);
         if (!tarefa) return;
 
         try {
-            const tarefaAtualizada = await meetingsApi.moverTarefa(tarefaId, novoStatus, colunaDestino);
+            const tarefaAtualizada = await meetingsApi.moverTarefa(tarefaId, novoStatus, newPosition);
 
             // Atualizar estado local
             setTarefas(prev => prev.map(t =>

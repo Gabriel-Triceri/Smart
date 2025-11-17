@@ -3,7 +3,7 @@ import {
     MapPin, Users, ZoomIn, ZoomOut, RotateCcw,
     Home, Building, ChevronUp, ChevronDown
 } from 'lucide-react';
-import { Sala } from '../types/meetings';
+import { Sala, SalaStatus } from '../types/meetings';
 
 interface MapaSalasProps {
     salas: Sala[];
@@ -78,13 +78,13 @@ export const MapaSalas: React.FC<MapaSalasProps> = ({
 
     const getStatusColor = (status: Sala['status']) => {
         switch (status) {
-            case 'disponivel':
+            case SalaStatus.LIVRE:
                 return '#10B981'; // green-500
-            case 'ocupada':
+            case SalaStatus.OCUPADA:
                 return '#EF4444'; // red-500
-            case 'manutencao':
+            case SalaStatus.MANUTENCAO:
                 return '#F59E0B'; // yellow-500
-            case 'reservada':
+            case SalaStatus.RESERVADA:
                 return '#3B82F6'; // blue-500
             default:
                 return '#6B7280'; // gray-500

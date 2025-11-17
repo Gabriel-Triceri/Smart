@@ -50,42 +50,18 @@ export const Calendar: React.FC<CalendarProps> = ({
         });
     };
 
-    const getStatusColor = (status: string) => {
-        // aceita variantes em maiúsculas/minúsculas
-        const s = (status || '').toString().toLowerCase();
-        switch (s) {
-            case 'agendada':
-            case 'agendada': // redundancy for clarity
-            case 'agendada':
-            case 'agendada':
-            case 'agendada':
-            case 'agendada':
-            case 'agendada':
-            case 'agendada':
-            case 'agendada':
-                return 'bg-blue-500';
-            case 'em_andamento':
-            case 'em andamento':
-            case 'em_andamento'.toLowerCase():
-            case 'em_andamento':
-            case 'em_andamento':
-                return 'bg-green-500';
-            case 'finalizada':
-            case 'finalizada':
-                return 'bg-gray-500';
-            case 'cancelada':
-                return 'bg-red-500';
-            // se backend usa enums em maiúsculas como 'AGENDADA', 'EM_ANDAMENTO'
-            default:
-                if (s === 'agendada' || s === 'agendada') return 'bg-blue-500';
-                if (s === 'em_andamento' || s === 'em_andamento') return 'bg-green-500';
-                if (s === 'finalizada') return 'bg-gray-500';
-                if (s === 'cancelada') return 'bg-red-500';
-                return 'bg-gray-400';
-        }
+    const getStatusColor = (status?: string) => {
+        // normaliza o status para facilitar a comparação (minusculas, underscores)
+        const s = (status || '').toString().trim().toLowerCase().replace(/[\s-]+/g, '_');
+
+        if (s.includes('agend')) return 'bg-blue-500';
+        if (s.includes('andament') || s === 'em_andamento') return 'bg-green-500';
+        if (s.includes('finaliz')) return 'bg-gray-500';
+        if (s.includes('cancel')) return 'bg-red-500';
+        return 'bg-gray-400';
     };
 
-    const getPrioridadeColor = (prioridade: string) => {
+    const getPrioridadeColor = (prioridade?: string) => {
         const p = (prioridade || '').toString().toLowerCase();
         switch (p) {
             case 'critica': return 'border-l-red-500';

@@ -7,6 +7,7 @@ export interface Participante {
     avatar?: string;
     status: 'confirmado' | 'pendente' | 'recusado';
     organizacao?: string;
+    departamento?: string;
 }
 
 export interface Sala {
@@ -140,8 +141,8 @@ export interface FiltroReunioes {
     status?: StatusReuniao[];
     dataInicio?: string;
     dataFim?: string;
-    organizador?: string;
-    sala?: string;
+    organizador?: number | string;
+    sala?: number | string;
     tipo?: Reuniao['tipo'][];
     prioridade?: Reuniao['prioridade'][];
     busca?: string;

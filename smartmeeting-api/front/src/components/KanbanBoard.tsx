@@ -66,11 +66,11 @@ export function KanbanBoard({
     const [filters, setFilters] = useState<FiltroTarefas>({
         responsavelId: undefined,
         prioridade: [],
-        dataVencimentoInicio: undefined,
-        dataVencimentoFim: undefined,
+        prazo_tarefaInicio: undefined,
+        prazo_tarefaFim: undefined,
         tags: undefined,
         status: undefined,
-        busca: undefined // Changed from searchText to busca
+        busca: undefined
     });
 
     const boardRef = useRef<HTMLDivElement>(null);
@@ -82,19 +82,19 @@ export function KanbanBoard({
             tarefa.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesResponsavel = !filters.responsavelId ||
-            tarefa.responsaveis.some(r => r.id === filters.responsavelId);
+            (tarefa.responsaveis ?? []).some(r => r.id === filters.responsavelId);
 
         const matchesPrioridade = filters.prioridade === undefined || filters.prioridade.length === 0 ||
             (tarefa.prioridade && filters.prioridade.includes(tarefa.prioridade));
 
-        const matchesDataVencimento = (!filters.dataVencimentoInicio || (tarefa.dataVencimento && new Date(tarefa.dataVencimento) >= new Date(filters.dataVencimentoInicio))) &&
-            (!filters.dataVencimentoFim || (tarefa.dataVencimento && new Date(tarefa.dataVencimento) <= new Date(filters.dataVencimentoFim)));
+        const matchesPrazoTarefa = (!filters.prazo_tarefaInicio || (tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) >= new Date(filters.prazo_tarefaInicio))) &&
+            (!filters.prazo_tarefaFim || (tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) <= new Date(filters.prazo_tarefaFim)));
 
         const matchesTags = !filters.tags ||
-            tarefa.tags?.some(tag => filters.tags?.includes(tag));
+            (tarefa.tags ?? []).some(tag => filters.tags?.includes(tag));
 
         return matchesSearch && matchesResponsavel && matchesPrioridade &&
-            matchesDataVencimento && matchesTags;
+            matchesPrazoTarefa && matchesTags;
     });
 
     // Agrupar tarefas por status
