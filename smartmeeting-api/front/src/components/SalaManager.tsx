@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Plus, Search, Filter, Grid, Map,
+    Plus, Search, Filter, Grid,
     RefreshCw, Building
 } from 'lucide-react';
 import { Sala } from '../types/meetings';
 import { useSalas } from '../hooks/useSalas';
 import { SalasGrid } from './SalasGrid';
 import { SalaForm } from './SalaForm';
-import { MapaSalas } from './MapaSalas';
 import { BookingSystem } from './BookingSystem';
 
-type ViewType = 'grid' | 'map';
 type ModalType = 'form' | 'booking' | null;
 
 export const SalaManager: React.FC = () => {
@@ -29,7 +27,6 @@ export const SalaManager: React.FC = () => {
         limparFiltros,
     } = useSalas();
 
-    const [currentView, setCurrentView] = useState<ViewType>('grid');
     const [modalType, setModalType] = useState<ModalType>(null);
     const [salaSelecionada, setSalaSelecionada] = useState<Sala | null>(null);
     const [salaEmEdicao, setSalaEmEdicao] = useState<Partial<Sala> | null>(null);
@@ -315,28 +312,12 @@ export const SalaManager: React.FC = () => {
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <nav className="flex space-x-8">
-                        <button
-                            onClick={() => setCurrentView('grid')}
-                            className={`flex items-center gap-2 px-1 py-4 text-sm font-medium border-b-2 transition-colors ${
-                                currentView === 'grid'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                            }`}
+                        <div
+                            className={`flex items-center gap-2 px-1 py-4 text-sm font-medium border-b-2 border-blue-500 text-blue-600`}
                         >
                             <Grid className="w-4 h-4" />
                             Grid de Salas
-                        </button>
-                        <button
-                            onClick={() => setCurrentView('map')}
-                            className={`flex items-center gap-2 px-1 py-4 text-sm font-medium border-b-2 transition-colors ${
-                                currentView === 'map'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                            }`}
-                        >
-                            <Map className="w-4 h-4" />
-                            Mapa Visual
-                        </button>
+                        </div>
                     </nav>
                 </div>
             </div>
@@ -348,18 +329,12 @@ export const SalaManager: React.FC = () => {
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                         <span className="ml-3 text-gray-600">Carregando salas...</span>
                     </div>
-                ) : currentView === 'grid' ? (
+                ) : (
                     <SalasGrid
                         salas={salasFiltradas}
                         onSalaClick={handleSalaClick}
                         onEditSala={handleEditSala}
                         onDeleteSala={handleDeleteSala}
-                    />
-                ) : (
-                    <MapaSalas
-                        salas={salasFiltradas}
-                        onSalaClick={handleSalaClick}
-                        salaSelecionada={salaSelecionada || undefined}
                     />
                 )}
             </main>

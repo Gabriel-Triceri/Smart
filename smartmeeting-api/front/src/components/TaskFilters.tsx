@@ -1,4 +1,4 @@
-import { Filter, X, Calendar, User, Flag, Tag, Search, ListChecks, LucideIcon } from 'lucide-react';
+import { Filter, X, Calendar, User, Flag, Tag, Search, ListChecks, LucideIcon, Clock } from 'lucide-react';
 import { FiltroTarefas, Tarefa, Assignee } from '../types/meetings';
 import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '../config/taskConfig';
 
@@ -37,94 +37,119 @@ export function TaskFilters({
     const uniqueTags = [...new Set(tarefas.flatMap(t => t.tags || []))];
 
     return (
-        <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-700 flex items-center">
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filtros
-                </h3>
+        <div className="bg-white border border-gray-200/80 rounded-lg shadow-sm overflow-hidden">
+            {/* Header Ultra Compacto */}
+            <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800/20">
+                <div className="flex items-center gap-1.5">
+                    <Filter className="w-3.5 h-3.5 text-white" />
+                    <h3 className="text-xs font-bold text-white">Filtros</h3>
+                </div>
                 {hasActiveFilters && (
                     <button
                         onClick={clearAllFilters}
-                        className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
+                        className="text-xs text-white/90 hover:text-white font-semibold flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition-all"
                     >
-                        <X className="w-3 h-3 mr-1" />
-                        Limpar filtros
+                        <X className="w-3 h-3" />
+                        Limpar
                     </button>
                 )}
             </div>
 
-            {/* Busca */}
-            <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                    <Search className="w-3 h-3 inline mr-1" />
-                    Busca
-                </label>
-                <input
-                    type="text"
-                    value={filters.busca || ''}
-                    onChange={(e) => updateFilter('busca', e.target.value)}
-                    placeholder="Título, descrição..."
-                    className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                />
-                {filters.busca && (
-                    <button
-                        onClick={() => clearFilter('busca')}
-                        className="text-xs text-gray-500 hover:text-gray-700 mt-1 flex items-center"
-                    >
-                        <X className="w-3 h-3 mr-1" />
-                        Remover busca
-                    </button>
-                )}
-            </div>
+            <div className="p-2.5 space-y-2">
+                {/* Linha 1: Busca + Ações Rápidas */}
+                <div className="flex gap-2">
+                    {/* Busca com ícone integrado */}
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                        <input
+                            type="text"
+                            value={filters.busca || ''}
+                            onChange={(e) => updateFilter('busca', e.target.value)}
+                            placeholder="Buscar tarefas..."
+                            className="w-full pl-8 pr-8 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white placeholder-gray-400"
+                        />
+                        {filters.busca && (
+                            <button
+                                onClick={() => clearFilter('busca')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-0.5 hover:bg-blue-50 rounded transition-colors"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
 
-            <FilterSelectField
-                label="Responsáveis"
-                icon={User}
-                filterKey="responsaveis"
-                value={filters.responsaveis}
-                options={assignees.map(a => ({ value: a.id, label: a.nome }))}
-                updateFilter={updateFilter}
-                clearFilter={clearFilter}
-            />
-            <FilterSelectField
-                label="Status"
-                icon={ListChecks}
-                filterKey="status"
-                value={filters.status}
-                options={STATUS_OPTIONS}
-                updateFilter={updateFilter}
-                clearFilter={clearFilter}
-            />
+                    {/* Ações Rápidas em linha */}
+                    <div className="flex gap-1.5">
+                        <button
+                            onClick={() => updateFilter('atribuidasPorMim', !filters.atribuidasPorMim)}
+                            className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
+                                filters.atribuidasPorMim
+                                    ? 'bg-blue-600 text-white shadow-sm'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                            }`}
+                        >
+                            <User className="w-3 h-3 inline mr-1" />
+                            Minhas
+                        </button>
+                        <button
+                            onClick={() => updateFilter('semResponsavel', !filters.semResponsavel)}
+                            className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
+                                filters.semResponsavel
+                                    ? 'bg-gray-800 text-white shadow-sm'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                            }`}
+                        >
+                            S/ Resp
+                        </button>
+                        <button
+                            onClick={() => updateFilter('proximas', filters.proximas === 5 ? undefined : 5)}
+                            className={`px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
+                                filters.proximas === 5
+                                    ? 'bg-blue-600 text-white shadow-sm'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                            }`}
+                        >
+                            <Clock className="w-3 h-3 inline mr-1" />
+                            Top 5
+                        </button>
+                    </div>
+                </div>
 
-            <FilterSelectField
-                label="Prioridade"
-                icon={Flag}
-                filterKey="prioridade"
-                value={filters.prioridade}
-                options={PRIORITY_OPTIONS}
-                updateFilter={updateFilter}
-                clearFilter={clearFilter}
-            />
+                {/* Linha 2: Filtros Principais - 4 colunas compactas */}
+                <div className="grid grid-cols-4 gap-2">
+                    <CompactSelect
+                        icon={User}
+                        value={filters.responsaveis?.[0] || ''}
+                        onChange={(val) => updateFilter('responsaveis', val ? [val] : undefined)}
+                        options={assignees.map(a => ({ value: a.id, label: a.nome }))}
+                        placeholder="Responsável"
+                    />
+                    <CompactSelect
+                        icon={ListChecks}
+                        value={filters.status?.[0] || ''}
+                        onChange={(val) => updateFilter('status', val ? [val] : undefined)}
+                        options={STATUS_OPTIONS}
+                        placeholder="Status"
+                    />
+                    <CompactSelect
+                        icon={Flag}
+                        value={filters.prioridade?.[0] || ''}
+                        onChange={(val) => updateFilter('prioridade', val ? [val] : undefined)}
+                        options={PRIORITY_OPTIONS}
+                        placeholder="Prioridade"
+                    />
+                    <CompactSelect
+                        icon={Tag}
+                        value={filters.tags?.[0] || ''}
+                        onChange={(val) => updateFilter('tags', val ? [val] : undefined)}
+                        options={uniqueTags.map(tag => ({ value: tag, label: tag }))}
+                        placeholder="Tags"
+                    />
+                </div>
 
-            <FilterSelectField
-                label="Tags"
-                icon={Tag}
-                filterKey="tags"
-                value={filters.tags}
-                options={uniqueTags.map(tag => ({ value: tag, label: tag }))}
-                updateFilter={updateFilter}
-                clearFilter={clearFilter}
-            />
-
-            {/* Data de Vencimento */}
-            <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                    <Calendar className="w-3 h-3 inline mr-1" />
-                    Data de Vencimento
-                </label>
-                <div className="space-y-2">
+                {/* Linha 3: Vencimento - Tudo inline */}
+                <div className="flex items-center gap-2 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-200">
+                    <Calendar className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                     <select
                         value={filters.vencendo ? '3' : filters.atrasadas ? 'overdue' : ''}
                         onChange={(e) => {
@@ -136,35 +161,27 @@ export function TaskFilters({
                                 clearFilter('atrasadas');
                             }
                         }}
-                        className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white font-medium"
                     >
-                        <option value="">Todas</option>
+                        <option value="">Vencimento</option>
                         <option value="overdue">Atrasadas</option>
-                        <option value="3">Vencendo em 3 dias</option>
+                        <option value="3">Vence em 3d</option>
                     </select>
-
-                    {/* Range de datas */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <div>
-                            <input
-                                type="date"
-                                value={filters.prazo_tarefaInicio || ''}
-                                onChange={(e) => updateFilter('prazo_tarefaInicio', e.target.value)}
-                                placeholder="De"
-                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                        <div>
-                            <input
-                                type="date"
-                                value={filters.prazo_tarefaFim || ''}
-                                onChange={(e) => updateFilter('prazo_tarefaFim', e.target.value)}
-                                placeholder="Até"
-                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
-
+                    <input
+                        type="date"
+                        value={filters.prazo_tarefaInicio || ''}
+                        onChange={(e) => updateFilter('prazo_tarefaInicio', e.target.value)}
+                        placeholder="De"
+                        className="w-28 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                    />
+                    <span className="text-xs text-gray-400">→</span>
+                    <input
+                        type="date"
+                        value={filters.prazo_tarefaFim || ''}
+                        onChange={(e) => updateFilter('prazo_tarefaFim', e.target.value)}
+                        placeholder="Até"
+                        className="w-28 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                    />
                     {(filters.vencendo || filters.atrasadas || filters.prazo_tarefaInicio || filters.prazo_tarefaFim) && (
                         <button
                             onClick={() => {
@@ -173,159 +190,97 @@ export function TaskFilters({
                                 clearFilter('prazo_tarefaInicio');
                                 clearFilter('prazo_tarefaFim');
                             }}
-                            className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
+                            className="text-gray-400 hover:text-blue-600 p-0.5 hover:bg-blue-50 rounded transition-colors flex-shrink-0"
                         >
-                            <X className="w-3 h-3 mr-1" />
-                            Limpar datas
+                            <X className="w-3.5 h-3.5" />
                         </button>
                     )}
                 </div>
-            </div>
 
-            {/* Filtros Rápidos */}
-            <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">
-                    Filtros Rápidos
-                </label>
-                <div className="space-y-1">
-                    <button
-                        onClick={() => updateFilter('atribuidasPorMim', !filters.atribuidasPorMim)}
-                        className={`w-full text-left px-3 py-1 text-xs rounded transition-colors ${
-                            filters.atribuidasPorMim
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                        }`}
-                    >
-                        Minhas Tarefas
-                    </button>
-                    <button
-                        onClick={() => updateFilter('semResponsavel', !filters.semResponsavel)}
-                        className={`w-full text-left px-3 py-1 text-xs rounded transition-colors ${
-                            filters.semResponsavel
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                        }`}
-                    >
-                        Sem Responsável
-                    </button>
-                    <button
-                        onClick={() => updateFilter('proximas', filters.proximas === 5 ? undefined : 5)}
-                        className={`w-full text-left px-3 py-1 text-xs rounded transition-colors ${
-                            filters.proximas === 5
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                        }`}
-                    >
-                        Próximas 5
-                    </button>
-                </div>
-            </div>
-
-            {/* Ativo/Disponível Filtros */}
-            {hasActiveFilters && (
-                <div className="border-t border-gray-200 pt-3">
-                    <div className="text-xs font-medium text-gray-600 mb-2">Filtros Ativos:</div>
-                    <div className="space-y-1">
+                {/* Badges de Filtros Ativos - Ultra compacto */}
+                {hasActiveFilters && (
+                    <div className="flex flex-wrap gap-1.5 pt-1 border-t border-gray-200">
                         {Object.entries(filters).map(([key, value]) => {
                             if (!value) return null;
                             return (
                                 <div
                                     key={key}
-                                    className="inline-flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs mr-1 mb-1"
+                                    className="inline-flex items-center bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-semibold"
                                 >
                                     <span>{getFilterLabel(key, value)}</span>
                                     <button
                                         onClick={() => clearFilter(key as keyof FiltroTarefas)}
-                                        className="ml-1 hover:text-blue-900"
+                                        className="ml-1 hover:bg-white/20 rounded p-0.5 transition-colors"
                                     >
-                                        <X className="w-3 h-3" />
+                                        <X className="w-2.5 h-2.5" />
                                     </button>
                                 </div>
                             );
                         })}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
 
-interface FilterSelectFieldProps {
-    label: string;
+// Componente Select Ultra Compacto
+interface CompactSelectProps {
     icon: LucideIcon;
-    filterKey: keyof FiltroTarefas;
-    value: string[] | undefined;
+    value: string;
+    onChange: (value: string) => void;
     options: { value: string; label: string }[];
-    updateFilter: (key: keyof FiltroTarefas, value: any) => void;
-    clearFilter: (key: keyof FiltroTarefas) => void;
+    placeholder: string;
 }
 
-function FilterSelectField({ label, icon: Icon, filterKey, value, options, updateFilter, clearFilter }: FilterSelectFieldProps) {
+function CompactSelect({ icon: Icon, value, onChange, options, placeholder }: CompactSelectProps) {
     return (
-        <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-                <Icon className="w-3 h-3 inline mr-1" />
-                {label}
-            </label>
+        <div className="relative">
+            <Icon className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-blue-600 pointer-events-none z-10" />
             <select
-                // O select padrão não suporta múltiplos valores facilmente via `value`.
-                // Esta implementação permite selecionar um por vez.
-                // Para multi-select, seria necessário um componente customizado (ex: com checkboxes).
-                value={value?.[0] || ''}
-                onChange={(e) => updateFilter(
-                    filterKey,
-                    e.target.value ? [e.target.value] : undefined
-                )}
-                className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white font-medium hover:border-blue-400 appearance-none"
             >
-                <option value="">{`Todos os ${label.toLowerCase()}`}</option>
+                <option value="">{placeholder}</option>
                 {options.map(option => (
                     <option key={option.value} value={option.value}>
                         {option.label}
                     </option>
                 ))}
             </select>
-            {value && (
-                <button
-                    onClick={() => clearFilter(filterKey)}
-                    className="text-xs text-gray-500 hover:text-gray-700 mt-1 flex items-center"
-                >
-                    <X className="w-3 h-3 mr-1" />
-                    {`Limpar ${label.toLowerCase()}`}
-                </button>
-            )}
         </div>
     );
 }
 
-// Função auxiliar para labels dos filtros
+// Função auxiliar para labels dos filtros - Versão compacta
 function getFilterLabel(key: string, value: any): string {
     switch (key) {
         case 'busca':
-            return `Busca: "${value}"`;
+            return `"${value.length > 15 ? value.substring(0, 15) + '...' : value}"`;
         case 'responsaveis':
-            return `Responsáveis: ${Array.isArray(value) ? value.length : 1}`;
+            return `Resp: ${Array.isArray(value) ? value.length : 1}`;
         case 'status':
             return `Status: ${Array.isArray(value) ? value.length : 1}`;
         case 'prioridade':
-            return `Prioridade: ${Array.isArray(value) ? value.length : 1}`;
+            return `Prior: ${Array.isArray(value) ? value.length : 1}`;
         case 'tags':
             return `Tags: ${Array.isArray(value) ? value.length : 1}`;
         case 'prazo_tarefaInicio':
-            return `De: ${value}`;
+            return `De ${value}`;
         case 'prazo_tarefaFim':
-            return `Até: ${value}`;
+            return `Até ${value}`;
         case 'vencendo':
-            return 'Vencendo em 3 dias';
+            return 'Vence 3d';
         case 'atrasadas':
             return 'Atrasadas';
         case 'atribuidasPorMim':
-            return 'Minhas tarefas';
+            return 'Minhas';
         case 'semResponsavel':
-            return 'Sem responsável';
+            return 'S/Resp';
         case 'proximas':
-            return `Próximas ${value}`;
+            return `Top ${value}`;
         default:
-            return `${key}: ${value}`;
+            return `${key}`;
     }
 }

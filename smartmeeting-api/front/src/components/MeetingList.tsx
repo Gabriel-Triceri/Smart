@@ -90,13 +90,11 @@ export const MeetingList: React.FC<MeetingListProps> = ({
             const timeA = dateA.getTime();
             const timeB = dateB.getTime();
 
-            // If either date is invalid, prioritize valid dates.
-            // If both are invalid, their relative order doesn't matter for date comparison.
-            if (isNaN(timeA) && isNaN(timeB)) return 0; // Both invalid, maintain original order
-            if (isNaN(timeA)) return 1; // a is invalid, b is valid, b comes first (a is "later")
-            if (isNaN(timeB)) return -1; // b is invalid, a is valid, a comes first (b is "later")
+            if (isNaN(timeA) && isNaN(timeB)) return 0;
+            if (isNaN(timeA)) return 1;
+            if (isNaN(timeB)) return -1;
 
-            return timeB - timeA; // Sort by date/time (most recent first)
+            return timeB - timeA;
         });
 
         return resultado;
@@ -115,12 +113,12 @@ export const MeetingList: React.FC<MeetingListProps> = ({
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'agendada': return 'text-blue-600 bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400';
-            case 'em_andamento': return 'text-green-600 bg-green-100 dark:bg-green-900/20 dark:text-green-400';
-            case 'finalizada': return 'text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400';
-            case 'cancelada': return 'text-red-600 bg-red-100 dark:bg-red-900/20 dark:text-red-400';
-            case 'expirada': return 'text-orange-600 bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400';
-            default: return 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400';
+            case 'agendada': return 'text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800';
+            case 'em_andamento': return 'text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800';
+            case 'finalizada': return 'text-gray-700 bg-gray-50 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
+            case 'cancelada': return 'text-gray-600 bg-gray-50 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
+            case 'expirada': return 'text-gray-600 bg-gray-50 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
+            default: return 'text-gray-700 bg-gray-50 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
         }
     };
 
@@ -135,13 +133,13 @@ export const MeetingList: React.FC<MeetingListProps> = ({
         }
     };
 
-    const getPrioridadeColor = (prioridade: string) => {
+    const getPrioridadeIndicator = (prioridade: string) => {
         switch (prioridade) {
-            case 'critica': return 'text-red-600 bg-red-100 dark:bg-red-900/20 dark:text-red-400';
-            case 'alta': return 'text-orange-600 bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400';
-            case 'media': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400';
-            case 'baixa': return 'text-green-600 bg-green-100 dark:bg-green-900/20 dark:text-green-400';
-            default: return 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400';
+            case 'critica': return 'bg-gray-900 dark:bg-white';
+            case 'alta': return 'bg-gray-700 dark:bg-gray-300';
+            case 'media': return 'bg-gray-500 dark:bg-gray-400';
+            case 'baixa': return 'bg-gray-300 dark:bg-gray-600';
+            default: return 'bg-gray-300 dark:bg-gray-600';
         }
     };
 
@@ -165,47 +163,47 @@ export const MeetingList: React.FC<MeetingListProps> = ({
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
             {/* Cabeçalho com busca e filtros */}
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex flex-col sm:flex-row gap-4">
                     {/* Barra de busca */}
                     <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                         <input
                             type="text"
-                            placeholder="Buscar reuniões..."
+                            placeholder="Buscar por título, pauta, organizador..."
                             value={filtros.busca || ''}
                             onChange={(e) => setFiltros(prev => ({ ...prev, busca: e.target.value }))}
-                            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
-                       focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                       dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
-                       transition-colors"
+                            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800
+                       dark:text-white placeholder-gray-500 dark:placeholder-gray-400
+                       transition-all duration-200 text-sm"
                         />
                     </div>
 
                     {/* Botão de filtros */}
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`px-4 py-3 border rounded-lg transition-colors flex items-center gap-2
+                        className={`px-5 py-3.5 border rounded-lg transition-all duration-200 flex items-center gap-2.5 text-sm font-medium
                      ${showFilters
-                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400'
-                            : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750'
                         }`}
                     >
                         <Filter className="w-5 h-5" />
                         Filtros
-                        <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
                     </button>
                 </div>
 
                 {/* Painel de filtros expandido */}
                 {showFilters && (
-                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="mt-5 p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                             {/* Status */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2.5">
                                     Status
                                 </label>
                                 <select
@@ -215,9 +213,9 @@ export const MeetingList: React.FC<MeetingListProps> = ({
                                         const values = Array.from(e.target.selectedOptions, option => option.value as any);
                                         setFiltros(prev => ({ ...prev, status: values }));
                                     }}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                           dark:bg-gray-600 dark:text-white text-sm"
+                                    className="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                           dark:text-white text-sm"
                                     size={3}
                                 >
                                     <option value="agendada">Agendada</option>
@@ -230,7 +228,7 @@ export const MeetingList: React.FC<MeetingListProps> = ({
 
                             {/* Tipo */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2.5">
                                     Tipo
                                 </label>
                                 <select
@@ -240,9 +238,9 @@ export const MeetingList: React.FC<MeetingListProps> = ({
                                         const values = Array.from(e.target.selectedOptions, option => option.value as any);
                                         setFiltros(prev => ({ ...prev, tipo: values }));
                                     }}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                           dark:bg-gray-600 dark:text-white text-sm"
+                                    className="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                           dark:text-white text-sm"
                                     size={3}
                                 >
                                     <option value="presencial">Presencial</option>
@@ -253,7 +251,7 @@ export const MeetingList: React.FC<MeetingListProps> = ({
 
                             {/* Prioridade */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2.5">
                                     Prioridade
                                 </label>
                                 <select
@@ -263,9 +261,9 @@ export const MeetingList: React.FC<MeetingListProps> = ({
                                         const values = Array.from(e.target.selectedOptions, option => option.value as any);
                                         setFiltros(prev => ({ ...prev, prioridade: values }));
                                     }}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                           dark:bg-gray-600 dark:text-white text-sm"
+                                    className="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                           dark:text-white text-sm"
                                     size={3}
                                 >
                                     <option value="baixa">Baixa</option>
@@ -277,36 +275,36 @@ export const MeetingList: React.FC<MeetingListProps> = ({
 
                             {/* Datas */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2.5">
                                     Período
                                 </label>
-                                <div className="space-y-2">
+                                <div className="space-y-2.5">
                                     <input
                                         type="date"
                                         value={filtros.dataInicio || ''}
                                         onChange={(e) => setFiltros(prev => ({ ...prev, dataInicio: e.target.value }))}
                                         placeholder="Data início"
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                             dark:bg-gray-600 dark:text-white text-sm"
+                                        className="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg
+                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                             dark:text-white text-sm"
                                     />
                                     <input
                                         type="date"
                                         value={filtros.dataFim || ''}
                                         onChange={(e) => setFiltros(prev => ({ ...prev, dataFim: e.target.value }))}
                                         placeholder="Data fim"
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                             dark:bg-gray-600 dark:text-white text-sm"
+                                        className="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg
+                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                             dark:text-white text-sm"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-3 mt-5 pt-5 border-t border-gray-200 dark:border-gray-700">
                             <button
                                 onClick={clearFilters}
-                                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
                             >
                                 Limpar filtros
                             </button>
@@ -316,19 +314,24 @@ export const MeetingList: React.FC<MeetingListProps> = ({
             </div>
 
             {/* Lista de reuniões */}
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
                 {isLoading ? (
-                    <div className="p-8 text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                        <p className="mt-2 text-gray-500 dark:text-gray-400">Carregando reuniões...</p>
+                    <div className="p-12 text-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 dark:border-gray-700 border-t-blue-600 mx-auto"></div>
+                        <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Carregando reuniões...</p>
                     </div>
                 ) : reunioesFiltradas.length === 0 ? (
-                    <div className="p-8 text-center">
-                        <Calendar className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-                        <p className="text-gray-500 dark:text-gray-400">
+                    <div className="p-12 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                            <Calendar className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                            Nenhuma reunião encontrada
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                             {Object.keys(filtros).length > 0
-                                ? 'Nenhuma reunião encontrada com os filtros aplicados'
-                                : 'Nenhuma reunião cadastrada'
+                                ? 'Tente ajustar os filtros para ver mais resultados'
+                                : 'Comece criando sua primeira reunião'
                             }
                         </p>
                     </div>
@@ -336,99 +339,96 @@ export const MeetingList: React.FC<MeetingListProps> = ({
                     reunioesFiltradas.map((reuniao) => (
                         <div
                             key={reuniao.id}
-                            className="p-6 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer"
+                            className="group p-6 hover:bg-gray-50 dark:hover:bg-gray-850 transition-all duration-200 cursor-pointer relative"
                             onClick={() => onReuniaoClick(reuniao)}
                         >
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1">
+                            {/* Indicador de prioridade */}
+                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPrioridadeIndicator(reuniao.prioridade)} rounded-l-xl`}></div>
+
+                            <div className="flex items-start justify-between gap-6 ml-4">
+                                <div className="flex-1 min-w-0">
                                     {/* Cabeçalho da reunião */}
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: reuniao.prioridade === 'critica' ? '#ef4444' : reuniao.prioridade === 'alta' ? '#f97316' : reuniao.prioridade === 'media' ? '#eab308' : '#22c55e' }}></div>
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                                                {reuniao.titulo}
-                                            </h3>
-                                            {reuniao.pauta && (
-                                                <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2">
-                                                    {reuniao.pauta}
-                                                </p>
-                                            )}
-                                        </div>
+                                    <div className="mb-3">
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                            {reuniao.titulo}
+                                        </h3>
+                                        {reuniao.pauta && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                                                {reuniao.pauta}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Informações da reunião */}
-                                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                        <div className="flex items-center gap-1">
-                                            <Calendar className="w-4 h-4" />
-                                            <span>{format(new Date(reuniao.dataHoraInicio), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                                    <div className="flex flex-wrap gap-x-6 gap-y-2.5 text-sm mb-4">
+                                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                            <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                            <span className="font-medium">{format(new Date(reuniao.dataHoraInicio), 'dd/MM/yyyy', { locale: ptBR })}</span>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <Clock className="w-4 h-4" />
-                                            <span>{getReuniaoHoraInicio(reuniao)}</span>
+                                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                            <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                            <span className="font-medium">{getReuniaoHoraInicio(reuniao)}</span>
                                         </div>
-                                        <div className="flex items-center gap-1">
+                                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                                             {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
-                                                <Video className="w-4 h-4" />
+                                                <Video className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                                             ) : (
-                                                <MapPin className="w-4 h-4" />
+                                                <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                                             )}
-                                            <span>{reuniao.sala.nome}</span>
+                                            <span className="font-medium">{reuniao.sala.nome}</span>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <Users className="w-4 h-4" />
-                                            <span>{reuniao.participantes.length} participantes</span>
+                                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                            <Users className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                            <span className="font-medium">{reuniao.participantes.length} participante{reuniao.participantes.length !== 1 ? 's' : ''}</span>
                                         </div>
                                     </div>
 
-                                    {/* Participantes */}
-                                    <div className="mt-3 flex items-center gap-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">Organizador:</span>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                    {/* Organizador */}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Organizador:</span>
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold shadow-sm">
                                                 {reuniao.organizador.nome.charAt(0).toUpperCase()}
                                             </div>
-                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {reuniao.organizador.nome}
-                      </span>
+                                            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                {reuniao.organizador.nome}
+                                            </span>
                                         </div>
                                     </div>
 
-                                    {/* Badges de status e prioridade */}
-                                    <div className="flex items-center gap-2 mt-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(reuniao.status)}`}>
-                      {getStatusIcon(reuniao.status)}
-                        {getStatusLabel(reuniao.status)}
-                    </span>
-                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPrioridadeColor(reuniao.prioridade)}`}>
-                      {reuniao.prioridade.charAt(0).toUpperCase() + reuniao.prioridade.slice(1)}
-                    </span>
-                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                      {reuniao.tipo.charAt(0).toUpperCase() + reuniao.tipo.slice(1)}
-                    </span>
+                                    {/* Badges de status e tipo */}
+                                    <div className="flex items-center gap-2.5 flex-wrap">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border ${getStatusColor(reuniao.status)}`}>
+                                            {getStatusIcon(reuniao.status)}
+                                            {getStatusLabel(reuniao.status)}
+                                        </span>
+                                        <span className="px-3 py-1.5 text-xs font-semibold rounded-lg border bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700">
+                                            {reuniao.tipo.charAt(0).toUpperCase() + reuniao.tipo.slice(1)}
+                                        </span>
                                     </div>
                                 </div>
 
                                 {/* Menu de ações */}
-                                <div className="relative">
+                                <div className="relative flex-shrink-0">
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setActiveDropdown(activeDropdown === String(reuniao.id) ? null : String(reuniao.id));
                                         }}
-                                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                        className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                                     >
                                         <MoreVertical className="w-5 h-5" />
                                     </button>
 
                                     {activeDropdown === String(reuniao.id) && (
-                                        <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10">
+                                        <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-10 py-1.5 overflow-hidden">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     onReuniaoClick(reuniao);
                                                     setActiveDropdown(null);
                                                 }}
-                                                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750 flex items-center gap-3 transition-colors"
                                             >
                                                 <Eye className="w-4 h-4" />
                                                 Ver detalhes
@@ -441,7 +441,7 @@ export const MeetingList: React.FC<MeetingListProps> = ({
                                                         onEditReuniao(reuniao);
                                                         setActiveDropdown(null);
                                                     }}
-                                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750 flex items-center gap-3 transition-colors"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                     Editar
@@ -455,27 +455,30 @@ export const MeetingList: React.FC<MeetingListProps> = ({
                                                         onEncerrarReuniao(reuniao);
                                                         setActiveDropdown(null);
                                                     }}
-                                                    className="w-full text-left px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center gap-2"
+                                                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 flex items-center gap-3 transition-colors"
                                                 >
                                                     <CheckCircle className="w-4 h-4" />
-                                                    Encerrar
+                                                    Encerrar reunião
                                                 </button>
                                             )}
 
                                             {canDelete(reuniao) && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (confirm('Tem certeza que deseja excluir esta reunião?')) {
-                                                            onDeleteReuniao(reuniao);
-                                                        }
-                                                        setActiveDropdown(null);
-                                                    }}
-                                                    className="w-full text-left px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                    Excluir
-                                                </button>
+                                                <>
+                                                    <div className="my-1.5 border-t border-gray-100 dark:border-gray-700"></div>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (confirm('Tem certeza que deseja excluir esta reunião?')) {
+                                                                onDeleteReuniao(reuniao);
+                                                            }
+                                                            setActiveDropdown(null);
+                                                        }}
+                                                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-750 flex items-center gap-3 transition-colors"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                        Excluir
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     )}
@@ -488,10 +491,10 @@ export const MeetingList: React.FC<MeetingListProps> = ({
 
             {/* Rodapé com resumo */}
             {reunioesFiltradas.length > 0 && (
-                <div className="p-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Mostrando {reunioesFiltradas.length} de {reunioes.length} reunião{reunioes.length !== 1 ? 's' : ''}
-                        {Object.keys(filtros).length > 0 && ' (filtradas)'}
+                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-850 border-t border-gray-200 dark:border-gray-800">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Mostrando <span className="text-gray-900 dark:text-white font-semibold">{reunioesFiltradas.length}</span> de <span className="text-gray-900 dark:text-white font-semibold">{reunioes.length}</span> reunião{reunioes.length !== 1 ? 'ões' : ''}
+                        {Object.keys(filtros).length > 0 && <span className="text-blue-600 dark:text-blue-400"> (com filtros aplicados)</span>}
                     </p>
                 </div>
             )}
