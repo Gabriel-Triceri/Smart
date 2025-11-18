@@ -25,6 +25,15 @@ interface TaskFormProps {
     reuniaoId?: string;
 }
 
+/**
+ * Tipo interno para o estado do formulário:
+ * mantemos estimadoHoras como string para controlar o input numérico
+ * e evitar problemas uncontrolled/controlled.
+ */
+type FormState = Omit<TarefaFormData, 'estimadoHoras'> & {
+    estimadoHoras: string; // string aqui para facilitar input controlado
+};
+
 const PRIORIDADE_OPTIONS = [
     { value: PrioridadeTarefa.BAIXA, label: 'Baixa', color: 'text-blue-600' },
     { value: PrioridadeTarefa.MEDIA, label: 'Média', color: 'text-yellow-600' },
@@ -47,7 +56,7 @@ export function TaskForm({
                          }: TaskFormProps) {
 
     // prazo_tarefa, dataInicio e estimadoHoras iniciam como string vazia
-    const [formData, setFormData] = useState<TarefaFormData>({
+    const [formData, setFormData] = useState<FormState>({
         titulo: '',
         descricao: '',
         responsavelPrincipalId: '',
@@ -56,7 +65,7 @@ export function TaskForm({
         dataInicio: '',         // <- não undefined
         prioridade: PrioridadeTarefa.MEDIA,
         tags: [],
-        estimadoHoras: '',      // <- manter como string para evitar uncontrolled -> controlled
+        estimadoHoras: '',      // string no estado
         reuniaoId: reuniaoId,
         cor: ''
     });
@@ -87,8 +96,11 @@ export function TaskForm({
                 reuniaoId: tarefa.reuniaoId,
                 cor: tarefa.cor || ''
             });
+        } else {
+            // se não há tarefa, resetamos parcialmente mantendo reuniaoId vindo das props
+            setFormData(prev => ({ ...prev, reuniaoId }));
         }
-    }, [tarefa]);
+    }, [tarefa, reuniaoId]);
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
@@ -109,6 +121,7 @@ export function TaskForm({
             }
         }
 
+        // validamos string -> number, apenas se preenchido
         if (formData.estimadoHoras && Number(formData.estimadoHoras) <= 0) {
             newErrors.estimadoHoras = 'Tempo estimado deve ser maior que zero';
         }
@@ -133,17 +146,21 @@ export function TaskForm({
                 ? formData.prazo_tarefa.trim()
                 : new Date().toISOString().split('T')[0];
 
-            // converter estimadoHoras de volta para number se houver
-            const estimadoNumber = formData.estimadoHoras && formData.estimadoHoras !== ''
+            // converter estimadoHoras de volta para number se houver (string -> number)
+            const estimadoNumber = formData.estimadoHoras !== '' && formData.estimadoHoras !== undefined
                 ? Number(formData.estimadoHoras)
                 : undefined;
 
+            // construímos o payload garantindo tipos exatamente como TarefaFormData
+            const {
+                estimadoHoras: _estimado, // exclui a string do spread
+                ...rest
+            } = formData;
+
             const payload: TarefaFormData = {
-                ...formData,
-                // sobrescreve para ter garantia de não-null
+                ...rest,
                 prazo_tarefa: usedPrazo,
-                // normaliza estimadoHoras para number | undefined
-                estimadoHoras: estimadoNumber as any
+                estimadoHoras: estimadoNumber
             };
 
             // enviar payload corrigido

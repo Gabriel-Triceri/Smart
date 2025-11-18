@@ -80,10 +80,27 @@ export function TaskManager() {
         await moverTarefa(tarefaId, status);
     };
 
+    const handleDuplicateTask = async (tarefaId: string) => {
+        const tarefaOriginal = tarefas.find(t => t.id === tarefaId);
+        if (!tarefaOriginal) return;
+
+        const novaTarefa: TarefaFormData = {
+            titulo: `${tarefaOriginal.titulo} (Cópia)`,
+            descricao: tarefaOriginal.descricao,
+            status: StatusTarefa.TODO,
+            prioridade: tarefaOriginal.prioridade,
+            prazo_tarefa: tarefaOriginal.prazo_tarefa,
+            estimadoHoras: tarefaOriginal.estimadoHoras,
+            tags: tarefaOriginal.tags,
+            responsaveis: tarefaOriginal.responsaveis?.map(r => r.id) || [],
+        };
+
+        await criarTarefa(novaTarefa);
+    };
+
     const totalNotificacoesNaoLidas = notificacoes.filter(n => !n.lida).length;
 
-    // CORREÇÃO 1: evita que cliques no header vazem para elementos abaixo
-    // CORREÇÃO 2 (melhoria): só fecha o modal / limpa seleção se a tarefa selecionada não existir mais
+    // Fecha o modal de detalhes se a tarefa selecionada for deletada
     useEffect(() => {
         if (!tarefaSelecionada) return;
 
@@ -443,9 +460,12 @@ export function TaskManager() {
                         tarefas={tarefas}
                         onMoveTask={moverTarefa}
                         onDeleteTask={deletarTarefa}
-                        onDuplicateTask={() => {}}
-                        onCreateTask={handleCreateTask}
-                        onViewTask={handleViewTask} // Pass handleViewTask to KanbanBoard
+                        onDuplicateTask={handleDuplicateTask}
+                        onCreateOrUpdateTask={tarefaSelecionada ?
+                            (data) => handleUpdateTask(tarefaSelecionada.id, data) :
+                            handleCreateTask
+                        }
+                        onViewTask={handleViewTask}
                         loading={loading}
                         assignees={assigneesDisponiveis}
                     />
@@ -460,7 +480,10 @@ export function TaskManager() {
             {exibirFormulario && (
                 <TaskForm
                     tarefa={tarefaSelecionada}
-                    onClose={() => setExibirFormulario(false)}
+                    onClose={() => {
+                        setExibirFormulario(false);
+                        setTarefaSelecionada(null);
+                    }}
                     onSubmit={tarefaSelecionada ?
                         (data) => handleUpdateTask(tarefaSelecionada.id, data) :
                         handleCreateTask
