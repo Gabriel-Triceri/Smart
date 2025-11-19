@@ -16,7 +16,6 @@ export const TaskComments: React.FC<TaskCommentsProps> = ({ tarefaId, comments, 
     const commentsContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // Rola para o final da lista de comentários quando novos comentários são adicionados
         if (commentsContainerRef.current) {
             commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
         }
@@ -37,24 +36,22 @@ export const TaskComments: React.FC<TaskCommentsProps> = ({ tarefaId, comments, 
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        // Permite o envio com Ctrl+Enter ou Cmd+Enter
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
             handleCommentSubmit();
         }
     };
 
-    // Memoiza a lista de comentários ordenada para evitar re-cálculos desnecessários
     const sortedComments = useMemo(() => {
         return [...comments].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     }, [comments]);
 
     return (
-        <div className="w-96 border-l border-gray-200 bg-gray-50">
+        <div className="w-96 border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div className="h-full flex flex-col">
                 {/* Header */}
-                <div className="p-4 border-b border-gray-200 bg-white">
-                    <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
                         <MessageSquare className="w-5 h-5 mr-2" />
                         Comentários ({comments.length})
                     </h3>
@@ -64,22 +61,22 @@ export const TaskComments: React.FC<TaskCommentsProps> = ({ tarefaId, comments, 
                 <div ref={commentsContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                     {sortedComments.length > 0 ? (
                         sortedComments.map((comment) => (
-                            <div key={comment.id} className="bg-white rounded-lg p-3 shadow-sm">
+                            <div key={comment.id} className="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-sm">
                                 <div className="flex items-start space-x-3">
                                     <Avatar src={comment.autorAvatar} name={comment.autorNome} />
                                     <div className="flex-1">
                                         <div className="flex items-center space-x-2 mb-1">
-                                            <span className="text-sm font-medium text-gray-900">{comment.autorNome}</span>
-                                            <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
+                                            <span className="text-sm font-medium text-gray-900 dark:text-white">{comment.autorNome}</span>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(comment.createdAt)}</span>
                                         </div>
-                                        <p className="text-sm text-gray-700">{comment.conteudo}</p>
+                                        <p className="text-sm text-gray-700 dark:text-gray-300">{comment.conteudo}</p>
                                     </div>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <div className="text-center text-gray-500 py-8">
-                            <MessageSquare className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                            <MessageSquare className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                             <p className="text-sm">Nenhum comentário ainda</p>
                         </div>
                     )}
@@ -87,7 +84,7 @@ export const TaskComments: React.FC<TaskCommentsProps> = ({ tarefaId, comments, 
 
                 {/* Campo de Novo Comentário */}
                 {onAddComment && (
-                    <div className="p-4 border-t border-gray-200 bg-white">
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                         <div className="space-y-3">
                             <textarea
                                 value={newComment}
@@ -95,7 +92,7 @@ export const TaskComments: React.FC<TaskCommentsProps> = ({ tarefaId, comments, 
                                 placeholder="Adicione um comentário..."
                                 onKeyDown={handleKeyDown}
                                 rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none dark:bg-gray-700 dark:text-white"
                             />
                             <div className="flex justify-end">
                                 <button

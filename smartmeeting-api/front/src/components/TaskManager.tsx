@@ -16,6 +16,7 @@ import { TaskForm } from './TaskForm';
 import { TaskDetails } from './TaskDetails';
 import { TaskFilters } from './TaskFilters';
 import { StatusTarefa, TarefaFormData } from '../types/meetings';
+import { useTheme } from '../contexts/ThemeContext'; // Import useTheme
 
 type ViewMode = 'kanban' | 'lista';
 
@@ -41,6 +42,8 @@ export function TaskManager() {
         setFiltros,
         assigneesDisponiveis
     } = useTarefas();
+
+    const { isDarkMode } = useTheme(); // Use the theme hook
 
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [searchTerm, setSearchTerm] = useState('');
@@ -112,10 +115,10 @@ export function TaskManager() {
         <div className="p-6 h-full overflow-y-auto">
             <div className="grid grid-cols-1 gap-4">
                 {tarefas.map((tarefa) => (
-                    <div key={tarefa.id} className="bg-white p-4 rounded-lg shadow-sm border flex justify-between items-center">
+                    <div key={tarefa.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex justify-between items-center">
                         <div>
-                            <h4 className="font-medium text-gray-900">{tarefa.titulo}</h4>
-                            <p className="text-sm text-gray-600">{tarefa.descricao}</p>
+                            <h4 className="font-medium text-gray-900 dark:text-white">{tarefa.titulo}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{tarefa.descricao}</p>
                         </div>
                         <div>
                             <button
@@ -126,7 +129,7 @@ export function TaskManager() {
                             </button>
                             <button
                                 onClick={() => handleEditTask(tarefa)}
-                                className="text-gray-600 hover:text-gray-900 text-sm"
+                                className="text-gray-600 hover:text-gray-900 text-sm dark:text-gray-400 dark:hover:text-gray-200"
                             >
                                 Editar
                             </button>
@@ -145,18 +148,18 @@ export function TaskManager() {
     };
 
     return (
-        <div className="h-full flex flex-col bg-gray-50">
+        <div className={`h-full flex flex-col bg-gray-50 dark:bg-gray-900 ${isDarkMode ? 'dark' : ''}`}>
             {/* Header */}
             <div
-                className="bg-white border-b border-gray-200 px-6 py-4 relative z-20"
+                className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 relative z-20"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        <h1 className="text-2xl font-semibold text-gray-900">Gestão de Tarefas</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Gestão de Tarefas</h1>
                         {loading && <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />}
                         {error && (
-                            <div className="bg-red-50 border border-red-200 rounded px-3 py-1 text-sm text-red-700">
+                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-1 text-sm text-red-700 dark:text-red-300">
                                 {error}
                             </div>
                         )}
@@ -164,7 +167,7 @@ export function TaskManager() {
 
                     <div className="flex items-center space-x-3">
                         {/* Notificações */}
-                        <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+                        <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700">
                             <Bell className="w-5 h-5" />
                             {totalNotificacoesNaoLidas > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -174,12 +177,12 @@ export function TaskManager() {
                         </button>
 
                         {/* Exportar */}
-                        <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+                        <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700">
                             <Download className="w-5 h-5" />
                         </button>
 
                         {/* Importar */}
-                        <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+                        <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700">
                             <Upload className="w-5 h-5" />
                         </button>
 
@@ -203,8 +206,8 @@ export function TaskManager() {
                         onClick={() => changeViewMode('kanban')}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                             viewMode === 'kanban'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
                         }`}
                     >
                         <LayoutGrid className="w-4 h-4" />
@@ -215,8 +218,8 @@ export function TaskManager() {
                         onClick={() => changeViewMode('lista')}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                             viewMode === 'lista'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
                         }`}
                     >
                         <List className="w-4 h-4" />
@@ -227,13 +230,13 @@ export function TaskManager() {
                 {/* Search and Filters */}
                 <div className="flex items-center space-x-4 mt-4">
                     <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                         <input
                             type="text"
                             placeholder="Buscar tarefas..."
                             value={searchTerm}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                     </div>
 
@@ -241,8 +244,8 @@ export function TaskManager() {
                         onClick={() => setShowFilters(!showFilters)}
                         className={`p-2 rounded-lg border transition-colors ${
                             showFilters
-                                ? 'bg-blue-100 border-blue-300 text-blue-700'
-                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                ? 'bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300'
+                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
                         }`}
                     >
                         <Filter className="w-5 h-5" />
@@ -251,7 +254,7 @@ export function TaskManager() {
 
                 {/* Filters Panel */}
                 {showFilters && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                         <TaskFilters
                             filters={filtros}
                             onFiltersChange={setFiltros}
