@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
     Plus, Search, Filter, Grid,
-    RefreshCw, Building
+    RefreshCw
 } from 'lucide-react';
 import { Sala } from '../types/meetings';
 import { useSalas } from '../hooks/useSalas';
 import { SalasGrid } from './SalasGrid';
 import { SalaForm } from './SalaForm';
 import { BookingSystem } from './BookingSystem';
-import { useTheme } from '../contexts/ThemeContext'; // Import useTheme
+import { useTheme } from '../context/ThemeContext'; // Corrigido o caminho para o contexto e importação
 
 type ModalType = 'form' | 'booking' | null;
 
@@ -28,7 +28,7 @@ export const SalaManager: React.FC = () => {
         limparFiltros,
     } = useSalas();
 
-    const { isDarkMode } = useTheme(); // Use the theme hook
+    const { theme } = useTheme(); // Alterado de isDarkMode para theme
 
     const [modalType, setModalType] = useState<ModalType>(null);
     const [salaSelecionada, setSalaSelecionada] = useState<Sala | null>(null);
@@ -131,68 +131,77 @@ export const SalaManager: React.FC = () => {
     }
 
     return (
-        <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+        <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
             <div className="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors">
-                {/* Cabeçalho */}
-                <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-16">
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-3">
-                                    <Building className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        Gestão de Salas
-                                    </h1>
-                                </div>
-
-                                {/* Estatísticas rápidas */}
-                                {estatisticas && (
-                                    <div className="hidden lg:flex items-center gap-6 ml-8 text-sm">
-                                        <div className="text-center">
-                                            <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                {estatisticas.total}
+                {/* Barra de ações */}
+                <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                            {/* Estatísticas */}
+                            {estatisticas && (
+                                <div className="flex items-center gap-4 w-full lg:w-auto overflow-x-auto">
+                                    <div className="flex items-center gap-4 bg-white dark:bg-gray-700/50 rounded-xl px-6 py-3 shadow-sm border border-gray-100 dark:border-gray-600">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                                                    {estatisticas.total}
+                                                </div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Total</div>
                                             </div>
-                                            <div className="text-gray-500 dark:text-gray-400">Total de Salas</div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-lg font-semibold text-green-600">
-                                                {estatisticas.disponiveis}
+                                        <div className="w-px h-10 bg-gray-200 dark:bg-gray-600"></div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-green-600">
+                                                    {estatisticas.disponiveis}
+                                                </div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Disponíveis</div>
                                             </div>
-                                            <div className="text-gray-500 dark:text-gray-400">Disponíveis</div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-lg font-semibold text-red-600">
-                                                {estatisticas.ocupadas}
+                                        <div className="w-px h-10 bg-gray-200 dark:bg-gray-600"></div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-red-600">
+                                                    {estatisticas.ocupadas}
+                                                </div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Ocupadas</div>
                                             </div>
-                                            <div className="text-gray-500 dark:text-gray-400">Ocupadas</div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-lg font-semibold text-yellow-600">
-                                                {estatisticas.manutencao}
+                                        <div className="w-px h-10 bg-gray-200 dark:bg-gray-600"></div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-yellow-600">
+                                                    {estatisticas.manutencao}
+                                                </div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Manutenção</div>
                                             </div>
-                                            <div className="text-gray-500 dark:text-gray-400">Manutenção</div>
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
 
-                            <div className="flex items-center gap-4">
+                            {/* Ações */}
+                            <div className="flex items-center gap-3 flex-wrap">
                                 {/* Busca */}
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                     <input
                                         type="text"
                                         placeholder="Buscar salas..."
                                         value={termoBusca}
                                         onChange={(e) => handleSearch(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        className="pl-10 pr-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all"
                                     />
                                 </div>
 
                                 {/* Botão de filtros */}
                                 <button
                                     onClick={() => setShowFilters(!showFilters)}
-                                    className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
+                                    className="flex items-center gap-2 px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all border border-gray-200 dark:border-gray-600"
                                 >
                                     <Filter className="w-4 h-4" />
                                     Filtros
@@ -201,7 +210,7 @@ export const SalaManager: React.FC = () => {
                                 {/* Botão de nova sala */}
                                 <button
                                     onClick={handleCreateSala}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-md hover:shadow-lg font-medium"
                                 >
                                     <Plus className="w-4 h-4" />
                                     Nova Sala
@@ -211,14 +220,14 @@ export const SalaManager: React.FC = () => {
                                 <button
                                     onClick={() => loadSalas()}
                                     disabled={loading}
-                                    className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 dark:hover:text-gray-300 dark:hover:bg-gray-700"
+                                    className="p-2.5 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-all disabled:opacity-50 border border-gray-200 dark:border-gray-600"
                                 >
                                     <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                                 </button>
                             </div>
                         </div>
                     </div>
-                </header>
+                </div>
 
                 {/* Filtros */}
                 {showFilters && (

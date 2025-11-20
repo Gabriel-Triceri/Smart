@@ -1,13 +1,8 @@
 package com.smartmeeting.controller;
 
-import com.smartmeeting.dto.*;
 import com.smartmeeting.service.DashboardService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/dashboard")
@@ -19,48 +14,6 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
-    @GetMapping
-    public ResponseEntity<DashboardDTO> obterDashboardCompleto() {
-        DashboardDTO dashboard = dashboardService.obterDashboardCompleto();
-        return ResponseEntity.ok(dashboard);
-    }
-
-    /**
-     * API para obter dashboard completo (compatível com frontend)
-     */
-    @GetMapping("/completo")
-    public ResponseEntity<DashboardDTO> getDashboardCompleto() {
-        DashboardDTO dashboard = dashboardService.obterDashboardCompleto();
-        return ResponseEntity.ok(dashboard);
-    }
-
-    @GetMapping("/estatisticas-gerais")
-    public ResponseEntity<EstatisticasGeraisDTO> obterEstatisticasGerais() {
-        EstatisticasGeraisDTO estatisticas = dashboardService.obterEstatisticasGerais();
-        return ResponseEntity.ok(estatisticas);
-    }
-
-    @GetMapping("/uso-salas")
-    public ResponseEntity<List<UsoSalaDTO>> obterUsoSalas() {
-        List<UsoSalaDTO> usoSalas = dashboardService.obterUsoSalas();
-        return ResponseEntity.ok(usoSalas);
-    }
-
-    @GetMapping("/taxas-presenca")
-    public ResponseEntity<List<TaxaPresencaDTO>> obterTaxasPresenca() {
-        List<TaxaPresencaDTO> taxasPresenca = dashboardService.obterTaxasPresenca();
-        return ResponseEntity.ok(taxasPresenca);
-    }
-
-    @GetMapping("/produtividade-organizadores")
-    public ResponseEntity<List<ProdutividadeOrganizadorDTO>> obterProdutividadeOrganizadores() {
-        List<ProdutividadeOrganizadorDTO> produtividade = dashboardService.obterProdutividadeOrganizadores();
-        return ResponseEntity.ok(produtividade);
-    }
-
-    @GetMapping("/metricas-reunioes")
-    public ResponseEntity<List<MetricasReunioesDTO>> obterMetricasReunioes() {
-        List<MetricasReunioesDTO> metricas = dashboardService.obterMetricasReunioes();
-        return ResponseEntity.ok(metricas);
-    }
+    // Todos os componentes foram removidos conforme solicitado.
+    // Novas funcionalidades para o dashboard executivo serão adicionadas aqui.
 }

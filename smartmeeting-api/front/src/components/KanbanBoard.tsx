@@ -53,22 +53,22 @@ const COLUMNS = [
 ];
 
 export function KanbanBoard({
-                                tarefas,
-                                assignees,
-                                onMoveTask,
-                                onDeleteTask,
-                                onDuplicateTask,
-                                onCreateOrUpdateTask,
-                                onViewTask,
-                                loading = false,
-                            }: KanbanBoardProps) {
+    tarefas,
+    assignees,
+    onMoveTask,
+    onDeleteTask,
+    onDuplicateTask,
+    onCreateOrUpdateTask,
+    onViewTask,
+    loading = false,
+}: KanbanBoardProps) {
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
 
     const tarefasPorStatus: Record<StatusTarefa, Tarefa[]> = COLUMNS.reduce((acc, col) => {
         acc[col.id] = tarefas
             .filter(t => t.status === col.id)
-            .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+            .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0));
         return acc;
     }, {} as Record<StatusTarefa, Tarefa[]>);
 
@@ -92,7 +92,7 @@ export function KanbanBoard({
         const { source, destination, draggableId } = result;
         if (!destination) return;
         if (source.droppableId === destination.droppableId && source.index === destination.index) return;
-        
+
         const destStatus = destination.droppableId as StatusTarefa;
         onMoveTask(draggableId, destStatus);
     };

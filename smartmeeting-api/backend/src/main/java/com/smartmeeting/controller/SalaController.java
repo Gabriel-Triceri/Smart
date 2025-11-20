@@ -1,6 +1,7 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.SalaDTO;
+import com.smartmeeting.dto.SalaStatisticsDTO;
 import com.smartmeeting.service.SalaService;
 import com.smartmeeting.service.TarefaService;
 import org.springframework.http.ResponseEntity;
@@ -107,17 +108,9 @@ public class SalaController {
      * Retorno: JSON com dados estatísticos, por exemplo: { "totalSalas": 10, "salasEmUso": 3, "salasDisponiveis": 7 }
      */
     @GetMapping("/statistics")
-    public ResponseEntity<Map<String, Long>> getSalaStatistics() {
-        // Implementar a lógica para obter estatísticas da sala no serviço
-        // Por exemplo:
-        long totalSalas = service.getTotalSalas();
-        long salasEmUso = service.getSalasEmUso();
-        long salasDisponiveis = totalSalas - salasEmUso; // Exemplo de cálculo
-        return ResponseEntity.ok(Map.of(
-                "totalSalas", totalSalas,
-                "salasEmUso", salasEmUso,
-                "salasDisponiveis", salasDisponiveis
-        ));
+    public ResponseEntity<SalaStatisticsDTO> getSalaStatistics() {
+        SalaStatisticsDTO statistics = service.getSalaStatistics();
+        return ResponseEntity.ok(statistics);
     }
 
     @PostMapping("/{id}/reservar")

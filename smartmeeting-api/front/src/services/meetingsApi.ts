@@ -53,14 +53,14 @@ const normalizeStatus = (value?: string): StatusTarefa => {
         return StatusTarefa.TODO;
     }
     switch (value.toLowerCase()) {
-    case StatusTarefa.IN_PROGRESS:
-        return StatusTarefa.IN_PROGRESS;
-    case StatusTarefa.REVIEW:
-        return StatusTarefa.REVIEW;
-    case StatusTarefa.DONE:
-        return StatusTarefa.DONE;
-    default:
-        return StatusTarefa.TODO;
+        case StatusTarefa.IN_PROGRESS:
+            return StatusTarefa.IN_PROGRESS;
+        case StatusTarefa.REVIEW:
+            return StatusTarefa.REVIEW;
+        case StatusTarefa.DONE:
+            return StatusTarefa.DONE;
+        default:
+            return StatusTarefa.TODO;
     }
 };
 
@@ -526,7 +526,7 @@ export const meetingsApi = {
         }, {} as Record<string, unknown>);
 
         const response = await api.put(`/tarefas/${id}`, cleanedData);
-        return mapBackendTask(response.data, data);
+        return mapBackendTask(response.data, data as TarefaFormData);
     },
 
     async deleteTarefa(id: string): Promise<void> {
@@ -694,5 +694,19 @@ export const meetingsApi = {
         const response = await api.post(`/tarefas/${tarefaId}/duplicar`, modificacoes);
 
         return mapBackendTask(response.data);
+    },
+
+    async vincularTarefaAReuniao(tarefaId: string, reuniaoId: string): Promise<void> {
+        if (!IdValidation.isValidId(tarefaId) || !IdValidation.isValidId(reuniaoId)) {
+            throw new Error('ID de tarefa ou reunião inválido');
+        }
+        await api.patch(`/tarefas/${tarefaId}/reuniao`, { reuniaoId: Number(reuniaoId) });
+    },
+
+    async desvincularTarefaDeReuniao(tarefaId: string, _reuniaoId: string): Promise<void> {
+        if (!IdValidation.isValidId(tarefaId)) {
+            throw new Error('ID da tarefa inválido');
+        }
+        await api.patch(`/tarefas/${tarefaId}/reuniao`, { reuniaoId: null });
     },
 };

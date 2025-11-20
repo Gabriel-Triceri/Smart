@@ -34,7 +34,7 @@ public class PessoaService {
      * @param pessoa Entidade a ser convertida
      * @return DTO correspondente ou null se a entidade for nula
      */
-    private PessoaDTO toDTO(Pessoa pessoa) {
+    public PessoaDTO convertToDto(Pessoa pessoa) {
         if (pessoa == null) return null;
         PessoaDTO dto = new PessoaDTO();
         dto.setId(pessoa.getId());
@@ -64,12 +64,12 @@ public class PessoaService {
     // --- Métodos de serviço ---
     public List<PessoaDTO> listarTodas() {
         return repository.findAll().stream()
-                .map(this::toDTO)
+                .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     public Optional<PessoaDTO> buscarPorId(Long id) {
-        return repository.findById(id).map(this::toDTO);
+        return repository.findById(id).map(this::convertToDto);
     }
 
     public PessoaDTO salvar(PessoaCreateDTO dto) {
@@ -79,7 +79,7 @@ public class PessoaService {
         }
         Pessoa pessoa = toEntity(dto);
         Pessoa salvo = repository.save(pessoa);
-        return toDTO(salvo);
+        return convertToDto(salvo);
     }
 
     public PessoaDTO atualizar(Long id, PessoaDTO dtoAtualizada) {
@@ -93,7 +93,7 @@ public class PessoaService {
                     pessoa.setEmail(dtoAtualizada.getEmail());
                     pessoa.setTipoUsuario(dtoAtualizada.getTipoUsuario());
                     Pessoa atualizado = repository.save(pessoa);
-                    return toDTO(atualizado);
+                    return convertToDto(atualizado);
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + id));
     }

@@ -5655,3 +5655,6 @@ Caused by: org.h2.mvstore.MVStoreException: The file is locked: C:/Users/user/De
 	at org.h2.mvstore.SingleFileStore.open(SingleFileStore.java:81)
 	at org.h2.mvstore.MVStore.<init>(MVStore.java:286)
 	... 150 more
+2025-11-20 11:45:05.491468-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "PERMISSION" not found; SQL statement:
+insert into permission (created_by,created_date,last_modified_by,last_modified_date,nome_permission,id_permission) values (?,?,?,?,?,?) [42102-224]

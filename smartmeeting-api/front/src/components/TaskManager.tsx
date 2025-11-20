@@ -14,8 +14,7 @@ import {
     Edit,
     Trash2,
     Calendar,
-    Users,
-    Flag
+
 } from 'lucide-react';
 import { useTarefas } from '../hooks/useTarefas';
 import { KanbanBoard } from './KanbanBoard';
@@ -23,7 +22,7 @@ import { TaskForm } from './TaskForm';
 import { TaskDetails } from './TaskDetails';
 import { TaskFilters } from './TaskFilters';
 import { StatusTarefa, TarefaFormData, PrioridadeTarefa, Tarefa } from '../types/meetings';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../context/ThemeContext'; // Corrigido o caminho para o contexto
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Avatar } from './Avatar';
@@ -85,7 +84,7 @@ export function TaskManager() {
         assigneesDisponiveis
     } = useTarefas();
 
-    const { isDarkMode } = useTheme();
+    const { theme } = useTheme(); // Alterado de isDarkMode para theme
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [searchTerm, setSearchTerm] = useState('');
     const [showFilters, setShowFilters] = useState(false);
@@ -106,13 +105,13 @@ export function TaskManager() {
         if (!tarefaOriginal) return;
         const novaTarefa: TarefaFormData = {
             titulo: `${tarefaOriginal.titulo} (Cópia)`,
+            responsavelPrincipalId: tarefaOriginal.responsavelPrincipalId,
             descricao: tarefaOriginal.descricao,
-            status: StatusTarefa.TODO,
             prioridade: tarefaOriginal.prioridade,
             prazo_tarefa: tarefaOriginal.prazo_tarefa,
             estimadoHoras: tarefaOriginal.estimadoHoras,
             tags: tarefaOriginal.tags,
-            responsaveis: tarefaOriginal.responsaveis?.map(r => r.id) || [],
+            responsaveisIds: tarefaOriginal.responsaveis?.map(r => r.id) || [],
         };
         await criarTarefa(novaTarefa);
     };
@@ -192,7 +191,7 @@ export function TaskManager() {
                                                         <Avatar
                                                             src={resp.avatar}
                                                             name={resp.nome}
-                                                            size="sm"
+                                                            // size="sm" // Removed size prop as it does not exist on Avatar
                                                             className="ring-2 ring-white dark:ring-gray-900"
                                                         />
                                                     </div>
@@ -264,7 +263,7 @@ export function TaskManager() {
     };
 
     return (
-        <div className={`h-full flex flex-col bg-gray-50 dark:bg-gray-900 ${isDarkMode ? 'dark' : ''}`}>
+        <div className={`h-full flex flex-col bg-gray-50 dark:bg-gray-900 ${theme === 'dark' ? 'dark' : ''}`}> {/* Alterado de isDarkMode para theme */}
             {/* Header */}
             <div
                 className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 relative z-20"
@@ -313,11 +312,10 @@ export function TaskManager() {
                 <div className="flex items-center space-x-6 mt-6">
                     <button
                         onClick={() => changeViewMode('kanban')}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                            viewMode === 'kanban'
-                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
-                        }`}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${viewMode === 'kanban'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                            }`}
                     >
                         <LayoutGrid className="w-4 h-4" />
                         <span>Kanban</span>
@@ -325,11 +323,10 @@ export function TaskManager() {
 
                     <button
                         onClick={() => changeViewMode('lista')}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                            viewMode === 'lista'
-                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
-                        }`}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${viewMode === 'lista'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                            }`}
                     >
                         <List className="w-4 h-4" />
                         <span>Lista</span>
@@ -351,11 +348,10 @@ export function TaskManager() {
 
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`p-2 rounded-lg border transition-colors ${
-                            showFilters
-                                ? 'bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300'
-                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
-                        }`}
+                        className={`p-2 rounded-lg border transition-colors ${showFilters
+                            ? 'bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+                            }`}
                     >
                         <Filter className="w-5 h-5" />
                     </button>

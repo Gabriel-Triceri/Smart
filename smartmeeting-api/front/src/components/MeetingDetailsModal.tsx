@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     X, Calendar, Clock, MapPin, Video, Users,
-    FileText, CheckCircle, Circle, AlertTriangle,
-    Edit, Trash2, ExternalLink, Bell, BellOff
+    FileText, CheckCircle, AlertTriangle,
+    Edit, Trash2, ExternalLink, Bell, BellOff, Link, Search
 } from 'lucide-react';
-import { Reuniao, TarefaReuniao, StatusReuniao } from '../types/meetings';
+import { Reuniao, StatusReuniao } from '../types/meetings';
 import { format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {  getReuniaoHoraInicio, getReuniaoHoraFim } from '../utils/reuniaoHelpers';
+import { useTarefas } from '../hooks/useTarefas';
+import { meetingsApi } from '../services/meetingsApi';
+import { getReuniaoHoraFim, getReuniaoHoraInicio } from '../utils/reuniaoHelpers';
 
 interface MeetingDetailsModalProps {
     reuniao: Reuniao;
@@ -19,15 +21,14 @@ interface MeetingDetailsModalProps {
 }
 
 export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
-                                                                            reuniao,
-                                                                            onClose,
-                                                                            onEdit,
-                                                                            onDelete,
-                                                                            onEncerrar,
-                                                                            onToggleLembrete
-                                                                        }) => {
+    reuniao,
+    onClose,
+    onEdit,
+    onDelete,
+    onEncerrar,
+    onToggleLembrete
+}) => {
     const [activeTab, setActiveTab] = useState<'info' | 'participantes' | 'tarefas'>('info');
-    const [tarefas, setTarefas] = useState<TarefaReuniao[]>(reuniao.tarefaReuniao || []);
 
     const formatDateSafe = (date: string | Date, formatString: string) => {
         const d = new Date(date);
@@ -86,29 +87,106 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
     const canDelete = canEdit && new Date(reuniao.dataHoraInicio) > new Date();
     const canEncerrar = reuniao.status === StatusReuniao.AGENDADA && new Date() >= new Date(reuniao.dataHoraInicio);
 
-    const addTarefa = () => {
-        const novaTarefa: TarefaReuniao = {
-            id: Date.now().toString(),
-            titulo: '',
-            responsavel: '',
-            concluida: false,
-            prazo: format(new Date(), 'yyyy-MM-dd'),
-            prioridade: 'media'
+    // Componente da Aba de Tarefas
+    const TarefasTab: React.FC = () => {
+        const { tarefas: todasAsTarefas, loading, error } = useTarefas();
+        const [tarefasVinculadas, setTarefasVinculadas] = useState<string[]>([]);
+        const [termoBusca, setTermoBusca] = useState('');
+
+        useEffect(() => {
+            const fetchTarefasVinculadas = async () => {
+                try {
+                    const tarefasDaReuniao = await meetingsApi.getTarefasPorReuniao(String(reuniao.id));
+                    setTarefasVinculadas(tarefasDaReuniao.map(t => t.id));
+                } catch (err) {
+                    console.error("Erro ao buscar tarefas da reunião:", err);
+                }
+            };
+            fetchTarefasVinculadas();
+        }, [reuniao.id]);
+
+        const handleToggleTarefa = async (tarefaId: string) => {
+            const isVinculada = tarefasVinculadas.includes(tarefaId);
+            try {
+                if (isVinculada) {
+                    await meetingsApi.desvincularTarefaDeReuniao(tarefaId, String(reuniao.id));
+                    setTarefasVinculadas(prev => prev.filter(id => id !== tarefaId));
+                } else {
+                    await meetingsApi.vincularTarefaAReuniao(tarefaId, String(reuniao.id));
+                    setTarefasVinculadas(prev => [...prev, tarefaId]);
+                }
+            } catch (err) {
+                console.error("Erro ao atualizar vínculo da tarefa:", err);
+            }
         };
-        setTarefas([...tarefas, novaTarefa]);
+
+        const tarefasFiltradas = todasAsTarefas.filter(tarefa =>
+            tarefa.titulo.toLowerCase().includes(termoBusca.toLowerCase())
+        );
+
+        return (
+            <div className="space-y-4">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Buscar tarefa para vincular..."
+                        value={termoBusca}
+                        onChange={(e) => setTermoBusca(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                {loading && <p>Carregando tarefas...</p>}
+                {error && <p className="text-red-500">{error}</p>}
+
+                <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+                    {tarefasFiltradas.length > 0 ? (
+                        tarefasFiltradas.map((tarefa) => (
+                            <div
+                                key={tarefa.id}
+                                className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${tarefasVinculadas.includes(tarefa.id)
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700'
+                                    : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                                    }`}
+                            >
+                                <div className="flex-1">
+                                    <p className={`font-medium ${tarefasVinculadas.includes(tarefa.id) ? 'text-blue-800 dark:text-blue-200' : 'text-gray-800 dark:text-gray-200'}`}>
+                                        {tarefa.titulo}
+                                    </p>
+                                    <div className="flex items-center gap-2 text-xs mt-1">
+                                        <span className={`px-2 py-0.5 rounded-full ${getPrioridadeColor(tarefa.prioridade)}`}>
+                                            {tarefa.prioridade}
+                                        </span>
+                                        <span className="text-gray-500 dark:text-gray-400">
+                                            Status: {tarefa.status.replace('_', ' ')}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleToggleTarefa(tarefa.id)}
+                                    className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${tarefasVinculadas.includes(tarefa.id)
+                                        ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50'
+                                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50'
+                                        }`}
+                                >
+                                    <Link className="w-4 h-4" />
+                                    {tarefasVinculadas.includes(tarefa.id) ? 'Desvincular' : 'Vincular'}
+                                </button>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-8">
+                            <Search className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                            <p className="text-gray-500 dark:text-gray-400">Nenhuma tarefa encontrada</p>
+                            <p className="text-sm text-gray-400 dark:text-gray-600">Tente um termo de busca diferente.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
     };
 
-    const updateTarefa = (id: string, updates: Partial<TarefaReuniao>) => {
-        setTarefas(tarefas.map(t => t.id === id ? { ...t, ...updates } : t));
-    };
-
-    const removeTarefa = (id: string) => {
-        setTarefas(tarefas.filter(t => t.id !== id));
-    };
-
-    const toggleTarefaConcluida = (id: string) => {
-        setTarefas(tarefas.map(t => t.id === id ? { ...t, concluida: !t.concluida } : t));
-    };
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -130,16 +208,16 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                         {reuniao.titulo}
                                     </h3>
                                     <div className="flex items-center gap-2 mt-1">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(reuniao.status)}`}>
-                      {getStatusLabel(reuniao.status)}
-                    </span>
+                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(reuniao.status)}`}>
+                                            {getStatusLabel(reuniao.status)}
+                                        </span>
                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPrioridadeColor(reuniao.prioridade)}`}>
-                      {getPrioridadeIcon(reuniao.prioridade)}
+                                            {getPrioridadeIcon(reuniao.prioridade)}
                                             {reuniao.prioridade.charAt(0).toUpperCase() + reuniao.prioridade.slice(1)}
-                    </span>
+                                        </span>
                                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400">
-                      {reuniao.tipo.charAt(0).toUpperCase() + reuniao.tipo.slice(1)}
-                    </span>
+                                            {reuniao.tipo.charAt(0).toUpperCase() + reuniao.tipo.slice(1)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -149,11 +227,10 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={onToggleLembrete}
-                                        className={`p-2 rounded-lg transition-colors ${
-                                            reuniao.lembretes
-                                                ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                                                : 'text-gray-400 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                        }`}
+                                        className={`p-2 rounded-lg transition-colors ${reuniao.lembretes
+                                            ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                                            : 'text-gray-400 dark:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            }`}
                                         title={reuniao.lembretes ? 'Desativar lembretes' : 'Ativar lembretes'}
                                     >
                                         {reuniao.lembretes ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
@@ -215,11 +292,10 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                 <button
                                     key={id}
                                     onClick={() => setActiveTab(id as any)}
-                                    className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                                        activeTab === id
-                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                    }`}
+                                    className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === id
+                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                        }`}
                                 >
                                     <Icon className="w-4 h-4" />
                                     {label}
@@ -301,8 +377,8 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                             key={index}
                                                             className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 text-xs rounded-full"
                                                         >
-                              {equipamento}
-                            </span>
+                                                            {equipamento}
+                                                        </span>
                                                     ))}
                                                 </div>
                                             </div>
@@ -393,14 +469,13 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                     )}
                                                 </div>
                                                 <div className="text-right">
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              participante.status === 'confirmado' ? 'text-green-600 bg-green-100 dark:bg-green-900/20 dark:text-green-400' :
-                                  participante.status === 'pendente' ? 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                                      'text-red-600 bg-red-100 dark:bg-red-900/20 dark:text-red-400'
-                          }`}>
-                            {participante.status === 'confirmado' ? 'Confirmado' :
-                                participante.status === 'pendente' ? 'Pendente' : 'Recusado'}
-                          </span>
+                                                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${participante.status === 'confirmado' ? 'text-green-600 bg-green-100 dark:bg-green-900/20 dark:text-green-400' :
+                                                        participante.status === 'pendente' ? 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                                                            'text-red-600 bg-red-100 dark:bg-red-900/20 dark:text-red-400'
+                                                        }`}>
+                                                        {participante.status === 'confirmado' ? 'Confirmado' :
+                                                            participante.status === 'pendente' ? 'Pendente' : 'Recusado'}
+                                                    </span>
                                                 </div>
                                             </div>
                                         ))}
@@ -410,92 +485,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                         )}
 
                         {/* Aba de Tarefas */}
-                        {activeTab === 'tarefas' && (
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">
-                                        Tarefas ({tarefas.filter(t => t.concluida).length}/{tarefas.length})
-                                    </h4>
-                                    <button
-                                        onClick={addTarefa}
-                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                                    >
-                                        Adicionar Tarefa
-                                    </button>
-                                </div>
-
-                                {tarefas.length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <CheckCircle className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-                                        <p className="text-gray-500 dark:text-gray-400">Nenhuma tarefa adicionada</p>
-                                        <p className="text-sm text-gray-400 dark:text-gray-600">Clique em "Adicionar Tarefa" para criar uma</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {tarefas.map((tarefa) => (
-                                            <div key={tarefa.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                                                <div className="flex items-start gap-3">
-                                                    <button
-                                                        onClick={() => toggleTarefaConcluida(tarefa.id)}
-                                                        className={`mt-1 ${tarefa.concluida ? 'text-green-600' : 'text-gray-400'} hover:text-green-600 transition-colors`}
-                                                    >
-                                                        {tarefa.concluida ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-                                                    </button>
-
-                                                    <div className="flex-1">
-                                                        <input
-                                                            type="text"
-                                                            value={tarefa.titulo}
-                                                            onChange={(e) => updateTarefa(tarefa.id, { titulo: e.target.value })}
-                                                            placeholder="Título da tarefa"
-                                                            className={`w-full font-medium bg-transparent border-none outline-none ${
-                                                                tarefa.concluida ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'
-                                                            }`}
-                                                        />
-
-                                                        <div className="flex items-center gap-4 mt-2 text-sm">
-                                                            <input
-                                                                type="text"
-                                                                value={tarefa.responsavel}
-                                                                onChange={(e) => updateTarefa(tarefa.id, { responsavel: e.target.value })}
-                                                                placeholder="Responsável"
-                                                                className="bg-transparent border-none outline-none text-gray-600 dark:text-gray-400 placeholder-gray-400"
-                                                            />
-                                                            <input
-                                                                type="date"
-                                                                value={tarefa.prazo}
-                                                                onChange={(e) => updateTarefa(tarefa.id, { prazo: e.target.value })}
-                                                                className="bg-transparent border-none outline-none text-gray-600 dark:text-gray-400"
-                                                            />
-                                                            <select
-                                                                value={tarefa.prioridade}
-                                                                onChange={(e) => updateTarefa(tarefa.id, { prioridade: e.target.value as any })}
-                                                                className="bg-transparent border-none outline-none text-gray-600 dark:text-gray-400 text-sm"
-                                                            >
-                                                                <option value="baixa">Baixa</option>
-                                                                <option value="media">Média</option>
-                                                                <option value="alta">Alta</option>
-                                                                <option value="critica">Crítica</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-2">
-                                                        {getPrioridadeIcon(tarefa.prioridade)}
-                                                        <button
-                                                            onClick={() => removeTarefa(tarefa.id)}
-                                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                        {activeTab === 'tarefas' && <TarefasTab />}
                     </div>
                 </div>
             </div>

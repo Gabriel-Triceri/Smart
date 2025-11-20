@@ -1,25 +1,37 @@
 import React, { useState } from 'react';
 import {
     ChevronLeft, ChevronRight, Calendar as CalendarIcon,
-    Clock, MapPin, Users, Video, GripVertical
+    Clock, MapPin, Users, Video, GripVertical, List
 } from 'lucide-react';
 import { Reuniao, CalendarioView } from '../types/meetings';
 import { format, startOfWeek, addDays, isSameDay, isSameMonth, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+interface ViewTab {
+    id: string;
+    label: string;
+    icon: React.ElementType;
+}
 
 interface CalendarProps {
     reunioes: Reuniao[];
     onReuniaoClick: (reuniao: Reuniao) => void;
     onDateClick: (date: Date) => void;
     onDragReuniao?: (reuniao: Reuniao, novaData: Date) => void;
+    viewTabs?: ViewTab[];
+    currentViewTab?: string;
+    onViewTabChange?: (viewId: string) => void;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
-                                                      reunioes,
-                                                      onReuniaoClick,
-                                                      onDateClick,
-                                                      onDragReuniao
-                                                  }) => {
+    reunioes,
+    onReuniaoClick,
+    onDateClick,
+    onDragReuniao,
+    viewTabs,
+    currentViewTab,
+    onViewTabChange
+}) => {
     const [currentView, setCurrentView] = useState<CalendarioView>({
         tipo: 'month',
         dataReferencia: new Date()
@@ -136,29 +148,43 @@ export const Calendar: React.FC<CalendarProps> = ({
                     onDrop={(e) => handleDrop(e, day)}
                 >
                     <div className="flex justify-between items-start mb-2">
-            <span className={`text-sm font-medium 
+                        <span className={`text-sm font-medium 
                           ${!isSameMonth(day, currentView.dataReferencia) ? 'text-gray-400' : 'text-gray-900 dark:text-white'}
                           ${isSameDay(day, new Date()) ? 'text-blue-600 dark:text-blue-400' : ''}`}>
-              {format(day, 'd', { locale: ptBR })}
-            </span>
+                            {format(day, 'd', { locale: ptBR })}
+                        </span>
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                         {dayReunioes.slice(0, 3).map((reuniao) => (
                             <div
                                 key={reuniao.id}
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, reuniao)}
                                 onClick={(e) => { e.stopPropagation(); onReuniaoClick(reuniao); }}
-                                className={`text-xs p-2 rounded cursor-move hover:opacity-80 transition-opacity
+                                className={`text-xs p-2.5 rounded-lg cursor-move hover:shadow-lg hover:scale-[1.02] transition-all duration-200
                          ${getStatusColor(reuniao.status)} text-white
-                         ${getPrioridadeColor(reuniao.prioridade)} border-l-4`}
+                         ${getPrioridadeColor(reuniao.prioridade)} border-l-4 relative overflow-hidden`}
                                 style={{ borderLeftWidth: '4px' }}
                             >
-                                <div className="font-medium truncate">{reuniao.titulo}</div>
-                                <div className="flex items-center gap-1 mt-1">
-                                    <Clock className="w-3 h-3" />
-                                    <span>{reuniaoHoraInicio(reuniao)}</span>
+                                <div className="font-semibold truncate mb-1.5">{reuniao.titulo}</div>
+                                <div className="flex items-center gap-1.5 mb-1 opacity-95">
+                                    <Clock className="w-3 h-3 flex-shrink-0" />
+                                    <span className="font-medium">{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 opacity-90">
+                                    <div className="flex items-center gap-1 min-w-0">
+                                        {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
+                                            <Video className="w-3 h-3 flex-shrink-0" />
+                                        ) : (
+                                            <MapPin className="w-3 h-3 flex-shrink-0" />
+                                        )}
+                                        <span className="truncate text-[10px]">{reuniao.sala?.nome ?? 'Sem sala'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                        <Users className="w-3 h-3" />
+                                        <span className="text-[10px]">{(reuniao.participantes ?? []).length}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -227,27 +253,37 @@ export const Calendar: React.FC<CalendarProps> = ({
                                                 e.stopPropagation();
                                                 onReuniaoClick(reuniao);
                                             }}
-                                            className={`p-2 mb-2 rounded cursor-move hover:opacity-80 transition-opacity
+                                            className={`p-3 mb-2 rounded-lg cursor-move hover:shadow-lg hover:scale-[1.01] transition-all duration-200
                                ${getStatusColor(reuniao.status)} text-white
                                ${getPrioridadeColor(reuniao.prioridade)} border-l-4 relative`}
                                             style={{ borderLeftWidth: '4px' }}
                                         >
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <GripVertical className="w-3 h-3" />
-                                                <span className="text-xs font-medium">{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
+                                            <div className="flex items-center justify-between gap-2 mb-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <GripVertical className="w-3.5 h-3.5 opacity-70" />
+                                                    <span className="text-xs font-bold">{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
+                                                </div>
+                                                <span className="text-[10px] px-2 py-0.5 bg-white/20 rounded-full font-medium">
+                                                    {reuniao.duracaoMinutos ?? 60}min
+                                                </span>
                                             </div>
-                                            <div className="text-sm font-medium truncate">{reuniao.titulo}</div>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
-                                                    <Video className="w-3 h-3" />
-                                                ) : (
-                                                    <MapPin className="w-3 h-3" />
-                                                )}
-                                                <span className="text-xs">{reuniao.sala?.nome ?? '—'}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1 mt-1">
-                                                <Users className="w-3 h-3" />
-                                                <span className="text-xs">{(reuniao.participantes ?? []).length} participantes</span>
+                                            <div className="text-sm font-bold mb-2 line-clamp-2">{reuniao.titulo}</div>
+                                            {reuniao.pauta && (
+                                                <p className="text-xs opacity-90 mb-2 line-clamp-1">{reuniao.pauta}</p>
+                                            )}
+                                            <div className="flex items-center justify-between gap-2 text-xs">
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
+                                                        <Video className="w-3.5 h-3.5 flex-shrink-0" />
+                                                    ) : (
+                                                        <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                                                    )}
+                                                    <span className="truncate opacity-95">{reuniao.sala?.nome ?? 'Sem sala'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 flex-shrink-0 bg-white/20 px-2 py-0.5 rounded-full">
+                                                    <Users className="w-3 h-3" />
+                                                    <span className="font-medium">{(reuniao.participantes ?? []).length}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -323,50 +359,55 @@ export const Calendar: React.FC<CalendarProps> = ({
                                         draggable
                                         onDragStart={(e) => handleDragStart(e, reuniao)}
                                         onClick={() => onReuniaoClick(reuniao)}
-                                        className={`p-4 rounded-lg cursor-move hover:shadow-md transition-shadow
-                             ${getStatusColor(reuniao.status)} text-white relative`}
+                                        className={`p-5 rounded-xl cursor-move hover:shadow-xl hover:scale-[1.01] transition-all duration-200
+                             ${getStatusColor(reuniao.status)} text-white relative overflow-hidden`}
                                     >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div>
-                                                <h4 className="font-medium text-lg">{reuniao.titulo}</h4>
-                                                <div className="flex items-center gap-4 text-sm opacity-90">
-                                                    <span>{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
-                                                    <span>{reuniao.sala?.nome ?? '—'}</span>
-                                                </div>
-                                            </div>
-                                            <div className={`w-3 h-3 rounded-full ${getPrioridadeColor(reuniao.prioridade)}`} style={{ borderLeftWidth: '4px' }}></div>
-                                        </div>
+                                        {/* Borda de prioridade decorativa */}
+                                        <div className={`absolute top-0 right-0 w-20 h-20 opacity-20 rounded-bl-full ${getPrioridadeColor(reuniao.prioridade).replace('border-l-', 'bg-')}`}></div>
 
-                                        {reuniao.pauta && (
-                                            <p className="text-sm opacity-90 mb-2 line-clamp-2">{reuniao.pauta}</p>
-                                        )}
-
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4 text-sm">
-                                                <div className="flex items-center gap-1">
-                                                    {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
-                                                        <Video className="w-4 h-4" />
-                                                    ) : (
-                                                        <MapPin className="w-4 h-4" />
-                                                    )}
-                                                    <span>{reuniao.tipo}</span>
+                                        <div className="relative">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-xl mb-2">{reuniao.titulo}</h4>
+                                                    <div className="flex items-center gap-3 text-sm">
+                                                        <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full">
+                                                            <Clock className="w-4 h-4" />
+                                                            <span className="font-semibold">{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full">
+                                                            <span className="font-semibold">{reuniao.duracaoMinutos ?? 60} min</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Users className="w-4 h-4" />
-                                                    <span>{(reuniao.participantes ?? []).length} participantes</span>
-                                                </div>
+                                                <div className={`w-4 h-4 rounded-full ${getPrioridadeColor(reuniao.prioridade).replace('border-l-', 'bg-')} ring-4 ring-white/30`}></div>
                                             </div>
-                                            <span className={`px-2 py-1 text-xs rounded-full ${
-                                                (String(reuniao.status || '').toLowerCase() === 'em_andamento' || String(reuniao.status || '').toLowerCase() === 'em andamento') ? 'bg-white/20' :
-                                                    String(reuniao.status || '').toLowerCase().includes('agendada') ? 'bg-blue-500' :
-                                                        String(reuniao.status || '').toLowerCase().includes('finalizada') ? 'bg-gray-500' :
-                                                            'bg-red-500'
-                                            }`}>
-                        {String(reuniao.status || '') === 'EM_ANDAMENTO' || String(reuniao.status || '').toLowerCase().includes('andamento') ? 'Em andamento' :
-                            String(reuniao.status || '').toLowerCase().includes('agendada') ? 'Agendada' :
-                                String(reuniao.status || '').toLowerCase().includes('finalizada') ? 'Finalizada' :
-                                    String(reuniao.status || '').toLowerCase().includes('cancelada') ? 'Cancelada' : String(reuniao.status || '')}
-                      </span>
+
+                                            {reuniao.pauta && (
+                                                <p className="text-sm opacity-95 mb-3 p-3 bg-white/10 rounded-lg line-clamp-2">{reuniao.pauta}</p>
+                                            )}
+
+                                            <div className="flex items-center justify-between pt-3 border-t border-white/20">
+                                                <div className="flex items-center gap-4 text-sm">
+                                                    <div className="flex items-center gap-2">
+                                                        {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
+                                                            <Video className="w-4 h-4" />
+                                                        ) : (
+                                                            <MapPin className="w-4 h-4" />
+                                                        )}
+                                                        <span className="font-medium">{reuniao.sala?.nome ?? 'Sem sala'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
+                                                        <Users className="w-4 h-4" />
+                                                        <span className="font-semibold">{(reuniao.participantes ?? []).length} participantes</span>
+                                                    </div>
+                                                </div>
+                                                <span className="px-3 py-1 text-xs font-bold rounded-full bg-white/30 backdrop-blur-sm">
+                                                    {String(reuniao.status || '') === 'EM_ANDAMENTO' || String(reuniao.status || '').toLowerCase().includes('andamento') ? 'Em andamento' :
+                                                        String(reuniao.status || '').toLowerCase().includes('agendada') ? 'Agendada' :
+                                                            String(reuniao.status || '').toLowerCase().includes('finalizada') ? 'Finalizada' :
+                                                                String(reuniao.status || '').toLowerCase().includes('cancelada') ? 'Cancelada' : String(reuniao.status || '')}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -410,10 +451,34 @@ export const Calendar: React.FC<CalendarProps> = ({
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
             {/* Cabeçalho do calendário */}
             <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                         {getHeaderText()}
                     </h1>
+
+                    {/* View Tabs */}
+                    {viewTabs && viewTabs.length > 0 && (
+                        <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                            {viewTabs.map((tab) => {
+                                const Icon = tab.icon;
+                                const isActive = currentViewTab === tab.id;
+
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => onViewTabChange?.(tab.id)}
+                                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive
+                                                ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                            }`}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -449,9 +514,9 @@ export const Calendar: React.FC<CalendarProps> = ({
                                     onClick={() => setCurrentView(prev => ({ ...prev, tipo }))}
                                     className={`px-4 py-2 text-sm font-medium transition-colors
                            ${currentView.tipo === tipo
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                    }`}
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        }`}
                                 >
                                     {tipo === 'day' ? 'Dia' : tipo === 'week' ? 'Semana' : 'Mês'}
                                 </button>

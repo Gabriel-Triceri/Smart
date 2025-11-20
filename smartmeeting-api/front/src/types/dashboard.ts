@@ -1,3 +1,39 @@
+import { Reuniao, StatusReuniao } from './meetings';
+import React from 'react';
+
+export interface DashboardStats {
+    reunioesHoje: number;
+    taxaConclusaoTarefas: number;
+    salasEmUso: number;
+    acessosCrachaHoje: number;
+}
+
+export interface TimelineItem {
+    id: string;
+    hora: string;
+    titulo: string;
+    sala: string;
+    status: StatusReuniao;
+    participantes: number;
+}
+
+export interface ProblemaReuniao {
+    id: string;
+    titulo: string;
+    tipo: 'tarefas_atrasadas' | 'problema_presenca';
+    descricao: string;
+    hora: string;
+}
+
+export interface AtividadeRecente {
+    id: string;
+    tipo: 'reuniao_criada' | 'tarefa_adicionada' | 'tarefa_concluida';
+    usuario: string;
+    descricao: string;
+    timestamp: string;
+    icone: React.ElementType;
+}
+
 export interface EstatisticasGerais {
     totalReunioes: number;
     taxaPresenca: number;
@@ -11,12 +47,11 @@ export interface EstatisticasGerais {
 }
 
 export interface UsoSalas {
-    id: string;
+    salaId: string;
     nome: string;
-    utilizacao: number;
-    totalReunioes: number;
+    uso: number;
     capacidade: number;
-    status: 'ocupada' | 'disponivel' | 'reservada' | 'manutencao';
+    status: string;
 }
 
 export interface HistoricoMetricasDiarias {
@@ -26,38 +61,11 @@ export interface HistoricoMetricasDiarias {
     presencas: number;
 }
 
-export interface ReuniaoHoje {
-    id: string;
-    titulo: string;
-    sala: string;
-    horario: string;
-    participantes: number;
-    status: 'agendada' | 'em-andamento' | 'concluida' | 'cancelada';
-}
-
-export interface ProximaReuniao {
-    id: string;
-    titulo: string;
-    sala: string;
-    horario: string;
-    dataHora: string;
-    participantes: number;
-    organizador: string;
-}
-
-export interface Alerta {
-    id: string;
-    tipo: 'info' | 'warning' | 'error' | 'success';
-    mensagem: string;
-    timestamp: string;
-    lido: boolean;
-}
-
 export interface DashboardData {
     estatisticas: EstatisticasGerais;
     usoSalas: UsoSalas[];
     metricas: HistoricoMetricasDiarias[];
-    reunioesHoje: ReuniaoHoje[];
-    proximasReunioes: ProximaReuniao[];
-    alertas: Alerta[];
+    reunioesHoje: Reuniao[];
+    proximasReunioes: Reuniao[];
+    alertas: ProblemaReuniao[];
 }

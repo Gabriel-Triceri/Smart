@@ -15,8 +15,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = {"organizador", "sala", "participantes", "presencas", "tarefas"}) // Excluir campos de relacionamento
-@ToString(exclude = {"organizador", "sala", "participantes", "presencas", "tarefas"}) // Excluir campos de relacionamento do toString
+@EqualsAndHashCode(callSuper = false, exclude = {"organizador", "sala", "participantes", "presencas", "tarefas", "project"}) // Excluir campos de relacionamento
+@ToString(exclude = {"organizador", "sala", "participantes", "presencas", "tarefas", "project"}) // Excluir campos de relacionamento do toString
 public class Reuniao extends Auditable { // Estende Auditable
 
     @Id
@@ -76,6 +76,10 @@ public class Reuniao extends Auditable { // Estende Auditable
     @OneToMany(mappedBy = "reuniao", fetch = FetchType.LAZY) // Relacionamento bidirecional com Tarefa
     @JsonManagedReference
     private List<Tarefa> tarefas;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_PROJECT")
+    private Project project;
 
     @Version
     @Column(name = "VERSION")

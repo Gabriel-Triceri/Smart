@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.tsx';
 import LoginPage from './pages/Login.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
+import { ThemeProvider } from './context/ThemeContext.tsx'; // Importa ThemeProvider
 import './index.css';
 
 const router = createBrowserRouter(
@@ -27,6 +28,8 @@ const router = createBrowserRouter(
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <RouterProvider router={router} />
+        <ThemeProvider> {/* Envolve a aplicação com ThemeProvider */}
+            <RouterProvider router={router} />
+        </ThemeProvider>
     </React.StrictMode>
 );
