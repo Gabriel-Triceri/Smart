@@ -65,6 +65,10 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
                 meetingsApi.getStatisticsTarefas()
             ]);
 
+            console.log('🔍 DEBUG - Primeira tarefa:', tarefasData[0]);
+            console.log('🔍 DEBUG - Project ID:', tarefasData[0]?.projectId);
+            console.log('🔍 DEBUG - Project Name:', tarefasData[0]?.projectName);
+
             setTarefas(tarefasData);
             setKanbanBoard(kanbanData);
             setTemplates(templatesData);

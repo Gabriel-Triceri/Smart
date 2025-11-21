@@ -5,6 +5,7 @@ import App from './App.tsx';
 import LoginPage from './pages/Login.tsx';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeContext.tsx'; // Importa ThemeProvider
+
 import './index.css';
 
 const router = createBrowserRouter(
@@ -25,6 +26,8 @@ const router = createBrowserRouter(
         },
     ]
 );
+
+
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

@@ -5,9 +5,9 @@ import { MeetingManager } from './components/meetings/MeetingManager';
 import { SalaManager } from './components/salas/SalaManager';
 import { TaskManager } from './components/tasks/TaskManager';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
-// Removido: import { ThemeProvider } from './context/ThemeContext'; // Removido o import do ThemeProvider
 import ThemeToggle from './components/common/ThemeToggle'; // Importa ThemeToggle
 import { BarChart3, Calendar, Building, CheckSquare, Menu, X } from 'lucide-react';
+import { inicializarDados } from './services/seedData';
 
 type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas';
 
@@ -73,6 +73,11 @@ function App() {
         if (savedView && ['dashboard', 'meetings', 'salas', 'tarefas'].includes(savedView)) {
             setActiveView(savedView);
         }
+
+        // Inicializar dados após login
+        inicializarDados().catch(err => {
+            console.error('Erro ao inicializar dados:', err);
+        });
     }, []);
 
     const navigationItems = useMemo<NavigationItem[]>(() => [

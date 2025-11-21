@@ -3,15 +3,21 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.smartmeeting</groupId>
-        <artifactId>smartmeeting-parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath> <!-- Caminho relativo para o pom.xml pai -->
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
+    <groupId>com.smartmeeting</groupId>
     <artifactId>smartmeeting-api</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
     <name>smartmeeting-api</name>
     <description>Sistema inteligente para reuniões presenciais com controle de acesso e gestão de tarefas.</description>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
 
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -46,6 +52,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
         </dependency>
 
         <!-- Database -->
@@ -59,15 +66,18 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
+            <version>0.12.3</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
+            <version>0.12.3</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.3</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -75,6 +85,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.3.0</version>
         </dependency>
 
         <!-- Test -->
@@ -110,7 +121,9 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <version>1.18.30</version>
+
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

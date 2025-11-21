@@ -35,8 +35,8 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService; // Adicionado
 
     public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-                          JwtAuthenticationFilter jwtAuthenticationFilter,
-                          CustomUserDetailsService customUserDetailsService) { // Adicionado
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            CustomUserDetailsService customUserDetailsService) { // Adicionado
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customUserDetailsService = customUserDetailsService; // Adicionado
@@ -46,7 +46,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin())) // ✅ permite iframes do mesmo domínio
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin())) // ✅ permite
+                                                                                                     // iframes do mesmo
+                                                                                                     // domínio
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
@@ -59,7 +61,8 @@ public class SecurityConfig {
                                 "/tarefas",
                                 "/tarefas/",
                                 "/webjars/**",
-                                "/h2-console/**" // ✅ permite acesso ao console do H2
+                                "/h2-console/**", // ✅ permite acesso ao console do H2
+                                "/error" // ✅ permite acesso ao endpoint de erro do Spring Boot
                         ).permitAll()
                         .anyRequest().authenticated() // 🔒 Exige autenticação para todos os outros endpoints
                 )
@@ -77,8 +80,10 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // DelegatingPasswordEncoder aceita hashes com identificador como {bcrypt}, {noop}, etc.
-        // Isso permite que as senhas seedadas com {noop} funcionem e novos registros sejam salvos com {bcrypt}.
+        // DelegatingPasswordEncoder aceita hashes com identificador como {bcrypt},
+        // {noop}, etc.
+        // Isso permite que as senhas seedadas com {noop} funcionem e novos registros
+        // sejam salvos com {bcrypt}.
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
@@ -92,15 +97,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3001", "https://3000-ieoksv0ct41for8oic153-28527b58.manus.computer"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:3001",
+                "https://3000-ieoksv0ct41for8oic153-28527b58.manus.computer"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

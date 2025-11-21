@@ -12,8 +12,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.security.MessageDigest;
 import java.util.Date;
 import java.util.List;
@@ -39,7 +39,7 @@ public class JwtTokenProvider {
     @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpirationMs;
 
-    private Key signingKey;
+    private SecretKey signingKey;
 
     @PostConstruct
     private void initSigningKey() {
@@ -92,23 +92,23 @@ public class JwtTokenProvider {
                 .setExpiration(expiryDate)
                 .claim("roles", roles)
                 .claim("permissions", permissions)
-                .signWith(signingKey, SignatureAlgorithm.HS512) // ainda válido
+                .signWith(signingKey, Jwts.SIG.HS512)
                 .compact();
     }
 
     public String getUsernameFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(signingKey)
+        Claims claims = Jwts.parser()
+                .verifyWith(signingKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
         logger.debug("[DEBUG] getUsernameFromJWT: {}", claims.getSubject());
         return claims.getSubject();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token);
+            Jwts.parser().verifyWith(signingKey).build().parseSignedClaims(token);
             return true;
         } catch (ExpiredJwtException eje) {
             logger.warn("[WARN] Token expirado: {}", eje.getMessage());
@@ -122,11 +122,11 @@ public class JwtTokenProvider {
 
     @SuppressWarnings("unchecked")
     public List<String> getRoles(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(signingKey)
+        Claims claims = Jwts.parser()
+                .verifyWith(signingKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
         Object val = claims.get("roles");
         if (val instanceof List<?> list) {
             return (List<String>) list;
@@ -136,11 +136,11 @@ public class JwtTokenProvider {
 
     @SuppressWarnings("unchecked")
     public List<String> getPermissions(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(signingKey)
+        Claims claims = Jwts.parser()
+                .verifyWith(signingKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
         Object val = claims.get("permissions");
         if (val instanceof List<?> list) {
             return (List<String>) list;

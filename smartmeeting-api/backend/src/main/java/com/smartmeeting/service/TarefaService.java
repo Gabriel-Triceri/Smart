@@ -51,10 +51,10 @@ public class TarefaService {
     private final TemplateTarefaRepository templateTarefaRepository;
 
     public TarefaService(TarefaRepository tarefaRepository,
-                         PessoaRepository pessoaRepository,
-                         ReuniaoRepository reuniaoRepository,
-                         NotificacaoTarefaRepository notificacaoTarefaRepository,
-                         TemplateTarefaRepository templateTarefaRepository) {
+            PessoaRepository pessoaRepository,
+            ReuniaoRepository reuniaoRepository,
+            NotificacaoTarefaRepository notificacaoTarefaRepository,
+            TemplateTarefaRepository templateTarefaRepository) {
         this.tarefaRepository = tarefaRepository;
         this.pessoaRepository = pessoaRepository;
         this.reuniaoRepository = reuniaoRepository;
@@ -64,11 +64,13 @@ public class TarefaService {
 
     /**
      * Converte uma entidade Tarefa para seu respectivo DTO
+     * 
      * @param tarefa Entidade a ser convertida
      * @return DTO correspondente ou null se a entidade for nula
      */
     public TarefaDTO toDTO(Tarefa tarefa) {
-        if (tarefa == null) return null;
+        if (tarefa == null)
+            return null;
         TarefaDTO dto = new TarefaDTO();
         dto.setId(tarefa.getId());
         dto.setDescricao(tarefa.getDescricao());
@@ -90,28 +92,48 @@ public class TarefaService {
             dto.setResponsavelId(null);
         }
 
-        // Safely get Reuniao ID
+        // Safely get Reuniao ID and Titulo
         if (tarefa.getReuniao() != null) {
             try {
                 dto.setReuniaoId(tarefa.getReuniao().getId());
+                dto.setReuniaoTitulo(tarefa.getReuniao().getTitulo());
             } catch (Exception e) {
                 // Log the error or handle it appropriately, e.g., set to null
-                logger.error("Error getting reuniao ID for Tarefa {}: {}", tarefa.getId(), e.getMessage(), e);
+                logger.error("Error getting reuniao info for Tarefa {}: {}", tarefa.getId(), e.getMessage(), e);
                 dto.setReuniaoId(null);
+                dto.setReuniaoTitulo(null);
             }
         } else {
             dto.setReuniaoId(null);
+            dto.setReuniaoTitulo(null);
+        }
+
+        // Safely get Project ID and Name
+        if (tarefa.getProject() != null) {
+            try {
+                dto.setProjectId(tarefa.getProject().getId());
+                dto.setProjectName(tarefa.getProject().getName());
+            } catch (Exception e) {
+                logger.error("Error getting project info for Tarefa {}: {}", tarefa.getId(), e.getMessage(), e);
+                dto.setProjectId(null);
+                dto.setProjectName(null);
+            }
+        } else {
+            dto.setProjectId(null);
+            dto.setProjectName(null);
         }
         return dto;
     }
 
     /**
      * Converte um DTO para a entidade Tarefa
+     * 
      * @param dto DTO contendo os dados da tarefa
      * @return Entidade Tarefa correspondente ou null se o DTO for nulo
      */
     public Tarefa toEntity(TarefaDTO dto) {
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
         Tarefa tarefa = new Tarefa();
         tarefa.setDescricao(dto.getDescricao());
         tarefa.setPrazo(dto.getPrazo());
@@ -120,13 +142,15 @@ public class TarefaService {
 
         if (dto.getResponsavelId() != null) {
             Pessoa responsavel = pessoaRepository.findById(dto.getResponsavelId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com ID: " + dto.getResponsavelId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Responsável não encontrado com ID: " + dto.getResponsavelId()));
             tarefa.setResponsavel(responsavel);
         }
 
         if (dto.getReuniaoId() != null) {
             Reuniao reuniao = reuniaoRepository.findById(dto.getReuniaoId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + dto.getReuniaoId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Reunião não encontrada com ID: " + dto.getReuniaoId()));
             tarefa.setReuniao(reuniao);
         }
 
@@ -166,13 +190,15 @@ public class TarefaService {
 
         if (dtoAtualizada.getResponsavelId() != null) {
             Pessoa responsavel = pessoaRepository.findById(dtoAtualizada.getResponsavelId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com ID: " + dtoAtualizada.getResponsavelId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Responsável não encontrado com ID: " + dtoAtualizada.getResponsavelId()));
             tarefa.setResponsavel(responsavel);
         }
 
         if (dtoAtualizada.getReuniaoId() != null) {
             Reuniao reuniao = reuniaoRepository.findById(dtoAtualizada.getReuniaoId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + dtoAtualizada.getReuniaoId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Reunião não encontrada com ID: " + dtoAtualizada.getReuniaoId()));
             tarefa.setReuniao(reuniao);
         }
 
@@ -182,6 +208,7 @@ public class TarefaService {
 
     /**
      * Lista todas as tarefas de uma reunião específica
+     * 
      * @param reuniaoId ID da reunião para filtrar as tarefas
      * @return Lista de TarefaDTO pertencentes à reunião
      */
@@ -212,6 +239,49 @@ public class TarefaService {
         return temPendencias ? "Existem tarefas pendentes." : "Todas as tarefas estão concluídas.";
     }
 
+    /**
+     * Obtém a reunião associada a uma tarefa
+     * 
+     * @param tarefaId ID da tarefa
+     * @return A reunião associada
+     * @throws ResourceNotFoundException se a tarefa ou a reunião não forem
+     *                                   encontradas
+     */
+    public Reuniao getReuniaoDaTarefa(Long tarefaId) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        if (tarefa.getReuniao() == null) {
+            throw new ResourceNotFoundException("A tarefa não está associada a nenhuma reunião.");
+        }
+
+        return tarefa.getReuniao();
+    }
+
+    /**
+     * Atualiza a reunião associada a uma tarefa
+     * 
+     * @param tarefaId  ID da tarefa
+     * @param reuniaoId ID da reunião (pode ser null para desvincular)
+     * @return A tarefa atualizada
+     */
+    @Transactional
+    public TarefaDTO atualizarReuniaoDaTarefa(Long tarefaId, Long reuniaoId) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        if (reuniaoId != null) {
+            Reuniao reuniao = reuniaoRepository.findById(reuniaoId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + reuniaoId));
+            tarefa.setReuniao(reuniao);
+        } else {
+            tarefa.setReuniao(null);
+        }
+
+        Tarefa salva = tarefaRepository.save(tarefa);
+        return toDTO(salva);
+    }
+
     // --- Métodos de Notificação ---
     @Transactional
     public List<NotificacaoTarefaDTO> getNotificacoesTarefas() {
@@ -221,7 +291,8 @@ public class TarefaService {
     }
 
     public NotificacaoTarefaDTO toDTO(NotificacaoTarefa notificacao) {
-        if (notificacao == null) return null;
+        if (notificacao == null)
+            return null;
         return new NotificacaoTarefaDTO(
                 notificacao.getId(),
                 notificacao.getTarefa() != null ? notificacao.getTarefa().getId() : null,
@@ -231,8 +302,7 @@ public class TarefaService {
                 notificacao.getMensagem(),
                 notificacao.isLida(),
                 notificacao.getCreatedAt(),
-                notificacao.getAgendadaPara()
-        );
+                notificacao.getAgendadaPara());
     }
 
     // --- Métodos de Template de Tarefas ---
@@ -243,7 +313,8 @@ public class TarefaService {
     }
 
     public TemplateTarefaDTO toDTO(TemplateTarefa template) {
-        if (template == null) return null;
+        if (template == null)
+            return null;
         return new TemplateTarefaDTO(
                 template.getId(),
                 template.getTitulo(),
@@ -251,8 +322,7 @@ public class TarefaService {
                 template.getPrioridade(),
                 template.getTags(),
                 template.getEstimadaHoras(),
-                template.getDependencias()
-        );
+                template.getDependencias());
     }
 
     // --- Métodos de Estatísticas de Tarefas ---
@@ -279,7 +349,8 @@ public class TarefaService {
                             long concluidasResp = tarefasDoResponsavel.stream()
                                     .filter(t -> t.getStatusTarefa() == StatusTarefa.DONE)
                                     .count();
-                            return new TarefaStatisticsDTO.ResponsavelStatsDTO(tarefasDoResponsavel.get(0).getResponsavel().getNome(), totalResp, concluidasResp);
+                            return new TarefaStatisticsDTO.ResponsavelStatsDTO(
+                                    tarefasDoResponsavel.get(0).getResponsavel().getNome(), totalResp, concluidasResp);
                         })))
                 .values().stream().collect(Collectors.toList());
 
@@ -289,11 +360,14 @@ public class TarefaService {
         double taxaConclusao = total > 0 ? (double) tarefasConcluidas / total : 0.0;
 
         long tarefasVencendo = todasTarefas.stream()
-                .filter(t -> t.getPrazo() != null && t.getPrazo().isAfter(now.toLocalDate()) && t.getPrazo().isBefore(now.toLocalDate().plusDays(3)) && t.getStatusTarefa() != StatusTarefa.DONE)
+                .filter(t -> t.getPrazo() != null && t.getPrazo().isAfter(now.toLocalDate())
+                        && t.getPrazo().isBefore(now.toLocalDate().plusDays(3))
+                        && t.getStatusTarefa() != StatusTarefa.DONE)
                 .count();
 
         long tarefasAtrasadas = todasTarefas.stream()
-                .filter(t -> t.getPrazo() != null && t.getPrazo().isBefore(now.toLocalDate()) && t.getStatusTarefa() != StatusTarefa.DONE)
+                .filter(t -> t.getPrazo() != null && t.getPrazo().isBefore(now.toLocalDate())
+                        && t.getStatusTarefa() != StatusTarefa.DONE)
                 .count();
 
         // Placeholder para mediaTempoConclusao e produtividadeSemana
@@ -309,8 +383,7 @@ public class TarefaService {
                 tarefasVencendo,
                 tarefasAtrasadas,
                 mediaTempoConclusao,
-                produtividadeSemana
-        );
+                produtividadeSemana);
     }
 
     // --- Métodos do Kanban Board ---
@@ -339,13 +412,27 @@ public class TarefaService {
                         String cor;
                         int ordem;
                         switch (status) {
-                            case TODO: cor = "#FFC107"; ordem = 1; break; // Amarelo
-                            case IN_PROGRESS: cor = "#2196F3"; ordem = 2; break; // Azul
-                            case REVIEW: cor = "#9C27B0"; ordem = 3; break; // Roxo
-                            case DONE: cor = "#4CAF50"; ordem = 4; break; // Verde
-                            default: throw new IllegalStateException("Status de tarefa inesperado: " + status);
+                            case TODO:
+                                cor = "#FFC107";
+                                ordem = 1;
+                                break; // Amarelo
+                            case IN_PROGRESS:
+                                cor = "#2196F3";
+                                ordem = 2;
+                                break; // Azul
+                            case REVIEW:
+                                cor = "#9C27B0";
+                                ordem = 3;
+                                break; // Roxo
+                            case DONE:
+                                cor = "#4CAF50";
+                                ordem = 4;
+                                break; // Verde
+                            default:
+                                throw new IllegalStateException("Status de tarefa inesperado: " + status);
                         }
-                        logger.trace("Creating KanbanColumnDTO for status {}: {} tasks", status, tarefasDaColuna.size());
+                        logger.trace("Creating KanbanColumnDTO for status {}: {} tasks", status,
+                                tarefasDaColuna.size());
                         return new KanbanColumnDTO(status, status.getDescricao(), tarefasDaColuna, null, cor, ordem);
                     })
                     .sorted(Comparator.comparingInt(KanbanColumnDTO::getOrdem))
@@ -358,11 +445,11 @@ public class TarefaService {
                     reuniaoId,
                     colunas,
                     LocalDateTime.now(),
-                    LocalDateTime.now()
-            );
+                    LocalDateTime.now());
         } catch (Exception e) {
             logger.error("Error retrieving Kanban Board for reuniaoId {}: {}", reuniaoId, e.getMessage(), e);
-            throw new RuntimeException("Failed to retrieve Kanban Board", e); // Re-throw as a runtime exception or a custom exception
+            throw new RuntimeException("Failed to retrieve Kanban Board", e); // Re-throw as a runtime exception or a
+                                                                              // custom exception
         }
     }
 
@@ -388,20 +475,22 @@ public class TarefaService {
     }
 
     public AssigneeDTO toAssigneeDTO(Pessoa pessoa) {
-        if (pessoa == null) return null;
+        if (pessoa == null)
+            return null;
         return new AssigneeDTO(
                 pessoa.getId(),
                 pessoa.getNome(),
                 pessoa.getEmail(),
                 null, // Avatar não está na entidade Pessoa
-                null  // Departamento não está na entidade Pessoa
+                null // Departamento não está na entidade Pessoa
         );
     }
 
     /**
      * Move uma tarefa para um novo status e, opcionalmente, uma nova posição.
-     * @param id O ID da tarefa a ser movida.
-     * @param newStatus O novo status da tarefa.
+     * 
+     * @param id          O ID da tarefa a ser movida.
+     * @param newStatus   O novo status da tarefa.
      * @param newPosition A nova posição da tarefa dentro do status (opcional).
      * @return A TarefaDTO atualizada.
      */
@@ -413,9 +502,11 @@ public class TarefaService {
         logger.info("Movendo tarefa ID {} de status {} para {}", id, tarefa.getStatusTarefa(), newStatus);
 
         tarefa.setStatusTarefa(newStatus);
-        // Se houver necessidade de reordenar tarefas dentro de um status, a lógica seria implementada aqui.
+        // Se houver necessidade de reordenar tarefas dentro de um status, a lógica
+        // seria implementada aqui.
         // Por enquanto, apenas a mudança de status é tratada.
-        // tarefa.setPosition(newPosition); // Se a entidade Tarefa tivesse um campo 'position'
+        // tarefa.setPosition(newPosition); // Se a entidade Tarefa tivesse um campo
+        // 'position'
 
         Tarefa updatedTarefa = tarefaRepository.save(tarefa);
         return toDTO(updatedTarefa);
@@ -423,21 +514,27 @@ public class TarefaService {
 
     /**
      * Registra uma movimentação de tarefa.
-     * Por enquanto, apenas loga a movimentação. Pode ser estendido para persistência futura.
+     * Por enquanto, apenas loga a movimentação. Pode ser estendido para
+     * persistência futura.
+     * 
      * @param dto DTO contendo os detalhes da movimentação.
      */
     public void registrarMovimentacao(MovimentacaoTarefaDTO dto) {
-        logger.info("Movimentação de Tarefa Registrada: Tarefa ID={}, De Status={}, Para Status={}, Usuário={}, Timestamp={}",
-                dto.getTarefaId(), dto.getStatusAnterior(), dto.getStatusNovo(), dto.getUsuarioNome(), dto.getTimestamp());
-        // Futuramente, aqui poderia haver a lógica para salvar a movimentação em um banco de dados
+        logger.info(
+                "Movimentação de Tarefa Registrada: Tarefa ID={}, De Status={}, Para Status={}, Usuário={}, Timestamp={}",
+                dto.getTarefaId(), dto.getStatusAnterior(), dto.getStatusNovo(), dto.getUsuarioNome(),
+                dto.getTimestamp());
+        // Futuramente, aqui poderia haver a lógica para salvar a movimentação em um
+        // banco de dados
         // Ex: movimentacaoTarefaRepository.save(toEntity(dto));
     }
 
     /**
      * Adiciona um comentário a uma tarefa
+     * 
      * @param tarefaId ID da tarefa
      * @param conteudo Conteúdo do comentário
-     * @param mencoes Lista de menções (usernames ou IDs de usuários)
+     * @param mencoes  Lista de menções (usernames ou IDs de usuários)
      * @return Map com informações do comentário criado
      */
     @Transactional
@@ -451,9 +548,11 @@ public class TarefaService {
         }
 
         // Log da ação
-        logger.info("Adicionando comentário à tarefa ID {}: {}", tarefaId, conteudo.substring(0, Math.min(50, conteudo.length())));
+        logger.info("Adicionando comentário à tarefa ID {}: {}", tarefaId,
+                conteudo.substring(0, Math.min(50, conteudo.length())));
 
-        // Simular criação de comentário (para implementação futura seria necessário uma entidade Comentário)
+        // Simular criação de comentário (para implementação futura seria necessário uma
+        // entidade Comentário)
         Map<String, Object> comentario = Map.of(
                 "id", System.currentTimeMillis(), // ID temporário
                 "tarefaId", tarefaId,
@@ -461,16 +560,16 @@ public class TarefaService {
                 "mencoes", mencoes != null ? mencoes : List.of(),
                 "autor", "Usuário Atual", // Em implementação real, pegaria do contexto de segurança
                 "dataCriacao", LocalDateTime.now(),
-                "status", "criado"
-        );
+                "status", "criado");
 
         return comentario;
     }
 
     /**
      * Anexa um arquivo a uma tarefa
+     * 
      * @param tarefaId ID da tarefa
-     * @param arquivo Arquivo a ser anexado
+     * @param arquivo  Arquivo a ser anexado
      * @return Map com informações do anexo
      */
     @Transactional
@@ -493,17 +592,17 @@ public class TarefaService {
                 "tipo", arquivo.getContentType(),
                 "urlDownload", "/api/arquivos/" + System.currentTimeMillis(), // URL simulada
                 "dataUpload", LocalDateTime.now(),
-                "status", "anexado"
-        );
+                "status", "anexado");
 
         return anexo;
     }
 
     /**
      * Atribui uma tarefa a um responsável
-     * @param tarefaId ID da tarefa
+     * 
+     * @param tarefaId      ID da tarefa
      * @param responsavelId ID do responsável
-     * @param principal Indica se é responsável principal
+     * @param principal     Indica se é responsável principal
      * @return TarefaDTO atualizada
      */
     @Transactional
@@ -512,7 +611,8 @@ public class TarefaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
 
         Pessoa responsavel = pessoaRepository.findById(responsavelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
 
         tarefa.setResponsavel(responsavel);
 
@@ -524,7 +624,8 @@ public class TarefaService {
 
     /**
      * Atualiza o progresso de uma tarefa
-     * @param tarefaId ID da tarefa
+     * 
+     * @param tarefaId  ID da tarefa
      * @param progresso Novo progresso (0-100)
      * @return TarefaDTO atualizada
      */
@@ -557,7 +658,8 @@ public class TarefaService {
 
     /**
      * Duplica uma tarefa
-     * @param tarefaId ID da tarefa original
+     * 
+     * @param tarefaId     ID da tarefa original
      * @param modificacoes Modificações opcionais para a nova tarefa
      * @return Nova tarefa criada
      */
@@ -592,7 +694,8 @@ public class TarefaService {
             if (modificacoes.containsKey("responsavelId")) {
                 Long responsavelId = Long.valueOf(modificacoes.get("responsavelId").toString());
                 Pessoa responsavel = pessoaRepository.findById(responsavelId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Responsável não encontrado com ID: " + responsavelId));
                 novaTarefa.setResponsavel(responsavel);
             }
         }
@@ -603,7 +706,8 @@ public class TarefaService {
 
     /**
      * Busca tarefas por texto
-     * @param termo Termo de busca
+     * 
+     * @param termo   Termo de busca
      * @param filtros Filtros adicionais
      * @return Lista de tarefas encontradas
      */
@@ -645,6 +749,7 @@ public class TarefaService {
 
     /**
      * Obtém tarefas que estão vencendo
+     * 
      * @param dias Número de dias para considerar como "vencendo"
      * @return Lista de tarefas vencendo
      */
@@ -671,6 +776,7 @@ public class TarefaService {
 
     /**
      * Obtém tarefas do usuário atual
+     * 
      * @return Lista de tarefas do usuário atual
      */
     public List<TarefaDTO> getTarefasDoUsuarioAtual() {
@@ -684,15 +790,16 @@ public class TarefaService {
 
     /**
      * Cria tarefas por template
-     * @param templateId ID do template
+     * 
+     * @param templateId      ID do template
      * @param responsaveisIds Lista de IDs dos responsáveis
      * @param datasVencimento Lista de datas de vencimento
-     * @param reuniaoId ID da reunião (opcional)
+     * @param reuniaoId       ID da reunião (opcional)
      * @return Lista de tarefas criadas
      */
     @Transactional
     public List<TarefaDTO> criarTarefasPorTemplate(Long templateId, List<Long> responsaveisIds,
-                                                   List<String> datasVencimento, Long reuniaoId) {
+            List<String> datasVencimento, Long reuniaoId) {
         TemplateTarefa template = templateTarefaRepository.findById(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Template não encontrado com ID: " + templateId));
 
@@ -703,12 +810,14 @@ public class TarefaService {
         for (int i = 0; i < responsaveisIds.size(); i++) {
             Long responsavelId = responsaveisIds.get(i);
             Pessoa responsavel = pessoaRepository.findById(responsavelId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
 
             Tarefa tarefa = new Tarefa();
             tarefa.setDescricao(template.getTitulo());
-            tarefa.setPrazo(datasVencimento != null && i < datasVencimento.size() ?
-                    LocalDate.parse(datasVencimento.get(i)) : LocalDate.now().plusDays(7));
+            tarefa.setPrazo(
+                    datasVencimento != null && i < datasVencimento.size() ? LocalDate.parse(datasVencimento.get(i))
+                            : LocalDate.now().plusDays(7));
             tarefa.setStatusTarefa(StatusTarefa.TODO);
             tarefa.setConcluida(false);
             tarefa.setPrioridade(template.getPrioridade());
@@ -716,7 +825,8 @@ public class TarefaService {
 
             if (reuniaoId != null) {
                 Reuniao reuniao = reuniaoRepository.findById(reuniaoId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + reuniaoId));
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("Reunião não encontrada com ID: " + reuniaoId));
                 tarefa.setReuniao(reuniao);
             }
 
@@ -729,12 +839,14 @@ public class TarefaService {
 
     /**
      * Marca uma notificação como lida
+     * 
      * @param notificacaoId ID da notificação
      */
     @Transactional
     public void marcarNotificacaoLida(Long notificacaoId) {
         NotificacaoTarefa notificacao = notificacaoTarefaRepository.findById(notificacaoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notificação não encontrada com ID: " + notificacaoId));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Notificação não encontrada com ID: " + notificacaoId));
 
         logger.info("Marcando notificação ID {} como lida", notificacaoId);
 

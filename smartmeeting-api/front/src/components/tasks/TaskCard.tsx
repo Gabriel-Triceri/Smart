@@ -124,10 +124,28 @@ export function TaskCard({
         }
     };
 
+    // Generate consistent color based on project name
+    const getProjectColor = (projectName?: string) => {
+        if (!projectName) return '';
+        const colors = [
+            'border-l-purple-500',
+            'border-l-blue-500',
+            'border-l-green-500',
+            'border-l-orange-500',
+            'border-l-pink-500',
+            'border-l-indigo-500',
+        ];
+        const hash = projectName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return colors[hash % colors.length];
+    };
+
+    const projectColorClass = tarefa.projectName ? getProjectColor(tarefa.projectName) : '';
+
     return (
         <div
             className={`
                 relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md dark:hover:border-blue-600 transition-all duration-200
+                ${projectColorClass ? `border-l-4 ${projectColorClass}` : ''}
                 ${isDragging ? 'opacity-50 scale-95' : ''}
                 ${compact ? 'p-3' : 'p-4'}
                 ${onClick ? 'cursor-pointer' : ''} 
@@ -152,6 +170,21 @@ export function TaskCard({
                         <Flag className="w-3 h-3 inline mr-1" />
                         {tarefa.prioridade ? (tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)) : 'N/A'}
                     </div>
+
+                    {tarefa.projectName && (
+                        <div
+                            className="px-2 py-1 rounded bg-purple-100 text-purple-800 border-2 border-purple-400 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-600 text-xs font-bold shadow-sm"
+                            title={`Projeto: ${tarefa.projectName}`}
+                        >
+                            📁 {tarefa.projectName}
+                        </div>
+                    )}
+
+                    {tarefa.reuniaoTitulo && (
+                        <div className="px-2 py-1 rounded bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 text-xs font-medium">
+                            📅 {tarefa.reuniaoTitulo}
+                        </div>
+                    )}
                 </div>
 
                 {/* Menu de ações */}

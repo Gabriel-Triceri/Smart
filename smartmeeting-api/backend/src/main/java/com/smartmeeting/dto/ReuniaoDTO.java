@@ -11,7 +11,8 @@ import java.util.List;
 
 /**
  * DTO para transferência de dados de Reunião
- * Contém informações sobre reuniões, incluindo data/hora, duração, participantes e sala
+ * Contém informações sobre reuniões, incluindo data/hora, duração,
+ * participantes e sala
  */
 @Data
 @NoArgsConstructor
@@ -19,6 +20,7 @@ import java.util.List;
 @Accessors(chain = true)
 public class ReuniaoDTO {
     private Long id;
+    private String titulo;
     private LocalDateTime dataHoraInicio;
     private Integer duracaoMinutos; // duração em minutos
     private String pauta;
@@ -38,16 +40,18 @@ public class ReuniaoDTO {
 
     // Construtor completo para respostas
     public ReuniaoDTO(Long id,
-                      LocalDateTime dataHoraInicio,
-                      Integer duracaoMinutos,
-                      String pauta,
-                      String ata,
-                      StatusReuniao status,
-                      PessoaDTO organizador,
-                      SalaDTO sala,
-                      List<PessoaDTO> participantesDetalhes, // Ajustado para participantesDetalhes
-                      List<String> tarefas) { // Adicionado tarefas ao construtor
+            String titulo,
+            LocalDateTime dataHoraInicio,
+            Integer duracaoMinutos,
+            String pauta,
+            String ata,
+            StatusReuniao status,
+            PessoaDTO organizador,
+            SalaDTO sala,
+            List<PessoaDTO> participantesDetalhes, // Ajustado para participantesDetalhes
+            List<String> tarefas) { // Adicionado tarefas ao construtor
         this.id = id;
+        this.titulo = titulo;
         this.dataHoraInicio = dataHoraInicio;
         this.duracaoMinutos = duracaoMinutos;
         this.pauta = pauta;
@@ -73,8 +77,11 @@ public class ReuniaoDTO {
     }
 
     /**
-     * Calcula e retorna o horário de término da reunião com base na data/hora de início e duração
-     * @return Data e hora de término da reunião ou null se os dados necessários não estiverem disponíveis
+     * Calcula e retorna o horário de término da reunião com base na data/hora de
+     * início e duração
+     * 
+     * @return Data e hora de término da reunião ou null se os dados necessários não
+     *         estiverem disponíveis
      */
     public LocalDateTime getDataHoraFim() {
         if (dataHoraInicio != null && duracaoMinutos != null) {
@@ -85,13 +92,16 @@ public class ReuniaoDTO {
 
     /**
      * Método para compatibilidade com o padrão JavaBean
-     * @param dataHoraFim Data e hora de término da reunião (não utilizado, calculado dinamicamente)
+     * 
+     * @param dataHoraFim Data e hora de término da reunião (não utilizado,
+     *                    calculado dinamicamente)
      */
     public void setDataHoraFim(LocalDateTime dataHoraFim) {
         // Método mantido vazio pois o valor é calculado dinamicamente
     }
 
-    // Getters e Setters para tarefas (gerados por Lombok @Data, mas explicitamente para clareza)
+    // Getters e Setters para tarefas (gerados por Lombok @Data, mas explicitamente
+    // para clareza)
     public List<String> getTarefas() {
         return tarefas;
     }

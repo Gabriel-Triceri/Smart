@@ -18,7 +18,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = {"responsavel", "reuniao", "project"}) // Excluir campos de relacionamento
+@EqualsAndHashCode(callSuper = false, exclude = { "responsavel", "reuniao", "project" }) // Excluir campos de
+                                                                                         // relacionamento
 public class Tarefa extends Auditable { // Estende Auditable
 
     @Id
@@ -53,7 +54,7 @@ public class Tarefa extends Auditable { // Estende Auditable
     @JoinColumn(name = "ID_REUNIAO", foreignKey = @ForeignKey(name = "FK_TAREFA_REUNIAO"))
     private Reuniao reuniao;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_PROJECT")
     private Project project;
 

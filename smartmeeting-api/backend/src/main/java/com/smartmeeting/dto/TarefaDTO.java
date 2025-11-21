@@ -10,7 +10,8 @@ import java.time.LocalDate;
 
 /**
  * DTO para transferência de dados de Tarefa
- * Contém informações sobre tarefas, incluindo descrição, prazo, status e responsável
+ * Contém informações sobre tarefas, incluindo descrição, prazo, status e
+ * responsável
  */
 @Data
 @NoArgsConstructor
@@ -26,4 +27,7 @@ public class TarefaDTO {
     private Long responsavelId;
     private String responsavelNome;
     private Long reuniaoId;
+    private String reuniaoTitulo;
+    private Long projectId;
+    private String projectName;
 }

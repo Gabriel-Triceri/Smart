@@ -12,15 +12,22 @@ KEY(ID_SALA) VALUES
 (2, 'Sala Verde', 12, 'Bloco B - 2o andar', 'OCUPADA'),
 (3, 'Sala Amarela', 6, 'Bloco C - Térreo', 'RESERVADA');
 
+-- PROJECT (IDs 1..3)
+MERGE INTO PROJECT (ID, NAME, DESCRIPTION, START_DATE, END_DATE, STATUS, ID_OWNER)
+KEY(ID) VALUES
+(1, 'Sistema de Gestão', 'Desenvolvimento do sistema de gestão de reuniões e tarefas', DATE '2025-10-01', DATE '2025-12-31', 'ACTIVE', 1),
+(2, 'Melhoria de Processos', 'Projeto de otimização dos processos internos da empresa', DATE '2025-11-01', DATE '2026-02-28', 'ACTIVE', 2),
+(3, 'Planejamento Estratégico', 'Definição de objetivos e metas para o próximo trimestre', DATE '2025-11-08', DATE '2025-11-30', 'PLANNING', 2);
+
 -- REUNIAO (IDs 1..3)
 MERGE INTO REUNIAO (
-  ID_REUNIAO, DATAHORAINICIO_REUNIAO, DURACAOMINUTOS_REUNIAO, PAUTA_REUNIAO, ATA_REUNIAO, STATUS_REUNIAO,
+  ID_REUNIAO, TITULO_REUNIAO, DATAHORAINICIO_REUNIAO, DURACAOMINUTOS_REUNIAO, PAUTA_REUNIAO, ATA_REUNIAO, STATUS_REUNIAO,
   ORGANIZADOR_ID, SALA_ID, VERSION
 )
 KEY(ID_REUNIAO) VALUES
-(1, TIMESTAMP '2025-11-07 09:00:00', 60, 'Kickoff do projeto', 'Ata inicial', 'AGENDADA', 2, 1, 0),
-(2, TIMESTAMP '2025-11-07 11:00:00', 45, 'Revisão de sprint', 'Ata sprint 12', 'EM_ANDAMENTO', 1, 2, 0),
-(3, TIMESTAMP '2025-11-08 15:30:00', 90, 'Planejamento trimestral', 'Ata Q4', 'FINALIZADA', 2, 3, 0);
+(1, 'Kickoff do Projeto', TIMESTAMP '2025-11-07 09:00:00', 60, 'Discussão dos objetivos e marcos do projeto', 'Ata inicial', 'AGENDADA', 2, 1, 0),
+(2, 'Revisão de Sprint', TIMESTAMP '2025-11-07 11:00:00', 45, 'Análise das entregas e retrospectiva da sprint 12', 'Ata sprint 12', 'EM_ANDAMENTO', 1, 2, 0),
+(3, 'Planejamento Trimestral', TIMESTAMP '2025-11-08 15:30:00', 90, 'Definição de metas e estratégias para o Q4', 'Ata Q4', 'FINALIZADA', 2, 3, 0);
 
 -- REUNIAO_PARTICIPANTES (JOIN TABLE) - composite key
 MERGE INTO REUNIAO_PARTICIPANTES (REUNIAO_ID, PESSOA_ID)
@@ -37,13 +44,13 @@ KEY(ID_PRESENCA) VALUES
 (3, TIMESTAMP '2025-11-08 15:25:00', TRUE, 2, 3);
 
 -- TAREFA (IDs 1..5) - Adicionando tarefas para todos os status
-MERGE INTO TAREFA (ID_TAREFA, DESCRICAO_TAREFA, PRAZO_TAREFA, CONCLUIDA_TAREFA, STATUS_TAREFA, PRIORIDADE_TAREFA, ID_RESPONSAVEL, ID_REUNIAO)
+MERGE INTO TAREFA (ID_TAREFA, DESCRICAO_TAREFA, PRAZO_TAREFA, CONCLUIDA_TAREFA, STATUS_TAREFA, PRIORIDADE_TAREFA, ID_RESPONSAVEL, ID_REUNIAO, ID_PROJECT)
 KEY(ID_TAREFA) VALUES
-(1, 'Preparar apresentação', DATE '2025-11-10', FALSE, 'TODO', 'ALTA', 1, 1),
-(2, 'Coletar métricas', DATE '2025-11-12', FALSE, 'IN_PROGRESS', 'MEDIA', 3, 2),
-(3, 'Revisar documentação', DATE '2025-11-15', FALSE, 'REVIEW', 'ALTA', 2, 1),
-(4, 'Implementar nova funcionalidade', DATE '2025-11-20', FALSE, 'IN_PROGRESS', 'CRITICA', 1, 2),
-(5, 'Fechar ata e enviar', DATE '2025-11-09', TRUE, 'DONE', 'BAIXA', 2, 3);
+(1, 'Preparar apresentação', DATE '2025-11-10', FALSE, 'TODO', 'ALTA', 1, 1, 1),
+(2, 'Coletar métricas', DATE '2025-11-12', FALSE, 'IN_PROGRESS', 'MEDIA', 3, 2, 2),
+(3, 'Revisar documentação', DATE '2025-11-15', FALSE, 'REVIEW', 'ALTA', 2, 1, 1),
+(4, 'Implementar nova funcionalidade', DATE '2025-11-20', FALSE, 'IN_PROGRESS', 'CRITICA', 1, 2, 1),
+(5, 'Fechar ata e enviar', DATE '2025-11-09', TRUE, 'DONE', 'BAIXA', 2, 3, 3);
 
 -- NOTIFICACAO (IDs 1..3)
 MERGE INTO NOTIFICACAO (ID_NOTIFICACAO, MENSAGEM_NOTIFICACAO, TIPO_NOTIFICACAO, ID_DESTINATARIO)

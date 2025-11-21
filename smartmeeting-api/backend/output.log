@@ -1,0 +1,61 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< com.smartmeeting:smartmeeting-api >------------------
+[INFO] Building smartmeeting-api 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ smartmeeting-api ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ smartmeeting-api ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 121 source files with javac [debug release 17] to target\classes
+[INFO] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java: C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\security\JwtTokenProvider.java uses or overrides a deprecated API.
+[INFO] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java: Recompile with -Xlint:deprecation for details.
+[INFO] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/CsvExportService.java: C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\service\CsvExportService.java uses unchecked or unsafe operations.
+[INFO] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/CsvExportService.java: Recompile with -Xlint:unchecked for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java:[100,29] cannot find symbol
+  symbol:   method parserBuilder()
+  location: class io.jsonwebtoken.Jwts
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java:[111,17] cannot find symbol
+  symbol:   method parserBuilder()
+  location: class io.jsonwebtoken.Jwts
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java:[125,29] cannot find symbol
+  symbol:   method parserBuilder()
+  location: class io.jsonwebtoken.Jwts
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java:[139,29] cannot find symbol
+  symbol:   method parserBuilder()
+  location: class io.jsonwebtoken.Jwts
+[INFO] 4 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  22.152 s
+[INFO] Finished at: 2025-11-21T16:23:55-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project smartmeeting-api: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java:[100,29] cannot find symbol
+[ERROR]   symbol:   method parserBuilder()
+[ERROR]   location: class io.jsonwebtoken.Jwts
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java:[111,17] cannot find symbol
+[ERROR]   symbol:   method parserBuilder()
+[ERROR]   location: class io.jsonwebtoken.Jwts
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java:[125,29] cannot find symbol
+[ERROR]   symbol:   method parserBuilder()
+[ERROR]   location: class io.jsonwebtoken.Jwts
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/security/JwtTokenProvider.java:[139,29] cannot find symbol
+[ERROR]   symbol:   method parserBuilder()
+[ERROR]   location: class io.jsonwebtoken.Jwts
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

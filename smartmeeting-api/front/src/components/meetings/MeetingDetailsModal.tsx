@@ -29,6 +29,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
     onToggleLembrete
 }) => {
     const [activeTab, setActiveTab] = useState<'info' | 'participantes' | 'tarefas'>('info');
+    const [removingParticipantId, setRemovingParticipantId] = useState<number | null>(null);
 
     const formatDateSafe = (date: string | Date, formatString: string) => {
         const d = new Date(date);
@@ -187,6 +188,33 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
         );
     };
 
+    const handleRemoveParticipant = async (participanteId: number) => {
+        if (!confirm('Tem certeza que deseja remover este participante da reunião?')) {
+            return;
+        }
+
+        setRemovingParticipantId(participanteId);
+        try {
+            // Get current participant IDs and remove the selected one
+            const updatedParticipantes = reuniao.participantes
+                .filter(p => p.id !== participanteId)
+                .map(p => p.id);
+
+            // Update the meeting with the new participant list
+            await meetingsApi.updateReuniao(String(reuniao.id), {
+                participantes: updatedParticipantes
+            });
+
+            // Refresh the page or notify parent to refresh
+            window.location.reload();
+        } catch (error) {
+            console.error('Erro ao remover participante:', error);
+            alert('Erro ao remover participante. Tente novamente.');
+        } finally {
+            setRemovingParticipantId(null);
+        }
+    };
+
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -310,14 +338,12 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                         {activeTab === 'info' && (
                             <div className="space-y-6">
                                 {/* Pauta */}
-                                {reuniao.pauta && (
-                                    <div>
-                                        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Pauta</h4>
-                                        <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                            {reuniao.pauta}
-                                        </p>
-                                    </div>
-                                )}
+                                <div>
+                                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Pauta</h4>
+                                    <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                        {reuniao.pauta || 'Nenhuma pauta definida.'}
+                                    </p>
+                                </div>
 
                                 {/* Informações básicas */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -468,7 +494,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                         <p className="text-sm text-gray-600 dark:text-gray-400">{participante.departamento}</p>
                                                     )}
                                                 </div>
-                                                <div className="text-right">
+                                                <div className="flex items-center gap-2">
                                                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${participante.status === 'confirmado' ? 'text-green-600 bg-green-100 dark:bg-green-900/20 dark:text-green-400' :
                                                         participante.status === 'pendente' ? 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400' :
                                                             'text-red-600 bg-red-100 dark:bg-red-900/20 dark:text-red-400'
@@ -476,6 +502,17 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                         {participante.status === 'confirmado' ? 'Confirmado' :
                                                             participante.status === 'pendente' ? 'Pendente' : 'Recusado'}
                                                     </span>
+                                                    {/* Delete button - disabled for organizer */}
+                                                    {participante.id !== reuniao.organizador.id && canEdit && (
+                                                        <button
+                                                            onClick={() => handleRemoveParticipant(participante.id)}
+                                                            disabled={removingParticipantId === participante.id}
+                                                            className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            title="Remover participante"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

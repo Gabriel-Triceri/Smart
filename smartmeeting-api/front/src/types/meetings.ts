@@ -260,6 +260,7 @@ export interface Tarefa {
     estimadoHoras?: number;
     horasTrabalhadas: number;
     reuniaoId?: string;
+    reuniaoTitulo?: string;
     tarefaPaiId?: string;
     subtarefas?: Tarefa[];
     dependencias?: string[];
@@ -273,6 +274,8 @@ export interface Tarefa {
     atualizadaPorNome?: string;
     createdAt: string;
     updatedAt: string;
+    projectId?: string;
+    projectName?: string;
     deletedAt?: string;
 }
 

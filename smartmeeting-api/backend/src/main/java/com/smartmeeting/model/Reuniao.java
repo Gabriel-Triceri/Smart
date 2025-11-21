@@ -15,8 +15,11 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = {"organizador", "sala", "participantes", "presencas", "tarefas", "project"}) // Excluir campos de relacionamento
-@ToString(exclude = {"organizador", "sala", "participantes", "presencas", "tarefas", "project"}) // Excluir campos de relacionamento do toString
+@EqualsAndHashCode(callSuper = false, exclude = { "organizador", "sala", "participantes", "presencas", "tarefas",
+        "project" }) // Excluir campos de relacionamento
+@ToString(exclude = { "organizador", "sala", "participantes", "presencas", "tarefas", "project" }) // Excluir campos de
+                                                                                                   // relacionamento do
+                                                                                                   // toString
 public class Reuniao extends Auditable { // Estende Auditable
 
     @Id
@@ -24,6 +27,9 @@ public class Reuniao extends Auditable { // Estende Auditable
     @SequenceGenerator(name = "SQ_REUNIAO", sequenceName = "SQ_REUNIAO", allocationSize = 1)
     @Column(name = "ID_REUNIAO")
     private Long id;
+
+    @Column(name = "TITULO_REUNIAO", nullable = false)
+    private String titulo;
 
     @Column(name = "DATAHORAINICIO_REUNIAO", nullable = false)
     private LocalDateTime dataHoraInicio;
@@ -41,32 +47,18 @@ public class Reuniao extends Auditable { // Estende Auditable
     @Column(name = "STATUS_REUNIAO", nullable = false)
     private StatusReuniao status;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(
-            name = "ORGANIZADOR_ID",
-            referencedColumnName = "ID_PESSOA",
-            foreignKey = @ForeignKey(name = "FK_REUNIAO_ORGANIZADOR")
-    )
+    @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinColumn(name = "ORGANIZADOR_ID", referencedColumnName = "ID_PESSOA", foreignKey = @ForeignKey(name = "FK_REUNIAO_ORGANIZADOR"))
     @JsonManagedReference // Adicionado para o lado gerenciador do relacionamento bidirecional
     private Pessoa organizador;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(
-            name = "SALA_ID",
-            referencedColumnName = "ID_SALA",
-            foreignKey = @ForeignKey(name = "FK_REUNIAO_SALA")
-    )
+    @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinColumn(name = "SALA_ID", referencedColumnName = "ID_SALA", foreignKey = @ForeignKey(name = "FK_REUNIAO_SALA"))
     @JsonManagedReference // Adicionado para o lado gerenciador do relacionamento bidirecional
     private Sala sala;
 
     @ManyToMany(fetch = FetchType.EAGER) // Alterado para EAGER
-    @JoinTable(
-            name = "REUNIAO_PARTICIPANTES",
-            joinColumns = @JoinColumn(name = "REUNIAO_ID", referencedColumnName = "ID_REUNIAO"),
-            inverseJoinColumns = @JoinColumn(name = "PESSOA_ID", referencedColumnName = "ID_PESSOA"),
-            foreignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_REUNIAO"),
-            inverseForeignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_PESSOA")
-    )
+    @JoinTable(name = "REUNIAO_PARTICIPANTES", joinColumns = @JoinColumn(name = "REUNIAO_ID", referencedColumnName = "ID_REUNIAO"), inverseJoinColumns = @JoinColumn(name = "PESSOA_ID", referencedColumnName = "ID_PESSOA"), foreignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_REUNIAO"), inverseForeignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_PESSOA"))
     private List<Pessoa> participantes;
 
     @OneToMany(mappedBy = "reuniao", fetch = FetchType.LAZY)
@@ -76,7 +68,7 @@ public class Reuniao extends Auditable { // Estende Auditable
     @OneToMany(mappedBy = "reuniao", fetch = FetchType.LAZY) // Relacionamento bidirecional com Tarefa
     @JsonManagedReference
     private List<Tarefa> tarefas;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_PROJECT")
     private Project project;

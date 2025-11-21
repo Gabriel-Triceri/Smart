@@ -39,6 +39,7 @@ public class ReuniaoMapper {
             return null;
 
         // Escapar campos textuais para evitar XSS
+        String tituloSeguro = escape(reuniao.getTitulo());
         String pautaSegura = escape(reuniao.getPauta());
         String ataSegura = escape(reuniao.getAta());
 
@@ -92,6 +93,7 @@ public class ReuniaoMapper {
 
         ReuniaoDTO dto = new ReuniaoDTO(
                 reuniao.getId(),
+                tituloSeguro,
                 reuniao.getDataHoraInicio(),
                 reuniao.getDuracaoMinutos(),
                 pautaSegura,
@@ -117,6 +119,7 @@ public class ReuniaoMapper {
             return null;
 
         Reuniao reuniao = new Reuniao()
+                .setTitulo(dto.getTitulo())
                 .setDataHoraInicio(dto.getDataHoraInicio())
                 .setDuracaoMinutos(dto.getDuracaoMinutos())
                 .setPauta(dto.getPauta())

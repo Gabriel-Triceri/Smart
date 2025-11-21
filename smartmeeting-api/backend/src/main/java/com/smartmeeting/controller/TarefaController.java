@@ -9,24 +9,31 @@ import com.smartmeeting.dto.TemplateTarefaDTO; // Importar o novo DTO
 import com.smartmeeting.dto.MovimentacaoTarefaRequest; // Importar o novo DTO de requisição
 import com.smartmeeting.dto.MovimentacaoTarefaDTO; // Importar o novo DTO de movimentação
 import com.smartmeeting.service.TarefaService;
+import com.smartmeeting.mapper.ReuniaoMapper; // Importar Mapper
+import com.smartmeeting.model.Reuniao; // Importar Model
+import com.smartmeeting.dto.ReuniaoDTO; // Importar DTO
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
+
 @RestController
 @RequestMapping("/tarefas")
 public class TarefaController {
 
     private final TarefaService tarefaService;
+    private final ReuniaoMapper reuniaoMapper;
 
-    public TarefaController(TarefaService tarefaService) {
+    public TarefaController(TarefaService tarefaService, ReuniaoMapper reuniaoMapper) {
         this.tarefaService = tarefaService;
+        this.reuniaoMapper = reuniaoMapper;
     }
 
     /**
      * Lista todas as tarefas cadastradas no sistema
+     * 
      * @return Lista de tarefas convertidas para DTO
      */
     @GetMapping
@@ -38,6 +45,7 @@ public class TarefaController {
     /**
      * API para obter estatísticas de tarefas.
      * Endpoint: GET /tarefas/statistics
+     * 
      * @return Objeto TarefaStatisticsDTO com as estatísticas.
      */
     @GetMapping("/statistics")
@@ -48,8 +56,10 @@ public class TarefaController {
 
     /**
      * Busca uma tarefa específica pelo seu ID
+     * 
      * @param id Identificador da tarefa
-     * @return ResponseEntity contendo a tarefa encontrada ou status 404 se não existir
+     * @return ResponseEntity contendo a tarefa encontrada ou status 404 se não
+     *         existir
      */
     @GetMapping("/{id:\\d+}") // Adicionado regex para aceitar apenas dígitos
     public ResponseEntity<TarefaDTO> buscarPorId(@PathVariable(name = "id") Long id) {
@@ -60,6 +70,7 @@ public class TarefaController {
 
     /**
      * Cria uma nova tarefa no sistema
+     * 
      * @param dto Dados da tarefa a ser criada
      * @return ResponseEntity contendo a tarefa criada com ID gerado
      */
@@ -73,9 +84,11 @@ public class TarefaController {
 
     /**
      * Atualiza uma tarefa existente
-     * @param id Identificador da tarefa a ser atualizada
+     * 
+     * @param id  Identificador da tarefa a ser atualizada
      * @param dto Novos dados da tarefa
-     * @return ResponseEntity contendo a tarefa atualizada ou status 404 se não existir
+     * @return ResponseEntity contendo a tarefa atualizada ou status 404 se não
+     *         existir
      */
     @PutMapping("/{id:\\d+}") // Adicionado regex para aceitar apenas dígitos
     public ResponseEntity<TarefaDTO> atualizar(@PathVariable(name = "id") Long id, @Valid @RequestBody TarefaDTO dto) {
@@ -85,6 +98,7 @@ public class TarefaController {
 
     /**
      * Remove uma tarefa do sistema
+     * 
      * @param id Identificador da tarefa a ser removida
      * @return ResponseEntity com status 204 (No Content) ou 404 se não encontrada
      */
@@ -96,8 +110,10 @@ public class TarefaController {
 
     /**
      * Verifica tarefas pendentes para uma reunião específica
+     * 
      * @param idReuniao Identificador da reunião
-     * @return ResponseEntity contendo informações sobre as pendências ou status 404 se a reunião não existir
+     * @return ResponseEntity contendo informações sobre as pendências ou status 404
+     *         se a reunião não existir
      */
     @GetMapping("/reuniao/{idReuniao:\\d+}/pendencias") // Adicionado regex para aceitar apenas dígitos
     public ResponseEntity<String> verificarPendencias(@PathVariable(name = "idReuniao") Long idReuniao) {
@@ -106,8 +122,44 @@ public class TarefaController {
     }
 
     /**
+     * Obtém a reunião associada a uma tarefa específica
+     * 
+     * @param id Identificador da tarefa
+     * @return ResponseEntity contendo a reunião convertida para DTO
+     */
+    @GetMapping("/{id:\\d+}/reuniao")
+    public ResponseEntity<ReuniaoDTO> getReuniaoDaTarefa(@PathVariable(name = "id") Long id) {
+        Reuniao reuniao = tarefaService.getReuniaoDaTarefa(id);
+        ReuniaoDTO dto = reuniaoMapper.toDTO(reuniao);
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * Atualiza a reunião associada a uma tarefa
+     * 
+     * @param id          Identificador da tarefa
+     * @param requestBody Corpo da requisição contendo o ID da reunião (pode ser
+     *                    null)
+     * @return ResponseEntity contendo a tarefa atualizada
+     */
+    @PatchMapping("/{id:\\d+}/reuniao")
+    public ResponseEntity<TarefaDTO> atualizarReuniaoDaTarefa(
+            @PathVariable(name = "id") Long id,
+            @RequestBody Map<String, Object> requestBody) {
+
+        Long reuniaoId = null;
+        if (requestBody.containsKey("reuniaoId") && requestBody.get("reuniaoId") != null) {
+            reuniaoId = Long.valueOf(requestBody.get("reuniaoId").toString());
+        }
+
+        TarefaDTO tarefaAtualizada = tarefaService.atualizarReuniaoDaTarefa(id, reuniaoId);
+        return ResponseEntity.ok(tarefaAtualizada);
+    }
+
+    /**
      * API para obter todas as notificações de tarefas.
      * Endpoint: GET /tarefas/notifications
+     * 
      * @return Lista de NotificacaoTarefaDTO.
      */
     @GetMapping("/notifications")
@@ -119,6 +171,7 @@ public class TarefaController {
     /**
      * API para obter todos os templates de tarefas.
      * Endpoint: GET /tarefas/templates
+     * 
      * @return Lista de TemplateTarefaDTO.
      */
     @GetMapping("/templates")
@@ -130,6 +183,7 @@ public class TarefaController {
     /**
      * API para obter a lista de responsáveis (assignees) disponíveis.
      * Endpoint: GET /tarefas/assignees
+     * 
      * @return Lista de AssigneeDTO.
      */
     @GetMapping("/assignees")
@@ -141,11 +195,14 @@ public class TarefaController {
     /**
      * API para obter o Kanban Board de tarefas.
      * Endpoint: GET /tarefas/kanban
-     * @param reuniaoId Opcional. Filtra o Kanban por tarefas de uma reunião específica.
+     * 
+     * @param reuniaoId Opcional. Filtra o Kanban por tarefas de uma reunião
+     *                  específica.
      * @return Objeto KanbanBoardDTO.
      */
     @GetMapping("/kanban")
-    public ResponseEntity<KanbanBoardDTO> getKanbanBoard(@RequestParam(required = false, name = "reuniaoId") Long reuniaoId) {
+    public ResponseEntity<KanbanBoardDTO> getKanbanBoard(
+            @RequestParam(required = false, name = "reuniaoId") Long reuniaoId) {
         KanbanBoardDTO kanbanBoard = tarefaService.getKanbanBoard(reuniaoId);
         return ResponseEntity.ok(kanbanBoard);
     }
@@ -153,12 +210,14 @@ public class TarefaController {
     /**
      * API para mover uma tarefa para um novo status ou posição.
      * Endpoint: POST /tarefas/{id}/mover
-     * @param id Identificador da tarefa a ser movida.
+     * 
+     * @param id      Identificador da tarefa a ser movida.
      * @param request DTO contendo o novo status e/ou nova posição.
      * @return ResponseEntity contendo a tarefa atualizada.
      */
     @PostMapping("/{id:\\d+}/mover")
-    public ResponseEntity<TarefaDTO> moverTarefa(@PathVariable(name = "id") Long id, @Valid @RequestBody MovimentacaoTarefaRequest request) {
+    public ResponseEntity<TarefaDTO> moverTarefa(@PathVariable(name = "id") Long id,
+            @Valid @RequestBody MovimentacaoTarefaRequest request) {
         TarefaDTO tarefaAtualizada = tarefaService.moverTarefa(id, request.getNewStatus(), request.getNewPosition());
         return ResponseEntity.ok(tarefaAtualizada);
     }
@@ -166,6 +225,7 @@ public class TarefaController {
     /**
      * API para registrar uma movimentação de tarefa (ex: no Kanban).
      * Endpoint: POST /tarefas/movimentacoes
+     * 
      * @param dto DTO contendo os detalhes da movimentação.
      * @return ResponseEntity com status 200 (OK) após o registro.
      */
@@ -280,7 +340,8 @@ public class TarefaController {
         List<String> datasVencimento = (List<String>) dados.get("datasVencimento");
         Long reuniaoId = dados.get("reuniaoId") != null ? Long.valueOf(dados.get("reuniaoId").toString()) : null;
 
-        List<TarefaDTO> tarefas = tarefaService.criarTarefasPorTemplate(templateId, responsaveisIds, datasVencimento, reuniaoId);
+        List<TarefaDTO> tarefas = tarefaService.criarTarefasPorTemplate(templateId, responsaveisIds, datasVencimento,
+                reuniaoId);
         return ResponseEntity.ok(tarefas);
     }
 

@@ -45,6 +45,7 @@ public class ReuniaoService {
     public Reuniao atualizar(Long id, Reuniao reuniaoAtualizada) {
         return repository.findById(id)
                 .map(reuniaoExistente -> {
+                    reuniaoExistente.setTitulo(reuniaoAtualizada.getTitulo());
                     reuniaoExistente.setDataHoraInicio(reuniaoAtualizada.getDataHoraInicio());
                     reuniaoExistente.setDuracaoMinutos(reuniaoAtualizada.getDuracaoMinutos());
                     reuniaoExistente.setPauta(reuniaoAtualizada.getPauta());

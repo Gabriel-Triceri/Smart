@@ -84,6 +84,16 @@ export function TaskDetails({
                                 <Flag className="w-4 h-4" />
                                 {PRIORITY_CONFIG[taskPriority].label}
                             </span>
+                            {tarefa.projectName && (
+                                <span className="px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm bg-purple-100 dark:bg-purple-900/80 text-purple-800 dark:text-purple-200 border border-purple-200/50 dark:border-purple-700/50 flex items-center gap-1.5">
+                                    📁 {tarefa.projectName}
+                                </span>
+                            )}
+                            {tarefa.reuniaoTitulo && (
+                                <span className="px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border border-blue-200/50 dark:border-blue-700/50 flex items-center gap-1.5">
+                                    📅 {tarefa.reuniaoTitulo}
+                                </span>
+                            )}
                         </div>
                         <button
                             onClick={onClose}
@@ -228,8 +238,8 @@ export function TaskDetails({
                                 )}
                                 {tarefa.prazo_tarefa && (
                                     <div className={`p-5 rounded-xl border transition-all duration-200 hover:shadow-md ${new Date(tarefa.prazo_tarefa) < new Date()
-                                            ? 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/30 dark:to-red-900/20 border-red-100/50 dark:border-red-800/50'
-                                            : 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800/50 border-blue-100/50 dark:border-gray-600/50'
+                                        ? 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/30 dark:to-red-900/20 border-red-100/50 dark:border-red-800/50'
+                                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800/50 border-blue-100/50 dark:border-gray-600/50'
                                         }`}>
                                         <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                                             <Calendar className={`w-4 h-4 ${new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600' : 'text-blue-600'}`} />
