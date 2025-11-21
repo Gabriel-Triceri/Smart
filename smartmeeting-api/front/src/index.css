@@ -16,8 +16,8 @@ body {
 }
 
 .dark body {
-    background-color: #0f172a;
-    color: #e2e8f0;
+    background-color: #171717;
+    color: #fafafa;
 }
 
 /* Scrollbar personalizada */
@@ -27,15 +27,15 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
+    @apply bg-mono-100 dark:bg-mono-800;
 }
 
 ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+    @apply bg-mono-300 dark:bg-mono-600 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-500;
+    @apply bg-mono-400 dark:bg-mono-500;
 }
 
 /* Animações personalizadas */
@@ -43,6 +43,7 @@ body {
     0% {
         background-position: -1000px 0;
     }
+
     100% {
         background-position: 1000px 0;
     }
@@ -50,11 +51,11 @@ body {
 
 .loading-shimmer {
     animation: shimmer 2s infinite linear;
-    background: linear-gradient(to right, #f3f4f6 0%, #e5e7eb 20%, #f3f4f6 40%, #f3f4f6 100%);
+    background: linear-gradient(to right, #fafafa 0%, #f5f5f5 20%, #fafafa 40%, #fafafa 100%);
     background-size: 1000px 100%;
 }
 
 .dark .loading-shimmer {
-    background: linear-gradient(to right, #1e293b 0%, #334155 20%, #1e293b 40%, #1e293b 100%);
+    background: linear-gradient(to right, #262626 0%, #404040 20%, #262626 40%, #262626 100%);
     background-size: 1000px 100%;
 }

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { HomeDashboard } from './pages/HomeDashboard';
-import { MeetingManager } from './components/MeetingManager';
-import { SalaManager } from './components/SalaManager';
-import { TaskManager } from './components/TaskManager';
-import LoadingSkeleton from './components/LoadingSkeleton';
+import { MeetingManager } from './components/meetings/MeetingManager';
+import { SalaManager } from './components/salas/SalaManager';
+import { TaskManager } from './components/tasks/TaskManager';
+import LoadingSkeleton from './components/common/LoadingSkeleton';
 // Removido: import { ThemeProvider } from './context/ThemeContext'; // Removido o import do ThemeProvider
-import ThemeToggle from './components/ThemeToggle'; // Importa ThemeToggle
+import ThemeToggle from './components/common/ThemeToggle'; // Importa ThemeToggle
 import { BarChart3, Calendar, Building, CheckSquare, Menu, X } from 'lucide-react';
 
 type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas';
@@ -29,15 +29,15 @@ interface NavigationProps {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Navigation({ activeView, setActiveView, items, showMobile = false, setShowMobile }: NavigationProps) {
     return (
-        <nav className={`${showMobile ? 'space-y-2 py-4 border-t border-gray-200 dark:border-gray-700 md:hidden' : 'hidden md:flex items-center space-x-1'}`}>
+        <nav className={`${showMobile ? 'space-y-2 py-4 border-t border-mono-200 dark:border-mono-700 md:hidden' : 'hidden md:flex items-center space-x-1'}`}>
             {items.map(item => {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const Icon = item.icon;
                 const isActive = activeView === item.id;
 
                 const buttonClasses = isActive
-                    ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
+                    ? 'bg-mono-100 dark:bg-mono-800 text-mono-900 dark:text-mono-100'
+                    : 'text-mono-600 dark:text-mono-400 hover:text-mono-900 dark:hover:text-mono-100 hover:bg-mono-50 dark:hover:bg-mono-700';
 
                 return (
                     <button
@@ -94,19 +94,19 @@ function App() {
     return (
         <ErrorBoundary>
             {/* Removido: <ThemeProvider> */}
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+            <div className="min-h-screen bg-mono-50 dark:bg-mono-900 transition-colors duration-300">
                 {/* Cabeçalho */}
-                <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
+                <header className="bg-white dark:bg-mono-800 shadow-sm border-b border-mono-200 dark:border-mono-700 sticky top-0 z-30">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             {/* Logo e título */}
                             <div className="flex items-center gap-4">
-                                <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                                <Calendar className="w-8 h-8 text-accent-500 dark:text-accent-400" />
                                 <div>
-                                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    <h1 className="text-xl font-bold text-mono-900 dark:text-mono-100">
                                         SmartMeeting
                                     </h1>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
+                                    <p className="text-xs text-mono-500 dark:text-mono-400 hidden sm:block">
                                         Sistema Integrado de Gestão de Reuniões
                                     </p>
                                 </div>
@@ -116,11 +116,11 @@ function App() {
                             <Navigation activeView={activeView} setActiveView={setActiveView} items={navigationItems} />
 
                             {/* Botão de tema e menu mobile */}
-                            <div className="flex items-center gap-3"> {/* Adicionado um div para agrupar */}
-                                <ThemeToggle /> {/* Adicionado ThemeToggle aqui */}
+                            <div className="flex items-center gap-3">
+                                <ThemeToggle />
                                 <button
                                     onClick={() => setShowNavigation(!showNavigation)}
-                                    className="md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                    className="md:hidden p-2 text-mono-600 dark:text-mono-400 hover:text-mono-900 dark:hover:text-mono-100 hover:bg-mono-50 dark:hover:bg-mono-700 rounded-lg transition-colors"
                                     aria-label="Toggle navigation menu"
                                 >
                                     {showNavigation ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -141,15 +141,15 @@ function App() {
                 </main>
 
                 {/* Rodapé */}
-                <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6">
+                <footer className="bg-white dark:bg-mono-800 border-t border-mono-200 dark:border-mono-700 py-6">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-4 text-sm text-mono-600 dark:text-mono-400">
                                 <span>© 2025 SmartMeeting</span>
                                 <span>•</span>
                                 <span>Sistema de Gestão de Reuniões</span>
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-500">
+                            <div className="flex items-center gap-4 text-sm text-mono-500 dark:text-mono-500">
                                 <span>Desenvolvido por MiniMax Agent</span>
                             </div>
                         </div>

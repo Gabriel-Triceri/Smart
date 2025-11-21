@@ -1,21 +1,46 @@
+
+
 import { useState, useEffect } from 'react';
-import { Calendar, RefreshCw, FileText, CheckCircle2 } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
-import { meetingsApi } from '../services/meetingsApi';
-import { format, isToday, parseISO, isBefore, startOfDay, endOfDay } from 'date-fns';
+import {
+    BarChart3,
+    RefreshCw,
+    Calendar,
+    FileText,
+    CheckCircle2
+} from 'lucide-react';
+import {
+    format,
+    startOfDay,
+    endOfDay,
+    isToday,
+    parseISO,
+    isBefore
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Reuniao, Tarefa, StatusReuniao, StatusTarefa, PrioridadeTarefa } from '../types/meetings';
-// import { DashboardData } from '../types/dashboard'; // Removed: Unused import
-import { DashboardStatsGrid } from '../components/dashboard/DashboardStatsGrid';
-import { DailyTimeline } from '../components/dashboard/DailyTimeline';
-import { AttentionNeededSection } from '../components/dashboard/AttentionNeededSection';
-import { TasksDueToday } from '../components/dashboard/TasksDueToday';
-import { OverdueTasks } from '../components/dashboard/OverdueTasks';
-import { RecentActivityFeed } from '../components/dashboard/RecentActivityFeed';
-
-import { DashboardStats, TimelineItem, ProblemaReuniao, AtividadeRecente } from '../types/dashboard';
-
-// Local Interfaces (moved from ../types/dashboard or defined here as they are specific to this component)
+import { useTheme } from '../context/ThemeContext';
+import { PageHeader } from '../components/common/PageHeader';
+import { meetingsApi } from '../services/meetingsApi';
+import {
+    Reuniao,
+    StatusReuniao,
+    Tarefa,
+    StatusTarefa,
+    PrioridadeTarefa
+} from '../types/meetings';
+import {
+    DashboardStats,
+    TimelineItem,
+    ProblemaReuniao,
+    AtividadeRecente
+} from '../types/dashboard';
+import {
+    DashboardStatsGrid,
+    DailyTimeline,
+    AttentionNeededSection,
+    TasksDueToday,
+    OverdueTasks,
+    RecentActivityFeed
+} from '../components/Widgets';
 
 const getPrioridadeColor = (prioridade: string) => {
     switch (prioridade) {
@@ -53,9 +78,8 @@ export function HomeDashboard() {
     const [problemas, setProblemas] = useState<ProblemaReuniao[]>([]);
     const [minhasTarefasHoje, setMinhasTarefasHoje] = useState<Tarefa[]>([]);
     const [tarefasAtrasadas, setTarefasAtrasadas] = useState<Tarefa[]>([]);
-    // const [tarefasConcluidas, setTarefasConcluidas] = useState<Tarefa[]>([]); // Removed: Unused
     const [atividades, setAtividades] = useState<AtividadeRecente[]>([]);
-    const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+    // const [lastUpdate, setLastUpdate] = useState(new Date());
 
     const loadDashboardData = async () => {
         setLoading(true);
@@ -248,7 +272,7 @@ export function HomeDashboard() {
             });
 
             setAtividades(atividadesRecentes.slice(0, 10));
-            setLastUpdate(new Date());
+
 
         } catch (err: any) {
             console.error('Erro ao carregar dados do dashboard:', err);
@@ -286,6 +310,21 @@ export function HomeDashboard() {
 
     return (
         <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
+            {/* Page Header */}
+            <PageHeader
+                title="Dashboard Executivo"
+                description="Visão geral do sistema"
+                icon={BarChart3}
+                actions={
+                    <button
+                        onClick={loadDashboardData}
+                        className="p-2 rounded-lg bg-white dark:bg-mono-700 text-mono-700 dark:text-mono-300 hover:bg-mono-50 dark:hover:bg-mono-600 shadow-sm transition-colors"
+                        aria-label="Atualizar dados"
+                    >
+                        <RefreshCw className={`h-5 w-5 text-mono-700 dark:text-mono-300 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
+                }
+            />
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

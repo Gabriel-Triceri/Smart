@@ -1,9 +1,8 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.*;
+import com.smartmeeting.mapper.ReuniaoMapper;
 import com.smartmeeting.model.Reuniao;
-import com.smartmeeting.model.Pessoa;
-import com.smartmeeting.model.Sala;
 import com.smartmeeting.service.ReuniaoService;
 import com.smartmeeting.service.SalaService;
 import com.smartmeeting.service.PessoaService;
@@ -23,13 +22,16 @@ import java.util.stream.Collectors;
 public class ReuniaoController {
 
     private final ReuniaoService service;
+    private final ReuniaoMapper mapper;
     private final EmailService emailService;
     private final SalaService salaService;
     private final PessoaService pessoaService;
     private final TarefaService tarefaService;
 
-    public ReuniaoController(ReuniaoService service, EmailService emailService, SalaService salaService, PessoaService pessoaService, TarefaService tarefaService) {
+    public ReuniaoController(ReuniaoService service, ReuniaoMapper mapper, EmailService emailService,
+            SalaService salaService, PessoaService pessoaService, TarefaService tarefaService) {
         this.service = service;
+        this.mapper = mapper;
         this.emailService = emailService;
         this.salaService = salaService;
         this.pessoaService = pessoaService;
@@ -40,95 +42,11 @@ public class ReuniaoController {
      * Lista todas as reuniões cadastradas
      */
     @GetMapping
-    public List<ReuniaoDTO> listar() {
-        return service.listarTodas().stream()
-                .map(this::converterParaDTO)
+    public ResponseEntity<List<ReuniaoDTO>> listar() {
+        List<ReuniaoDTO> reunioes = service.listarTodas().stream()
+                .map(mapper::toDTO)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Converte entidade para DTO de forma segura contra XSS
-     * Este método é usado para listar e buscar por ID, onde a entidade Reuniao é a fonte.
-     */
-    private ReuniaoDTO converterParaDTO(Reuniao reuniao) {
-        if (reuniao == null) return null;
-
-        // Escapar campos textuais para evitar XSS
-        String pautaSegura = escape(reuniao.getPauta());
-        String ataSegura = escape(reuniao.getAta());
-
-        ReuniaoDTO dto = new ReuniaoDTO()
-                .setId(reuniao.getId())
-                .setPauta(pautaSegura)
-                .setDataHoraInicio(reuniao.getDataHoraInicio())
-                .setDuracaoMinutos(reuniao.getDuracaoMinutos())
-                .setStatus(reuniao.getStatus())
-                .setAta(ataSegura);
-
-        // Organizador
-        if (reuniao.getOrganizador() != null) {
-            Pessoa o = reuniao.getOrganizador();
-            PessoaDTO organizadorDTO = new PessoaDTO(
-                    o.getId(),
-                    escape(o.getNome()),
-                    escape(o.getEmail()),
-                    o.getTipoUsuario(),
-                    o.getCrachaId()
-            );
-            dto.setOrganizador(organizadorDTO);
-            dto.setOrganizadorId(o.getId());
-        }
-
-        // Sala
-        if (reuniao.getSala() != null) {
-            Sala s = reuniao.getSala();
-            SalaDTO salaDTO = new SalaDTO()
-                    .setId(s.getId())
-                    .setNome(escape(s.getNome()))
-                    .setCapacidade(s.getCapacidade())
-                    .setLocalizacao(escape(s.getLocalizacao()))
-                    .setStatus(s.getStatus())
-                    .setEquipamentos(null) // equipamentos
-                    .setCategoria(null) // categoria
-                    .setAndar(null) // andar
-                    .setDisponibilidade(null) // disponibilidade
-                    .setImagem(null) // imagem
-                    .setObservacoes(null); // observacoes
-            dto.setSala(salaDTO);
-            dto.setSalaId(s.getId());
-        }
-
-        // Participantes
-        if (reuniao.getParticipantes() != null) {
-            List<PessoaDTO> participantesDTO = reuniao.getParticipantes().stream()
-                    .map((Pessoa p) -> new PessoaDTO(
-                            p.getId(),
-                            escape(p.getNome()),
-                            escape(p.getEmail()),
-                            p.getTipoUsuario(),
-                            p.getCrachaId()
-                    ))
-                    .collect(Collectors.toList());
-            List<Long> participantesIds = reuniao.getParticipantes().stream()
-                    .map(Pessoa::getId)
-                    .collect(Collectors.toList());
-
-            dto.setParticipantesDetalhes(participantesDTO); // Ajustado para o novo campo
-            dto.setParticipantes(participantesIds); // Ajustado para o novo campo
-        }
-
-        return dto;
-    }
-
-    /**
-     * Utilitário para escapar strings potencialmente perigosas
-     */
-    private String escape(String valor) {
-        if (valor == null) {
-            return null;
-        }
-        // Usar método mais seguro e moderno
-        return StringEscapeUtils.escapeHtml4(valor);
+        return ResponseEntity.ok(reunioes);
     }
 
     /**
@@ -137,7 +55,7 @@ public class ReuniaoController {
     @GetMapping("/{id}")
     public ResponseEntity<ReuniaoDTO> buscarPorId(@PathVariable("id") Long id) {
         return service.buscarPorId(id)
-                .map(this::converterParaDTO)
+                .map(mapper::toDTO)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -146,10 +64,11 @@ public class ReuniaoController {
      * Cria uma nova reunião
      */
     @PostMapping
-    //@PreAuthorize("hasAuthority('CRIAR_REUNIAO')")
+    // @PreAuthorize("hasAuthority('CRIAR_REUNIAO')")
     public ResponseEntity<ReuniaoDTO> criar(@Valid @RequestBody ReuniaoDTO dto) {
-        ReuniaoDTO reuniaoCriada = service.salvarDTO(dto);
-        return ResponseEntity.ok(reuniaoCriada); // Retorna o DTO já populado pelo serviço
+        Reuniao reuniao = mapper.toEntity(dto);
+        Reuniao reuniaoCriada = service.salvar(reuniao);
+        return ResponseEntity.ok(mapper.toDTO(reuniaoCriada));
     }
 
     /**
@@ -157,8 +76,9 @@ public class ReuniaoController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<ReuniaoDTO> atualizar(@PathVariable("id") Long id, @Valid @RequestBody ReuniaoDTO dto) {
-        ReuniaoDTO reuniaoAtualizada = service.atualizarDTO(id, dto);
-        return ResponseEntity.ok(reuniaoAtualizada); // Retorna o DTO já populado pelo serviço
+        Reuniao reuniaoAtualizada = mapper.toEntity(dto);
+        Reuniao reuniao = service.atualizar(id, reuniaoAtualizada);
+        return ResponseEntity.ok(mapper.toDTO(reuniao));
     }
 
     /**
@@ -175,8 +95,8 @@ public class ReuniaoController {
      */
     @PostMapping("/{id}/encerrar")
     public ResponseEntity<ReuniaoDTO> encerrar(@PathVariable("id") Long id) {
-        ReuniaoDTO reuniaoEncerrada = service.encerrarReuniaoDTO(id);
-        return ResponseEntity.ok(reuniaoEncerrada); // Retorna o DTO já populado pelo serviço
+        Reuniao reuniao = service.encerrarReuniao(id);
+        return ResponseEntity.ok(mapper.toDTO(reuniao));
     }
 
     /**
@@ -186,8 +106,8 @@ public class ReuniaoController {
     public ResponseEntity<String> testarEmail(@RequestParam(defaultValue = "teste@exemplo.com") String email) {
         boolean sucesso = emailService.enviarEmailTeste(email);
         String resultado = sucesso
-                ? "Email de teste enviado com sucesso para: " + escape(email)
-                : "Falha ao enviar email de teste para: " + escape(email);
+                ? "Email de teste enviado com sucesso para: " + StringEscapeUtils.escapeHtml4(email)
+                : "Falha ao enviar email de teste para: " + StringEscapeUtils.escapeHtml4(email);
         return ResponseEntity.ok(resultado);
     }
 
@@ -195,16 +115,16 @@ public class ReuniaoController {
      * Lista todas as salas disponíveis
      */
     @GetMapping("/salas")
-    public List<SalaDTO> listarSalas() {
-        return salaService.listarTodas();
+    public ResponseEntity<List<SalaDTO>> listarSalas() {
+        return ResponseEntity.ok(salaService.listarTodas());
     }
 
     /**
      * Lista todas as pessoas (organizadores e participantes)
      */
     @GetMapping("/pessoas")
-    public List<PessoaDTO> listarPessoas() {
-        return pessoaService.listarTodas();
+    public ResponseEntity<List<PessoaDTO>> listarPessoas() {
+        return ResponseEntity.ok(pessoaService.listarTodas());
     }
 
     /**
@@ -231,8 +151,14 @@ public class ReuniaoController {
     @GetMapping("/statistics")
     public ResponseEntity<ReuniaoStatisticsDTO> getReuniaoStatistics() {
         ReuniaoStatisticsDTO statistics = service.getReuniaoStatistics();
+        // Populate proximasList with DTOs
+        List<ReuniaoDTO> proximasList = service.getProximasReunioes().stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
+        statistics.setProximasReunioesList(proximasList);
         return ResponseEntity.ok(statistics);
     }
+
     /**
      * API de tarefas por reunião
      */

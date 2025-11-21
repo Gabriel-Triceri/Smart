@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.tsx';
 import LoginPage from './pages/Login.tsx';
-import ProtectedRoute from './components/ProtectedRoute.tsx';
+import ProtectedRoute from './components/common/ProtectedRoute';
 import { ThemeProvider } from './context/ThemeContext.tsx'; // Importa ThemeProvider
 import './index.css';
 
