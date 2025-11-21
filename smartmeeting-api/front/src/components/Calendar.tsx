@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     ChevronLeft, ChevronRight, Calendar as CalendarIcon,
-    Clock, MapPin, Users, Video, GripVertical, List
+    Clock, MapPin, Users, Video, GripVertical
 } from 'lucide-react';
 import { Reuniao, CalendarioView } from '../types/meetings';
 import { format, startOfWeek, addDays, isSameDay, isSameMonth, addMinutes } from 'date-fns';
@@ -468,8 +468,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                                         key={tab.id}
                                         onClick={() => onViewTabChange?.(tab.id)}
                                         className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive
-                                                ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                            ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                             }`}
                                     >
                                         <Icon className="w-4 h-4" />
