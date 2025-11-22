@@ -2,7 +2,6 @@ import { meetingsApi } from './meetingsApi';
 import type {
     ReuniaoFormData,
     Sala,
-    Participante,
     TarefaFormData
 } from '../types/meetings';
 import { PrioridadeTarefa } from '../types/meetings';
@@ -63,48 +62,48 @@ const salasParaImportar: Partial<Sala>[] = [
 ];
 
 // Dados de participantes para importar
-const participantesParaImportar: Partial<Participante>[] = [
-    {
-        nome: 'Ana Silva',
-        email: 'ana.silva@empresa.com',
-        tipoUsuario: 'Gerente',
-        organizacao: 'Empresa',
-        departamento: 'TI',
-        status: 'confirmado'
-    },
-    {
-        nome: 'Carlos Santos',
-        email: 'carlos.santos@empresa.com',
-        tipoUsuario: 'Desenvolvedor',
-        organizacao: 'Empresa',
-        departamento: 'Desenvolvimento',
-        status: 'confirmado'
-    },
-    {
-        nome: 'Maria Oliveira',
-        email: 'maria.oliveira@empresa.com',
-        tipoUsuario: 'Designer',
-        organizacao: 'Empresa',
-        departamento: 'Design',
-        status: 'confirmado'
-    },
-    {
-        nome: 'Pedro Costa',
-        email: 'pedro.costa@empresa.com',
-        tipoUsuario: 'Analista',
-        organizacao: 'Empresa',
-        departamento: 'Produto',
-        status: 'confirmado'
-    },
-    {
-        nome: 'Julia Fernandes',
-        email: 'julia.fernandes@empresa.com',
-        tipoUsuario: 'Scrum Master',
-        organizacao: 'Empresa',
-        departamento: 'Agile',
-        status: 'confirmado'
-    }
-];
+// const participantesParaImportar: Partial<Participante>[] = [
+//     {
+//         nome: 'Ana Silva',
+//         email: 'ana.silva@empresa.com',
+//         tipoUsuario: 'Gerente',
+//         organizacao: 'Empresa',
+//         departamento: 'TI',
+//         status: 'confirmado'
+//     },
+//     {
+//         nome: 'Carlos Santos',
+//         email: 'carlos.santos@empresa.com',
+//         tipoUsuario: 'Desenvolvedor',
+//         organizacao: 'Empresa',
+//         departamento: 'Desenvolvimento',
+//         status: 'confirmado'
+//     },
+//     {
+//         nome: 'Maria Oliveira',
+//         email: 'maria.oliveira@empresa.com',
+//         tipoUsuario: 'Designer',
+//         organizacao: 'Empresa',
+//         departamento: 'Design',
+//         status: 'confirmado'
+//     },
+//     {
+//         nome: 'Pedro Costa',
+//         email: 'pedro.costa@empresa.com',
+//         tipoUsuario: 'Analista',
+//         organizacao: 'Empresa',
+//         departamento: 'Produto',
+//         status: 'confirmado'
+//     },
+//     {
+//         nome: 'Julia Fernandes',
+//         email: 'julia.fernandes@empresa.com',
+//         tipoUsuario: 'Scrum Master',
+//         organizacao: 'Empresa',
+//         departamento: 'Agile',
+//         status: 'confirmado'
+//     }
+// ];
 
 // Função para gerar uma data e hora específica
 function gerarDataHora(diasAFrente: number, hora: number = 9, minuto: number = 0): { data: string; horaInicio: string; horaFim: string } {
@@ -221,7 +220,7 @@ export async function importarDadosIniciais(): Promise<boolean> {
 
         // 2. Importar Participantes
         console.log('👥 Importando participantes...');
-        const participantesImportados = [];
+        // const participantesImportados = [];
 
         // Nota: A API não tem um endpoint de criar participantes isoladamente
         // Os participantes são criados automaticamente ao criar reuniões
@@ -339,4 +338,3 @@ export async function inicializarDados(): Promise<void> {
         console.error('❌ Erro ao inicializar dados:', error);
     }
 }
-

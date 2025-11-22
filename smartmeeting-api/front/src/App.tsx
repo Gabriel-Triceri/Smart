@@ -4,12 +4,13 @@ import { HomeDashboard } from './pages/HomeDashboard';
 import { MeetingManager } from './components/meetings/MeetingManager';
 import { SalaManager } from './components/salas/SalaManager';
 import { TaskManager } from './components/tasks/TaskManager';
+import { PermissionManager } from './components/permissions/PermissionManager';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
 import ThemeToggle from './components/common/ThemeToggle'; // Importa ThemeToggle
-import { BarChart3, Calendar, Building, CheckSquare, Menu, X } from 'lucide-react';
+import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X } from 'lucide-react';
 import { inicializarDados } from './services/seedData';
 
-type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas';
+type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas' | 'permissions';
 
 interface NavigationItem {
     id: ActiveView;
@@ -70,7 +71,7 @@ function App() {
     useEffect(() => {
         setMounted(true);
         const savedView = localStorage.getItem('smartmeeting-active-view') as ActiveView;
-        if (savedView && ['dashboard', 'meetings', 'salas', 'tarefas'].includes(savedView)) {
+        if (savedView && ['dashboard', 'meetings', 'salas', 'tarefas', 'permissions'].includes(savedView)) {
             setActiveView(savedView);
         }
 
@@ -84,14 +85,16 @@ function App() {
         { id: 'dashboard', label: 'Dashboard Executivo', description: 'Métricas e indicadores', icon: BarChart3 },
         { id: 'meetings', label: 'Gestão de Reuniões', description: 'Calendário e organização', icon: Calendar },
         { id: 'salas', label: 'Gestão de Salas', description: 'Salas e recursos', icon: Building },
-        { id: 'tarefas', label: 'Gestão de Tarefas', description: 'Kanban e produtividade', icon: CheckSquare }
+        { id: 'tarefas', label: 'Gestão de Tarefas', description: 'Kanban e produtividade', icon: CheckSquare },
+        { id: 'permissions', label: 'Gestão de Permissões', description: 'Permissões, roles e usuários', icon: Shield }
     ], []);
 
     const viewComponents: Record<ActiveView, React.ReactNode> = {
         dashboard: <HomeDashboard />,
         meetings: <MeetingManager />,
         salas: <SalaManager />,
-        tarefas: <TaskManager />
+        tarefas: <TaskManager />,
+        permissions: <PermissionManager />
     };
 
     if (!mounted) return <LoadingSkeleton />;
