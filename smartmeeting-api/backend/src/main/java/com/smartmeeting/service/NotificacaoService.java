@@ -9,8 +9,10 @@ import com.smartmeeting.repository.PessoaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+
 import java.util.stream.Collectors;
+
+@SuppressWarnings("null")
 
 @Service
 public class NotificacaoService {
@@ -27,7 +29,8 @@ public class NotificacaoService {
      * Converte uma entidade Notificacao para seu respectivo DTO
      */
     private NotificacaoDTO toDTO(Notificacao notificacao) {
-        if (notificacao == null) return null;
+        if (notificacao == null)
+            return null;
         NotificacaoDTO dto = new NotificacaoDTO();
         dto.setId(notificacao.getId());
         dto.setMensagem(notificacao.getMensagem());
@@ -40,14 +43,16 @@ public class NotificacaoService {
      * Converte um DTO para a entidade Notificacao, incluindo destinatário
      */
     private Notificacao toEntity(NotificacaoDTO dto) {
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
         Notificacao notificacao = new Notificacao();
         notificacao.setMensagem(dto.getMensagem());
         notificacao.setTipo(dto.getTipo());
 
         if (dto.getDestinatarioId() != null) {
             Pessoa destinatario = pessoaRepository.findById(dto.getDestinatarioId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Destinatário não encontrado com ID: " + dto.getDestinatarioId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Destinatário não encontrado com ID: " + dto.getDestinatarioId()));
             notificacao.setDestinatario(destinatario);
         }
 
@@ -60,7 +65,8 @@ public class NotificacaoService {
                 .collect(Collectors.toList());
     }
 
-    // Corrigido: Retorna NotificacaoDTO diretamente, lançando exceção se não encontrado
+    // Corrigido: Retorna NotificacaoDTO diretamente, lançando exceção se não
+    // encontrado
     public NotificacaoDTO buscarPorId(Long id) {
         return repository.findById(id)
                 .map(this::toDTO)
@@ -81,7 +87,8 @@ public class NotificacaoService {
 
                     if (dtoAtualizada.getDestinatarioId() != null) {
                         Pessoa destinatario = pessoaRepository.findById(dtoAtualizada.getDestinatarioId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Destinatário não encontrado com ID: " + dtoAtualizada.getDestinatarioId()));
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                        "Destinatário não encontrado com ID: " + dtoAtualizada.getDestinatarioId()));
                         notificacao.setDestinatario(destinatario);
                     }
 

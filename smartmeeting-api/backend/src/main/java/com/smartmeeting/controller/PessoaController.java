@@ -4,7 +4,7 @@ import com.smartmeeting.dto.PessoaCreateDTO;
 import com.smartmeeting.dto.PessoaDTO;
 import com.smartmeeting.service.PessoaService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -24,6 +24,7 @@ public class PessoaController {
 
     /**
      * Lista todas as pessoas cadastradas no sistema
+     * 
      * @return ResponseEntity contendo a lista de pessoas
      */
     @GetMapping
@@ -34,19 +35,23 @@ public class PessoaController {
 
     /**
      * Busca uma pessoa específica pelo seu ID
+     * 
      * @param id Identificador da pessoa
-     * @return ResponseEntity contendo a pessoa encontrada ou status 404 se não existir
+     * @return ResponseEntity contendo a pessoa encontrada ou status 404 se não
+     *         existir
      */
     @GetMapping("/{id}")
     public ResponseEntity<PessoaDTO> buscarPorId(@PathVariable Long id) {
-        // O service lançará ResourceNotFoundException se não encontrar, que será tratada pelo GlobalExceptionHandler
+        // O service lançará ResourceNotFoundException se não encontrar, que será
+        // tratada pelo GlobalExceptionHandler
         return pessoaService.buscarPorId(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build()); // Mantido para o Optional vazio
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build()); // Mantido para o Optional vazio
     }
 
     /**
      * Cria uma nova pessoa no sistema
+     * 
      * @param dto Dados da pessoa a ser criada
      * @return ResponseEntity contendo a pessoa criada com ID gerado
      */
@@ -58,9 +63,11 @@ public class PessoaController {
 
     /**
      * Atualiza uma pessoa existente
-     * @param id Identificador da pessoa a ser atualizada
+     * 
+     * @param id        Identificador da pessoa a ser atualizada
      * @param pessoaDTO Novos dados da pessoa
-     * @return ResponseEntity contendo a pessoa atualizada ou status 404 se não existir
+     * @return ResponseEntity contendo a pessoa atualizada ou status 404 se não
+     *         existir
      */
     @PutMapping("/{id}")
     public ResponseEntity<PessoaDTO> atualizarPessoa(@PathVariable Long id, @RequestBody PessoaDTO pessoaDTO) {
@@ -70,11 +77,12 @@ public class PessoaController {
 
     /**
      * Remove uma pessoa do sistema
+     * 
      * @param id Identificador da pessoa a ser removida
      * @return ResponseEntity com status 204 (No Content) ou 404 se não encontrada
      */
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarPessoa(@PathVariable Long id) {
         pessoaService.deletar(id);
         return ResponseEntity.noContent().build();
@@ -82,7 +90,7 @@ public class PessoaController {
 
     // --- Roles de uma pessoa ---
     @GetMapping("/{id}/roles")
-    //@PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<String>> listarRoles(@PathVariable Long id) {
         List<String> roles = pessoaService.listarRoles(id).stream()
                 .map(Role::getNome)
@@ -91,14 +99,14 @@ public class PessoaController {
     }
 
     @PostMapping("/{id}/roles/{roleId}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> adicionarRole(@PathVariable Long id, @PathVariable Long roleId) {
         pessoaService.addRoleToPessoa(id, roleId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/roles/{roleId}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removerRole(@PathVariable Long id, @PathVariable Long roleId) {
         pessoaService.removeRoleFromPessoa(id, roleId);
         return ResponseEntity.noContent().build();

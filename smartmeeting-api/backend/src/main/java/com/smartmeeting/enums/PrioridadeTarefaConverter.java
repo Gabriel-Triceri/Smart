@@ -5,8 +5,6 @@ import jakarta.persistence.Converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.stream.Stream;
-
 @Converter(autoApply = true) // Re-added autoApply = true
 public class PrioridadeTarefaConverter implements AttributeConverter<PrioridadeTarefa, String> {
 

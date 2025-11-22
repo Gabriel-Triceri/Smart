@@ -1,6 +1,5 @@
 package com.smartmeeting.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.smartmeeting.enums.SalaStatus;
 import jakarta.persistence.*;
@@ -16,8 +15,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = {"reunioes"})
-@ToString(exclude = {"reunioes"})
+@EqualsAndHashCode(callSuper = false, exclude = { "reunioes" })
+@ToString(exclude = { "reunioes" })
 public class Sala extends Auditable {
 
     @Id

@@ -4,14 +4,14 @@ import com.smartmeeting.dto.AssigneeDTO; // Importar o novo DTO
 import com.smartmeeting.dto.KanbanBoardDTO; // Importar o novo DTO
 import com.smartmeeting.dto.NotificacaoTarefaDTO;
 import com.smartmeeting.dto.TarefaDTO;
-import com.smartmeeting.dto.TarefaStatisticsDTO; // Importar o novo DTO
-import com.smartmeeting.dto.TemplateTarefaDTO; // Importar o novo DTO
-import com.smartmeeting.dto.MovimentacaoTarefaRequest; // Importar o novo DTO de requisição
-import com.smartmeeting.dto.MovimentacaoTarefaDTO; // Importar o novo DTO de movimentação
+import com.smartmeeting.dto.TarefaStatisticsDTO;
+import com.smartmeeting.dto.TemplateTarefaDTO;
+import com.smartmeeting.dto.MovimentacaoTarefaRequest;
+import com.smartmeeting.dto.MovimentacaoTarefaDTO;
 import com.smartmeeting.service.TarefaService;
-import com.smartmeeting.mapper.ReuniaoMapper; // Importar Mapper
-import com.smartmeeting.model.Reuniao; // Importar Model
-import com.smartmeeting.dto.ReuniaoDTO; // Importar DTO
+import com.smartmeeting.mapper.ReuniaoMapper;
+import com.smartmeeting.model.Reuniao;
+import com.smartmeeting.dto.ReuniaoDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;

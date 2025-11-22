@@ -1,9 +1,13 @@
 package com.smartmeeting.security;
 
 import com.smartmeeting.api.SmartmeetingApiApplication;
+import com.smartmeeting.dto.ReuniaoDTO;
+import com.smartmeeting.mapper.ReuniaoMapper;
+import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.service.PessoaService;
 import com.smartmeeting.service.ReuniaoService;
 import com.smartmeeting.service.SalaService;
+import com.smartmeeting.service.TarefaService;
 import com.smartmeeting.service.email.EmailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,31 +30,41 @@ class ReuniaoAuthorizationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // Mock dos serviços para não depender da lógica interna quando a autorização permitir
-    @MockBean private ReuniaoService reuniaoService;
-    @MockBean private SalaService salaService;
-    @MockBean private PessoaService pessoaService;
-    @MockBean private EmailService emailService;
+    // Mock dos serviços para não depender da lógica interna quando a autorização
+    // permitir
+    @MockBean
+    private ReuniaoService reuniaoService;
+    @MockBean
+    private SalaService salaService;
+    @MockBean
+    private PessoaService pessoaService;
+    @MockBean
+    private EmailService emailService;
+    @MockBean
+    private ReuniaoMapper reuniaoMapper;
+    @MockBean
+    private TarefaService tarefaService;
 
     @Test
-    @WithMockUser(username = "participante@teste.com", roles = {"PARTICIPANTE"})
+    @WithMockUser(username = "participante@teste.com", roles = { "PARTICIPANTE" })
     void participanteNaoPodeCriarReuniao_deveRetornar403() throws Exception {
         mockMvc.perform(post("/reunioes")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username = "organizador@teste.com", authorities = {"CRIAR_REUNIAO"})
+    @WithMockUser(username = "organizador@teste.com", authorities = { "CRIAR_REUNIAO" })
     void usuarioComPermissaoCriarReuniao_deveRetornar200() throws Exception {
         // Evita NullPointer do service quando o método é chamado após autorização
-        when(reuniaoService.salvarDTO(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(reuniaoService.toEntity(any())).thenReturn(null);
+        when(reuniaoMapper.toEntity(any())).thenReturn(new Reuniao());
+        when(reuniaoService.salvar(any())).thenReturn(new Reuniao());
+        when(reuniaoMapper.toDTO(any())).thenReturn(new ReuniaoDTO());
 
         mockMvc.perform(post("/reunioes")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
                 .andExpect(status().isOk());
     }
 }

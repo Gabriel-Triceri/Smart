@@ -3,7 +3,7 @@ package com.smartmeeting.controller;
 import com.smartmeeting.dto.SalaDTO;
 import com.smartmeeting.dto.SalaStatisticsDTO;
 import com.smartmeeting.service.SalaService;
-import com.smartmeeting.service.TarefaService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,15 +17,13 @@ public class SalaController {
 
     private final SalaService service;
 
-
-
-
     public SalaController(SalaService service) {
         this.service = service;
     }
 
     /**
      * Lista todas as salas cadastradas no sistema
+     * 
      * @return Lista de salas convertidas para DTO
      */
     @GetMapping
@@ -36,18 +34,22 @@ public class SalaController {
 
     /**
      * Busca uma sala específica pelo seu ID
+     * 
      * @param id Identificador da sala
-     * @return ResponseEntity contendo a sala encontrada ou status 404 se não existir
+     * @return ResponseEntity contendo a sala encontrada ou status 404 se não
+     *         existir
      */
     @GetMapping("/{id}")
     public ResponseEntity<SalaDTO> buscarPorId(@PathVariable(name = "id") Long id) {
-        // O service lançará ResourceNotFoundException se não encontrar, que será tratada pelo GlobalExceptionHandler
+        // O service lançará ResourceNotFoundException se não encontrar, que será
+        // tratada pelo GlobalExceptionHandler
         SalaDTO dto = service.buscarPorId(id);
         return ResponseEntity.ok(dto);
     }
 
     /**
      * Cria uma nova sala no sistema
+     * 
      * @param dto Dados da sala a ser criada
      * @return ResponseEntity contendo a sala criada com ID gerado
      */
@@ -59,9 +61,11 @@ public class SalaController {
 
     /**
      * Atualiza uma sala existente
-     * @param id Identificador da sala a ser atualizada
+     * 
+     * @param id  Identificador da sala a ser atualizada
      * @param dto Novos dados da sala
-     * @return ResponseEntity contendo a sala atualizada ou status 404 se não existir
+     * @return ResponseEntity contendo a sala atualizada ou status 404 se não
+     *         existir
      */
     @PutMapping("/{id}")
     public ResponseEntity<SalaDTO> atualizar(@PathVariable(name = "id") Long id, @Valid @RequestBody SalaDTO dto) {
@@ -71,6 +75,7 @@ public class SalaController {
 
     /**
      * Remove uma sala do sistema
+     * 
      * @param id Identificador da sala a ser removida
      * @return ResponseEntity com status 204 (No Content) ou 404 se não encontrada
      */
@@ -83,7 +88,8 @@ public class SalaController {
     /**
      * API para obter o total de salas cadastradas no sistema.
      * Endpoint: GET /salas/total
-     * Retorno: JSON com a quantidade total de salas, por exemplo: { "totalSalas": 10 }
+     * Retorno: JSON com a quantidade total de salas, por exemplo: { "totalSalas":
+     * 10 }
      */
     @GetMapping("/total")
     public ResponseEntity<Map<String, Long>> getTotalSalas() {
@@ -94,7 +100,8 @@ public class SalaController {
     /**
      * API para obter a quantidade de salas atualmente em uso.
      * Endpoint: GET /salas/em-uso
-     * Retorno: JSON com a quantidade de salas ocupadas, por exemplo: { "salasEmUso": 3 }
+     * Retorno: JSON com a quantidade de salas ocupadas, por exemplo: {
+     * "salasEmUso": 3 }
      */
     @GetMapping("/em-uso")
     public ResponseEntity<Map<String, Long>> getSalasEmUso() {
@@ -105,7 +112,8 @@ public class SalaController {
     /**
      * API para obter estatísticas gerais sobre as salas.
      * Endpoint: GET /salas/statistics
-     * Retorno: JSON com dados estatísticos, por exemplo: { "totalSalas": 10, "salasEmUso": 3, "salasDisponiveis": 7 }
+     * Retorno: JSON com dados estatísticos, por exemplo: { "totalSalas": 10,
+     * "salasEmUso": 3, "salasDisponiveis": 7 }
      */
     @GetMapping("/statistics")
     public ResponseEntity<SalaStatisticsDTO> getSalaStatistics() {
@@ -153,7 +161,6 @@ public class SalaController {
         SalaDTO salaAtualizada = service.updateRecursos(id, recursos);
         return ResponseEntity.ok(salaAtualizada);
     }
-
 
     /**
      * API para atualizar status da sala

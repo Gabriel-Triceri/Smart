@@ -1,7 +1,7 @@
 package com.smartmeeting.service;
 
 import com.smartmeeting.enums.StatusReuniao;
-import com.smartmeeting.enums.StatusTarefa;
+
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Presenca;
@@ -35,7 +35,8 @@ public class RelatorioService {
     public Map<String, Object> getReunioesPorSala(LocalDate dataInicio, LocalDate dataFim) {
         List<Reuniao> reunioes;
         if (dataInicio != null && dataFim != null) {
-            reunioes = reuniaoRepository.findByDataHoraInicioBetween(dataInicio.atStartOfDay(), dataFim.atTime(LocalTime.MAX));
+            reunioes = reuniaoRepository.findByDataHoraInicioBetween(dataInicio.atStartOfDay(),
+                    dataFim.atTime(LocalTime.MAX));
         } else {
             reunioes = reuniaoRepository.findAll();
         }
@@ -43,8 +44,7 @@ public class RelatorioService {
         Map<String, Long> reunioesPorSala = reunioes.stream()
                 .collect(Collectors.groupingBy(
                         reuniao -> reuniao.getSala().getNome(),
-                        Collectors.counting()
-                ));
+                        Collectors.counting()));
 
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("total_reunioes", reunioes.size());
@@ -68,9 +68,8 @@ public class RelatorioService {
         resultado.put("total_tarefas", todasTarefas.size());
         resultado.put("tarefas_concluidas", tarefasConcluidas);
         resultado.put("tarefas_pendentes", todasTarefas.size() - tarefasConcluidas);
-        resultado.put("percentual_conclusao", 
-                todasTarefas.size() > 0 ? 
-                        (double) tarefasConcluidas / todasTarefas.size() * 100 : 0);
+        resultado.put("percentual_conclusao",
+                todasTarefas.size() > 0 ? (double) tarefasConcluidas / todasTarefas.size() * 100 : 0);
         resultado.put("data_geracao", LocalDateTime.now());
 
         return resultado;
@@ -81,7 +80,8 @@ public class RelatorioService {
         if (participanteId != null) {
             // Verifica se a pessoa existe antes de buscar as presenças
             pessoaRepository.findById(participanteId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + participanteId));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + participanteId));
             presencas = presencaRepository.findByParticipanteId(participanteId);
         } else {
             presencas = presencaRepository.findAll();
@@ -90,8 +90,7 @@ public class RelatorioService {
         Map<String, Long> presencasPorPessoa = presencas.stream()
                 .collect(Collectors.groupingBy(
                         presenca -> presenca.getParticipante().getNome(),
-                        Collectors.counting()
-                ));
+                        Collectors.counting()));
 
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("total_presencas", presencas.size());
@@ -108,7 +107,8 @@ public class RelatorioService {
     public Map<String, Object> getDuracaoReunioes(LocalDate dataInicio, LocalDate dataFim) {
         List<Reuniao> reunioesFinalizadas;
         if (dataInicio != null && dataFim != null) {
-            reunioesFinalizadas = reuniaoRepository.findByDataHoraInicioBetweenAndStatus(dataInicio.atStartOfDay(), dataFim.atTime(LocalTime.MAX), StatusReuniao.FINALIZADA);
+            reunioesFinalizadas = reuniaoRepository.findByDataHoraInicioBetweenAndStatus(dataInicio.atStartOfDay(),
+                    dataFim.atTime(LocalTime.MAX), StatusReuniao.FINALIZADA);
         } else {
             reunioesFinalizadas = reuniaoRepository.findByStatus(StatusReuniao.FINALIZADA);
         }
@@ -166,8 +166,7 @@ public class RelatorioService {
                             stats.put("tarefas_concluidas", concluidas);
                             stats.put("percentual_conclusao", total > 0 ? (double) concluidas / total * 100 : 0);
                             return stats;
-                        }
-                ));
+                        }));
 
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("produtividade_por_participante", produtividade);

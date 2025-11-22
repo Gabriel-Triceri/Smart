@@ -2,6 +2,6 @@ package com.smartmeeting.enums;
 
 public enum ProjectRole {
     OWNER,
-    MANAGER,
-    CONTRIBUTOR
+    ADMIN,
+    MEMBER_EDITOR
 }

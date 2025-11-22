@@ -17,17 +17,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
+
 import java.util.stream.Collectors;
 
-/**
- * Componente responsável por gerar e validar tokens JWT
- *
- * Observações:
- * - HS512 requer chave >= 512 bits (64 bytes). Se a secret configurada for menor,
- *   esta classe deriva uma chave de 512 bits via SHA-512 (avisa via log).
- * - Recomenda-se fornecer uma secret robusta (Base64 ou texto) com >=64 bytes em app.jwt.secret.
- */
+@SuppressWarnings("null")
 @Component
 public class JwtTokenProvider {
 

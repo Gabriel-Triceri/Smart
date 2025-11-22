@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("null")
+
 @Service
 public class ReuniaoService {
 

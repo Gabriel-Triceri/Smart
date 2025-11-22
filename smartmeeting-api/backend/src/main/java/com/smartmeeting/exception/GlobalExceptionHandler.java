@@ -1,9 +1,6 @@
 package com.smartmeeting.exception;
 
 import com.smartmeeting.dto.ErrorResponse;
-import com.smartmeeting.exception.BadRequestException;
-import com.smartmeeting.exception.ConflictException;
-import com.smartmeeting.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,7 +17,6 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 

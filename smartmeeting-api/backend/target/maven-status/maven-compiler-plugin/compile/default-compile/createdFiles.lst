@@ -102,6 +102,7 @@ com\smartmeeting\config\DataSeeder.class
 com\smartmeeting\enums\TipoUsuario.class
 com\smartmeeting\dto\EstatisticasGeraisDTO.class
 com\smartmeeting\model\Sala.class
+com\smartmeeting\controller\TarefaController.class
 com\smartmeeting\model\Pessoa.class
 com\smartmeeting\service\RoleService.class
 com\smartmeeting\dto\RoleDTO.class
