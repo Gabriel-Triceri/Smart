@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, ChevronDown } from 'lucide-react';
 
 interface Props {
     children: ReactNode;
@@ -53,56 +53,53 @@ class ErrorBoundary extends Component<Props, State> {
             }
 
             return (
-                <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-                    <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-                        <div className="flex items-center justify-center mb-6">
-                            <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-full">
-                                <AlertCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
-                            </div>
+                <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-6 font-sans">
+                    <div className="max-w-md w-full bg-white dark:bg-slate-800 shadow-xl rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-700">
+                        <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <AlertTriangle className="w-8 h-8 text-red-500 dark:text-red-400" />
                         </div>
 
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4">
-                            Ops! Algo deu errado
-                        </h1>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                            Ops! Algo deu errado.
+                        </h2>
 
-                        <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
-                            Ocorreu um erro inesperado ao carregar o dashboard. Por favor, tente novamente.
+                        <p className="text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                            Desculpe, encontramos um erro inesperado. Nossa equipe já foi notificada. Por favor, tente recarregar a página.
                         </p>
-
-                        {process.env.NODE_ENV === 'development' && this.state.error && (
-                            <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                                <p className="text-sm font-mono text-red-600 dark:text-red-400 break-all">
-                                    {this.state.error.toString()}
-                                </p>
-                                {this.state.errorInfo && (
-                                    <details className="mt-2">
-                                        <summary className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
-                                            Detalhes do erro
-                                        </summary>
-                                        <pre className="text-xs mt-2 overflow-auto max-h-40 text-gray-600 dark:text-gray-400">
-                      {this.state.errorInfo.componentStack}
-                    </pre>
-                                    </details>
-                                )}
-                            </div>
-                        )}
 
                         <div className="flex gap-3">
                             <button
                                 onClick={() => window.location.reload()}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md"
                             >
-                                <RefreshCw className="h-5 w-5" />
-                                Recarregar Página
+                                <RefreshCw className="w-4 h-4" />
+                                Recarregar
                             </button>
 
                             <button
                                 onClick={this.handleReset}
-                                className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                                className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-medium transition-colors"
                             >
                                 Tentar Novamente
                             </button>
                         </div>
+
+                        {process.env.NODE_ENV === 'development' && this.state.error && (
+                            <div className="text-left mt-8">
+                                <details className="group border-t border-slate-100 dark:border-slate-700 pt-4">
+                                    <summary className="flex items-center justify-between cursor-pointer text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-300 transition-colors list-none">
+                                        <span>Detalhes técnicos</span>
+                                        <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
+                                    </summary>
+                                    <div className="mt-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-auto max-h-40">
+                                        <pre className="text-[10px] text-slate-600 dark:text-slate-400 font-mono whitespace-pre-wrap break-words">
+                                            {this.state.error.toString()}
+                                            {this.state.errorInfo?.componentStack}
+                                        </pre>
+                                    </div>
+                                </details>
+                            </div>
+                        )}
                     </div>
                 </div>
             );

@@ -45,11 +45,19 @@ interface KanbanBoardProps {
     onViewTask: (tarefa: Tarefa) => void;
 }
 
+// Colors for the small status dot/accent
+const COLUMN_ACCENTS: Record<string, string> = {
+    [StatusTarefa.TODO]: 'bg-slate-400',
+    [StatusTarefa.IN_PROGRESS]: 'bg-blue-500',
+    [StatusTarefa.REVIEW]: 'bg-purple-500',
+    [StatusTarefa.DONE]: 'bg-emerald-500',
+};
+
 const COLUMNS = [
-    { id: StatusTarefa.TODO, title: 'A Fazer', headerColor: 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200', borderColor: 'border-gray-300 dark:border-gray-600' },
-    { id: StatusTarefa.IN_PROGRESS, title: 'Em Andamento', headerColor: 'bg-blue-200 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200', borderColor: 'border-blue-300 dark:border-blue-700' },
-    { id: StatusTarefa.REVIEW, title: 'Em Revisão', headerColor: 'bg-purple-200 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200', borderColor: 'border-purple-300 dark:border-purple-700' },
-    { id: StatusTarefa.DONE, title: 'Concluído', headerColor: 'bg-green-200 text-green-800 dark:bg-green-900/50 dark:text-green-200', borderColor: 'border-green-300 dark:border-green-700' },
+    { id: StatusTarefa.TODO, title: 'A Fazer' },
+    { id: StatusTarefa.IN_PROGRESS, title: 'Em Andamento' },
+    { id: StatusTarefa.REVIEW, title: 'Em Revisão' },
+    { id: StatusTarefa.DONE, title: 'Concluído' },
 ];
 
 export function KanbanBoard({
@@ -98,12 +106,13 @@ export function KanbanBoard({
     };
 
     return (
-        <div className="h-full flex flex-col bg-gray-100 dark:bg-gray-900 relative">
-            <div className="p-6 flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="h-full flex flex-col relative">
+            <div className="flex-1">
                 <DragDropContext onDragEnd={onDragEnd}>
-                    <div className="h-full flex space-x-6 min-w-max">
+                    <div className="flex h-full gap-6 pb-2">
                         {COLUMNS.map(column => {
                             const columnTasks = tarefasPorStatus[column.id] ?? [];
+                            const accentColor = COLUMN_ACCENTS[column.id] || 'bg-gray-400';
 
                             return (
                                 <StrictModeDroppable droppableId={column.id} key={String(column.id)}>
@@ -111,25 +120,30 @@ export function KanbanBoard({
                                         <div
                                             ref={provided.innerRef}
                                             {...provided.droppableProps}
-                                            className="flex-shrink-0 w-80 flex flex-col h-full max-h-full"
+                                            className="flex-shrink-0 w-[320px] flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-slate-800/20 border border-slate-200/50 dark:border-slate-700/50"
                                         >
                                             {/* Cabeçalho da Coluna */}
-                                            <div className={`px-4 py-3 ${column.headerColor} rounded-t-lg border-b-2 ${column.borderColor} flex items-center justify-between shadow-sm z-10`}>
-                                                <h3 className="font-bold">{column.title}</h3>
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-full text-sm font-semibold">
+                                            <div className="px-4 py-3 flex items-center justify-between flex-shrink-0">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-2 h-2 rounded-full ${accentColor}`} />
+                                                    <h3 className="font-semibold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+                                                        {column.title}
+                                                    </h3>
+                                                    <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
                                                         {columnTasks.length}
                                                     </span>
-                                                    {loading && <RefreshCwIcon className="w-4 h-4 animate-spin" />}
+                                                </div>
+                                                <div className="flex items-center">
+                                                    {loading && <RefreshCwIcon className="w-3 h-3 animate-spin text-slate-400" />}
                                                 </div>
                                             </div>
 
                                             {/* Área de Drop (Corpo da Coluna) */}
                                             <div
                                                 className={`
-                                                    flex-1 p-3 space-y-3 overflow-y-auto bg-gray-50/50 dark:bg-gray-800/50 rounded-b-lg 
-                                                    transition-colors duration-200 border-x border-b border-gray-200 dark:border-gray-700
-                                                    ${snapshot.isDraggingOver ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 ring-2 ring-blue-100 dark:ring-blue-900/50 inset-0' : ''}
+                                                    flex-1 px-3 pb-3 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600
+                                                    transition-colors duration-200 rounded-b-xl
+                                                    ${snapshot.isDraggingOver ? 'bg-blue-50/50 dark:bg-blue-900/10 ring-2 ring-inset ring-blue-400/30' : ''}
                                                 `}
                                                 style={{ minHeight: '150px' }}
                                             >
@@ -146,9 +160,10 @@ export function KanbanBoard({
                                                                 {...provided.dragHandleProps}
                                                                 style={{
                                                                     ...provided.draggableProps.style,
-                                                                    opacity: snapshot.isDragging ? 0.8 : 1,
+                                                                    opacity: snapshot.isDragging ? 0.9 : 1,
+                                                                    transform: snapshot.isDragging ? `${provided.draggableProps.style?.transform} scale(1.02)` : provided.draggableProps.style?.transform
                                                                 }}
-                                                                className="group"
+                                                                className="group outline-none"
                                                             >
                                                                 <TaskCard
                                                                     tarefa={tarefa}
@@ -163,13 +178,14 @@ export function KanbanBoard({
                                                     </Draggable>
                                                 ))}
                                                 {provided.placeholder}
+
                                                 {column.id === StatusTarefa.TODO && (
                                                     <button
                                                         onClick={handleAddTask}
-                                                        className="mt-2 flex items-center justify-center w-full p-2 text-sm font-medium text-gray-500 hover:bg-gray-200 hover:text-gray-800 rounded-md transition-all border border-dashed border-gray-300 hover:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 dark:border-gray-600 dark:hover:border-gray-500"
+                                                        className="w-full py-2 flex items-center justify-center text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-white dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-slate-700/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-300 transition-all group mt-2"
                                                     >
-                                                        <PlusIcon className="w-4 h-4 mr-2" />
-                                                        Adicionar Tarefa
+                                                        <PlusIcon className="w-4 h-4 mr-1.5 transition-transform group-hover:scale-110" />
+                                                        Nova Tarefa
                                                     </button>
                                                 )}
                                             </div>

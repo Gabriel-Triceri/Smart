@@ -1,6 +1,5 @@
 package com.smartmeeting.service;
 
-import com.smartmeeting.dto.ReuniaoDTO;
 import com.smartmeeting.dto.SalaDTO;
 import com.smartmeeting.dto.SalaStatisticsDTO;
 import com.smartmeeting.enums.SalaStatus;
@@ -22,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("null")
 @Service
 public class SalaService {
 
@@ -29,7 +29,8 @@ public class SalaService {
     private final ReuniaoRepository reuniaoRepository;
     private final PessoaRepository pessoaRepository;
 
-    public SalaService(SalaRepository repository, ReuniaoRepository reuniaoRepository, PessoaRepository pessoaRepository) {
+    public SalaService(SalaRepository repository, ReuniaoRepository reuniaoRepository,
+            PessoaRepository pessoaRepository) {
         this.repository = repository;
         this.reuniaoRepository = reuniaoRepository;
         this.pessoaRepository = pessoaRepository;
@@ -37,11 +38,13 @@ public class SalaService {
 
     /**
      * Converte uma entidade Sala para seu respectivo DTO
+     * 
      * @param sala Entidade a ser convertida
      * @return DTO correspondente
      */
     public SalaDTO toDTO(Sala sala) {
-        if (sala == null) return null;
+        if (sala == null)
+            return null;
         SalaDTO dto = new SalaDTO();
         dto.setId(sala.getId());
         dto.setNome(sala.getNome());
@@ -53,11 +56,13 @@ public class SalaService {
 
     /**
      * Converte um DTO para a entidade Sala
+     * 
      * @param dto DTO contendo os dados da sala
      * @return Entidade Sala correspondente
      */
     public Sala toEntity(SalaDTO dto) {
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
         Sala sala = new Sala();
         sala.setNome(dto.getNome());
         sala.setCapacidade(dto.getCapacidade());
@@ -140,7 +145,8 @@ public class SalaService {
 
         String emailOrganizador = SecurityContextHolder.getContext().getAuthentication().getName();
         Pessoa organizador = pessoaRepository.findByEmail(emailOrganizador)
-                .orElseThrow(() -> new ResourceNotFoundException("Organizador não encontrado com o email: " + emailOrganizador));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Organizador não encontrado com o email: " + emailOrganizador));
 
         Reuniao reuniao = new Reuniao();
         reuniao.setSala(sala);
@@ -159,8 +165,9 @@ public class SalaService {
 
     /**
      * Verifica a disponibilidade de uma sala para uma data específica
+     * 
      * @param salaId ID da sala
-     * @param data Data para verificação (formato: yyyy-MM-dd)
+     * @param data   Data para verificação (formato: yyyy-MM-dd)
      * @return Map com informações sobre disponibilidade
      */
     public Map<String, Object> getDisponibilidadeSala(Long salaId, String data) {
@@ -172,8 +179,7 @@ public class SalaService {
             return Map.of(
                     "disponivel", false,
                     "motivo", "Sala em manutenção",
-                    "statusAtual", sala.getStatus()
-            );
+                    "statusAtual", sala.getStatus());
         }
 
         // Parse da data fornecida
@@ -212,15 +218,14 @@ public class SalaService {
                                 "inicio", r.getDataHoraInicio(),
                                 "fim", r.getDataHoraInicio().plusMinutes(r.getDuracaoMinutos()),
                                 "pauta", r.getPauta(),
-                                "organizador", r.getOrganizador() != null ? r.getOrganizador().getNome() : "N/A"
-                        ))
-                        .collect(Collectors.toList())
-        );
+                                "organizador", r.getOrganizador() != null ? r.getOrganizador().getNome() : "N/A"))
+                        .collect(Collectors.toList()));
     }
 
     /**
      * Cancela a reserva específica de uma sala
-     * @param salaId ID da sala
+     * 
+     * @param salaId    ID da sala
      * @param reservaId ID da reserva a ser cancelada
      */
     public void cancelarReservaSala(Long salaId, Long reservaId) {
@@ -257,7 +262,8 @@ public class SalaService {
 
     /**
      * Atualiza os recursos disponíveis em uma sala
-     * @param salaId ID da sala
+     * 
+     * @param salaId   ID da sala
      * @param recursos Lista de recursos da sala
      * @return SalaDTO atualizada
      */
@@ -265,7 +271,8 @@ public class SalaService {
         Sala sala = repository.findById(salaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada com ID: " + salaId));
 
-        // Em implementação real, seria necessário uma entidade separada para recursos da sala
+        // Em implementação real, seria necessário uma entidade separada para recursos
+        // da sala
         // Por enquanto, apenas registramos a atualização nos logs
         System.out.println("Atualizando recursos da sala " + sala.getNome());
         System.out.println("Recursos: " + recursos);
@@ -285,6 +292,7 @@ public class SalaService {
 
     /**
      * Atualiza o status de uma sala
+     * 
      * @param salaId ID da sala
      * @param status Novo status da sala (string)
      * @return SalaDTO com status atualizado
@@ -320,6 +328,7 @@ public class SalaService {
 
     /**
      * Busca salas por texto no nome ou localização
+     * 
      * @param termo Termo de busca
      * @return Lista de salas que correspondem ao termo
      */
@@ -347,6 +356,7 @@ public class SalaService {
 
     /**
      * Obtém as categorias de salas disponíveis
+     * 
      * @return Lista de categorias de salas
      */
     public List<String> getCategorias() {
@@ -358,9 +368,8 @@ public class SalaService {
                 "Auditório",
                 "Sala de Projeto",
                 "Sala de Vídeo Conference",
-                "Sala Informal"
-        );
-        
+                "Sala Informal");
+
         return categorias;
     }
 

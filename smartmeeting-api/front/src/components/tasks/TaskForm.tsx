@@ -7,7 +7,9 @@ import {
     Flag,
     Tag,
     Save,
-    Loader2
+    Loader2,
+    Check,
+    ChevronDown
 } from 'lucide-react';
 import {
     Tarefa,
@@ -15,7 +17,6 @@ import {
     Assignee,
     PrioridadeTarefa,
 } from '../../types/meetings';
-
 
 interface TaskFormProps {
     tarefa?: Tarefa | null;
@@ -30,11 +31,11 @@ type FormState = Omit<TarefaFormData, 'estimadoHoras'> & {
 };
 
 const PRIORIDADE_OPTIONS = [
-    { value: PrioridadeTarefa.BAIXA, label: 'Baixa', color: 'text-blue-600' },
-    { value: PrioridadeTarefa.MEDIA, label: 'Média', color: 'text-yellow-600' },
-    { value: PrioridadeTarefa.ALTA, label: 'Alta', color: 'text-orange-600' },
-    { value: PrioridadeTarefa.CRITICA, label: 'Crítica', color: 'text-red-600' },
-    { value: PrioridadeTarefa.URGENTE, label: 'Urgente', color: 'text-purple-600' }
+    { value: PrioridadeTarefa.BAIXA, label: 'Baixa', color: 'bg-slate-100 text-slate-700' },
+    { value: PrioridadeTarefa.MEDIA, label: 'Média', color: 'bg-blue-100 text-blue-700' },
+    { value: PrioridadeTarefa.ALTA, label: 'Alta', color: 'bg-amber-100 text-amber-700' },
+    { value: PrioridadeTarefa.CRITICA, label: 'Crítica', color: 'bg-red-100 text-red-700' },
+    { value: PrioridadeTarefa.URGENTE, label: 'Urgente', color: 'bg-purple-100 text-purple-700' }
 ];
 
 const TAGS_SUGESTOES = [
@@ -108,7 +109,6 @@ export function TaskForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateForm()) {
-            alert('Por favor, preencha todos os campos obrigatórios e corrija os erros.');
             return;
         }
         setLoading(true);
@@ -159,274 +159,259 @@ export function TaskForm({
     const principalAssignee = assignees.find(a => a.id === formData.responsavelPrincipalId);
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-mono-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+
+            <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-mono-200 dark:border-mono-700">
-                    <h2 className="text-xl font-semibold text-mono-900 dark:text-mono-100">
-                        {tarefa ? 'Editar Tarefa' : 'Nova Tarefa'}
-                    </h2>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                            {tarefa ? 'Editar Tarefa' : 'Nova Tarefa'}
+                        </h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Preencha os detalhes abaixo</p>
+                    </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-mono-50 dark:hover:bg-mono-700 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                     >
-                        <X className="w-5 h-5 text-mono-600 dark:text-mono-400" />
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* Form Content */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
                     {/* Título */}
                     <div>
-                        <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-2">
-                            Título *
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Título da Tarefa <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             value={formData.titulo}
                             onChange={(e) => setFormData(prev => ({ ...prev, titulo: e.target.value }))}
-                            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-1 focus:ring-accent-500 focus:border-accent-500 transition-colors ${errors.titulo ? 'border-red-500' : 'border-mono-300 dark:border-mono-600'
-                                } bg-white dark:bg-mono-700 text-mono-900 dark:text-mono-100`}
-                            placeholder="Digite o título da tarefa..."
+                            className={`w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none ${errors.titulo ? 'border-red-500' : 'border-slate-200 dark:border-slate-600'} text-slate-900 dark:text-white placeholder-slate-400`}
+                            placeholder="Ex: Atualizar documentação da API"
+                            autoFocus
                         />
-                        {errors.titulo && <p className="mt-1 text-sm text-red-600">{errors.titulo}</p>}
+                        {errors.titulo && <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1"><X className="w-3 h-3" /> {errors.titulo}</p>}
                     </div>
 
                     {/* Descrição */}
                     <div>
-                        <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-2">
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                             Descrição
                         </label>
                         <textarea
                             value={formData.descricao}
                             onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
                             rows={4}
-                            className="w-full px-3 py-2.5 border border-mono-300 dark:border-mono-600 rounded-lg focus:ring-1 focus:ring-accent-500 focus:border-accent-500 bg-white dark:bg-mono-700 text-mono-900 dark:text-mono-100 transition-colors"
-                            placeholder="Descreva a tarefa..."
+                            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white placeholder-slate-400 resize-none"
+                            placeholder="Adicione detalhes sobre esta tarefa..."
                         />
                     </div>
 
-                    {/* Responsáveis */}
-                    <div>
-                        <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-2">
-                            Responsáveis *
-                        </label>
-                        <div className="mb-3">
-                            <label className="block text-xs font-medium text-mono-600 dark:text-mono-400 mb-1">
-                                Responsável Principal
+                    {/* Grid for Priority & Responsible */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        {/* Responsáveis */}
+                        <div className="relative">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Responsável Principal <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowAssigneesDropdown(!showAssigneesDropdown)}
-                                    className="w-full px-3 py-2.5 border border-mono-300 dark:border-mono-600 rounded-lg bg-mono-50 dark:bg-mono-700 flex items-center justify-between focus:ring-1 focus:ring-accent-500 focus:border-accent-500 transition-colors"
-                                >
-                                    {principalAssignee ? (
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-8 h-8 bg-accent-500 rounded-full flex items-center justify-center text-white text-sm">
-                                                {principalAssignee.nome.charAt(0)}
-                                            </div>
-                                            <span className="text-mono-900 dark:text-mono-100">{principalAssignee.nome}</span>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowAssigneesDropdown(!showAssigneesDropdown)}
+                                className={`w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border rounded-lg flex items-center justify-between hover:border-blue-400 transition-colors ${errors.responsavelPrincipalId ? 'border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                            >
+                                {principalAssignee ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                            {principalAssignee.nome.charAt(0)}
                                         </div>
-                                    ) : (
-                                        <span className="text-mono-500 dark:text-mono-400">Selecione o responsável principal</span>
-                                    )}
-                                    <User className="w-4 h-4 text-mono-400" />
-                                </button>
-                                {showAssigneesDropdown && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-mono-700 border border-mono-200 dark:border-mono-600 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                                        <span className="text-sm text-slate-900 dark:text-white font-medium">{principalAssignee.nome}</span>
+                                    </div>
+                                ) : (
+                                    <span className="text-sm text-slate-500 dark:text-slate-400">Selecione...</span>
+                                )}
+                                <ChevronDown className="w-4 h-4 text-slate-400" />
+                            </button>
+
+                            {errors.responsavelPrincipalId && <p className="mt-1.5 text-sm text-red-500">{errors.responsavelPrincipalId}</p>}
+
+                            {showAssigneesDropdown && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto">
+                                    <div className="p-2 space-y-1">
                                         {assignees.map((assignee) => (
-                                            <button
-                                                key={assignee.id}
-                                                type="button"
-                                                onClick={() => { setAsPrincipal(assignee.id); setShowAssigneesDropdown(false); }}
-                                                className={`w-full px-3 py-2 text-left hover:bg-mono-50 dark:hover:bg-mono-600 flex items-center space-x-2 transition-colors ${assignee.id === formData.responsavelPrincipalId ? 'bg-accent-50 dark:bg-accent-900/20' : ''
-                                                    }`}
-                                            >
-                                                <div className="w-8 h-8 bg-accent-500 rounded-full flex items-center justify-center text-white text-sm">
-                                                    {assignee.nome.charAt(0)}
+                                            <div key={assignee.id} className="rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 group transition-colors">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-2" onClick={() => { setAsPrincipal(assignee.id); setShowAssigneesDropdown(false); }}>
+                                                        <div className="w-8 h-8 bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-200 rounded-full flex items-center justify-center text-xs font-bold">
+                                                            {assignee.nome.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">{assignee.nome}</p>
+                                                            <p className="text-xs text-slate-500">{assignee.departamento}</p>
+                                                        </div>
+                                                    </div>
+                                                    <label className="flex items-center gap-2 cursor-pointer p-1">
+                                                        <span className="text-xs text-slate-400">Participante</span>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData.responsaveisIds.includes(assignee.id)}
+                                                            onChange={() => handleAssigneeToggle(assignee.id)}
+                                                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                                        />
+                                                    </label>
                                                 </div>
-                                                <div>
-                                                    <div className="font-medium dark:text-white">{assignee.nome}</div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">{assignee.departamento}</div>
-                                                </div>
-                                                {assignee.id === formData.responsavelPrincipalId && <span className="ml-auto text-blue-600 dark:text-blue-400 text-sm">Principal</span>}
-                                            </button>
+                                            </div>
                                         ))}
                                     </div>
-                                )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Prioridade */}
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Prioridade
+                            </label>
+                            <div className="relative">
+                                <Flag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <select
+                                    value={formData.prioridade}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, prioridade: e.target.value as PrioridadeTarefa }))}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white appearance-none cursor-pointer"
+                                >
+                                    {PRIORIDADE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Grid for Dates */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Data de Início
+                            </label>
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <input
+                                    type="date"
+                                    value={formData.dataInicio}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, dataInicio: e.target.value }))}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white"
+                                />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                                Outros Responsáveis
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Data de Vencimento <span className="text-red-500">*</span>
                             </label>
-                            <div className="space-y-2 max-h-32 overflow-y-auto">
-                                {assignees.map((assignee) => (
-                                    <label key={assignee.id} className="flex items-center space-x-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.responsaveisIds.includes(assignee.id)}
-                                            onChange={() => handleAssigneeToggle(assignee.id)}
-                                            className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700"
-                                        />
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
-                                                {assignee.nome.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium dark:text-white">{assignee.nome}</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400">{assignee.departamento}</div>
-                                            </div>
-                                        </div>
-                                    </label>
-                                ))}
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <input
+                                    type="date"
+                                    value={formData.prazo_tarefa}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, prazo_tarefa: e.target.value }))}
+                                    className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white ${errors.prazo_tarefa ? 'border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                                    min={formData.dataInicio || undefined}
+                                />
                             </div>
+                            {errors.prazo_tarefa && <p className="mt-1.5 text-sm text-red-500">{errors.prazo_tarefa}</p>}
                         </div>
-                        {errors.responsavelPrincipalId && <p className="mt-1 text-sm text-red-600">{errors.responsavelPrincipalId}</p>}
                     </div>
 
-                    {/* Prioridade */}
+                    {/* Estimativa */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <Flag className="w-4 h-4 inline mr-1" /> Prioridade
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Tempo Estimado (Horas)
                         </label>
-                        <select
-                            value={formData.prioridade}
-                            onChange={(e) => setFormData(prev => ({ ...prev, prioridade: e.target.value as PrioridadeTarefa }))}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        >
-                            {PRIORIDADE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-                        </select>
-                    </div>
-
-                    {/* Datas */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <Calendar className="w-4 h-4 inline mr-1" /> Data de Início
-                            </label>
+                        <div className="relative">
+                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <input
-                                type="date"
-                                value={formData.dataInicio}
-                                onChange={(e) => setFormData(prev => ({ ...prev, dataInicio: e.target.value }))}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                type="number"
+                                min="0.5"
+                                step="0.5"
+                                value={formData.estimadoHoras}
+                                onChange={(e) => setFormData(prev => ({ ...prev, estimadoHoras: e.target.value }))}
+                                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white ${errors.estimadoHoras ? 'border-red-500' : 'border-slate-200 dark:border-slate-600'}`}
+                                placeholder="0.0"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <Calendar className="w-4 h-4 inline mr-1" /> Data de Vencimento *
-                            </label>
-                            <input
-                                type="date"
-                                value={formData.prazo_tarefa}
-                                onChange={(e) => setFormData(prev => ({ ...prev, prazo_tarefa: e.target.value }))}
-                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${errors.prazo_tarefa ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                    }`}
-                                min={formData.dataInicio || undefined}
-                            />
-                            {errors.prazo_tarefa && <p className="mt-1 text-sm text-red-600">{errors.prazo_tarefa}</p>}
-                        </div>
-                    </div>
-
-                    {/* Tempo Estimado */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <Clock className="w-4 h-4 inline mr-1" /> Tempo Estimado (horas)
-                        </label>
-                        <input
-                            type="number"
-                            min="0.5"
-                            step="0.5"
-                            value={formData.estimadoHoras}
-                            onChange={(e) => setFormData(prev => ({ ...prev, estimadoHoras: e.target.value }))}
-                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${errors.estimadoHoras ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                }`}
-                            placeholder="Ex: 8"
-                        />
-                        {errors.estimadoHoras && <p className="mt-1 text-sm text-red-600">{errors.estimadoHoras}</p>}
+                        {errors.estimadoHoras && <p className="mt-1.5 text-sm text-red-500">{errors.estimadoHoras}</p>}
                     </div>
 
                     {/* Tags */}
                     <div>
-                        <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-2">
-                            <Tag className="w-4 h-4 inline mr-1" /> Tags
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Tags
                         </label>
-                        {(formData.tags ?? []).length > 0 && (
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                {(formData.tags ?? []).map((tag, index) => (
-                                    <span key={index} className="inline-flex items-center px-2 py-1 bg-accent-100 text-accent-800 text-sm rounded dark:bg-accent-900/30 dark:text-accent-300">
-                                        {tag}
-                                        <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-2 text-accent-600 hover:text-accent-800 dark:text-accent-400 dark:hover:text-accent-200">
-                                            <X className="w-3 h-3" />
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-                        <div className="flex space-x-2">
+                        <div className="flex gap-2 mb-3">
                             <input
                                 type="text"
                                 value={newTag}
                                 onChange={(e) => setNewTag(e.target.value)}
                                 onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(newTag); } }}
-                                className="flex-1 px-3 py-2.5 border border-mono-300 dark:border-mono-600 rounded-lg focus:ring-1 focus:ring-accent-500 focus:border-accent-500 bg-white dark:bg-mono-700 text-mono-900 dark:text-mono-100 transition-colors"
-                                placeholder="Digite uma tag..."
+                                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white"
+                                placeholder="Digite nova tag..."
                             />
-                            <button type="button" onClick={() => handleAddTag(newTag)} className="px-3 py-2.5 bg-mono-100 text-mono-700 rounded-lg hover:bg-mono-200 transition-colors dark:bg-mono-600 dark:text-mono-300 dark:hover:bg-mono-500">
+                            <button
+                                type="button"
+                                onClick={() => handleAddTag(newTag)}
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium transition-colors"
+                            >
                                 Adicionar
                             </button>
                         </div>
-                        <div className="mt-3">
-                            <div className="text-xs text-mono-600 dark:text-mono-400 mb-2">Sugestões:</div>
-                            <div className="flex flex-wrap gap-1">
-                                {availableTags.filter(tag => !(formData.tags ?? []).includes(tag)).slice(0, 8).map(tag => (
-                                    <button key={tag} type="button" onClick={() => handleAddTag(tag)} className="px-2 py-1 bg-mono-100 text-mono-700 text-sm rounded hover:bg-mono-200 transition-colors dark:bg-mono-700 dark:text-mono-300 dark:hover:bg-mono-600">
-                                        {tag}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Cor */}
-                    <div>
-                        <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-2">
-                            Cor da Tarefa
-                        </label>
-                        <div className="flex space-x-2">
-                            {['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'].map(color => (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {(formData.tags ?? []).map((tag, index) => (
+                                <span key={index} className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-sm font-medium rounded-full border border-blue-100 dark:border-blue-800">
+                                    {tag}
+                                    <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1.5 text-blue-400 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-300">
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5">
+                            <span className="text-xs text-slate-400 mr-1 py-1">Sugestões:</span>
+                            {availableTags.filter(tag => !(formData.tags ?? []).includes(tag)).slice(0, 6).map(tag => (
                                 <button
-                                    key={color}
+                                    key={tag}
                                     type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, cor: color }))}
-                                    className={`w-8 h-8 rounded-full border-2 ${formData.cor === color ? 'border-mono-800 dark:border-white' : 'border-mono-300 dark:border-mono-600'
-                                        }`}
-                                    style={{ backgroundColor: color }}
-                                />
+                                    onClick={() => handleAddTag(tag)}
+                                    className="px-2 py-0.5 bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 text-xs rounded transition-colors"
+                                >
+                                    + {tag}
+                                </button>
                             ))}
                         </div>
                     </div>
-
-                    {/* Botões */}
-                    <div className="flex justify-end space-x-3 pt-6 border-t border-mono-200 dark:border-mono-700">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-mono-700 border border-mono-300 rounded-lg hover:bg-mono-50 transition-colors dark:text-mono-300 dark:border-mono-600 dark:hover:bg-mono-700"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="px-4 py-2 bg-accent-500 text-white rounded-lg hover:bg-accent-600 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                        >
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            <span>{tarefa ? 'Salvar' : 'Criar Tarefa'}</span>
-                        </button>
-                    </div>
                 </form>
+
+                {/* Footer Actions */}
+                <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3 rounded-b-xl">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2 transition-all shadow-sm"
+                    >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {tarefa ? 'Salvar Alterações' : 'Criar Tarefa'}
+                    </button>
+                </div>
             </div>
         </div>
     );

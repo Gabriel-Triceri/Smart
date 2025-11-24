@@ -9,14 +9,14 @@ import {
     ChevronDown,
     ChevronRight,
     Layers,
-    Layout
+    Layout,
+    Lock
 } from 'lucide-react';
 import { useRoles } from '../../hooks/useRoles';
 import { usePermissions } from '../../hooks/usePermissions';
 import { MatrixSkeleton } from './PermissionSkeleton';
 import { useTheme } from '../../context/ThemeContext';
 
-// Tipos auxiliares
 type ViewMode = 'matrix' | 'by-role';
 
 export const PermissionMatrix: React.FC = () => {
@@ -31,17 +31,12 @@ export const PermissionMatrix: React.FC = () => {
 
     const isLoading = rolesLoading || permissionsLoading;
 
-    // --- Lógica de Agrupamento Inteligente ---
-    // Transforma permissões planas (users.create, users.edit) em grupos { Users: [create, edit] }
     const groupedPermissions = useMemo(() => {
         const groups: Record<string, typeof permissions> = {};
 
         permissions.forEach(perm => {
-            // Tenta detectar o prefixo (ex: "users.create" -> "users", "financial_read" -> "financial")
             const separator = perm.nome.includes('.') ? '.' : perm.nome.includes('_') ? '_' : ' ';
             const parts = perm.nome.split(separator);
-
-            // Se não tiver separador, joga num grupo "Geral"
             const groupName = parts.length > 1 ? parts[0] : 'Geral';
             const formattedGroupName = groupName.charAt(0).toUpperCase() + groupName.slice(1);
 
@@ -51,20 +46,17 @@ export const PermissionMatrix: React.FC = () => {
             groups[formattedGroupName].push(perm);
         });
 
-        // Ordena chaves dos grupos alfabeticamente
         return Object.keys(groups).sort().reduce((acc, key) => {
             acc[key] = groups[key];
             return acc;
         }, {} as typeof groups);
     }, [permissions]);
 
-    // Filtragem
     const filteredGroups = useMemo(() => {
         if (!searchTerm) return groupedPermissions;
 
         const filtered: typeof groupedPermissions = {};
         Object.entries(groupedPermissions).forEach(([group, perms]) => {
-            // Filtra se o nome da permissão OU o nome do grupo contém o termo
             const matchingPerms = perms.filter(p =>
                 p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 group.toLowerCase().includes(searchTerm.toLowerCase())
@@ -81,18 +73,12 @@ export const PermissionMatrix: React.FC = () => {
     };
 
     const formatPermissionLabel = (fullName: string, groupName: string) => {
-        // Remove o nome do grupo da string para ficar mais limpo na UI
-        // Ex: "users.create" no grupo "Users" vira apenas "Create"
         const cleanGroup = groupName.toLowerCase();
         const cleanName = fullName.toLowerCase();
-
-        // Tenta remover o prefixo exato
         let label = fullName;
         if (cleanName.startsWith(cleanGroup + '.') || cleanName.startsWith(cleanGroup + '_')) {
             label = fullName.substring(cleanGroup.length + 1);
         }
-
-        // Capitaliza e substitui _ por espaços restantes
         return label.charAt(0).toUpperCase() + label.slice(1).replace(/[_.]/g, ' ');
     };
 
@@ -115,243 +101,266 @@ export const PermissionMatrix: React.FC = () => {
     if (isLoading) return <MatrixSkeleton roles={5} permissions={10} />;
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-10 transition-colors">
-            <main className="max-w-[95%] mx-auto px-4 py-8 w-full">
-
-                {/* --- Header Card --- */}
-                <div className="bg-white dark:bg-mono-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-mono-700 mb-6">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-[#0ea5e9] rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
-                                <Shield className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Matriz de Acessos</h1>
-                                <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-                                    Gerenciamento avançado de permissões por recurso
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* View Toggle */}
-                        <div className="flex items-center bg-gray-100 dark:bg-mono-700 rounded-lg p-1">
-                            <button
-                                onClick={() => setViewMode('matrix')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'matrix'
-                                        ? 'bg-white dark:bg-mono-600 text-gray-900 dark:text-white shadow-sm'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
-                                    }`}
-                            >
-                                <Layout className="w-4 h-4" />
-                                Matriz Geral
-                            </button>
-                            <button
-                                onClick={() => setViewMode('by-role')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'by-role'
-                                        ? 'bg-white dark:bg-mono-600 text-gray-900 dark:text-white shadow-sm'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
-                                    }`}
-                            >
-                                <Layers className="w-4 h-4" />
-                                Por Perfil
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Toolbar */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-t border-gray-100 dark:border-mono-700 pt-6">
-                        <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
-                            {Object.keys(groupedPermissions).map(group => (
-                                <button
-                                    key={group}
-                                    onClick={() => {
-                                        // Scroll to group or filter logic
-                                        document.getElementById(`group-${group}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    }}
-                                    className="px-3 py-1 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-mono-700 dark:hover:bg-mono-600 text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-mono-600 whitespace-nowrap transition-colors"
-                                >
-                                    {group}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="relative w-full lg:w-72">
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Buscar permissão ou grupo..."
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:border-transparent dark:bg-mono-900 dark:border-mono-700 dark:text-white"
-                            />
-                            <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-                        </div>
-                    </div>
+        <div className="h-full flex flex-col">
+            {/* Controls Toolbar */}
+            <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
+                <div className="flex items-center bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg border border-slate-200 dark:border-slate-700 self-start">
+                    <button
+                        onClick={() => setViewMode('matrix')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'matrix'
+                            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                            }`}
+                    >
+                        <Layout className="w-4 h-4" />
+                        Matriz Geral
+                    </button>
+                    <button
+                        onClick={() => setViewMode('by-role')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${viewMode === 'by-role'
+                            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                            }`}
+                    >
+                        <Layers className="w-4 h-4" />
+                        Por Perfil
+                    </button>
                 </div>
 
-                {/* --- VIEW MODE: MATRIX (Transposed) --- */}
-                {viewMode === 'matrix' && (
-                    <div className="bg-white dark:bg-mono-800 rounded-xl shadow-sm border border-gray-200 dark:border-mono-700 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-mono-900/50 dark:text-gray-300 sticky top-0 z-20">
-                                    <tr>
-                                        <th className="px-6 py-4 font-bold border-b border-gray-200 dark:border-mono-700 min-w-[250px] sticky left-0 z-30 bg-gray-50 dark:bg-mono-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                                            Recurso / Ação
-                                        </th>
-                                        {roles.map(role => (
-                                            <th key={role.id} className="px-4 py-4 text-center font-semibold border-b border-gray-200 dark:border-mono-700 min-w-[100px]">
-                                                <div className="flex flex-col items-center gap-1">
-                                                    <span className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold">
-                                                        {role.nome.substring(0, 2).toUpperCase()}
-                                                    </span>
-                                                    <span className="truncate max-w-[120px]">{role.nome}</span>
-                                                </div>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 dark:divide-mono-700">
-                                    {Object.entries(filteredGroups).map(([group, perms]) => {
-                                        const isCollapsed = collapsedGroups.includes(group);
+                <div className="flex gap-3 flex-1 justify-end">
+                    <div className="relative max-w-xs w-full group">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Filtrar permissões..."
+                            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white"
+                        />
+                    </div>
+                </div>
+            </div>
 
-                                        return (
-                                            <React.Fragment key={group}>
-                                                {/* Group Header Row */}
-                                                <tr
-                                                    id={`group-${group}`}
-                                                    className="bg-gray-50/50 dark:bg-mono-900/30 hover:bg-gray-100 dark:hover:bg-mono-700/50 cursor-pointer transition-colors"
-                                                    onClick={() => toggleGroupCollapse(group)}
+            {/* Filter Chips */}
+            {viewMode === 'matrix' && Object.keys(groupedPermissions).length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                    {Object.keys(groupedPermissions).map(group => (
+                        <button
+                            key={group}
+                            onClick={() => {
+                                const el = document.getElementById(`group-${group}`);
+                                if (el) {
+                                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    // Optionally briefly highlight
+                                    el.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
+                                    setTimeout(() => el.classList.remove('bg-blue-50', 'dark:bg-blue-900/20'), 1000);
+                                }
+                            }}
+                            className="px-3 py-1 rounded-full text-xs font-medium border transition-colors bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300"
+                        >
+                            {group}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* --- VIEW MODE: MATRIX --- */}
+            {viewMode === 'matrix' && (
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col relative">
+                    <div className="overflow-x-auto custom-scrollbar">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="text-xs uppercase bg-slate-50 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 sticky top-0 z-30 backdrop-blur-sm">
+                                <tr>
+                                    <th className="px-6 py-4 font-bold border-b border-r border-slate-200 dark:border-slate-700 min-w-[280px] sticky left-0 z-40 bg-slate-50 dark:bg-slate-900 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                        Recurso / Permissão
+                                    </th>
+                                    {roles.map(role => (
+                                        <th key={role.id} className="px-4 py-4 text-center font-semibold border-b border-r border-slate-200 dark:border-slate-700 min-w-[120px] last:border-r-0">
+                                            <div className="flex flex-col items-center gap-1.5">
+                                                <span className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs font-bold shadow-sm">
+                                                    {role.nome.substring(0, 2).toUpperCase()}
+                                                </span>
+                                                <span className="truncate max-w-[100px]" title={role.nome}>{role.nome}</span>
+                                            </div>
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                {Object.entries(filteredGroups).map(([group, perms]) => {
+                                    const isCollapsed = collapsedGroups.includes(group);
+
+                                    return (
+                                        <React.Fragment key={group}>
+                                            {/* Group Header */}
+                                            <tr
+                                                id={`group-${group}`}
+                                                className="bg-slate-50/80 dark:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                                                onClick={() => toggleGroupCollapse(group)}
+                                            >
+                                                <td
+                                                    className="px-6 py-3 font-semibold text-slate-800 dark:text-slate-200 sticky left-0 z-20 bg-slate-50/95 dark:bg-slate-900/95 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]"
                                                 >
-                                                    <td
-                                                        className="px-6 py-3 font-semibold text-gray-900 dark:text-white sticky left-0 z-10 bg-gray-50/95 dark:bg-mono-800/95 backdrop-blur-sm shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2"
-                                                        colSpan={1} // Apenas para o sticky funcionar bem, o conteúdo visual ocupa a largura
-                                                    >
-                                                        {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                    <div className="flex items-center gap-2">
+                                                        {isCollapsed ? <ChevronRight className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                                                         {group}
-                                                        <span className="ml-2 text-xs font-normal text-gray-500 bg-gray-200 dark:bg-mono-700 px-2 py-0.5 rounded-full">
+                                                        <span className="ml-auto text-[10px] font-medium text-slate-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full">
                                                             {perms.length}
                                                         </span>
-                                                    </td>
-                                                    {/* Colspan vazio para preencher o resto da linha do header */}
-                                                    <td colSpan={roles.length} className="bg-inherit"></td>
-                                                </tr>
-
-                                                {/* Permission Rows */}
-                                                {!isCollapsed && perms.map(perm => (
-                                                    <tr key={perm.id} className="hover:bg-gray-50 dark:hover:bg-mono-700/20 transition-colors group">
-                                                        <td className="px-6 py-3 font-medium text-gray-600 dark:text-gray-300 border-r border-gray-100 dark:border-mono-700/50 sticky left-0 bg-white dark:bg-mono-800 group-hover:bg-gray-50 dark:group-hover:bg-mono-700/20 transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] z-10">
-                                                            <div className="pl-6 border-l-2 border-gray-200 dark:border-mono-700">
-                                                                {formatPermissionLabel(perm.nome, group)}
-                                                                <div className="text-[10px] text-gray-400 font-normal mt-0.5 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    {perm.nome}
-                                                                </div>
-                                                            </div>
-                                                        </td>
-
-                                                        {roles.map(role => {
-                                                            const has = hasPermission(role.permissions, perm.nome);
-                                                            return (
-                                                                <td key={`${role.id}-${perm.id}`} className="px-4 py-2 text-center border-r border-dashed border-gray-100 dark:border-mono-700/30 last:border-r-0">
-                                                                    <div className="flex justify-center">
-                                                                        <label className="relative inline-flex items-center cursor-pointer">
-                                                                            <input
-                                                                                type="checkbox"
-                                                                                className="sr-only peer"
-                                                                                checked={has}
-                                                                                onChange={() => handleToggle(role.id, perm.nome, has)}
-                                                                            />
-                                                                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-[#0ea5e9]"></div>
-                                                                        </label>
-                                                                    </div>
-                                                                </td>
-                                                            );
-                                                        })}
-                                                    </tr>
-                                                ))}
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-
-                            {Object.keys(filteredGroups).length === 0 && (
-                                <div className="p-12 text-center text-gray-500">
-                                    Nenhuma permissão encontrada para "{searchTerm}"
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* --- VIEW MODE: BY ROLE (Master-Detail) --- */}
-                {viewMode === 'by-role' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {/* Sidebar: Roles List */}
-                        <div className="bg-white dark:bg-mono-800 rounded-xl shadow-sm border border-gray-200 dark:border-mono-700 overflow-hidden">
-                            <div className="p-4 border-b border-gray-200 dark:border-mono-700 bg-gray-50 dark:bg-mono-900/50">
-                                <h3 className="font-semibold text-gray-700 dark:text-gray-200">Selecione o Perfil</h3>
-                            </div>
-                            <div className="divide-y divide-gray-100 dark:divide-mono-700 max-h-[600px] overflow-y-auto">
-                                {roles.map(role => (
-                                    <button
-                                        key={role.id}
-                                        onClick={() => setSelectedRoleFilter(role.id)}
-                                        className={`w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-mono-700/50 transition-colors ${selectedRoleFilter === role.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : 'border-l-4 border-transparent'
-                                            }`}
-                                    >
-                                        <span className={`font-medium ${selectedRoleFilter === role.id ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>
-                                            {role.nome}
-                                        </span>
-                                        <ChevronRight className={`w-4 h-4 ${selectedRoleFilter === role.id ? 'text-blue-500' : 'text-gray-400'}`} />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Main Content: Permissions for Selected Role */}
-                        <div className="lg:col-span-3">
-                            {selectedRoleFilter ? (
-                                <div className="bg-white dark:bg-mono-800 rounded-xl shadow-sm border border-gray-200 dark:border-mono-700 p-6">
-                                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-mono-700">
-                                        <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                                            Permissões para:
-                                            <span className="text-[#0ea5e9]">{roles.find(r => r.id === selectedRoleFilter)?.nome}</span>
-                                        </h2>
-                                        <span className="text-sm text-gray-500">
-                                            {roles.find(r => r.id === selectedRoleFilter)?.permissions.length} permissões ativas
-                                        </span>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {Object.entries(filteredGroups).map(([group, perms]) => {
-                                            // Check if any permission in this group is active for this role
-                                            const currentRole = roles.find(r => r.id === selectedRoleFilter);
-                                            const activeCount = perms.filter(p => currentRole?.permissions.includes(p.nome)).length;
-
-                                            return (
-                                                <div key={group} className="border border-gray-200 dark:border-mono-700 rounded-lg overflow-hidden">
-                                                    <div className="bg-gray-50 dark:bg-mono-900/50 px-4 py-3 flex justify-between items-center border-b border-gray-200 dark:border-mono-700">
-                                                        <h4 className="font-semibold text-gray-700 dark:text-gray-200">{group}</h4>
-                                                        <span className={`text-xs px-2 py-0.5 rounded-full ${activeCount > 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-200 text-gray-500'}`}>
-                                                            {activeCount} / {perms.length}
-                                                        </span>
                                                     </div>
-                                                    <div className="p-4 space-y-3">
-                                                        {perms.map(perm => {
-                                                            const has = hasPermission(currentRole?.permissions, perm.nome);
-                                                            return (
-                                                                <div key={perm.id} className="flex items-center justify-between">
-                                                                    <span className="text-sm text-gray-600 dark:text-gray-300">{formatPermissionLabel(perm.nome, group)}</span>
-                                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                </td>
+                                                {/* Spacer cells with borders to maintain grid structure */}
+                                                {roles.map(role => (
+                                                    <td key={role.id} className="border-r border-slate-200 dark:border-slate-700 last:border-r-0"></td>
+                                                ))}
+                                            </tr>
+
+                                            {/* Permission Rows */}
+                                            {!isCollapsed && perms.map((perm, idx) => (
+                                                <tr
+                                                    key={perm.id}
+                                                    className={`group transition-colors hover:bg-blue-50/30 dark:hover:bg-blue-900/10 ${idx % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/30 dark:bg-slate-800/50'}`}
+                                                >
+                                                    <td className="px-6 py-3 border-r border-slate-200 dark:border-slate-700 sticky left-0 z-10 bg-inherit shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                                                                {formatPermissionLabel(perm.nome, group)}
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-400 font-mono mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                                                                {perm.nome}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+
+                                                    {roles.map(role => {
+                                                        const has = hasPermission(role.permissions, perm.nome);
+                                                        return (
+                                                            <td key={`${role.id}-${perm.id}`} className="px-4 py-2 text-center border-r border-slate-100 dark:border-slate-700 last:border-r-0 align-middle">
+                                                                <div className="flex justify-center">
+                                                                    <label className="relative inline-flex items-center cursor-pointer group/toggle">
                                                                         <input
                                                                             type="checkbox"
                                                                             className="sr-only peer"
                                                                             checked={has}
-                                                                            onChange={() => handleToggle(selectedRoleFilter, perm.nome, has)}
+                                                                            onChange={() => handleToggle(role.id, perm.nome, has)}
                                                                         />
-                                                                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-[#0ea5e9]"></div>
+                                                                        <div className={`
+                                                                            w-9 h-5 rounded-full peer transition-all duration-200
+                                                                            bg-slate-200 dark:bg-slate-600 peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800
+                                                                            peer-checked:bg-blue-600
+                                                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                                                            after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                                                            after:h-4 after:w-4 after:transition-all after:shadow-sm
+                                                                            peer-checked:after:translate-x-full peer-checked:after:border-white
+                                                                        `}></div>
                                                                     </label>
                                                                 </div>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+
+                        {Object.keys(filteredGroups).length === 0 && (
+                            <div className="p-16 text-center flex flex-col items-center justify-center">
+                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-3">
+                                    <Search className="w-6 h-6 text-slate-400" />
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 font-medium">
+                                    Nenhuma permissão encontrada para "{searchTerm}"
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* --- VIEW MODE: BY ROLE --- */}
+            {viewMode === 'by-role' && (
+                <div className="flex flex-col lg:flex-row gap-6 h-full">
+                    {/* Sidebar */}
+                    <div className="lg:w-1/4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[600px]">
+                        <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide">Perfis Disponíveis</h3>
+                        </div>
+                        <div className="overflow-y-auto flex-1 p-2 space-y-1 custom-scrollbar">
+                            {roles.map(role => (
+                                <button
+                                    key={role.id}
+                                    onClick={() => setSelectedRoleFilter(role.id)}
+                                    className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between transition-all ${selectedRoleFilter === role.id
+                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
+                                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                                        }`}
+                                >
+                                    <span className="truncate">{role.nome}</span>
+                                    {selectedRoleFilter === role.id && <ChevronRight className="w-4 h-4 text-blue-500" />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col h-full min-h-[500px]">
+                        {selectedRoleFilter ? (
+                            <>
+                                <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20 rounded-t-xl">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                            <Shield className="w-5 h-5 text-blue-500" />
+                                            {roles.find(r => r.id === selectedRoleFilter)?.nome}
+                                        </h2>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                            Gerencie as permissões individuais para este perfil.
+                                        </p>
+                                    </div>
+                                    <div className="bg-white dark:bg-slate-700 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-600 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm">
+                                        {roles.find(r => r.id === selectedRoleFilter)?.permissions.length} permissões ativas
+                                    </div>
+                                </div>
+
+                                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                        {Object.entries(filteredGroups).map(([group, perms]) => {
+                                            const currentRole = roles.find(r => r.id === selectedRoleFilter);
+                                            const activeCount = perms.filter(p => currentRole?.permissions.includes(p.nome)).length;
+                                            const allActive = activeCount === perms.length;
+
+                                            return (
+                                                <div key={group} className={`border rounded-lg overflow-hidden transition-all ${allActive ? 'border-blue-200 dark:border-blue-900 bg-blue-50/30 dark:bg-blue-900/10' : 'border-slate-200 dark:border-slate-700'}`}>
+                                                    <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                                                        <h4 className="font-semibold text-sm text-slate-800 dark:text-slate-200">{group}</h4>
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${activeCount > 0 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}`}>
+                                                            {activeCount}/{perms.length}
+                                                        </span>
+                                                    </div>
+                                                    <div className="p-3 space-y-2">
+                                                        {perms.map(perm => {
+                                                            const has = hasPermission(currentRole?.permissions, perm.nome);
+                                                            return (
+                                                                <label key={perm.id} className="flex items-start gap-3 p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-pointer transition-colors group">
+                                                                    <div className="relative flex items-center pt-0.5">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="peer h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600 dark:border-slate-600 dark:bg-slate-700 dark:ring-offset-slate-800"
+                                                                            checked={has}
+                                                                            onChange={() => handleToggle(selectedRoleFilter, perm.nome, has)}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="text-sm leading-tight">
+                                                                        <span className={`font-medium ${has ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                                                            {formatPermissionLabel(perm.nome, group)}
+                                                                        </span>
+                                                                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                                                            {perm.nome}
+                                                                        </p>
+                                                                    </div>
+                                                                </label>
                                                             );
                                                         })}
                                                     </div>
@@ -360,22 +369,21 @@ export const PermissionMatrix: React.FC = () => {
                                         })}
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="bg-white dark:bg-mono-800 rounded-xl shadow-sm border border-gray-200 dark:border-mono-700 p-12 text-center flex flex-col items-center justify-center h-full min-h-[400px]">
-                                    <div className="w-16 h-16 bg-gray-50 dark:bg-mono-900 rounded-full flex items-center justify-center mb-4">
-                                        <Layers className="w-8 h-8 text-gray-400" />
-                                    </div>
-                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Selecione um Perfil</h3>
-                                    <p className="text-gray-500 dark:text-gray-400 max-w-sm">
-                                        Selecione um perfil na lista ao lado para visualizar e editar suas permissões detalhadas.
-                                    </p>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-center p-12">
+                                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4">
+                                    <Lock className="w-8 h-8 text-slate-300 dark:text-slate-600" />
                                 </div>
-                            )}
-                        </div>
+                                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Nenhum perfil selecionado</h3>
+                                <p className="text-slate-500 dark:text-slate-400 max-w-sm mt-1">
+                                    Selecione um perfil na lista lateral para visualizar e editar suas permissões de forma detalhada.
+                                </p>
+                            </div>
+                        )}
                     </div>
-                )}
-
-            </main>
+                </div>
+            )}
         </div>
     );
 };

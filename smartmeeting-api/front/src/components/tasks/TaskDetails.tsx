@@ -12,6 +12,8 @@ import {
     ExternalLink,
     Edit,
     Trash2,
+    CheckCircle2,
+    FileText
 } from 'lucide-react';
 import {
     Tarefa, StatusTarefa, PrioridadeTarefa
@@ -72,303 +74,257 @@ export function TaskDetails({
     const taskPriority = tarefa.prioridade || PrioridadeTarefa.MEDIA;
 
     return (
-        <div className="fixed inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all duration-300 animate-slideUp">
+        <div className="fixed inset-0 z-50 flex justify-end">
+            {/* Backdrop */}
+            <div
+                className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+                onClick={onClose}
+            ></div>
+
+            {/* Slide-over Panel */}
+            <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-300">
+
                 {/* Header */}
-                <div className="relative bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 p-6 border-b border-blue-400/20">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                            <h2 className="text-xl font-bold text-white tracking-tight">Detalhes da Tarefa</h2>
-                            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm ${PRIORITY_CONFIG[taskPriority].badgeColor
-                                } bg-white/95 dark:bg-gray-900/80 dark:text-white border border-white/20 flex items-center gap-1.5`}>
-                                <Flag className="w-4 h-4" />
-                                {PRIORITY_CONFIG[taskPriority].label}
-                            </span>
-                            {tarefa.projectName && (
-                                <span className="px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm bg-purple-100 dark:bg-purple-900/80 text-purple-800 dark:text-purple-200 border border-purple-200/50 dark:border-purple-700/50 flex items-center gap-1.5">
-                                    📁 {tarefa.projectName}
-                                </span>
-                            )}
-                            {tarefa.reuniaoTitulo && (
-                                <span className="px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border border-blue-200/50 dark:border-blue-700/50 flex items-center gap-1.5">
-                                    📅 {tarefa.reuniaoTitulo}
-                                </span>
-                            )}
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 hover:bg-white/20 rounded-xl transition-all duration-200 text-white hover:rotate-90 transform"
-                        >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10">
+                    <div className="flex items-center gap-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${PRIORITY_CONFIG[taskPriority].badgeColor.replace('bg-', 'bg-opacity-10 border-').replace('text-white', 'text-slate-700 dark:text-slate-300')}`}>
+                            <Flag className="w-3.5 h-3.5" />
+                            {PRIORITY_CONFIG[taskPriority].label}
+                        </span>
+                        <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
+                        <span className="text-sm text-slate-500 dark:text-slate-400 font-mono">#{tarefa.id.substring(0, 6)}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {onEdit && (
+                            <button onClick={() => onEdit(tarefa)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-lg transition-colors" title="Editar">
+                                <Edit className="w-4 h-4" />
+                            </button>
+                        )}
+                        {onDelete && (
+                            <button onClick={() => onDelete(tarefa.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir">
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        )}
+                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                        <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex h-[calc(90vh-120px)]">
-                    {/* Conteúdo Principal */}
-                    <div className="flex-1 overflow-y-auto">
-                        <div className="p-8">
-                            {/* Título e Ações */}
-                            <div className="flex items-start justify-between mb-8">
-                                <div className="flex-1">
-                                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
-                                        {tarefa.titulo}
-                                    </h1>
-                                    {tarefa.descricao && (
-                                        <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
-                                            {tarefa.descricao}
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="flex items-center space-x-2 ml-4">
-                                    {onEdit && (
-                                        <button
-                                            onClick={() => onEdit(tarefa)}
-                                            className="p-2.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 hover:scale-110 transform"
-                                            title="Editar tarefa"
-                                        >
-                                            <Edit className="w-5 h-5" />
-                                        </button>
-                                    )}
-                                    {onDelete && (
-                                        <button
-                                            onClick={() => onDelete(tarefa.id)}
-                                            className="p-2.5 text-gray-600 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 hover:scale-110 transform"
-                                            title="Excluir tarefa"
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
+                {/* Main Content Split */}
+                <div className="flex-1 flex overflow-hidden">
 
-                            {/* Progresso */}
-                            <div className="mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 p-6 rounded-2xl border border-blue-100/50 dark:border-gray-600/50 shadow-sm">
-                                <div className="flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                                    <span className="flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                                        Progresso
-                                    </span>
-                                    <span className="text-blue-600 dark:text-blue-400 text-lg">{Math.round(progressPercentage)}%</span>
+                    {/* Left Column: Details */}
+                    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+
+                        {/* Title & Desc */}
+                        <div>
+                            {tarefa.projectName && (
+                                <div className="mb-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                                    {tarefa.projectName}
                                 </div>
-                                <div className="w-full bg-white/80 dark:bg-gray-600/50 rounded-full h-4 shadow-inner overflow-hidden">
-                                    <div
-                                        className="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 h-4 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
-                                        style={{ width: `${progressPercentage}%` }}
-                                    >
-                                        <div className="absolute inset-0 bg-white/20 animate-shimmer"></div>
+                            )}
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-4">
+                                {tarefa.titulo}
+                            </h1>
+                            {tarefa.descricao ? (
+                                <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
+                                    <p className="whitespace-pre-wrap">{tarefa.descricao}</p>
+                                </div>
+                            ) : (
+                                <p className="text-slate-400 italic">Sem descrição.</p>
+                            )}
+                        </div>
+
+                        {/* Status & Progress Card */}
+                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 border border-slate-200 dark:border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {onUpdateStatus && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Status</label>
+                                    <div className="relative">
+                                        <select
+                                            value={tarefa.status}
+                                            onChange={(e) => onUpdateStatus(tarefa.id, e.target.value as StatusTarefa)}
+                                            className="w-full pl-3 pr-10 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none shadow-sm cursor-pointer"
+                                        >
+                                            {STATUS_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                                            <CheckCircle2 className="w-4 h-4" />
+                                        </div>
                                     </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Progresso</label>
+                                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{Math.round(progressPercentage)}%</span>
+                                </div>
+                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 mb-2">
+                                    <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${progressPercentage}%` }}></div>
                                 </div>
                                 {onUpdateProgress && (
-                                    <div className="mt-4">
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            value={progressPercentage}
-                                            onChange={(e) => onUpdateProgress(tarefa.id, parseInt(e.target.value))}
-                                            className="w-full h-2 bg-white/80 dark:bg-gray-600/50 rounded-full appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Status */}
-                            {onUpdateStatus && (
-                                <div className="mb-8">
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-blue-600 rounded-full"></div>
-                                        Status
-                                    </label>
-                                    <select
-                                        value={tarefa.status}
-                                        onChange={(e) => onUpdateStatus(tarefa.id, e.target.value as StatusTarefa)}
-                                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 font-medium text-gray-700 dark:text-white"
-                                    >
-                                        {STATUS_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-                                    </select>
-                                </div>
-                            )}
-
-                            {/* Responsáveis */}
-                            <div className="mb-8">
-                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                                    <div className="w-1 h-4 bg-blue-600 rounded-full"></div>
-                                    <User className="w-4 h-4" />
-                                    Responsáveis
-                                </h3>
-                                <div className="space-y-3">
-                                    {(tarefa.responsaveis ?? []).map((responsavel) => (
-                                        <div
-                                            key={responsavel.id}
-                                            className="flex items-center space-x-4 p-4 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-700 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-600/50 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-600 transition-all duration-200 hover:-translate-y-0.5"
-                                        >
-                                            <Avatar src={responsavel.avatar} name={responsavel.nome} />
-                                            <div className="flex-1">
-                                                <div className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                                    {responsavel.nome}
-                                                    {responsavel.id === tarefa.responsavelPrincipalId && (
-                                                        <span className="text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full font-medium shadow-sm">
-                                                            Principal
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-                                                    {responsavel.email}
-                                                    {responsavel.departamento && <span className="ml-2 text-gray-500 dark:text-gray-500">• {responsavel.departamento}</span>}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Datas */}
-                            <div className="grid grid-cols-2 gap-4 mb-8">
-                                {tarefa.dataInicio && (
-                                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-800/50 p-5 rounded-xl border border-green-100/50 dark:border-gray-600/50 hover:shadow-md transition-all duration-200">
-                                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-green-600" />
-                                            Data de Início
-                                        </h4>
-                                        <p className="text-gray-900 dark:text-white font-medium">
-                                            {formatDate(tarefa.dataInicio, "dd 'de' MMMM 'de' yyyy")}
-                                        </p>
-                                    </div>
-                                )}
-                                {tarefa.prazo_tarefa && (
-                                    <div className={`p-5 rounded-xl border transition-all duration-200 hover:shadow-md ${new Date(tarefa.prazo_tarefa) < new Date()
-                                        ? 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/30 dark:to-red-900/20 border-red-100/50 dark:border-red-800/50'
-                                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800/50 border-blue-100/50 dark:border-gray-600/50'
-                                        }`}>
-                                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                                            <Calendar className={`w-4 h-4 ${new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600' : 'text-blue-600'}`} />
-                                            Data de Vencimento
-                                        </h4>
-                                        <p className={`font-medium ${new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
-                                            {formatDate(tarefa.prazo_tarefa, "dd 'de' MMMM 'de' yyyy")}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {(tarefa.estimadoHoras || tarefa.horasTrabalhadas > 0) && (
-                                <div className="mb-8 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-800/50 p-5 rounded-xl border border-purple-100/50 dark:border-gray-600/50 hover:shadow-md transition-all duration-200">
-                                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                                        <Clock className="w-4 h-4 text-purple-600" />
-                                        Tempo
-                                    </h4>
-                                    <p className="text-gray-900 dark:text-white font-medium">
-                                        {tarefa.horasTrabalhadas}h trabalhadas
-                                        {tarefa.estimadoHoras && ` de ${tarefa.estimadoHoras}h estimadas`}
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Tags */}
-                            {(tarefa.tags ?? []).length > 0 && (
-                                <div className="mb-8">
-                                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-blue-600 rounded-full"></div>
-                                        <Tag className="w-4 h-4" />
-                                        Tags
-                                    </h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {(tarefa.tags ?? []).map((tag, index) => (
-                                            <span key={index} className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm rounded-full font-medium shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200">
-                                                {tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Anexos */}
-                            <div className="mb-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                                        <div className="w-1 h-4 bg-blue-600 rounded-full"></div>
-                                        <Paperclip className="w-4 h-4" />
-                                        Anexos ({(tarefa.anexos ?? []).length})
-                                    </h4>
-                                    {onAttachFile && (
-                                        <button
-                                            onClick={() => setShowFileUpload(!showFileUpload)}
-                                            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 font-semibold flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-200"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                            Anexar
-                                        </button>
-                                    )}
-                                </div>
-                                {showFileUpload && (
-                                    <div
-                                        className="border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-8 text-center mb-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800/50 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100/50 dark:hover:bg-gray-700/50 transition-all duration-200"
-                                        onDragOver={(e) => e.preventDefault()}
-                                        onDrop={handleFileDrop}
-                                    >
-                                        <input type="file" onChange={handleFileSelect} className="hidden" id="file-upload" />
-                                        <label htmlFor="file-upload" className="cursor-pointer text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium">
-                                            Clique para selecionar ou arraste um arquivo para cá
-                                        </label>
-                                    </div>
-                                )}
-                                {(tarefa.anexos ?? []).length > 0 ? (
-                                    <div className="space-y-3">
-                                        {(tarefa.anexos ?? []).map((anexo) => (
-                                            <div
-                                                key={anexo.id}
-                                                className="flex items-center justify-between p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-700 dark:to-gray-800/50 rounded-xl border border-gray-200/50 dark:border-gray-600/50 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-600 transition-all duration-200 hover:-translate-y-0.5"
-                                            >
-                                                <div className="flex items-center space-x-3">
-                                                    <div className="p-2 bg-blue-100 dark:bg-gray-600 rounded-lg">
-                                                        <Paperclip className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                            {anexo.nome}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                            {formatFileSize(anexo.tamanho)} • {anexo.uploadedByNome}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <a href={anexo.url} download={anexo.nome} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200" title="Download">
-                                                        <Download className="w-4 h-4" />
-                                                    </a>
-                                                    <a href={anexo.url} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200" title="Abrir em nova aba">
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200/50 dark:border-gray-700">Nenhum anexo</p>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={progressPercentage}
+                                        onChange={(e) => onUpdateProgress(tarefa.id, parseInt(e.target.value))}
+                                        className="w-full h-1 bg-transparent appearance-none cursor-pointer accent-blue-600"
+                                    />
                                 )}
                             </div>
                         </div>
+
+                        {/* Metadata Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            {/* Dates */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-slate-400" /> Datas
+                                </h3>
+                                <div className="space-y-3 pl-6 border-l-2 border-slate-100 dark:border-slate-800">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500 dark:text-slate-400">Início</span>
+                                        <span className="font-medium text-slate-900 dark:text-white">
+                                            {tarefa.dataInicio ? formatDate(tarefa.dataInicio, "dd/MM/yyyy") : '-'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500 dark:text-slate-400">Vencimento</span>
+                                        <span className={`font-medium ${tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600' : 'text-slate-900 dark:text-white'}`}>
+                                            {tarefa.prazo_tarefa ? formatDate(tarefa.prazo_tarefa, "dd/MM/yyyy") : '-'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500 dark:text-slate-400">Estimado</span>
+                                        <span className="font-medium text-slate-900 dark:text-white flex items-center gap-1">
+                                            <Clock className="w-3.5 h-3.5" />
+                                            {tarefa.estimadoHoras ? `${tarefa.estimadoHoras}h` : '-'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Assignees */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <User className="w-4 h-4 text-slate-400" /> Responsáveis
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {(tarefa.responsaveis ?? []).map((responsavel) => (
+                                        <div key={responsavel.id} className="flex items-center gap-2 p-1.5 pr-3 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                            <Avatar src={responsavel.avatar} name={responsavel.nome} className="w-6 h-6 text-xs" />
+                                            <span className="text-sm text-slate-700 dark:text-slate-300">{responsavel.nome}</span>
+                                            {responsavel.id === tarefa.responsavelPrincipalId && (
+                                                <div className="w-2 h-2 rounded-full bg-blue-500 ml-1" title="Principal"></div>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {(tarefa.responsaveis ?? []).length === 0 && (
+                                        <span className="text-sm text-slate-400 italic">Nenhum responsável</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tags */}
+                        {tarefa.tags && tarefa.tags.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                                    <Tag className="w-4 h-4 text-slate-400" /> Tags
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {tarefa.tags.map((tag, idx) => (
+                                        <span key={idx} className="px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Attachments Section */}
+                        <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Paperclip className="w-4 h-4 text-slate-400" />
+                                    Anexos <span className="text-slate-400 font-normal">({(tarefa.anexos ?? []).length})</span>
+                                </h3>
+                                {onAttachFile && (
+                                    <button
+                                        onClick={() => setShowFileUpload(!showFileUpload)}
+                                        className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" /> Adicionar
+                                    </button>
+                                )}
+                            </div>
+
+                            {showFileUpload && (
+                                <div
+                                    className="mb-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={handleFileDrop}
+                                >
+                                    <input type="file" onChange={handleFileSelect} className="hidden" id="file-upload" />
+                                    <label htmlFor="file-upload" className="cursor-pointer block">
+                                        <div className="mx-auto w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-2">
+                                            <UploadIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">Clique para upload ou arraste</p>
+                                        <p className="text-xs text-slate-400 mt-1">Qualquer formato (max 10MB)</p>
+                                    </label>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                {(tarefa.anexos ?? []).map((anexo) => (
+                                    <div key={anexo.id} className="group flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                                                <FileText className="w-5 h-5 text-slate-500" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{anexo.nome}</p>
+                                                <p className="text-xs text-slate-500">{formatFileSize(anexo.tamanho)} • {anexo.uploadedByNome}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <a href={anexo.url} download className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
+                                                <Download className="w-4 h-4" />
+                                            </a>
+                                            <a href={anexo.url} target="_blank" rel="noopener noreferrer" className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(tarefa.anexos ?? []).length === 0 && !showFileUpload && (
+                                    <p className="text-sm text-slate-400 italic py-2">Nenhum arquivo anexado.</p>
+                                )}
+                            </div>
+                        </div>
+
                     </div>
 
-                    {/* Sidebar - Comentários */}
-                    <TaskComments
-                        tarefaId={tarefa.id}
-                        comments={tarefa.comentarios ?? []}
-                        onAddComment={onAddComment}
-                    />
+                    {/* Right Column: Comments (Fixed Sidebar) */}
+                    <div className="w-[380px] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col">
+                        <TaskComments
+                            tarefaId={tarefa.id}
+                            comments={tarefa.comentarios ?? []}
+                            onAddComment={onAddComment}
+                        />
+                    </div>
                 </div>
             </div>
-
-            {/* Estilos CSS adicionais para animações */}
-            <style>{`
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-                @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-                .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-                .animate-slideUp { animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-                .animate-shimmer { animation: shimmer 2s infinite; }
-            `}</style>
         </div>
     );
 }
+
+const UploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+);

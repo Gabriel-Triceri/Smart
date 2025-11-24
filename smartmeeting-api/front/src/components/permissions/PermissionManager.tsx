@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Key, Users, Grid3x3 } from 'lucide-react';
-import { PageHeader, PageHeaderTab } from '../common/PageHeader';
+import { Shield, Key, Users, Grid3x3, Lock } from 'lucide-react';
 import { PermissionList } from './PermissionList';
 import { RoleList } from './RoleList';
 import { UserRoleList } from './UserRoleList';
@@ -11,102 +10,64 @@ type ViewType = 'permissions' | 'roles' | 'users' | 'matrix';
 export const PermissionManager: React.FC = () => {
     const [currentView, setCurrentView] = useState<ViewType>('permissions');
 
-    const tabs: PageHeaderTab[] = [
-        {
-            id: 'permissions',
-            label: 'Permissões',
-            icon: Key,
-            active: currentView === 'permissions',
-            onClick: () => setCurrentView('permissions')
-        },
-        {
-            id: 'roles',
-            label: 'Roles',
-            icon: Shield,
-            active: currentView === 'roles',
-            onClick: () => setCurrentView('roles')
-        },
-        {
-            id: 'users',
-            label: 'Usuários',
-            icon: Users,
-            active: currentView === 'users',
-            onClick: () => setCurrentView('users')
-        },
-        {
-            id: 'matrix',
-            label: 'Matriz',
-            icon: Grid3x3,
-            active: currentView === 'matrix',
-            onClick: () => setCurrentView('matrix')
+    const renderView = () => {
+        switch (currentView) {
+            case 'permissions': return <PermissionList />;
+            case 'roles': return <RoleList />;
+            case 'users': return <UserRoleList />;
+            case 'matrix': return <PermissionMatrix />;
+            default: return <PermissionList />;
         }
-    ];
-
-    const activeTab = tabs.find(t => t.active) ?? tabs[0];
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-mono-50 to-white dark:from-mono-900 dark:to-mono-800 transition-colors">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                {/* Header card */}
-                <div className="rounded-2xl overflow-hidden shadow-sm border border-mono-200 dark:border-mono-700 bg-white dark:bg-mono-900">
-                    <div className="px-6 py-6 sm:px-8 sm:py-8">
-                        <PageHeader
-                            title="Gestão de Permissões"
-                            description="Gerencie permissões, papéis (roles) e atribuições de usuários — tudo em um só lugar."
-                            icon={Shield}
-                            tabs={tabs}
-                        />
-                        {/* Active tab pill (visual cue) */}
-                        <div className="mt-4 flex items-center gap-3">
-                            <div className="inline-flex items-center gap-2 rounded-full bg-mono-100 dark:bg-mono-800 px-3 py-1 text-sm font-medium border border-mono-200 dark:border-mono-700">
-                                <activeTab.icon className="w-4 h-4" />
-                                <span>{activeTab.label}</span>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans transition-colors">
+            {/* Sticky Header */}
+            <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between gap-4">
+                        {/* Title Section */}
+                        <div className="flex items-center gap-2.5">
+                            <div className="bg-blue-600 text-white p-2 rounded-lg shadow-sm shadow-blue-500/20">
+                                <Shield className="w-5 h-5" />
                             </div>
-                            <div className="text-xs text-mono-500 dark:text-mono-400">Visualizando: <span className="font-medium text-mono-700 dark:text-mono-200">{activeTab.label}</span></div>
+                            <div>
+                                <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">Acessos</h1>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gestão de permissões</p>
+                            </div>
+                        </div>
+
+                        {/* Navigation Tabs (Pills) */}
+                        <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg overflow-x-auto scrollbar-hide">
+                            {[
+                                { id: 'permissions', label: 'Permissões', icon: Key },
+                                { id: 'roles', label: 'Perfis', icon: Lock },
+                                { id: 'users', label: 'Usuários', icon: Users },
+                                { id: 'matrix', label: 'Matriz', icon: Grid3x3 },
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setCurrentView(tab.id as ViewType)}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${currentView === tab.id
+                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        }`}
+                                >
+                                    <tab.icon className="w-4 h-4" />
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
-
-                {/* Main content */}
-                <main className="mt-8">
-                    <section className="bg-white rounded-2xl shadow-md p-6 border border-mono-200 dark:bg-mono-900 dark:border-mono-700 transition-all">
-                        {/* subtle header for the panel */}
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-mono-900 dark:text-mono-100">{activeTab.label}</h2>
-                            <div className="text-sm text-mono-500 dark:text-mono-400">Painel de gerenciamento</div>
-                        </div>
-
-                        <div className="space-y-6">
-                            {currentView === 'permissions' && (
-                                <div className="animate-fade-in">
-                                    <PermissionList />
-                                </div>
-                            )}
-
-                            {currentView === 'roles' && (
-                                <div className="animate-fade-in">
-                                    <RoleList />
-                                </div>
-                            )}
-
-                            {currentView === 'users' && (
-                                <div className="animate-fade-in">
-                                    <UserRoleList />
-                                </div>
-                            )}
-
-                            {currentView === 'matrix' && (
-                                <div className="animate-fade-in">
-                                    <PermissionMatrix />
-                                </div>
-                            )}
-                        </div>
-                    </section>
-
-                    {/* Helpful footer / hint area */}
-                    <div className="mt-4 text-sm text-mono-500 dark:text-mono-400">Dica: use a aba <span className="font-medium text-mono-700 dark:text-mono-200">Matriz</span> para obter uma visão consolidada das permissões por papel.</div>
-                </main>
             </div>
+
+            {/* Main Content Area */}
+            <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    {renderView()}
+                </div>
+            </main>
         </div>
     );
 };

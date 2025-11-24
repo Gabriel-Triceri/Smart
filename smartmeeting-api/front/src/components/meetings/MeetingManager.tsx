@@ -1,19 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Calendar as CalendarIcon,
     List,
     Plus,
     Search,
     Filter,
-    Bell,
-    Download,
-    Upload,
+    CalendarDays,
+    X,
     RefreshCw
 } from 'lucide-react';
 import { useMeetings } from '../../hooks/useMeetings';
 import { useTheme } from '../../context/ThemeContext';
 import { Reuniao, ReuniaoFormData } from '../../types/meetings';
-// PageHeader removido pois foi substituído pelo design customizado
 import { Calendar } from '../Calendar';
 import { MeetingList } from './MeetingList';
 import { MeetingForm } from './MeetingForm';
@@ -25,7 +23,6 @@ type ModalType = 'form' | 'details' | null;
 export const MeetingManager: React.FC = () => {
     const {
         reunioes,
-        // statistics,
         isLoading,
         error,
         createReuniao,
@@ -40,10 +37,21 @@ export const MeetingManager: React.FC = () => {
     const [selectedReuniao, setSelectedReuniao] = useState<Reuniao | null>(null);
     const [reuniaoEmEdicao, setReuniaoEmEdicao] = useState<Partial<ReuniaoFormData> | null>(null);
 
-    // Estado local apenas para controlar o input visual de busca (sem alterar lógica profunda)
     const [searchTerm, setSearchTerm] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
 
-    // Helpers para formatar data/hora a partir de dataHoraInicio + duracaoMinutos
+    // Filtragem global para aplicar tanto no calendário quanto na lista
+    const filteredReunioes = useMemo(() => {
+        if (!searchTerm) return reunioes;
+        const lowerTerm = searchTerm.toLowerCase();
+        return reunioes.filter(r =>
+            r.titulo.toLowerCase().includes(lowerTerm) ||
+            r.sala?.nome.toLowerCase().includes(lowerTerm) ||
+            r.organizador.nome.toLowerCase().includes(lowerTerm) ||
+            r.pauta?.toLowerCase().includes(lowerTerm)
+        );
+    }, [reunioes, searchTerm]);
+
     const formatDate = (d: Date) => {
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -58,19 +66,18 @@ export const MeetingManager: React.FC = () => {
     };
 
     const parseReuniaoToForm = (reuniao: Reuniao): Partial<ReuniaoFormData> => {
-        // garante que temos dataHoraInicio; fallback para agora
         const start = reuniao.dataHoraInicio ? new Date(reuniao.dataHoraInicio) : new Date();
         const dur = reuniao.duracaoMinutos ?? 60;
         const end = new Date(start.getTime() + dur * 60 * 1000);
 
         return {
             titulo: reuniao.titulo,
-            pauta: reuniao.pauta, // campo correto
+            pauta: reuniao.pauta,
             data: formatDate(start),
             horaInicio: formatTime(start),
             horaFim: formatTime(end),
             salaId: reuniao.sala?.id ?? undefined,
-            participantes: (reuniao.participantes ?? []).map(p => String(p.id)), // string[] para UI
+            participantes: (reuniao.participantes ?? []).map(p => String(p.id)),
             tipo: reuniao.tipo,
             prioridade: reuniao.prioridade,
             linkReuniao: reuniao.linkReuniao,
@@ -122,7 +129,6 @@ export const MeetingManager: React.FC = () => {
     };
 
     const handleEncerrarReuniao = async () => {
-        // Funcionalidade de encerrar reunião temporariamente desabilitada
         console.log('Encerrar reunião - funcionalidade em desenvolvimento');
     };
 
@@ -150,18 +156,16 @@ export const MeetingManager: React.FC = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-mono-50 dark:bg-mono-900 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-red-500 mb-4">
-                        <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+                <div className="text-center max-w-md w-full bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                    <div className="text-red-500 mb-4 bg-red-50 dark:bg-red-900/20 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
+                        <X className="w-10 h-10" />
                     </div>
-                    <h2 className="text-xl font-semibold text-mono-900 dark:text-mono-100 mb-2">Erro ao Carregar</h2>
-                    <p className="text-mono-600 dark:text-mono-400 mb-4">{error}</p>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Erro ao Carregar</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-6">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-accent-500 hover:bg-accent-600 text-white rounded-lg transition-colors"
+                        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
                     >
                         Tentar Novamente
                     </button>
@@ -171,144 +175,118 @@ export const MeetingManager: React.FC = () => {
     }
 
     return (
-        <div className={`min-h-screen bg-mono-50 dark:bg-gray-900 ${isDarkMode ? 'dark' : ''}`}>
-            <div className="h-full flex flex-col transition-colors pb-10">
+        <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 font-sans ${isDarkMode ? 'dark' : ''} flex flex-col`}>
 
-                {/* Main Container centralizado */}
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            {/* Header Sticky - Padrão Unificado */}
+            <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between gap-4">
 
-                    {/* --- NOVO CABEÇALHO (DESIGN DA IMAGEM/CARD) --- */}
-                    <div className="bg-white dark:bg-mono-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-mono-700 mb-8">
-
-                        {/* Topo: Ícone, Título e Ações Secundárias */}
-                        <div className="flex justify-between items-start mb-8">
-                            <div className="flex items-start gap-4">
-                                {/* Ícone com fundo azul arredondado */}
-                                <div className="w-12 h-12 bg-[#0ea5e9] rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
-                                    <CalendarIcon className="w-6 h-6" />
+                        {/* Esquerda: Título e Views */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2.5">
+                                <div className="bg-blue-600 text-white p-2 rounded-lg shadow-sm shadow-blue-500/20">
+                                    <CalendarDays className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Reuniões</h1>
-                                    <p className="text-gray-500 dark:text-gray-400 mt-1">
-                                        Calendário e organização de reuniões
-                                    </p>
+                                    <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">Reuniões</h1>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{filteredReunioes.length} agendadas</p>
                                 </div>
                             </div>
 
-                            {/* Ações de topo (Notificação, Upload, etc) */}
-                            <div className="flex items-center gap-2">
-                                <button className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-mono-700 rounded-lg transition-colors">
-                                    <Bell className="w-5 h-5" />
+                            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+
+                            <div className="hidden md:flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setCurrentView('calendar')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${currentView === 'calendar'
+                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        }`}
+                                >
+                                    <CalendarIcon className="w-4 h-4" />
+                                    <span className="hidden lg:inline">Calendário</span>
                                 </button>
-                                <div className="w-px h-6 bg-gray-200 dark:bg-mono-700 mx-1"></div>
-                                <button className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-mono-700 rounded-lg transition-colors">
-                                    <Download className="w-5 h-5" />
-                                </button>
-                                <button className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-mono-700 rounded-lg transition-colors">
-                                    <Upload className="w-5 h-5" />
+                                <button
+                                    onClick={() => setCurrentView('list')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${currentView === 'list'
+                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        }`}
+                                >
+                                    <List className="w-4 h-4" />
+                                    <span className="hidden lg:inline">Lista</span>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Barra de Ferramentas */}
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-gray-100 dark:border-mono-700 pb-6">
-
-                            {/* Abas e Botões de Ação */}
-                            <div className="flex items-center gap-2 overflow-x-auto">
-                                {/* Aba Calendário */}
-                                <button
-                                    onClick={() => setCurrentView('calendar')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap border ${currentView === 'calendar'
-                                            ? 'bg-[#0ea5e9] border-transparent text-white shadow-sm'
-                                            : 'bg-white border-transparent text-gray-600 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700'
-                                        }`}
-                                >
-                                    <CalendarIcon className="w-4 h-4" />
-                                    Calendário
-                                </button>
-
-                                {/* Aba Lista */}
-                                <button
-                                    onClick={() => setCurrentView('list')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap border ${currentView === 'list'
-                                            ? 'bg-[#0ea5e9] border-transparent text-white shadow-sm'
-                                            : 'bg-white border-transparent text-gray-600 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700'
-                                        }`}
-                                >
-                                    <List className="w-4 h-4" />
-                                    Lista
-                                </button>
-
-                                {/* Divisor Vertical */}
-                                <div className="w-px h-6 bg-gray-200 dark:bg-mono-700 mx-1 hidden sm:block"></div>
-
-                                {/* Botão Filtro (Visual) */}
-                                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-transparent text-gray-600 hover:bg-gray-50 rounded-lg font-medium transition-colors whitespace-nowrap dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700">
-                                    <Filter className="w-4 h-4" />
-                                    Filtros
-                                </button>
-
-                                {/* Botão Nova Reunião */}
-                                <button
-                                    onClick={handleCreateReuniao}
-                                    className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors whitespace-nowrap border border-transparent hover:border-gray-200 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Nova Reunião
-                                </button>
-                            </div>
-
-                            {/* Barra de Busca */}
-                            <div className="relative w-full lg:w-72">
+                        {/* Direita: Ações e Busca */}
+                        <div className="flex items-center gap-3 flex-1 justify-end">
+                            <div className="hidden md:flex relative group max-w-md w-full">
                                 <input
                                     type="text"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Buscar reuniões..."
-                                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:border-transparent dark:bg-mono-900 dark:border-mono-700 dark:text-white"
+                                    className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-700/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-500"
                                 />
-                                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-                                {isLoading && <RefreshCw className="w-4 h-4 absolute right-3 top-2.5 text-[#0ea5e9] animate-spin" />}
+                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                {isLoading && <RefreshCw className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 animate-spin" />}
                             </div>
-                        </div>
 
-                        {/* Indicador Visual (Breadcrumb/Status) */}
-                        <div className="mt-4 flex items-center gap-2">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-50 border border-gray-100 dark:bg-mono-900 dark:border-mono-700 text-xs font-medium text-gray-500 dark:text-gray-400">
-                                {currentView === 'calendar' ? <CalendarIcon className="w-3 h-3" /> : <List className="w-3 h-3" />}
-                                <span className="capitalize">{currentView === 'calendar' ? 'Calendário' : 'Lista Detalhada'}</span>
-                                <span className="text-gray-300 dark:text-mono-600">|</span>
-                                <span>{reunioes.length} reuniões agendadas</span>
-                            </div>
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`p-2 rounded-lg border transition-all relative ${showFilters
+                                    ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'
+                                    }`}
+                                title="Filtros"
+                            >
+                                <Filter className="w-4 h-4" />
+                            </button>
+
+                            <button
+                                onClick={handleCreateReuniao}
+                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden sm:inline">Nova Reunião</span>
+                            </button>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    {/* Conteúdo Principal (Calendário ou Lista) */}
-                    <div className="bg-white dark:bg-mono-800 rounded-lg shadow-sm border border-mono-200 dark:border-mono-700 p-4">
-                        {currentView === 'calendar' ? (
-                            <Calendar
-                                reunioes={reunioes}
-                                onReuniaoClick={handleViewDetails}
-                                onDateClick={handleDateClick}
-                                onDragReuniao={handleDragReuniao}
-                            />
-                        ) : (
-                            <MeetingList
-                                reunioes={reunioes}
-                                onReuniaoClick={handleViewDetails}
-                                onEditReuniao={handleEditReuniao}
-                                onDeleteReuniao={handleDeleteReuniao}
-                                onEncerrarReuniao={handleEncerrarReuniao}
-                                isLoading={isLoading}
-                            />
-                        )}
-                    </div>
-                </main>
+            {/* Área Principal */}
+            <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-hidden">
 
-                {/* Modais */}
-                {modalType === 'form' && (
-                    <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-40 backdrop-blur-sm">
-                        <div className="flex items-center justify-center min-h-screen p-4">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden min-h-[600px] flex flex-col">
+                    {currentView === 'calendar' ? (
+                        <Calendar
+                            reunioes={filteredReunioes}
+                            onReuniaoClick={handleViewDetails}
+                            onDateClick={handleDateClick}
+                            onDragReuniao={handleDragReuniao}
+                        />
+                    ) : (
+                        <MeetingList
+                            reunioes={filteredReunioes}
+                            onReuniaoClick={handleViewDetails}
+                            onEditReuniao={handleEditReuniao}
+                            onDeleteReuniao={handleDeleteReuniao}
+                            onEncerrarReuniao={handleEncerrarReuniao}
+                            isLoading={isLoading}
+                        />
+                    )}
+                </div>
+            </main>
+
+            {/* Modais */}
+            {modalType === 'form' && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen p-4">
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
+                        <div className="relative w-full max-w-4xl z-10">
                             <MeetingForm
                                 initialData={reuniaoEmEdicao || undefined}
                                 onSubmit={handleFormSubmit}
@@ -321,32 +299,22 @@ export const MeetingManager: React.FC = () => {
                             />
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {modalType === 'details' && selectedReuniao && (
-                    <MeetingDetailsModal
-                        reuniao={selectedReuniao}
-                        onClose={() => {
-                            setModalType(null);
-                            setSelectedReuniao(null);
-                        }}
-                        onEdit={() => handleEditReuniao(selectedReuniao)}
-                        onDelete={handleDeleteReuniao}
-                        onEncerrar={handleEncerrarReuniao}
-                        onToggleLembrete={handleToggleLembrete}
-                    />
-                )}
-
-                {/* Loading overlay */}
-                {isLoading && (
-                    <div className="fixed inset-0 z-40 bg-black bg-opacity-25 flex items-center justify-center">
-                        <div className="bg-white dark:bg-mono-800 rounded-lg p-6 flex items-center gap-3 shadow-lg">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#0ea5e9]"></div>
-                            <span className="text-mono-700 dark:text-mono-300 font-medium">Carregando...</span>
-                        </div>
-                    </div>
-                )}
-            </div>
+            {modalType === 'details' && selectedReuniao && (
+                <MeetingDetailsModal
+                    reuniao={selectedReuniao}
+                    onClose={() => {
+                        setModalType(null);
+                        setSelectedReuniao(null);
+                    }}
+                    onEdit={() => handleEditReuniao(selectedReuniao)}
+                    onDelete={handleDeleteReuniao}
+                    onEncerrar={handleEncerrarReuniao}
+                    onToggleLembrete={handleToggleLembrete}
+                />
+            )}
         </div>
     );
 };

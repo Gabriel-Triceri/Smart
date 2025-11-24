@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Key } from 'lucide-react';
+import { Plus, Search, Key, AlertCircle } from 'lucide-react';
 import { usePermissions } from '../../hooks/usePermissions';
 import { PermissionCard } from './PermissionCard';
 import { PermissionFormModal } from './PermissionFormModal';
@@ -48,40 +48,42 @@ export const PermissionList: React.FC = () => {
 
     if (error) {
         return (
-            <div className="text-center py-12">
-                <div className="text-red-500 mb-4">
-                    <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full mb-4">
+                    <AlertCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-mono-900 dark:text-mono-100 mb-2">Erro ao Carregar</h2>
-                <p className="text-mono-600 dark:text-mono-400">{error}</p>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Erro ao Carregar</h2>
+                <p className="text-slate-500 dark:text-slate-400 max-w-md mb-6">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-white border border-slate-300 dark:bg-slate-800 dark:border-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                    Tentar Novamente
+                </button>
             </div>
         );
     }
 
     return (
-        <div>
-            {/* Header Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                {/* Search */}
-                <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-mono-400 dark:text-mono-500" />
+        <div className="space-y-6">
+            {/* Toolbar Card */}
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center">
+                <div className="relative group w-full sm:max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                     <input
                         type="text"
                         placeholder="Buscar permissões..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-mono-800 border border-mono-300 dark:border-mono-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent text-mono-900 dark:text-mono-100 placeholder:text-mono-400 dark:placeholder:text-mono-500 transition-all"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white"
                     />
                 </div>
 
-                {/* Create Button */}
                 <button
                     onClick={handleCreate}
-                    className="flex items-center justify-center gap-2 px-6 py-3 bg-accent-500 hover:bg-accent-600 dark:bg-accent-600 dark:hover:bg-accent-700 text-white rounded-lg transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 font-medium whitespace-nowrap"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all active:scale-95 whitespace-nowrap w-full sm:w-auto justify-center"
                 >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-4 h-4" />
                     Nova Permissão
                 </button>
             </div>
@@ -91,26 +93,26 @@ export const PermissionList: React.FC = () => {
 
             {/* Empty State */}
             {!isLoading && filteredPermissions.length === 0 && (
-                <div className="text-center py-16">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-accent-100 to-accent-50 dark:from-accent-900/20 dark:to-accent-900/10 rounded-2xl mb-6 shadow-sm">
-                        <Key className="w-10 h-10 text-accent-500 dark:text-accent-400" />
+                <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-center shadow-sm">
+                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                        <Key className="w-8 h-8 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <h3 className="text-xl font-semibold text-mono-900 dark:text-mono-100 mb-2">
-                        {searchTerm ? 'Nenhuma permissão encontrada' : 'Nenhuma permissão cadastrada'}
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+                        {searchTerm ? 'Nenhuma permissão encontrada' : 'Comece a definir acessos'}
                     </h3>
-                    <p className="text-mono-600 dark:text-mono-400 mb-8 max-w-md mx-auto">
+                    <p className="text-slate-500 dark:text-slate-400 max-w-md mb-6">
                         {searchTerm
-                            ? 'Tente buscar com outros termos ou ajustar os filtros de pesquisa'
-                            : 'Comece criando sua primeira permissão para definir o acesso às funcionalidades do sistema'
+                            ? `Não encontramos resultados para "${searchTerm}". Tente outro termo.`
+                            : 'Crie permissões granulares para controlar o acesso às funcionalidades do sistema.'
                         }
                     </p>
                     {!searchTerm && (
                         <button
                             onClick={handleCreate}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-accent-500 hover:bg-accent-600 dark:bg-accent-600 dark:hover:bg-accent-700 text-white rounded-lg transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 font-medium"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
                         >
-                            <Plus className="w-5 h-5" />
-                            Nova Permissão
+                            <Plus className="w-4 h-4" />
+                            Criar Primeira Permissão
                         </button>
                     )}
                 </div>

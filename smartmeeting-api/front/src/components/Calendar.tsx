@@ -63,14 +63,13 @@ export const Calendar: React.FC<CalendarProps> = ({
     };
 
     const getStatusColor = (status?: string) => {
-        // normaliza o status para facilitar a comparação (minusculas, underscores)
         const s = (status || '').toString().trim().toLowerCase().replace(/[\s-]+/g, '_');
 
-        if (s.includes('agend')) return 'bg-blue-500';
-        if (s.includes('andament') || s === 'em_andamento') return 'bg-green-500';
-        if (s.includes('finaliz')) return 'bg-gray-500';
-        if (s.includes('cancel')) return 'bg-red-500';
-        return 'bg-gray-400';
+        if (s.includes('agend')) return 'bg-blue-500 border-blue-600 shadow-blue-500/20';
+        if (s.includes('andament') || s === 'em_andamento') return 'bg-emerald-500 border-emerald-600 shadow-emerald-500/20';
+        if (s.includes('finaliz')) return 'bg-slate-500 border-slate-600 shadow-slate-500/20';
+        if (s.includes('cancel')) return 'bg-red-500 border-red-600 shadow-red-500/20';
+        return 'bg-slate-400 border-slate-500';
     };
 
     const getPrioridadeColor = (prioridade?: string) => {
@@ -79,14 +78,16 @@ export const Calendar: React.FC<CalendarProps> = ({
             case 'critica': return 'border-l-red-500';
             case 'alta': return 'border-l-orange-500';
             case 'media': return 'border-l-yellow-500';
-            case 'baixa': return 'border-l-green-500';
-            default: return 'border-l-gray-500';
+            case 'baixa': return 'border-l-emerald-500';
+            default: return 'border-l-slate-400';
         }
     };
 
     const handleDragStart = (e: React.DragEvent, reuniao: Reuniao) => {
         setDraggedReuniao(reuniao);
         e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', reuniao.id);
+        // Add a ghost image styling if needed
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -102,7 +103,6 @@ export const Calendar: React.FC<CalendarProps> = ({
         setDraggedReuniao(null);
     };
 
-    // helpers para extrair data/hora de Reuniao
     const reuniaoStartDate = (r: Reuniao) => {
         try {
             return new Date(r.dataHoraInicio);
@@ -123,7 +123,6 @@ export const Calendar: React.FC<CalendarProps> = ({
         return format(end, 'HH:mm');
     };
 
-    // Função para renderizar a visualização mensal
     const renderMonthView = () => {
         const firstDay = new Date(currentView.dataReferencia.getFullYear(), currentView.dataReferencia.getMonth(), 1);
         const startDate = startOfWeek(firstDay, { weekStartsOn: 1 });
@@ -131,6 +130,9 @@ export const Calendar: React.FC<CalendarProps> = ({
 
         for (let i = 0; i < 42; i++) {
             const day = addDays(startDate, i);
+            const isCurrentMonth = isSameMonth(day, currentView.dataReferencia);
+            const isToday = isSameDay(day, new Date());
+
             const dayReunioes = reunioes.filter(r => {
                 const reuniaoDate = reuniaoStartDate(r);
                 return isSameDay(reuniaoDate, day);
@@ -139,20 +141,33 @@ export const Calendar: React.FC<CalendarProps> = ({
             days.push(
                 <div
                     key={day.toISOString()}
-                    className={`min-h-[120px] border border-gray-200 dark:border-gray-700 p-2 cursor-pointer
-                   hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors
-                   ${!isSameMonth(day, currentView.dataReferencia) ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800'}
-                   ${isSameDay(day, new Date()) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                    className={`
+                        min-h-[140px] border-b border-r border-slate-200 dark:border-slate-700 p-2 transition-colors relative group
+                        ${!isCurrentMonth ? 'bg-slate-50/50 dark:bg-slate-900/50 text-slate-400' : 'bg-white dark:bg-slate-800'}
+                        hover:bg-slate-50 dark:hover:bg-slate-700/50
+                    `}
                     onClick={() => onDateClick(day)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, day)}
                 >
                     <div className="flex justify-between items-start mb-2">
-                        <span className={`text-sm font-medium 
-                          ${!isSameMonth(day, currentView.dataReferencia) ? 'text-gray-400' : 'text-gray-900 dark:text-white'}
-                          ${isSameDay(day, new Date()) ? 'text-blue-600 dark:text-blue-400' : ''}`}>
-                            {format(day, 'd', { locale: ptBR })}
+                        <span className={`
+                            text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full transition-colors
+                            ${isToday
+                                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                                : isCurrentMonth ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-600'}
+                        `}>
+                            {format(day, 'd')}
                         </span>
+
+                        {/* Hover Add Button */}
+                        <button
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all transform scale-90 group-hover:scale-100"
+                            onClick={(e) => { e.stopPropagation(); onDateClick(day); }}
+                        >
+                            <span className="sr-only">Adicionar</span>
+                            <div className="w-5 h-5 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">+</div>
+                        </button>
                     </div>
 
                     <div className="space-y-1.5">
@@ -162,34 +177,20 @@ export const Calendar: React.FC<CalendarProps> = ({
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, reuniao)}
                                 onClick={(e) => { e.stopPropagation(); onReuniaoClick(reuniao); }}
-                                className={`text-xs p-2.5 rounded-lg cursor-move hover:shadow-lg hover:scale-[1.02] transition-all duration-200
-                         ${getStatusColor(reuniao.status)} text-white
-                         ${getPrioridadeColor(reuniao.prioridade)} border-l-4 relative overflow-hidden`}
-                                style={{ borderLeftWidth: '4px' }}
+                                className={`
+                                    text-xs px-2 py-1.5 rounded border-l-[3px] shadow-sm cursor-grab active:cursor-grabbing hover:brightness-110 transition-all
+                                    ${getStatusColor(reuniao.status)} text-white ${getPrioridadeColor(reuniao.prioridade)}
+                                `}
                             >
-                                <div className="font-semibold truncate mb-1.5">{reuniao.titulo}</div>
-                                <div className="flex items-center gap-1.5 mb-1 opacity-95">
-                                    <Clock className="w-3 h-3 flex-shrink-0" />
-                                    <span className="font-medium">{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
-                                </div>
-                                <div className="flex items-center justify-between gap-2 opacity-90">
-                                    <div className="flex items-center gap-1 min-w-0">
-                                        {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
-                                            <Video className="w-3 h-3 flex-shrink-0" />
-                                        ) : (
-                                            <MapPin className="w-3 h-3 flex-shrink-0" />
-                                        )}
-                                        <span className="truncate text-[10px]">{reuniao.sala?.nome ?? 'Sem sala'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 flex-shrink-0">
-                                        <Users className="w-3 h-3" />
-                                        <span className="text-[10px]">{(reuniao.participantes ?? []).length}</span>
-                                    </div>
+                                <div className="font-semibold truncate leading-tight">{reuniao.titulo}</div>
+                                <div className="flex items-center gap-1 mt-0.5 opacity-90 text-[10px]">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{reuniaoHoraInicio(reuniao)}</span>
                                 </div>
                             </div>
                         ))}
                         {dayReunioes.length > 3 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="px-2 py-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 rounded text-center">
                                 +{dayReunioes.length - 3} mais
                             </div>
                         )}
@@ -201,89 +202,87 @@ export const Calendar: React.FC<CalendarProps> = ({
         return days;
     };
 
-    // Função para renderizar a visualização semanal
     const renderWeekView = () => {
         const weekStart = startOfWeek(currentView.dataReferencia, { weekStartsOn: 1 });
         const days = [];
 
         for (let i = 0; i < 7; i++) {
             const day = addDays(weekStart, i);
-            const dayReunioes = reunioes.filter(r => {
-                const reuniaoDate = reuniaoStartDate(r);
-                return isSameDay(reuniaoDate, day);
-            });
+            const isToday = isSameDay(day, new Date());
+            const dayReunioes = reunioes.filter(r => isSameDay(reuniaoStartDate(r), day));
 
             days.push(
                 <div
                     key={day.toISOString()}
-                    className="flex-1 min-h-[600px] border-r border-gray-200 dark:border-gray-700 last:border-r-0"
+                    className="flex-1 min-w-[140px] border-r border-slate-200 dark:border-slate-700 last:border-r-0 flex flex-col"
                 >
-                    {/* Cabeçalho do dia */}
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                        <div className={`text-center ${isSameDay(day, new Date()) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
-                            <div className="text-sm font-medium">{format(day, 'EEEE', { locale: ptBR })}</div>
-                            <div className={`text-2xl font-bold ${isSameDay(day, new Date()) ? 'text-blue-600 dark:text-blue-400' : ''}`}>
-                                {format(day, 'd')}
-                            </div>
+                    {/* Column Header */}
+                    <div className={`
+                        p-3 text-center border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 backdrop-blur-sm
+                        ${isToday ? 'bg-blue-50/90 dark:bg-blue-900/20' : 'bg-slate-50/90 dark:bg-slate-800/90'}
+                    `}>
+                        <div className={`text-xs font-semibold uppercase tracking-wider mb-1 ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                            {format(day, 'EEE', { locale: ptBR })}
+                        </div>
+                        <div className={`
+                            w-8 h-8 mx-auto flex items-center justify-center rounded-full text-lg font-bold
+                            ${isToday ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-slate-700 dark:text-slate-200'}
+                        `}>
+                            {format(day, 'd')}
                         </div>
                     </div>
 
-                    {/* Horários e reuniões */}
-                    <div className="p-2">
+                    {/* Time Slots */}
+                    <div className="flex-1 bg-white dark:bg-slate-800 relative">
                         {Array.from({ length: 24 }, (_, hour) => {
-                            const hourReunioes = dayReunioes.filter(r => {
-                                const reuniaoHour = parseInt(reuniaoHoraInicio(r).split(':')[0], 10);
-                                return reuniaoHour === hour;
-                            });
+                            const hourReunioes = dayReunioes.filter(r => parseInt(reuniaoHoraInicio(r).split(':')[0], 10) === hour);
 
                             return (
                                 <div
                                     key={hour}
-                                    className="min-h-[60px] border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                                    className="min-h-[100px] border-b border-slate-100 dark:border-slate-700/50 p-1 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group"
                                     onClick={() => onDateClick(day)}
                                     onDragOver={handleDragOver}
                                     onDrop={(e) => handleDrop(e, day)}
                                 >
+                                    {/* Hour Marker (Subtle) */}
+                                    <span className="hidden group-hover:block absolute left-1 text-[10px] text-slate-300 font-mono select-none pointer-events-none">
+                                        {hour.toString().padStart(2, '0')}:00
+                                    </span>
+
                                     {hourReunioes.map((reuniao) => (
                                         <div
                                             key={reuniao.id}
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, reuniao)}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onReuniaoClick(reuniao);
-                                            }}
-                                            className={`p-3 mb-2 rounded-lg cursor-move hover:shadow-lg hover:scale-[1.01] transition-all duration-200
-                               ${getStatusColor(reuniao.status)} text-white
-                               ${getPrioridadeColor(reuniao.prioridade)} border-l-4 relative`}
-                                            style={{ borderLeftWidth: '4px' }}
+                                            onClick={(e) => { e.stopPropagation(); onReuniaoClick(reuniao); }}
+                                            className={`
+                                                p-2 mb-2 rounded-lg cursor-grab active:cursor-grabbing hover:shadow-lg hover:scale-[1.02] transition-all
+                                                ${getStatusColor(reuniao.status)} text-white
+                                                ${getPrioridadeColor(reuniao.prioridade)} border-l-[3px] shadow-sm
+                                            `}
                                         >
-                                            <div className="flex items-center justify-between gap-2 mb-2">
-                                                <div className="flex items-center gap-1.5">
-                                                    <GripVertical className="w-3.5 h-3.5 opacity-70" />
-                                                    <span className="text-xs font-bold">{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
+                                            <div className="flex items-center justify-between gap-2 mb-1">
+                                                <div className="flex items-center gap-1 opacity-90">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span className="text-[10px] font-bold">{reuniaoHoraInicio(reuniao)}</span>
                                                 </div>
-                                                <span className="text-[10px] px-2 py-0.5 bg-white/20 rounded-full font-medium">
-                                                    {reuniao.duracaoMinutos ?? 60}min
-                                                </span>
+                                                <GripVertical className="w-3 h-3 opacity-50" />
                                             </div>
-                                            <div className="text-sm font-bold mb-2 line-clamp-2">{reuniao.titulo}</div>
-                                            {reuniao.pauta && (
-                                                <p className="text-xs opacity-90 mb-2 line-clamp-1">{reuniao.pauta}</p>
-                                            )}
-                                            <div className="flex items-center justify-between gap-2 text-xs">
-                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                    {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
-                                                        <Video className="w-3.5 h-3.5 flex-shrink-0" />
-                                                    ) : (
-                                                        <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                                                    )}
-                                                    <span className="truncate opacity-95">{reuniao.sala?.nome ?? 'Sem sala'}</span>
+
+                                            <div className="font-bold text-xs mb-1 line-clamp-2">{reuniao.titulo}</div>
+
+                                            <div className="flex items-center gap-2 text-[10px] opacity-90 mt-2">
+                                                <div className="flex items-center gap-1 min-w-0 flex-1">
+                                                    {reuniao.tipo === 'online' ? <Video className="w-3 h-3 shrink-0" /> : <MapPin className="w-3 h-3 shrink-0" />}
+                                                    <span className="truncate">{reuniao.sala?.nome ?? 'Sem sala'}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1 flex-shrink-0 bg-white/20 px-2 py-0.5 rounded-full">
-                                                    <Users className="w-3 h-3" />
-                                                    <span className="font-medium">{(reuniao.participantes ?? []).length}</span>
-                                                </div>
+                                                {reuniao.participantes && (
+                                                    <div className="flex items-center gap-1 bg-white/20 px-1.5 py-0.5 rounded">
+                                                        <Users className="w-3 h-3" />
+                                                        <span>{reuniao.participantes.length}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -294,245 +293,195 @@ export const Calendar: React.FC<CalendarProps> = ({
                 </div>
             );
         }
-
         return days;
     };
 
-    // Função para renderizar a visualização diária
     const renderDayView = () => {
-        const dayReunioes = reunioes.filter(r => {
-            const reuniaoDate = reuniaoStartDate(r);
-            return isSameDay(reuniaoDate, currentView.dataReferencia);
-        }).sort((a, b) => reuniaoHoraInicio(a).localeCompare(reuniaoHoraInicio(b)));
-
-        const horarios = Array.from({ length: 24 }, (_, hour) => {
-            const hourReunioes = dayReunioes.filter(r => {
-                const reuniaoHour = parseInt(reuniaoHoraInicio(r).split(':')[0], 10);
-                return reuniaoHour === hour;
-            });
-
-            return { hour, reunioes: hourReunioes };
-        });
+        const dayReunioes = reunioes
+            .filter(r => isSameDay(reuniaoStartDate(r), currentView.dataReferencia))
+            .sort((a, b) => reuniaoHoraInicio(a).localeCompare(reuniaoHoraInicio(b)));
 
         return (
-            <div className="space-y-4">
-                {/* Cabeçalho do dia */}
-                <div className="text-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {format(currentView.dataReferencia, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </h2>
-                    {dayReunioes.length > 0 && (
-                        <p className="text-blue-600 dark:text-blue-400 mt-2">
-                            {dayReunioes.length} reunião{dayReunioes.length !== 1 ? 's' : ''} agendada{dayReunioes.length !== 1 ? 's' : ''}
+            <div className="max-w-4xl mx-auto space-y-6">
+                <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                            {format(currentView.dataReferencia, "EEEE, d 'de' MMMM", { locale: ptBR })}
+                        </h2>
+                        <p className="text-blue-600 dark:text-blue-400 font-medium mt-1">
+                            {dayReunioes.length} {dayReunioes.length === 1 ? 'reunião agendada' : 'reuniões agendadas'}
                         </p>
-                    )}
+                    </div>
+                    <button
+                        onClick={() => onDateClick(currentView.dataReferencia)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+                    >
+                        Adicionar Reunião
+                    </button>
                 </div>
 
-                {/* Lista de horários */}
-                {horarios.map(({ hour, reunioes: hourReunioes }) => (
-                    <div key={hour} className="border-l-4 border-gray-200 dark:border-gray-700 pl-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium text-gray-900 dark:text-white">
-                                {hour.toString().padStart(2, '0')}:00
-                            </h3>
-                            <button
-                                onClick={() => {
-                                    const newDate = new Date(currentView.dataReferencia);
-                                    newDate.setHours(hour, 0, 0, 0);
-                                    onDateClick(newDate);
-                                }}
-                                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
-                            >
-                                Adicionar reunião
-                            </button>
-                        </div>
+                <div className="space-y-4 relative before:absolute before:left-[4.5rem] before:top-4 before:bottom-4 before:w-px before:bg-slate-200 dark:before:bg-slate-700">
+                    {Array.from({ length: 24 }, (_, hour) => {
+                        const hourReunioes = dayReunioes.filter(r => parseInt(reuniaoHoraInicio(r).split(':')[0], 10) === hour);
 
-                        {hourReunioes.length === 0 ? (
-                            <div className="h-16 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-600">
-                                Horário livre
+                        if (hourReunioes.length === 0) return (
+                            <div key={hour} className="flex gap-6 group min-h-[60px]">
+                                <div className="w-12 text-right text-sm font-medium text-slate-400 pt-2">{hour.toString().padStart(2, '0')}:00</div>
+                                <div className="flex-1 rounded-lg border-2 border-dashed border-transparent group-hover:border-slate-200 dark:group-hover:border-slate-700 transition-colors" />
                             </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {hourReunioes.map((reuniao) => (
-                                    <div
-                                        key={reuniao.id}
-                                        draggable
-                                        onDragStart={(e) => handleDragStart(e, reuniao)}
-                                        onClick={() => onReuniaoClick(reuniao)}
-                                        className={`p-5 rounded-xl cursor-move hover:shadow-xl hover:scale-[1.01] transition-all duration-200
-                             ${getStatusColor(reuniao.status)} text-white relative overflow-hidden`}
-                                    >
-                                        {/* Borda de prioridade decorativa */}
-                                        <div className={`absolute top-0 right-0 w-20 h-20 opacity-20 rounded-bl-full ${getPrioridadeColor(reuniao.prioridade).replace('border-l-', 'bg-')}`}></div>
+                        );
 
-                                        <div className="relative">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="flex-1">
-                                                    <h4 className="font-bold text-xl mb-2">{reuniao.titulo}</h4>
-                                                    <div className="flex items-center gap-3 text-sm">
-                                                        <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full">
-                                                            <Clock className="w-4 h-4" />
-                                                            <span className="font-semibold">{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
+                        return (
+                            <div key={hour} className="flex gap-6">
+                                <div className="w-12 text-right text-sm font-bold text-slate-600 dark:text-slate-400 pt-2">
+                                    {hour.toString().padStart(2, '0')}:00
+                                </div>
+
+                                <div className="flex-1 space-y-3">
+                                    {hourReunioes.map((reuniao) => (
+                                        <div
+                                            key={reuniao.id}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, reuniao)}
+                                            onClick={() => onReuniaoClick(reuniao)}
+                                            className={`
+                                                relative p-4 rounded-xl cursor-grab active:cursor-grabbing hover:shadow-md transition-all
+                                                ${getStatusColor(reuniao.status)} text-white overflow-hidden group
+                                            `}
+                                        >
+                                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPrioridadeColor(reuniao.prioridade).replace('border-l-', 'bg-')}`} />
+
+                                            <div className="flex justify-between items-start pl-2">
+                                                <div>
+                                                    <h4 className="text-lg font-bold mb-1">{reuniao.titulo}</h4>
+                                                    <div className="flex items-center gap-3 text-sm opacity-90">
+                                                        <div className="flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded">
+                                                            <Clock className="w-3.5 h-3.5" />
+                                                            <span>{reuniaoHoraInicio(reuniao)} - {reuniaoHoraFim(reuniao)}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full">
-                                                            <span className="font-semibold">{reuniao.duracaoMinutos ?? 60} min</span>
+                                                        <div className="flex items-center gap-1">
+                                                            {reuniao.tipo === 'online' ? <Video className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}
+                                                            <span>{reuniao.sala?.nome || 'Local a definir'}</span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className={`w-4 h-4 rounded-full ${getPrioridadeColor(reuniao.prioridade).replace('border-l-', 'bg-')} ring-4 ring-white/30`}></div>
+
+                                                <div className="flex items-center gap-2">
+                                                    {reuniao.participantes && (
+                                                        <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full text-xs font-bold">
+                                                            <Users className="w-3 h-3" />
+                                                            {reuniao.participantes.length}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {reuniao.pauta && (
-                                                <p className="text-sm opacity-95 mb-3 p-3 bg-white/10 rounded-lg line-clamp-2">{reuniao.pauta}</p>
+                                                <p className="mt-3 text-sm opacity-80 pl-2 line-clamp-1 border-t border-white/20 pt-2">
+                                                    {reuniao.pauta}
+                                                </p>
                                             )}
-
-                                            <div className="flex items-center justify-between pt-3 border-t border-white/20">
-                                                <div className="flex items-center gap-4 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        {reuniao.tipo === 'online' || reuniao.tipo === 'hibrida' ? (
-                                                            <Video className="w-4 h-4" />
-                                                        ) : (
-                                                            <MapPin className="w-4 h-4" />
-                                                        )}
-                                                        <span className="font-medium">{reuniao.sala?.nome ?? 'Sem sala'}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
-                                                        <Users className="w-4 h-4" />
-                                                        <span className="font-semibold">{(reuniao.participantes ?? []).length} participantes</span>
-                                                    </div>
-                                                </div>
-                                                <span className="px-3 py-1 text-xs font-bold rounded-full bg-white/30 backdrop-blur-sm">
-                                                    {String(reuniao.status || '') === 'EM_ANDAMENTO' || String(reuniao.status || '').toLowerCase().includes('andamento') ? 'Em andamento' :
-                                                        String(reuniao.status || '').toLowerCase().includes('agendada') ? 'Agendada' :
-                                                            String(reuniao.status || '').toLowerCase().includes('finalizada') ? 'Finalizada' :
-                                                                String(reuniao.status || '').toLowerCase().includes('cancelada') ? 'Cancelada' : String(reuniao.status || '')}
-                                                </span>
-                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        )}
-                    </div>
-                ))}
-
-                {dayReunioes.length === 0 && (
-                    <div className="text-center py-12">
-                        <CalendarIcon className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">
-                            Nenhuma reunião agendada
-                        </h3>
-                        <p className="text-gray-400 dark:text-gray-600">
-                            Clique no botão "Adicionar reunião" para criar uma nova
-                        </p>
-                    </div>
-                )}
+                        );
+                    })}
+                </div>
             </div>
         );
     };
 
     const getHeaderText = () => {
         const { tipo, dataReferencia } = currentView;
-        switch (tipo) {
-            case 'day':
-                return format(dataReferencia, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
-            case 'week':
-                const weekStart = startOfWeek(dataReferencia, { weekStartsOn: 1 });
-                const weekEnd = addDays(weekStart, 6);
-                return `${format(weekStart, "d 'de' MMM", { locale: ptBR })} - ${format(weekEnd, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
-            case 'month':
-                return format(dataReferencia, "MMMM 'de' yyyy", { locale: ptBR });
-            default:
-                return '';
+        if (tipo === 'day') return format(dataReferencia, "d 'de' MMMM", { locale: ptBR });
+        if (tipo === 'week') {
+            const start = startOfWeek(dataReferencia, { weekStartsOn: 1 });
+            const end = addDays(start, 6);
+            return isSameMonth(start, end)
+                ? `${format(start, 'd')} - ${format(end, "d 'de' MMMM, yyyy", { locale: ptBR })}`
+                : `${format(start, "d 'de' MMM", { locale: ptBR })} - ${format(end, "d 'de' MMM, yyyy", { locale: ptBR })}`;
         }
+        return format(dataReferencia, "MMMM 'de' yyyy", { locale: ptBR });
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-            {/* Cabeçalho do calendário */}
-            <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-6">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
+            {/* Header */}
+            <div className="px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-t-2xl">
+                <div className="flex items-center gap-6 w-full md:w-auto">
+                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                        <button onClick={() => navigateView('prev')} className="p-1.5 hover:bg-white dark:hover:bg-slate-600 rounded-md transition-all shadow-sm">
+                            <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                        </button>
+                        <button onClick={() => setCurrentView(prev => ({ ...prev, dataReferencia: new Date() }))} className="px-3 py-1 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            Hoje
+                        </button>
+                        <button onClick={() => navigateView('next')} className="p-1.5 hover:bg-white dark:hover:bg-slate-600 rounded-md transition-all shadow-sm">
+                            <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                        </button>
+                    </div>
+                    <h1 className="text-xl font-bold text-slate-900 dark:text-white capitalize min-w-[200px]">
                         {getHeaderText()}
                     </h1>
+                </div>
 
-                    {/* View Tabs */}
+                <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+                    {/* View Switcher */}
+                    <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                        {(['day', 'week', 'month'] as const).map((view) => (
+                            <button
+                                key={view}
+                                onClick={() => setCurrentView(prev => ({ ...prev, tipo: view }))}
+                                className={`
+                                    px-4 py-1.5 text-sm font-medium rounded-md transition-all
+                                    ${currentView.tipo === view
+                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}
+                                `}
+                            >
+                                {view === 'day' ? 'Dia' : view === 'week' ? 'Semana' : 'Mês'}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Optional View Tabs */}
                     {viewTabs && viewTabs.length > 0 && (
-                        <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                        <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 hidden md:block" />
+                    )}
+
+                    {viewTabs && viewTabs.length > 0 && (
+                        <div className="flex gap-1">
                             {viewTabs.map((tab) => {
                                 const Icon = tab.icon;
                                 const isActive = currentViewTab === tab.id;
-
                                 return (
                                     <button
                                         key={tab.id}
                                         onClick={() => onViewTabChange?.(tab.id)}
-                                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isActive
-                                            ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                            }`}
+                                        className={`
+                                            flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-all border
+                                            ${isActive
+                                                ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300'
+                                                : 'bg-white border-transparent text-slate-600 hover:bg-slate-50 dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-700/50'}
+                                        `}
                                     >
                                         <Icon className="w-4 h-4" />
-                                        {tab.label}
+                                        <span className="hidden lg:inline">{tab.label}</span>
                                     </button>
                                 );
                             })}
                         </div>
                     )}
                 </div>
-
-                <div className="flex items-center gap-2">
-                    {/* Navegação */}
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => navigateView('prev')}
-                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                        >
-                            <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                        </button>
-                        <button
-                            onClick={() => setCurrentView(prev => ({ ...prev, dataReferencia: new Date() }))}
-                            className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400
-                       hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                        >
-                            Hoje
-                        </button>
-                        <button
-                            onClick={() => navigateView('next')}
-                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                        >
-                            <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                        </button>
-                    </div>
-
-                    {/* Seletor de visualização */}
-                    <div className="border-l border-gray-300 dark:border-gray-600 pl-4">
-                        <div className="flex rounded-lg overflow-hidden">
-                            {(['day', 'week', 'month'] as const).map((tipo) => (
-                                <button
-                                    key={tipo}
-                                    onClick={() => setCurrentView(prev => ({ ...prev, tipo }))}
-                                    className={`px-4 py-2 text-sm font-medium transition-colors
-                           ${currentView.tipo === tipo
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                        }`}
-                                >
-                                    {tipo === 'day' ? 'Dia' : tipo === 'week' ? 'Semana' : 'Mês'}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            {/* Conteúdo do calendário */}
-            <div className="p-6">
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto">
                 {currentView.tipo === 'month' && (
-                    <div className="grid grid-cols-7 gap-1">
-                        {/* Cabeçalhos dos dias da semana */}
-                        {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day) => (
-                            <div key={day} className="p-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800">
+                    <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700">
+                        {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(day => (
+                            <div key={day} className="py-2 text-center text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 last:border-r-0">
                                 {day}
                             </div>
                         ))}
@@ -541,12 +490,17 @@ export const Calendar: React.FC<CalendarProps> = ({
                 )}
 
                 {currentView.tipo === 'week' && (
-                    <div className="flex">
+                    <div className="flex h-full min-h-[800px]">
+                        {/* Time sidebar for week view could go here */}
                         {renderWeekView()}
                     </div>
                 )}
 
-                {currentView.tipo === 'day' && renderDayView()}
+                {currentView.tipo === 'day' && (
+                    <div className="p-6">
+                        {renderDayView()}
+                    </div>
+                )}
             </div>
         </div>
     );

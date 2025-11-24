@@ -5,7 +5,6 @@ import {
     Paperclip,
     MessageSquare,
     AlertTriangle,
-    Flag,
     MoreVertical,
     Edit,
     Trash2,
@@ -29,26 +28,12 @@ interface TaskCardProps {
     children?: React.ReactNode;
 }
 
-const PRIORITY_COLORS = {
-    [PrioridadeTarefa.BAIXA]: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
-    [PrioridadeTarefa.MEDIA]: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
-    [PrioridadeTarefa.ALTA]: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
-    [PrioridadeTarefa.CRITICA]: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
-    [PrioridadeTarefa.URGENTE]: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
-};
-
-const STATUS_COLORS = {
-    [StatusTarefa.TODO]: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
-    [StatusTarefa.IN_PROGRESS]: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-    [StatusTarefa.DONE]: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    [StatusTarefa.REVIEW]: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-};
-
-const STATUS_ICONS = {
-    [StatusTarefa.TODO]: '○',
-    [StatusTarefa.IN_PROGRESS]: '◐',
-    [StatusTarefa.DONE]: '✓',
-    [StatusTarefa.REVIEW]: '◉',
+const PRIORITY_STYLES = {
+    [PrioridadeTarefa.BAIXA]: { label: 'Baixa', class: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
+    [PrioridadeTarefa.MEDIA]: { label: 'Média', class: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300' },
+    [PrioridadeTarefa.ALTA]: { label: 'Alta', class: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' },
+    [PrioridadeTarefa.CRITICA]: { label: 'Crítica', class: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
+    [PrioridadeTarefa.URGENTE]: { label: 'Urgente', class: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400' }
 };
 
 const STATUS_LABELS = {
@@ -99,10 +84,10 @@ export function TaskCard({
     };
 
     const getAvatarColor = (name: string) => {
-        if (!name) return 'bg-gray-500';
+        if (!name) return 'bg-slate-500';
         const colors = [
-            'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500',
-            'bg-indigo-500', 'bg-yellow-500', 'bg-red-500', 'bg-teal-500'
+            'bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-pink-500',
+            'bg-indigo-500', 'bg-amber-500', 'bg-rose-500', 'bg-teal-500'
         ];
         const index = name.charCodeAt(0) % colors.length;
         return colors[index];
@@ -124,104 +109,96 @@ export function TaskCard({
         }
     };
 
-    // Generate consistent color based on project name
+    // Project indicator bar color
     const getProjectColor = (projectName?: string) => {
         if (!projectName) return '';
         const colors = [
-            'border-l-purple-500',
-            'border-l-blue-500',
-            'border-l-green-500',
-            'border-l-orange-500',
-            'border-l-pink-500',
-            'border-l-indigo-500',
+            'bg-purple-500', 'bg-blue-500', 'bg-emerald-500', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500',
         ];
         const hash = projectName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         return colors[hash % colors.length];
     };
 
-    const projectColorClass = tarefa.projectName ? getProjectColor(tarefa.projectName) : '';
+    const projectBarColor = tarefa.projectName ? getProjectColor(tarefa.projectName) : 'bg-transparent';
+    const priorityConfig = PRIORITY_STYLES[tarefa.prioridade || PrioridadeTarefa.MEDIA];
 
     return (
         <div
             className={`
-                relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md dark:hover:border-blue-600 transition-all duration-200
-                ${projectColorClass ? `border-l-4 ${projectColorClass}` : ''}
-                ${isDragging ? 'opacity-50 scale-95' : ''}
+                relative bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700
+                hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200
+                ${isDragging ? 'shadow-lg ring-2 ring-blue-500/20 rotate-1' : ''}
                 ${compact ? 'p-3' : 'p-4'}
                 ${onClick ? 'cursor-pointer' : ''} 
+                overflow-hidden
             `}
             onClick={handleCardClick}
             role="group"
         >
+            {/* Project Indicator Strip */}
+            {tarefa.projectName && (
+                <div className={`absolute top-0 left-0 w-1 h-full ${projectBarColor} opacity-80`} />
+            )}
+
             {children && (
                 <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
                     {children}
                 </div>
             )}
 
-            {/* Header */}
-            <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center space-x-2 flex-1 min-w-0">
-                    <span className={`text-sm ${STATUS_COLORS[tarefa.status]} px-2 py-1 rounded-full text-xs font-medium`}>
-                        {STATUS_ICONS[tarefa.status]} {STATUS_LABELS[tarefa.status]}
+            {/* Top Meta: Labels & Menu */}
+            <div className="flex items-start justify-between mb-3 pl-2">
+                <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 pr-6">
+                    {/* Priority Badge */}
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide border border-transparent ${priorityConfig.class}`}>
+                        {priorityConfig.label}
                     </span>
 
-                    <div className={`px-2 py-1 rounded border text-xs font-medium ${tarefa.prioridade ? PRIORITY_COLORS[tarefa.prioridade] : 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'}`}>
-                        <Flag className="w-3 h-3 inline mr-1" />
-                        {tarefa.prioridade ? (tarefa.prioridade.charAt(0).toUpperCase() + tarefa.prioridade.slice(1)) : 'N/A'}
-                    </div>
-
                     {tarefa.projectName && (
-                        <div
-                            className="px-2 py-1 rounded bg-purple-100 text-purple-800 border-2 border-purple-400 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-600 text-xs font-bold shadow-sm"
-                            title={`Projeto: ${tarefa.projectName}`}
-                        >
-                            📁 {tarefa.projectName}
-                        </div>
-                    )}
-
-                    {tarefa.reuniaoTitulo && (
-                        <div className="px-2 py-1 rounded bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 text-xs font-medium">
-                            📅 {tarefa.reuniaoTitulo}
-                        </div>
-                    )}
-                </div>
-
-                {/* Menu de ações */}
-                <div className="flex items-center space-x-1 relative">
-                    {tarefa.estimadoHoras && tarefa.horasTrabalhadas > tarefa.estimadoHoras && (
-                        <span title="Tempo excedido">
-                            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 truncate max-w-[100px]" title={tarefa.projectName}>
+                            {tarefa.projectName}
                         </span>
                     )}
 
+                    {tarefa.reuniaoTitulo && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300 truncate max-w-[80px]">
+                            Meet
+                        </span>
+                    )}
+                </div>
+
+                {/* Actions Menu */}
+                <div className="flex items-center absolute right-2 top-3">
+                    {tarefa.estimadoHoras && tarefa.horasTrabalhadas > tarefa.estimadoHoras && (
+                        <span title="Tempo excedido" className="mr-1">
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                        </span>
+                    )}
                     <div className="relative">
-                        <button onClick={handleMenuClick} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-                            <MoreVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                        <button onClick={handleMenuClick} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-700 rounded-md transition-colors">
+                            <MoreVertical className="w-4 h-4" />
                         </button>
 
                         {showMenu && (
-                            <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-1 min-w-[160px]">
+                            <div className="absolute right-0 top-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 py-1 min-w-[140px] animate-in fade-in zoom-in-95 duration-100 origin-top-right">
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onEdit?.(tarefa); setShowMenu(false); }}
-                                    className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                                    className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center"
                                 >
-                                    <Edit className="w-4 h-4 mr-2" /> Editar
+                                    <Edit className="w-3.5 h-3.5 mr-2 text-slate-400" /> Editar
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onDuplicate?.(tarefa.id); setShowMenu(false); }}
-                                    className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                                    className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center"
                                 >
-                                    <Copy className="w-4 h-4 mr-2" /> Duplicar
+                                    <Copy className="w-3.5 h-3.5 mr-2 text-slate-400" /> Duplicar
                                 </button>
 
                                 {onMove && (
                                     <>
-                                        <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                        <div className="px-3 py-1 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                                            Mover para
-                                        </div>
-                                        {(Object.keys(STATUS_COLORS) as StatusTarefa[]).map((status) => {
+                                        <div className="border-t border-slate-100 dark:border-slate-700 my-1"></div>
+                                        <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mover</div>
+                                        {(Object.keys(STATUS_LABELS) as StatusTarefa[]).map((status) => {
                                             if (status === tarefa.status) return null;
                                             return (
                                                 <button
@@ -231,23 +208,23 @@ export function TaskCard({
                                                         onMove(tarefa.id, status);
                                                         setShowMenu(false);
                                                     }}
-                                                    className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center group"
+                                                    className="w-full px-3 py-2 text-left text-xs text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 flex items-center group"
                                                 >
-                                                    <ArrowRight className="w-3 h-3 mr-2 text-gray-400 group-hover:text-blue-500" />
+                                                    <ArrowRight className="w-3 h-3 mr-2 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     {STATUS_LABELS[status]}
                                                 </button>
                                             );
                                         })}
-                                        <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                        <div className="border-t border-slate-100 dark:border-slate-700 my-1"></div>
                                     </>
                                 )}
 
                                 {onDelete && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); onDelete?.(tarefa.id); setShowMenu(false); }}
-                                        className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 flex items-center"
+                                        className="w-full px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 flex items-center"
                                     >
-                                        <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                                        <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
                                     </button>
                                 )}
                             </div>
@@ -256,90 +233,106 @@ export function TaskCard({
                 </div>
             </div>
 
-            {/* Título */}
-            <h4 className={`font-medium text-gray-900 dark:text-white mb-2 ${compact ? 'text-sm' : 'text-base'} line-clamp-2`}>
-                {tarefa.titulo}
-            </h4>
+            {/* Title */}
+            <div className="pl-2 pr-1 mb-2">
+                <h4 className={`font-semibold text-slate-800 dark:text-slate-100 leading-snug ${compact ? 'text-xs' : 'text-sm'}`}>
+                    {tarefa.titulo}
+                </h4>
+            </div>
 
-            {/* Descrição */}
+            {/* Description Preview (Optional) */}
             {!compact && tarefa.descricao && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-3">{tarefa.descricao}</p>
-            )}
-
-            {/* Progresso */}
-            {tarefa.progresso > 0 && (
-                <div className="mb-3">
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        <span>Progresso</span>
-                        <span>{tarefa.progresso}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${tarefa.progresso}%` }} />
-                    </div>
-                </div>
+                <p className="pl-2 text-xs text-slate-500 dark:text-slate-400 mb-3 line-clamp-2 leading-relaxed">
+                    {tarefa.descricao}
+                </p>
             )}
 
             {/* Tags */}
             {tarefa.tags && tarefa.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
+                <div className="pl-2 flex flex-wrap gap-1 mb-3">
                     {tarefa.tags.slice(0, 3).map((tag, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded">{tag}</span>
+                        <span key={idx} className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] rounded border border-slate-200 dark:border-slate-600">
+                            {tag}
+                        </span>
                     ))}
-                    {tarefa.tags.length > 3 && <span className="text-xs text-gray-500 dark:text-gray-400">+{tarefa.tags.length - 3}</span>}
+                    {tarefa.tags.length > 3 && (
+                        <span className="text-[10px] text-slate-400 px-1 py-0.5">+{tarefa.tags.length - 3}</span>
+                    )}
                 </div>
             )}
 
-            {/* Footer */}
-            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                <div className="flex items-center space-x-3">
+            {/* Progress Bar */}
+            {tarefa.progresso > 0 && (
+                <div className="pl-2 pr-1 mb-3">
+                    <div className="h-1 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-blue-500 rounded-full"
+                            style={{ width: `${tarefa.progresso}%` }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Footer: Date, Stats, Assignees */}
+            <div className="pl-2 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between mt-auto">
+                <div className="flex items-center gap-3">
+                    {/* Due Date */}
                     {tarefa.prazo_tarefa && (
-                        <div className={`flex items-center ${isOverdue ? 'text-red-500 dark:text-red-400' : isDueSoon ? 'text-yellow-500 dark:text-yellow-400' : ''}`}>
+                        <div className={`flex items-center text-xs font-medium ${isOverdue ? 'text-red-600 dark:text-red-400' : isDueSoon ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}>
                             <Calendar className="w-3 h-3 mr-1" />
                             <span>{formatDate(tarefa.prazo_tarefa)}</span>
                         </div>
                     )}
-                    {(tarefa.estimadoHoras || tarefa.horasTrabalhadas > 0) && (
-                        <div className="flex items-center">
-                            <Clock className="w-3 h-3 mr-1" />
-                            <span>{tarefa.horasTrabalhadas}h{tarefa.estimadoHoras && `/${tarefa.estimadoHoras}h`}</span>
-                        </div>
-                    )}
+
+                    {/* Meta Icons (Attachments/Comments) */}
+                    <div className="flex items-center gap-2 text-slate-400">
+                        {!compact && ((tarefa.anexos && tarefa.anexos.length > 0) || (tarefa.comentarios && tarefa.comentarios.length > 0)) && (
+                            <>
+                                {tarefa.anexos && tarefa.anexos.length > 0 && (
+                                    <div className="flex items-center text-[10px]">
+                                        <Paperclip className="w-3 h-3" />
+                                        <span className="ml-0.5">{tarefa.anexos.length}</span>
+                                    </div>
+                                )}
+                                {tarefa.comentarios && tarefa.comentarios.length > 0 && (
+                                    <div className="flex items-center text-[10px]">
+                                        <MessageSquare className="w-3 h-3" />
+                                        <span className="ml-0.5">{tarefa.comentarios.length}</span>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
 
-                {/* Responsáveis */}
+                {/* Assignees Avatars */}
                 {showAssignee && tarefa.responsaveis && tarefa.responsaveis.length > 0 && (
-                    <div className="flex items-center space-x-1">
+                    <div className="flex -space-x-1.5 overflow-hidden p-0.5">
                         {tarefa.responsaveis.slice(0, 3).map((r) => (
-                            <div key={r.id} className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium ${getAvatarColor(r.nome || '')}`} title={r.nome}>
+                            <div
+                                key={r.id}
+                                className={`
+                                    w-5 h-5 rounded-full ring-2 ring-white dark:ring-slate-800 flex items-center justify-center 
+                                    text-[9px] font-bold text-white shadow-sm
+                                    ${getAvatarColor(r.nome || '')}
+                                `}
+                                title={r.nome}
+                            >
                                 {!imageErrors[r.id] && r.avatar ? (
-                                    <img src={r.avatar} alt={r.nome} className="w-6 h-6 rounded-full object-cover" onError={() => setImageErrors(prev => ({ ...prev, [r.id]: true }))} />
+                                    <img src={r.avatar} alt={r.nome} className="w-full h-full rounded-full object-cover" onError={() => setImageErrors(prev => ({ ...prev, [r.id]: true }))} />
                                 ) : (
                                     getInitials(r.nome || '')
                                 )}
                             </div>
                         ))}
-                        {tarefa.responsaveis.length > 3 && <span className="text-xs text-gray-500 dark:text-gray-400">+{tarefa.responsaveis.length - 3}</span>}
+                        {tarefa.responsaveis.length > 3 && (
+                            <div className="w-5 h-5 rounded-full ring-2 ring-white dark:ring-slate-800 bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[8px] text-slate-500 font-medium">
+                                +{tarefa.responsaveis.length - 3}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
-
-            {/* Anexos e comentários */}
-            {!compact && ((tarefa.anexos && tarefa.anexos.length > 0) || (tarefa.comentarios && tarefa.comentarios.length > 0)) && (
-                <div className="flex items-center space-x-4 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                    {tarefa.anexos && tarefa.anexos.length > 0 && (
-                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                            <Paperclip className="w-3 h-3 mr-1" />
-                            <span>{tarefa.anexos.length}</span>
-                        </div>
-                    )}
-                    {tarefa.comentarios && tarefa.comentarios.length > 0 && (
-                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                            <MessageSquare className="w-3 h-3 mr-1" />
-                            <span>{tarefa.comentarios.length}</span>
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 }

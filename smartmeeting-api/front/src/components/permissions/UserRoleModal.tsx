@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Shield, Search, User } from 'lucide-react';
 import { Role } from '../../types/permissions';
 
 interface UserRoleModalProps {
@@ -32,50 +33,59 @@ export const UserRoleModal: React.FC<UserRoleModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen p-4">
-                {/* Backdrop */}
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-                    onClick={onClose}
-                />
+            {/* Backdrop */}
+            <div
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+                onClick={onClose}
+            />
 
-                {/* Modal */}
-                <div className="relative bg-white dark:bg-mono-800 rounded-lg shadow-xl max-w-2xl w-full p-6">
+            <div className="flex min-h-full items-center justify-center p-4">
+                <div className="relative w-full max-w-2xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h2 className="text-xl font-semibold text-mono-900 dark:text-mono-100">
-                                Gerenciar Roles
-                            </h2>
-                            <p className="text-sm text-mono-500 dark:text-mono-400">
-                                Usuário: <span className="font-medium">{user.nome}</span> ({user.email})
-                            </p>
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 sticky top-0 z-10">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400">
+                                <User className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
+                                    Atribuir Perfis
+                                </h2>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Usuário: <span className="font-semibold text-slate-700 dark:text-slate-200">{user.nome}</span> <span className="opacity-60">({user.email})</span>
+                                </p>
+                            </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-1 hover:bg-mono-100 dark:hover:bg-mono-700 rounded-lg transition-colors"
+                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                         >
-                            <X className="w-5 h-5 text-mono-500" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
-                    {/* Search */}
-                    <div className="mb-4">
-                        <input
-                            type="text"
-                            placeholder="Buscar roles..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-mono-700 border border-mono-300 dark:border-mono-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent text-mono-900 dark:text-mono-100"
-                        />
+                    {/* Search Bar */}
+                    <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Buscar perfis..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            />
+                        </div>
                     </div>
 
                     {/* Role List */}
-                    <div className="max-h-96 overflow-y-auto space-y-2 mb-4">
+                    <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
                         {filteredRoles.length === 0 ? (
-                            <p className="text-center text-mono-500 dark:text-mono-400 py-8">
-                                Nenhuma role encontrada
-                            </p>
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <Shield className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" />
+                                <p className="text-slate-500 dark:text-slate-400 font-medium">Nenhum perfil encontrado</p>
+                            </div>
                         ) : (
                             filteredRoles.map(role => {
                                 const assigned = isAssigned(role.nome);
@@ -83,21 +93,36 @@ export const UserRoleModal: React.FC<UserRoleModalProps> = ({
                                     <button
                                         key={role.id}
                                         onClick={() => onToggleRole(user.id, role.nome, assigned)}
-                                        className="w-full flex items-center justify-between p-3 bg-mono-50 dark:bg-mono-700 hover:bg-mono-100 dark:hover:bg-mono-600 rounded-lg transition-colors"
+                                        className={`w-full flex items-center justify-between p-4 rounded-xl transition-all border group ${assigned
+                                                ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/50'
+                                                : 'bg-white dark:bg-slate-800 border-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                                            }`}
                                     >
-                                        <div className="text-left">
-                                            <span className="text-mono-900 dark:text-mono-100 font-medium block">
-                                                {role.nome}
-                                            </span>
-                                            <span className="text-xs text-mono-500 dark:text-mono-400">
-                                                {role.permissions.length} {role.permissions.length === 1 ? 'permissão' : 'permissões'}
-                                            </span>
+                                        <div className="flex items-start gap-4 text-left">
+                                            <div className={`mt-1 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${assigned
+                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                                    : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                                                }`}>
+                                                {role.nome.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <span className={`font-medium block ${assigned ? 'text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                    {role.nome}
+                                                </span>
+                                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                    {role.permissions.length} permissões
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className={`w-5 h-5 rounded flex items-center justify-center ${assigned
-                                            ? 'bg-accent-500 dark:bg-accent-600'
-                                            : 'border-2 border-mono-300 dark:border-mono-500'
-                                            }`}>
-                                            {assigned && <Check className="w-4 h-4 text-white" />}
+
+                                        <div className={`
+                                            w-6 h-6 rounded-full flex items-center justify-center transition-all
+                                            ${assigned
+                                                ? 'bg-blue-600 text-white shadow-sm scale-100'
+                                                : 'border-2 border-slate-300 dark:border-slate-600 group-hover:border-blue-400 scale-90'
+                                            }
+                                        `}>
+                                            {assigned && <Check className="w-3.5 h-3.5" />}
                                         </div>
                                     </button>
                                 );
@@ -106,13 +131,14 @@ export const UserRoleModal: React.FC<UserRoleModalProps> = ({
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-between items-center pt-4 border-t border-mono-200 dark:border-mono-700">
-                        <p className="text-sm text-mono-600 dark:text-mono-400">
-                            {user.roles.length} {user.roles.length === 1 ? 'role atribuída' : 'roles atribuídas'}
-                        </p>
+                    <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-between items-center">
+                        <div className="text-sm">
+                            <span className="font-medium text-slate-900 dark:text-white">{user.roles.length}</span>
+                            <span className="text-slate-500 dark:text-slate-400 ml-1">perfis atribuídos</span>
+                        </div>
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-white bg-accent-500 hover:bg-accent-600 rounded-lg transition-colors"
+                            className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95"
                         >
                             Concluir
                         </button>

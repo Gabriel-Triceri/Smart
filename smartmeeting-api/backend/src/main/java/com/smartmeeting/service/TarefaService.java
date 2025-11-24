@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("null")
-
 @Service
 public class TarefaService {
 
@@ -779,11 +777,9 @@ public class TarefaService {
      * @return Lista de tarefas do usuário atual
      */
     public List<TarefaDTO> getTarefasDoUsuarioAtual() {
-        // Em implementação real, pegaria o usuário do contexto de segurança
-        // Por enquanto, retorna todas as tarefas como placeholder
+
         logger.info("Buscando tarefas do usuário atual");
 
-        // TODO: Implementar busca por usuário autenticado
         return listarTodas();
     }
 

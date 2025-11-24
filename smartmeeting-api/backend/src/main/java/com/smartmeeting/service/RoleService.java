@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("null")
 @Service
 public class RoleService {
 
@@ -21,7 +22,8 @@ public class RoleService {
     private final PermissionRepository permissionRepository;
     private final PessoaRepository pessoaRepository;
 
-    public RoleService(RoleRepository roleRepository, PermissionRepository permissionRepository, PessoaRepository pessoaRepository) {
+    public RoleService(RoleRepository roleRepository, PermissionRepository permissionRepository,
+            PessoaRepository pessoaRepository) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.pessoaRepository = pessoaRepository;
@@ -62,7 +64,9 @@ public class RoleService {
 
         roleRepository.findByNome(updated.getNome())
                 .filter(r -> !r.getId().equals(id))
-                .ifPresent(r -> { throw new BadRequestException("Já existe outro cargo com o nome: " + updated.getNome()); });
+                .ifPresent(r -> {
+                    throw new BadRequestException("Já existe outro cargo com o nome: " + updated.getNome());
+                });
 
         existing.setNome(updated.getNome());
 
@@ -74,19 +78,21 @@ public class RoleService {
         return roleRepository.save(existing);
     }
 
-//    @Transactional
-//    public void delete(Long id) {
-//        Role roleToDelete = roleRepository.findById(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + id));
-//
-//        // Desassocia a role de todas as pessoas antes de deletar para evitar erro de FK
-//        pessoaRepository.findAllByRolesContaining(roleToDelete).forEach(pessoa -> {
-//            pessoa.getRoles().remove(roleToDelete);
-//            pessoaRepository.save(pessoa);
-//        });
-//
-//        roleRepository.deleteById(id);
-//    }
+    // @Transactional
+    // public void delete(Long id) {
+    // Role roleToDelete = roleRepository.findById(id)
+    // .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado
+    // com ID: " + id));
+    //
+    // // Desassocia a role de todas as pessoas antes de deletar para evitar erro de
+    // FK
+    // pessoaRepository.findAllByRolesContaining(roleToDelete).forEach(pessoa -> {
+    // pessoa.getRoles().remove(roleToDelete);
+    // pessoaRepository.save(pessoa);
+    // });
+    //
+    // roleRepository.deleteById(id);
+    // }
 
     @Transactional
     public Role addPermissionToRole(Long roleId, Long permissionId) {
@@ -121,7 +127,8 @@ public class RoleService {
      * Busca e valida uma lista de permissões a partir de seus IDs.
      * Garante que todas as permissões existam no banco de dados.
      *
-     * @param permissions A lista de permissões (geralmente não gerenciadas) com IDs.
+     * @param permissions A lista de permissões (geralmente não gerenciadas) com
+     *                    IDs.
      * @return Uma lista de entidades Permission gerenciadas pelo JPA.
      * @throws ResourceNotFoundException se alguma permissão não for encontrada.
      */
@@ -131,7 +138,8 @@ public class RoleService {
         }
         List<Long> ids = permissions.stream().map(Permission::getId).collect(Collectors.toList());
         List<Permission> managedPermissions = permissionRepository.findAllById(ids);
-        if (managedPermissions.size() != ids.size()) throw new ResourceNotFoundException("Uma ou mais permissões não foram encontradas.");
+        if (managedPermissions.size() != ids.size())
+            throw new ResourceNotFoundException("Uma ou mais permissões não foram encontradas.");
         return managedPermissions;
     }
 }

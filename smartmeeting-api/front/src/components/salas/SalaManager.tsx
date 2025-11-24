@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Plus, Building, Search, Filter, X
-} from 'lucide-react'; // Adicionei Search, Filter, X para o design
+    Plus, Building, Search, Filter, X, LayoutGrid, List
+} from 'lucide-react';
 import { Sala } from '../../types/meetings';
 import { useSalas } from '../../hooks/useSalas';
 import { SalasGrid } from './SalasGrid';
 import { SalaForm } from './SalaForm';
 import { BookingSystem } from './BookingSystem';
 import { useTheme } from '../../context/ThemeContext';
-// PageHeader removido pois faremos o design customizado
 
 type ModalType = 'form' | 'booking' | null;
 
@@ -108,18 +107,16 @@ export const SalaManager: React.FC = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-red-500 mb-4">
-                        <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+                <div className="text-center bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 max-w-md w-full">
+                    <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <X className="w-8 h-8 text-red-600 dark:text-red-400" />
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Erro ao Carregar</h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Erro ao Carregar</h2>
+                    <p className="text-slate-500 dark:text-slate-400 mb-6">{error}</p>
                     <button
                         onClick={() => loadSalas()}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium w-full"
                     >
                         Tentar Novamente
                     </button>
@@ -129,238 +126,220 @@ export const SalaManager: React.FC = () => {
     }
 
     return (
-        <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
-            <div className="bg-mono-50 dark:bg-mono-900 min-h-screen transition-colors pb-10">
+        <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans ${theme === 'dark' ? 'dark' : ''}`}>
 
-                {/* Main Container centralizado */}
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Header / Toolbar Area */}
+            <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between gap-4">
 
-                    {/* --- NOVO CABEÇALHO (DESIGN DA IMAGEM) --- */}
-                    <div className="bg-white dark:bg-mono-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-mono-700 mb-8">
-
-                        {/* Topo: Ícone e Títulos */}
-                        <div className="flex items-start gap-4 mb-8">
-                            {/* Ícone com fundo azul arredondado */}
-                            <div className="w-12 h-12 bg-[#0ea5e9] rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
-                                <Building className="w-6 h-6" />
+                        {/* Left: Title & Main Views */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2.5">
+                                <div className="bg-blue-600 text-white p-2 rounded-lg shadow-sm shadow-blue-500/20">
+                                    <Building className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">Salas</h1>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{salasFiltradas.length} disponíveis</p>
+                                </div>
                             </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Salas</h1>
-                                <p className="text-gray-500 dark:text-gray-400 mt-1">
-                                    Gerencie salas, papéis (roles) e atribuições de usuários — tudo em um só lugar.
-                                </p>
+
+                            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+
+                            <div className="hidden md:flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                                <button className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm transition-all">
+                                    <LayoutGrid className="w-4 h-4" />
+                                    <span className="hidden lg:inline">Grid</span>
+                                </button>
+                                <button className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all">
+                                    <List className="w-4 h-4" />
+                                    <span className="hidden lg:inline">Lista</span>
+                                </button>
                             </div>
                         </div>
 
-                        {/* Barra de "Abas" e Ações */}
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-gray-100 dark:border-mono-700 pb-6">
-
-                            {/* Simulação das Abas da imagem (usando botões funcionais) */}
-                            <div className="flex items-center gap-2 overflow-x-auto">
-                                {/* Aba Ativa (Salas) */}
-                                <button className="flex items-center gap-2 px-4 py-2 bg-[#0ea5e9] text-white rounded-lg font-medium shadow-sm hover:bg-[#0284c7] transition-colors whitespace-nowrap">
-                                    <Building className="w-4 h-4" />
-                                    Salas
-                                </button>
-
-                                {/* Aba/Botão Filtros */}
-                                <button
-                                    onClick={() => setShowFilters(!showFilters)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap border ${showFilters
-                                            ? 'bg-gray-100 border-gray-300 text-gray-900 dark:bg-mono-700 dark:border-mono-600 dark:text-white'
-                                            : 'bg-white border-transparent text-gray-600 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700'
-                                        }`}
-                                >
-                                    <Filter className="w-4 h-4" />
-                                    Filtros
-                                </button>
-
-                                {/* Botão Nova Sala (Estilizado como aba secundária para manter consistência visual) */}
-                                <button
-                                    onClick={handleCreateSala}
-                                    className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors whitespace-nowrap border border-transparent hover:border-gray-200 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Nova Sala
-                                </button>
-                            </div>
-
-                            {/* Barra de Busca */}
-                            <div className="relative w-full lg:w-72">
+                        {/* Right: Actions & Search */}
+                        <div className="flex items-center gap-3 flex-1 justify-end">
+                            <div className="hidden md:flex relative group max-w-md w-full">
                                 <input
                                     type="text"
                                     value={termoBusca}
                                     onChange={(e) => handleSearch(e.target.value)}
-                                    placeholder="Buscar permissões..."
-                                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:border-transparent dark:bg-mono-900 dark:border-mono-700 dark:text-white"
+                                    placeholder="Buscar salas..."
+                                    className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-700/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-500"
                                 />
-                                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                             </div>
-                        </div>
 
-                        {/* Breadcrumb / Indicador Visual inferior (Pílula) */}
-                        <div className="mt-4 flex items-center gap-2">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-50 border border-gray-100 dark:bg-mono-900 dark:border-mono-700 text-xs font-medium text-gray-500 dark:text-gray-400">
-                                <Building className="w-3 h-3" />
-                                <span>Salas</span>
-                                <span className="text-gray-300 dark:text-mono-600">|</span>
-                                <span>Visualizando: {termoBusca ? 'Resultados da busca' : 'Todas as salas'}</span>
-                            </div>
-                        </div>
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`p-2 rounded-lg border transition-all relative ${showFilters
+                                    ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'
+                                    }`}
+                                title="Filtros Avançados"
+                            >
+                                <Filter className="w-4 h-4" />
+                            </button>
 
-                        {/* Área de Filtros (Expansível) - Mesma lógica, novo container visual */}
-                        {showFilters && (
-                            <div className="mt-4 p-5 bg-gray-50 dark:bg-mono-900/50 rounded-xl border border-gray-100 dark:border-mono-700 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filtros Avançados</h3>
-                                    <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-gray-600">
-                                        <X className="w-4 h-4" />
+                            <button
+                                onClick={handleCreateSala}
+                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden sm:inline">Nova Sala</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Expandable Filter Area */}
+                    {showFilters && (
+                        <div className="py-4 border-t border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">
+                                        Categoria
+                                    </label>
+                                    <select
+                                        value={filtrosLocais.categoria}
+                                        onChange={(e) => setFiltrosLocais(prev => ({ ...prev, categoria: e.target.value }))}
+                                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    >
+                                        <option value="">Todas</option>
+                                        <option value="executiva">Executiva</option>
+                                        <option value="reuniao">Reunião</option>
+                                        <option value="treinamento">Treinamento</option>
+                                        <option value="auditorio">Auditório</option>
+                                        <option value="pequena">Pequena</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">
+                                        Status
+                                    </label>
+                                    <select
+                                        value={filtrosLocais.status}
+                                        onChange={(e) => setFiltrosLocais(prev => ({ ...prev, status: e.target.value }))}
+                                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    >
+                                        <option value="">Todos</option>
+                                        <option value="disponivel">Disponível</option>
+                                        <option value="ocupada">Ocupada</option>
+                                        <option value="manutencao">Manutenção</option>
+                                        <option value="reservada">Reservada</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">
+                                        Capacidade Min.
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={filtrosLocais.capacidade}
+                                        onChange={(e) => setFiltrosLocais(prev => ({ ...prev, capacidade: e.target.value }))}
+                                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                        placeholder="Ex: 8"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">
+                                        Andar
+                                    </label>
+                                    <select
+                                        value={filtrosLocais.andar}
+                                        onChange={(e) => setFiltrosLocais(prev => ({ ...prev, andar: e.target.value }))}
+                                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg text-sm text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    >
+                                        <option value="">Todos</option>
+                                        <option value="Térrео">Térrео</option>
+                                        <option value="1º Andar">1º Andar</option>
+                                        <option value="2º Andar">2º Andar</option>
+                                    </select>
+                                </div>
+
+                                <div className="md:col-span-4 flex items-center justify-end gap-3 pt-2">
+                                    <button
+                                        onClick={() => {
+                                            setFiltrosLocais({ categoria: '', status: '', capacidade: '', andar: '' });
+                                            limparFiltros();
+                                        }}
+                                        className="px-4 py-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 text-sm font-medium transition-colors"
+                                    >
+                                        Limpar Filtros
+                                    </button>
+                                    <button
+                                        onClick={handleFilterChange}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm"
+                                    >
+                                        Aplicar Filtros
                                     </button>
                                 </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-mono-400 mb-1.5 uppercase tracking-wide">
-                                            Categoria
-                                        </label>
-                                        <select
-                                            value={filtrosLocais.categoria}
-                                            onChange={(e) => setFiltrosLocais(prev => ({ ...prev, categoria: e.target.value }))}
-                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] dark:bg-mono-800 dark:border-mono-600 dark:text-white"
-                                        >
-                                            <option value="">Todas</option>
-                                            <option value="executiva">Executiva</option>
-                                            <option value="reuniao">Reunião</option>
-                                            <option value="treinamento">Treinamento</option>
-                                            <option value="auditorio">Auditório</option>
-                                            <option value="pequena">Pequena</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-mono-400 mb-1.5 uppercase tracking-wide">
-                                            Status
-                                        </label>
-                                        <select
-                                            value={filtrosLocais.status}
-                                            onChange={(e) => setFiltrosLocais(prev => ({ ...prev, status: e.target.value }))}
-                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] dark:bg-mono-800 dark:border-mono-600 dark:text-white"
-                                        >
-                                            <option value="">Todos</option>
-                                            <option value="disponivel">Disponível</option>
-                                            <option value="ocupada">Ocupada</option>
-                                            <option value="manutencao">Manutenção</option>
-                                            <option value="reservada">Reservada</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-mono-400 mb-1.5 uppercase tracking-wide">
-                                            Capacidade Min.
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={filtrosLocais.capacidade}
-                                            onChange={(e) => setFiltrosLocais(prev => ({ ...prev, capacidade: e.target.value }))}
-                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] dark:bg-mono-800 dark:border-mono-600 dark:text-white"
-                                            placeholder="Ex: 8"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-mono-400 mb-1.5 uppercase tracking-wide">
-                                            Andar
-                                        </label>
-                                        <select
-                                            value={filtrosLocais.andar}
-                                            onChange={(e) => setFiltrosLocais(prev => ({ ...prev, andar: e.target.value }))}
-                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] dark:bg-mono-800 dark:border-mono-600 dark:text-white"
-                                        >
-                                            <option value="">Todos</option>
-                                            <option value="Térrео">Térrео</option>
-                                            <option value="1º Andar">1º Andar</option>
-                                            <option value="2º Andar">2º Andar</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="md:col-span-4 flex items-center gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-mono-700">
-                                        <button
-                                            onClick={handleFilterChange}
-                                            className="px-4 py-2 bg-[#0ea5e9] hover:bg-[#0284c7] text-white rounded-lg transition-colors text-sm font-medium"
-                                        >
-                                            Aplicar Filtros
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setFiltrosLocais({ categoria: '', status: '', capacidade: '', andar: '' });
-                                                limparFiltros();
-                                            }}
-                                            className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 hover:border-gray-400 rounded-lg transition-colors text-sm font-medium dark:text-mono-300 dark:border-mono-600"
-                                        >
-                                            Limpar
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Grid de Salas (Mantido o original) */}
-                    <div className="bg-white dark:bg-mono-800 rounded-lg shadow-sm border border-mono-200 dark:border-mono-700 p-6">
-                        {loading ? (
-                            <div className="flex items-center justify-center h-64">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-500"></div>
-                                <span className="ml-3 text-mono-600 dark:text-mono-300">Carregando salas...</span>
-                            </div>
-                        ) : (
-                            <SalasGrid
-                                salas={salasFiltradas}
-                                onSalaClick={handleSalaClick}
-                                onEditSala={handleEditSala}
-                                onDeleteSala={handleDeleteSala}
-                            />
-                        )}
-                    </div>
-                </main>
-
-                {/* Modais */}
-                {modalType === 'form' && (
-                    <SalaForm
-                        sala={salaEmEdicao ? (salaEmEdicao as Sala) : undefined}
-                        isOpen={true}
-                        onClose={() => {
-                            setModalType(null);
-                            setSalaEmEdicao(null);
-                        }}
-                        onSave={handleSaveSala}
-                        isLoading={loading}
-                    />
-                )}
-
-                {modalType === 'booking' && salaSelecionada && (
-                    <BookingSystem
-                        sala={salaSelecionada}
-                        isOpen={true}
-                        onClose={() => {
-                            setModalType(null);
-                            setSalaSelecionada(null);
-                        }}
-                        onBooking={handleBooking}
-                        isLoading={loading}
-                    />
-                )}
-
-                {/* Loading overlay */}
-                {loading && (
-                    <div className="fixed inset-0 z-40 bg-black bg-opacity-25 flex items-center justify-center">
-                        <div className="bg-white dark:bg-mono-800 rounded-lg p-6 flex items-center gap-3">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent-500"></div>
-                            <span className="text-mono-700 dark:text-mono-300">Processando...</span>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
+
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-y-auto">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center h-64">
+                            <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-blue-600 mb-4"></div>
+                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Carregando salas...</span>
+                        </div>
+                    ) : (
+                        <SalasGrid
+                            salas={salasFiltradas}
+                            onSalaClick={handleSalaClick}
+                            onEditSala={handleEditSala}
+                            onDeleteSala={handleDeleteSala}
+                        />
+                    )}
+                </div>
+            </main>
+
+            {/* Modais */}
+            {modalType === 'form' && (
+                <SalaForm
+                    sala={salaEmEdicao ? (salaEmEdicao as Sala) : undefined}
+                    isOpen={true}
+                    onClose={() => {
+                        setModalType(null);
+                        setSalaEmEdicao(null);
+                    }}
+                    onSave={handleSaveSala}
+                    isLoading={loading}
+                />
+            )}
+
+            {modalType === 'booking' && salaSelecionada && (
+                <BookingSystem
+                    sala={salaSelecionada}
+                    isOpen={true}
+                    onClose={() => {
+                        setModalType(null);
+                        setSalaSelecionada(null);
+                    }}
+                    onBooking={handleBooking}
+                    isLoading={loading}
+                />
+            )}
+
+            {/* Loading overlay for actions */}
+            {loading && (modalType === 'form' || modalType === 'booking') && (
+                <div className="fixed inset-0 z-[60] bg-white/50 dark:bg-slate-900/50 backdrop-blur-[2px] flex items-center justify-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-xl flex items-center gap-3 border border-slate-200 dark:border-slate-700">
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-slate-200 border-t-blue-600"></div>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Processando...</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

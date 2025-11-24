@@ -1,19 +1,19 @@
 import { Sun, Moon } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext'; // Importa o hook useTheme
+import { useTheme } from '../../context/ThemeContext';
 
 export default function ThemeToggle() {
-    const { theme, toggleTheme } = useTheme(); // Usa o hook para obter o tema e a função de alternância
+    const { theme, toggleTheme } = useTheme();
 
     return (
         <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-mono-50 dark:bg-mono-700 hover:bg-mono-100 dark:hover:bg-mono-600 transition-colors border border-mono-200 dark:border-mono-600"
+            className="p-2.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 shadow-sm"
             aria-label="Toggle theme"
         >
             {theme === 'dark' ? (
-                <Sun className="h-5 w-5 text-mono-700 dark:text-mono-300" />
+                <Sun className="h-5 w-5 text-slate-600 dark:text-slate-300" />
             ) : (
-                <Moon className="h-5 w-5 text-mono-700 dark:text-mono-300" />
+                <Moon className="h-5 w-5 text-slate-600 dark:text-slate-300" />
             )}
         </button>
     );

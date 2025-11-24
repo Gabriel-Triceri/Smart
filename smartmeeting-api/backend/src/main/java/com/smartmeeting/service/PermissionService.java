@@ -52,7 +52,9 @@ public class PermissionService {
         // Valida duplicidade de nome para outro registro
         permissionRepository.findByNome(updated.getNome())
                 .filter(p -> !p.getId().equals(id))
-                .ifPresent(p -> { throw new BadRequestException("Já existe outra permissão com o nome: " + updated.getNome()); });
+                .ifPresent(p -> {
+                    throw new BadRequestException("Já existe outra permissão com o nome: " + updated.getNome());
+                });
 
         existing.setNome(updated.getNome());
         return permissionRepository.save(existing);

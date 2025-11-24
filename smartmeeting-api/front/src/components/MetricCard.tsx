@@ -21,41 +21,51 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     color = "blue",
     description
 }) => {
-    const colorClasses = {
-        blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
-        green: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
-        red: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
-        yellow: "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400",
-        purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
-        orange: "bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400",
+    // Standardized color palettes for better visual consistency
+    const colorStyles = {
+        blue: { bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-600 dark:text-blue-400" },
+        green: { bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-600 dark:text-emerald-400" },
+        red: { bg: "bg-red-50 dark:bg-red-900/20", text: "text-red-600 dark:text-red-400" },
+        yellow: { bg: "bg-amber-50 dark:bg-amber-900/20", text: "text-amber-600 dark:text-amber-400" },
+        purple: { bg: "bg-purple-50 dark:bg-purple-900/20", text: "text-purple-600 dark:text-purple-400" },
+        orange: { bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-600 dark:text-orange-400" },
     };
 
-    const selectedColorClass = colorClasses[color as keyof typeof colorClasses] || colorClasses.blue;
+    // Fallback to blue if color key not found
+    const selectedStyle = colorStyles[color as keyof typeof colorStyles] || colorStyles.blue;
 
     return (
-        <div className="bg-white dark:bg-mono-800 rounded-xl p-6 shadow-sm border border-mono-200 dark:border-mono-700 transition-all hover:shadow-md">
-            <div className="flex items-start justify-between">
-                <div>
-                    <p className="text-sm font-medium text-mono-500 dark:text-mono-400 mb-1">{title}</p>
-                    <h3 className="text-2xl font-bold text-mono-900 dark:text-mono-100">{value}</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 transition-all hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 group">
+            <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-lg ${selectedStyle.bg} transition-transform group-hover:scale-110 duration-300`}>
+                    <Icon className={`w-6 h-6 ${selectedStyle.text}`} />
                 </div>
-                <div className={`p-3 rounded-lg ${selectedColorClass}`}>
-                    <Icon className="w-6 h-6" />
-                </div>
+
+                {trend && (
+                    <div className={`
+                        flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold
+                        ${trend.isPositive
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                            : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'}
+                    `}>
+                        <span>{trend.isPositive ? '+' : ''}{trend.value}%</span>
+                    </div>
+                )}
             </div>
 
-            {(trend || description) && (
-                <div className="mt-4 flex items-center text-sm">
-                    {trend && (
-                        <span className={`font-medium ${trend.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} mr-2`}>
-                            {trend.isPositive ? '+' : ''}{trend.value}%
-                        </span>
-                    )}
-                    {description && (
-                        <span className="text-mono-500 dark:text-mono-400">{description}</span>
-                    )}
-                </div>
-            )}
+            <div>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">
+                    {value}
+                </h3>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    {title}
+                </p>
+                {description && (
+                    <p className="mt-2 text-xs text-slate-400 dark:text-slate-500 line-clamp-2 leading-relaxed">
+                        {description}
+                    </p>
+                )}
+            </div>
         </div>
     );
 };

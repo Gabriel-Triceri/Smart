@@ -20,7 +20,6 @@ import java.util.List;
 
 import java.util.stream.Collectors;
 
-@SuppressWarnings("null")
 @Component
 public class JwtTokenProvider {
 

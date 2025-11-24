@@ -25,6 +25,7 @@ import com.smartmeeting.security.JwtAuthenticationFilter;
 import com.smartmeeting.security.JwtAuthenticationEntryPoint;
 import com.smartmeeting.security.CustomUserDetailsService; // Adicionado
 
+@SuppressWarnings("null")
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true) // 🔒 Habilita @PreAuthorize/@PostAuthorize

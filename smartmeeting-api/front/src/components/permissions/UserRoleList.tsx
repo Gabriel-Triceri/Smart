@@ -1,9 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
-import { Search, Shield } from 'lucide-react';
+import {
+    Search,
+    Shield,
+    Users,
+    Filter,
+    Download,
+    Mail,
+    AlertCircle,
+    CheckCircle2
+} from 'lucide-react';
 import { userRoleService } from '../../services/userRoleService';
 import { useRoles } from '../../hooks/useRoles';
 import { UserRoleModal } from './UserRoleModal';
 import { UserTableSkeleton } from './PermissionSkeleton';
+import { useTheme } from '../../context/ThemeContext';
 
 interface User {
     id: number;
@@ -14,6 +25,7 @@ interface User {
 
 export const UserRoleList: React.FC = () => {
     const { roles } = useRoles();
+    const { theme } = useTheme();
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -76,6 +88,15 @@ export const UserRoleList: React.FC = () => {
         }
     };
 
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map(n => n[0])
+            .slice(0, 2)
+            .join('')
+            .toUpperCase();
+    };
+
     const filteredUsers = users.filter(u =>
         u.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -83,31 +104,54 @@ export const UserRoleList: React.FC = () => {
 
     if (error) {
         return (
-            <div className="text-center py-12">
-                <div className="text-red-500 mb-4">
-                    <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full mb-4">
+                    <AlertCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-mono-900 dark:text-mono-100 mb-2">Erro ao Carregar</h2>
-                <p className="text-mono-600 dark:text-mono-400">{error}</p>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Erro ao Carregar</h2>
+                <p className="text-slate-500 dark:text-slate-400 max-w-md mb-6">{error}</p>
+                <button
+                    onClick={loadUsers}
+                    className="px-4 py-2 bg-white border border-slate-300 dark:bg-slate-800 dark:border-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                    Tentar Novamente
+                </button>
             </div>
         );
     }
 
     return (
-        <div>
-            {/* Search */}
-            <div className="mb-8">
-                <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-mono-400 dark:text-mono-500" />
-                    <input
-                        type="text"
-                        placeholder="Buscar usuários..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-mono-800 border border-mono-300 dark:border-mono-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent text-mono-900 dark:text-mono-100 placeholder:text-mono-400 dark:placeholder:text-mono-500 transition-all"
-                    />
+        <div className="h-full flex flex-col">
+            {/* Controls */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-semibold border border-blue-100 dark:border-blue-800">
+                        <Users className="w-3.5 h-3.5" />
+                        <span>{users.length} Total</span>
+                    </div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium border border-slate-200 dark:border-slate-700">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>{users.filter(u => u.roles.length > 0).length} com Acesso</span>
+                    </div>
+                </div>
+
+                <div className="flex gap-3 w-full md:w-auto">
+                    <div className="relative flex-1 md:w-72 group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nome ou email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        />
+                    </div>
+                    <button className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 transition-colors">
+                        <Filter className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 transition-colors">
+                        <Download className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
 
@@ -116,17 +160,17 @@ export const UserRoleList: React.FC = () => {
 
             {/* Empty State */}
             {!isLoading && filteredUsers.length === 0 && (
-                <div className="text-center py-16">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-accent-100 to-accent-50 dark:from-accent-900/20 dark:to-accent-900/10 rounded-2xl mb-6 shadow-sm">
-                        <Shield className="w-10 h-10 text-accent-500 dark:text-accent-400" />
+                <div className="flex flex-col items-center justify-center py-16 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-center">
+                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
+                        <Search className="w-8 h-8 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <h3 className="text-xl font-semibold text-mono-900 dark:text-mono-100 mb-2">
-                        {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+                        {searchTerm ? 'Nenhum usuário encontrado' : 'Lista de usuários vazia'}
                     </h3>
-                    <p className="text-mono-600 dark:text-mono-400 mb-8 max-w-md mx-auto">
+                    <p className="text-slate-500 dark:text-slate-400 max-w-sm">
                         {searchTerm
-                            ? 'Tente buscar com outros termos ou ajustar os filtros de pesquisa'
-                            : 'Cadastre usuários no sistema para gerenciar suas roles e permissões de acesso'
+                            ? `Não encontramos correspondências para "${searchTerm}".`
+                            : 'Cadastre usuários no sistema para gerenciar seus acessos.'
                         }
                     </p>
                 </div>
@@ -134,64 +178,85 @@ export const UserRoleList: React.FC = () => {
 
             {/* User Table */}
             {!isLoading && filteredUsers.length > 0 && (
-                <div className="bg-white dark:bg-mono-800 rounded-lg border border-mono-200 dark:border-mono-700 overflow-hidden shadow-sm">
-                    <table className="w-full">
-                        <thead className="bg-mono-50 dark:bg-mono-700/30">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-mono-900 dark:text-mono-100 border-b border-mono-200 dark:border-mono-600">
-                                    Usuário
-                                </th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-mono-900 dark:text-mono-100 border-b border-mono-200 dark:border-mono-600">
-                                    Email
-                                </th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-mono-900 dark:text-mono-100 border-b border-mono-200 dark:border-mono-600">
-                                    Roles
-                                </th>
-                                <th className="px-6 py-4 text-right text-sm font-semibold text-mono-900 dark:text-mono-100 border-b border-mono-200 dark:border-mono-600">
-                                    Ações
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-mono-200 dark:divide-mono-700">
-                            {filteredUsers.map(user => (
-                                <tr key={user.id} className="hover:bg-mono-50/70 dark:hover:bg-mono-700/20 transition-colors">
-                                    <td className="px-6 py-4 text-sm font-medium text-mono-900 dark:text-mono-100">
-                                        {user.nome}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-mono-600 dark:text-mono-400">
-                                        {user.email}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-wrap gap-2">
-                                            {user.roles.length === 0 ? (
-                                                <span className="text-sm text-mono-500 dark:text-mono-400 italic font-medium">
-                                                    Sem roles
-                                                </span>
-                                            ) : (
-                                                user.roles.map((role, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="inline-flex items-center px-2.5 py-1 text-xs font-medium bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 rounded-lg border border-accent-200 dark:border-accent-700"
-                                                    >
-                                                        {role}
-                                                    </span>
-                                                ))
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => handleManageRoles(user)}
-                                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-accent-600 dark:text-accent-400 bg-accent-50 dark:bg-accent-900/20 hover:bg-accent-100 dark:hover:bg-accent-900/40 border border-accent-200 dark:border-accent-700 hover:border-accent-300 dark:hover:border-accent-600 rounded-lg transition-all duration-200 hover:shadow-sm"
-                                        >
-                                            <Shield className="w-4 h-4" />
-                                            Gerenciar Roles
-                                        </button>
-                                    </td>
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50/80 dark:bg-slate-900/30 border-b border-slate-200 dark:border-slate-700 text-xs uppercase text-slate-500 dark:text-slate-400">
+                                    <th className="px-6 py-4 font-semibold tracking-wide">Usuário</th>
+                                    <th className="px-6 py-4 font-semibold tracking-wide">Contato</th>
+                                    <th className="px-6 py-4 font-semibold tracking-wide">Perfis de Acesso</th>
+                                    <th className="px-6 py-4 font-semibold tracking-wide text-right">Ações</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                {filteredUsers.map((user) => (
+                                    <tr key={user.id} className="group hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
+                                        {/* Nome e Avatar */}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm font-bold border border-blue-200 dark:border-blue-800 shrink-0">
+                                                    {getInitials(user.nome)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-slate-900 dark:text-white">{user.nome}</div>
+                                                    <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">ID: #{user.id}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* Email */}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                                <Mail className="w-4 h-4 text-slate-400" />
+                                                {user.email}
+                                            </div>
+                                        </td>
+
+                                        {/* Roles */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-wrap gap-2">
+                                                {user.roles.length === 0 ? (
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                                        Sem acesso
+                                                    </span>
+                                                ) : (
+                                                    user.roles.map((role, index) => (
+                                                        <span
+                                                            key={index}
+                                                            className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/50"
+                                                        >
+                                                            {role}
+                                                        </span>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </td>
+
+                                        {/* Ações */}
+                                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                                            <button
+                                                onClick={() => handleManageRoles(user)}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all shadow-sm hover:shadow"
+                                            >
+                                                <Shield className="w-4 h-4" />
+                                                Gerenciar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Simple Pagination Footer */}
+                    <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 flex items-center justify-between text-xs text-slate-500">
+                        <span>Mostrando {filteredUsers.length} registros</span>
+                        <div className="flex gap-1">
+                            <button className="px-2 py-1 border border-slate-200 dark:border-slate-700 rounded hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50" disabled>Anterior</button>
+                            <button className="px-2 py-1 border border-slate-200 dark:border-slate-700 rounded hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50" disabled>Próximo</button>
+                        </div>
+                    </div>
                 </div>
             )}
 

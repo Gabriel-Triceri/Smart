@@ -15,7 +15,8 @@ import {
     CheckSquare,
     Search,
     Filter,
-    X
+    X,
+    ChevronDown
 } from 'lucide-react';
 import { useTarefas } from '../../hooks/useTarefas';
 import { KanbanBoard } from './KanbanBoard';
@@ -27,17 +28,15 @@ import { useTheme } from '../../context/ThemeContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Avatar } from '../../components/common/Avatar';
-// PageHeader removido pois foi substituído pelo design customizado
 
 type ViewMode = 'kanban' | 'lista';
 
-// Funções de estilo (Mantidas)
 const getStatusColor = (status: string) => {
     switch (status) {
-        case StatusTarefa.TODO: return 'text-gray-700 bg-gray-100 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
-        case StatusTarefa.IN_PROGRESS: return 'text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800';
-        case StatusTarefa.REVIEW: return 'text-purple-700 bg-purple-50 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800';
-        case StatusTarefa.DONE: return 'text-green-700 bg-green-100 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800';
+        case StatusTarefa.TODO: return 'text-slate-700 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+        case StatusTarefa.IN_PROGRESS: return 'text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800';
+        case StatusTarefa.REVIEW: return 'text-purple-700 bg-purple-50 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800';
+        case StatusTarefa.DONE: return 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800';
         default: return 'text-gray-700 bg-gray-50 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
     }
 };
@@ -54,12 +53,12 @@ const getStatusLabel = (status: string) => {
 
 const getPrioridadeIndicator = (prioridade: string) => {
     switch (prioridade) {
-        case PrioridadeTarefa.CRITICA: return 'bg-red-500';
-        case PrioridadeTarefa.URGENTE: return 'bg-purple-500';
-        case PrioridadeTarefa.ALTA: return 'bg-orange-500';
-        case PrioridadeTarefa.MEDIA: return 'bg-yellow-500';
-        case PrioridadeTarefa.BAIXA: return 'bg-blue-500';
-        default: return 'bg-gray-400';
+        case PrioridadeTarefa.CRITICA: return 'bg-red-500 shadow-red-500/50';
+        case PrioridadeTarefa.URGENTE: return 'bg-orange-500 shadow-orange-500/50';
+        case PrioridadeTarefa.ALTA: return 'bg-amber-500 shadow-amber-500/50';
+        case PrioridadeTarefa.MEDIA: return 'bg-blue-500 shadow-blue-500/50';
+        case PrioridadeTarefa.BAIXA: return 'bg-slate-400 shadow-slate-400/50';
+        default: return 'bg-gray-300';
     }
 };
 
@@ -129,29 +128,29 @@ export function TaskManager() {
         }
     }, [tarefas, tarefaSelecionada, setTarefaSelecionada, setExibirDetalhes]);
 
-    // Renderização da lista (Mantida a lógica original)
+    // Renderização da lista
     const renderLista = () => (
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hidden md:grid grid-cols-12 gap-4 items-center">
-                <div className="col-span-4 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Tarefa</div>
-                <div className="col-span-2 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Status</div>
-                <div className="col-span-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Responsável</div>
-                <div className="col-span-2 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Prazo</div>
-                <div className="col-span-1 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider text-right">Ações</div>
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 hidden md:grid grid-cols-12 gap-4 items-center">
+                <div className="col-span-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tarefa</div>
+                <div className="col-span-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</div>
+                <div className="col-span-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Responsável</div>
+                <div className="col-span-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Prazo</div>
+                <div className="col-span-1 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Ações</div>
             </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="divide-y divide-slate-100 dark:divide-slate-700">
                 {loading ? (
                     <div className="p-12 text-center">
-                        <div className="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 dark:border-gray-700 border-t-blue-600 mx-auto"></div>
-                        <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Carregando tarefas...</p>
+                        <Loader2 className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-2" />
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Carregando tarefas...</p>
                     </div>
                 ) : tarefas.length === 0 ? (
                     <div className="p-12 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                            <List className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                        <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                            <List className="w-8 h-8 text-slate-400 dark:text-slate-500" />
                         </div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">Nenhuma tarefa encontrada</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Comece criando sua primeira tarefa.</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">Nenhuma tarefa encontrada</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Comece criando sua primeira tarefa.</p>
                     </div>
                 ) : (
                     tarefas.map((tarefa) => {
@@ -161,76 +160,86 @@ export function TaskManager() {
                         return (
                             <div
                                 key={tarefa.id}
-                                className="group p-6 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 cursor-pointer relative grid grid-cols-12 gap-4 items-center"
+                                className="group p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer relative grid grid-cols-12 gap-4 items-center"
                                 onClick={() => handleViewTask(tarefa)}
                             >
-                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPrioridadeIndicator(tarefa.prioridade)}`}></div>
-                                <div className="col-span-12 md:col-span-4 ml-2">
-                                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-md ${getPrioridadeIndicator(tarefa.prioridade).split(' ')[0]}`}></div>
+                                <div className="col-span-12 md:col-span-4 ml-3">
+                                    <h3 className="font-medium text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                         {tarefa.titulo}
                                     </h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{tarefa.descricao}</p>
+                                    {tarefa.descricao && (
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{tarefa.descricao}</p>
+                                    )}
                                 </div>
                                 <div className="col-span-6 md:col-span-2">
-                                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold rounded-md border ${getStatusColor(tarefa.status)}`}>
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border ${getStatusColor(tarefa.status)}`}>
                                         {getStatusLabel(tarefa.status)}
                                     </span>
                                 </div>
                                 <div className="col-span-12 md:col-span-3 flex items-center gap-2">
                                     {responsaveis.length > 0 ? (
-                                        <>
-                                            <div className="flex items-center -space-x-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex -space-x-2">
                                                 {responsaveis.slice(0, 3).map((resp, idx) => (
-                                                    <div key={resp.id} className="relative" style={{ zIndex: 10 - idx }}>
-                                                        <Avatar src={resp.avatar} name={resp.nome} className="ring-2 ring-white dark:ring-gray-900" />
+                                                    <div key={resp.id} className="relative transition-transform hover:-translate-y-1" style={{ zIndex: 10 - idx }}>
+                                                        <Avatar src={resp.avatar} name={resp.nome} className="ring-2 ring-white dark:ring-slate-800 w-8 h-8 text-xs" />
                                                     </div>
                                                 ))}
-                                                {outrosResponsaveis > 2 && (
-                                                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-300 ring-2 ring-white dark:ring-gray-900">
-                                                        +{outrosResponsaveis - 2}
+                                                {outrosResponsaveis > 0 && (
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-300 ring-2 ring-white dark:ring-slate-800">
+                                                        +{outrosResponsaveis}
                                                     </div>
                                                 )}
                                             </div>
                                             {responsavelPrincipal && (
-                                                <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate max-w-[120px]">
+                                                <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[100px] hidden lg:block">
                                                     {responsavelPrincipal.nome}
                                                 </span>
                                             )}
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-slate-400 italic">Não atribuído</span>
+                                    )}
+                                </div>
+                                <div className="col-span-6 md:col-span-2 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                    {tarefa.prazo_tarefa ? (
+                                        <>
+                                            <Calendar className="w-4 h-4 text-slate-400" />
+                                            <span className="text-xs font-medium">
+                                                {format(new Date(tarefa.prazo_tarefa), 'dd/MM/yyyy', { locale: ptBR })}
+                                            </span>
                                         </>
                                     ) : (
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">Sem responsável</span>
+                                        <span className="text-xs text-slate-400">-</span>
                                     )}
-                                </div>
-                                <div className="col-span-6 md:col-span-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                                    <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                    <span className="font-medium">
-                                        {tarefa.prazo_tarefa ? format(new Date(tarefa.prazo_tarefa), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'}
-                                    </span>
                                 </div>
                                 <div className="col-span-6 md:col-span-1 flex justify-end">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveDropdown(activeDropdown === String(tarefa.id) ? null : String(tarefa.id));
-                                        }}
-                                        className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-                                    >
-                                        <MoreVertical className="w-5 h-5" />
-                                    </button>
-                                    {activeDropdown === String(tarefa.id) && (
-                                        <div className="absolute right-6 top-16 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-10 py-1.5 overflow-hidden">
-                                            <button onClick={(e) => { e.stopPropagation(); handleViewTask(tarefa); setActiveDropdown(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors">
-                                                <Eye className="w-4 h-4" /> Ver Detalhes
-                                            </button>
-                                            <button onClick={(e) => { e.stopPropagation(); handleEditTask(tarefa); setActiveDropdown(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors">
-                                                <Edit className="w-4 h-4" /> Editar
-                                            </button>
-                                            <div className="my-1.5 border-t border-gray-100 dark:border-gray-700"></div>
-                                            <button onClick={(e) => { e.stopPropagation(); deletarTarefa(tarefa.id); setActiveDropdown(null); }} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-3 transition-colors">
-                                                <Trash2 className="w-4 h-4" /> Excluir
-                                            </button>
-                                        </div>
-                                    )}
+                                    <div className="relative">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveDropdown(activeDropdown === String(tarefa.id) ? null : String(tarefa.id));
+                                            }}
+                                            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                        >
+                                            <MoreVertical className="w-4 h-4" />
+                                        </button>
+                                        {activeDropdown === String(tarefa.id) && (
+                                            <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 py-1">
+                                                <button onClick={(e) => { e.stopPropagation(); handleViewTask(tarefa); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2">
+                                                    <Eye className="w-4 h-4" /> Ver Detalhes
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleEditTask(tarefa); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2">
+                                                    <Edit className="w-4 h-4" /> Editar
+                                                </button>
+                                                <div className="my-1 border-t border-slate-100 dark:border-slate-700"></div>
+                                                <button onClick={(e) => { e.stopPropagation(); deletarTarefa(tarefa.id); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+                                                    <Trash2 className="w-4 h-4" /> Excluir
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )
@@ -241,150 +250,116 @@ export function TaskManager() {
     );
 
     return (
-        <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${theme === 'dark' ? 'dark' : ''}`}>
-            <div className="h-full flex flex-col">
+        <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans ${theme === 'dark' ? 'dark' : ''}`}>
 
-                {/* --- NOVO CABEÇALHO (DESIGN CARD) --- */}
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-none">
-                    <div className="bg-white dark:bg-mono-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-mono-700 mb-6">
+            {/* Header / Toolbar Area */}
+            <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between">
 
-                        {/* Topo: Ícone, Títulos e Ações Secundárias */}
-                        <div className="flex justify-between items-start mb-8">
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 bg-[#0ea5e9] rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
-                                    <CheckSquare className="w-6 h-6" />
+                        {/* Left: Title & Main Views */}
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-2.5">
+                                <div className="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
+                                    <CheckSquare className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Tarefas</h1>
-                                    <p className="text-gray-500 dark:text-gray-400 mt-1">
-                                        Kanban e produtividade
-                                    </p>
+                                    <h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">Tarefas</h1>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{tarefas.length} total</p>
                                 </div>
                             </div>
 
-                            {/* Ações Secundárias (Notificações, etc) movidas para o topo para limpar a barra de busca */}
-                            <div className="flex items-center gap-2">
-                                <button className="relative p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-mono-700 rounded-lg transition-colors">
-                                    <Bell className="w-5 h-5" />
-                                    {totalNotificacoesNaoLidas > 0 && (
-                                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-mono-800"></span>
-                                    )}
+                            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+
+                            <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setViewMode('kanban')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'kanban'
+                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        }`}
+                                >
+                                    <LayoutGrid className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Kanban</span>
                                 </button>
-                                <div className="w-px h-6 bg-gray-200 dark:bg-mono-700 mx-1"></div>
-                                <button className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-mono-700 rounded-lg transition-colors">
-                                    <Download className="w-5 h-5" />
-                                </button>
-                                <button className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-mono-700 rounded-lg transition-colors">
-                                    <Upload className="w-5 h-5" />
+                                <button
+                                    onClick={() => setViewMode('lista')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'lista'
+                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        }`}
+                                >
+                                    <List className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Lista</span>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Barra de Ferramentas */}
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-gray-100 dark:border-mono-700 pb-6">
-
-                            {/* Abas de Visualização + Botões de Ação */}
-                            <div className="flex items-center gap-2 overflow-x-auto">
-                                {/* Toggle Kanban */}
-                                <button
-                                    onClick={() => setViewMode('kanban')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap border ${viewMode === 'kanban'
-                                            ? 'bg-[#0ea5e9] border-transparent text-white shadow-sm'
-                                            : 'bg-white border-transparent text-gray-600 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700'
-                                        }`}
-                                >
-                                    <LayoutGrid className="w-4 h-4" />
-                                    Kanban
-                                </button>
-
-                                {/* Toggle Lista */}
-                                <button
-                                    onClick={() => setViewMode('lista')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap border ${viewMode === 'lista'
-                                            ? 'bg-[#0ea5e9] border-transparent text-white shadow-sm'
-                                            : 'bg-white border-transparent text-gray-600 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700'
-                                        }`}
-                                >
-                                    <List className="w-4 h-4" />
-                                    Lista
-                                </button>
-
-                                {/* Divisor Vertical */}
-                                <div className="w-px h-6 bg-gray-200 dark:bg-mono-700 mx-1 hidden sm:block"></div>
-
-                                {/* Botão Filtros */}
-                                <button
-                                    onClick={() => setShowFilters(!showFilters)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap border ${showFilters
-                                            ? 'bg-gray-100 border-gray-300 text-gray-900 dark:bg-mono-700 dark:border-mono-600 dark:text-white'
-                                            : 'bg-white border-transparent text-gray-600 hover:bg-gray-50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700'
-                                        }`}
-                                >
-                                    <Filter className="w-4 h-4" />
-                                    Filtros
-                                </button>
-
-                                {/* Botão Nova Tarefa */}
-                                <button
-                                    onClick={() => {
-                                        setTarefaSelecionada(null);
-                                        setExibirFormulario(true);
-                                    }}
-                                    className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors whitespace-nowrap border border-transparent hover:border-gray-200 dark:bg-transparent dark:text-gray-400 dark:hover:bg-mono-700"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Nova Tarefa
-                                </button>
-                            </div>
-
-                            {/* Barra de Busca */}
-                            <div className="relative w-full lg:w-72">
+                        {/* Right: Actions & Search */}
+                        <div className="flex items-center gap-3">
+                            <div className="hidden md:flex relative group">
                                 <input
                                     type="text"
                                     value={searchTerm}
                                     onChange={(e) => handleSearch(e.target.value)}
-                                    placeholder="Buscar tarefas..."
-                                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:border-transparent dark:bg-mono-900 dark:border-mono-700 dark:text-white"
+                                    placeholder="Buscar..."
+                                    className="w-64 pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-700/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 border-slate-200 dark:border-slate-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-500"
                                 />
-                                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-                                {loading && <RefreshCw className="w-4 h-4 absolute right-3 top-2.5 text-[#0ea5e9] animate-spin" />}
+                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500" />
+                                {loading && <RefreshCw className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 animate-spin" />}
                             </div>
-                        </div>
 
-                        {/* Indicador Visual inferior */}
-                        <div className="mt-4 flex items-center gap-2">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-50 border border-gray-100 dark:bg-mono-900 dark:border-mono-700 text-xs font-medium text-gray-500 dark:text-gray-400">
-                                {viewMode === 'kanban' ? <LayoutGrid className="w-3 h-3" /> : <List className="w-3 h-3" />}
-                                <span className="capitalize">{viewMode}</span>
-                                <span className="text-gray-300 dark:text-mono-600">|</span>
-                                <span>{tarefas.length} tarefas listadas</span>
-                                {error && <span className="text-red-500 ml-2">- {error}</span>}
-                            </div>
-                        </div>
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`p-2 rounded-lg border transition-colors relative ${showFilters
+                                    ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'
+                                    }`}
+                                title="Filtros"
+                            >
+                                <Filter className="w-4 h-4" />
+                                {Object.keys(filtros).length > 0 && (
+                                    <span className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full ring-1 ring-white dark:ring-slate-800"></span>
+                                )}
+                            </button>
 
-                        {/* Área de Filtros (Expansível) */}
-                        {showFilters && (
-                            <div className="mt-4 p-5 bg-gray-50 dark:bg-mono-900/50 rounded-xl border border-gray-100 dark:border-mono-700 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filtros Avançados</h3>
-                                    <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-gray-600">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                {/* Renderizando o componente TaskFilters original para manter a lógica */}
-                                <TaskFilters
-                                    filters={filtros}
-                                    onFiltersChange={setFiltros}
-                                    tarefas={tarefas}
-                                    assignees={assigneesDisponiveis}
-                                />
-                            </div>
-                        )}
+                            <button
+                                onClick={() => {
+                                    setTarefaSelecionada(null);
+                                    setExibirFormulario(true);
+                                }}
+                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all active:scale-95"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden sm:inline">Nova Tarefa</span>
+                            </button>
+                        </div>
                     </div>
-                </main>
 
-                {/* Content Area (Kanban ou Lista) */}
-                <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-8">
+                    {/* Expandable Filter Area */}
+                    {showFilters && (
+                        <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <TaskFilters
+                                filters={filtros}
+                                onFiltersChange={setFiltros}
+                                tarefas={tarefas}
+                                assignees={assigneesDisponiveis}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-hidden">
+                <div className="h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-x-auto">
+                    {error && (
+                        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center justify-between">
+                            <span className="text-sm">{error}</span>
+                            <button onClick={() => window.location.reload()} className="text-red-700 hover:underline text-sm font-medium">Recarregar</button>
+                        </div>
+                    )}
+
                     {viewMode === 'kanban' ? (
                         <KanbanBoard
                             tarefas={tarefas}
@@ -398,7 +373,7 @@ export function TaskManager() {
                         />
                     ) : renderLista()}
                 </div>
-            </div>
+            </main>
 
             {/* Modals */}
             {exibirFormulario && (
@@ -422,6 +397,16 @@ export function TaskManager() {
                     onUpdateProgress={async (_, __) => { /* TODO */ }}
                 />
             )}
+
+            {/* Loader Component for TSX */}
+            <div className="hidden"><Loader2 /></div>
         </div>
     );
 }
+
+// Helper component purely for the spinner icon availability
+const Loader2 = ({ className }: { className?: string }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+);
