@@ -5,6 +5,7 @@ import {
 import { Sala } from '../../types/meetings';
 import { useSalas } from '../../hooks/useSalas';
 import { SalasGrid } from './SalasGrid';
+import { SalasList } from './SalasList';
 import { SalaForm } from './SalaForm';
 import { BookingSystem } from './BookingSystem';
 import { useTheme } from '../../context/ThemeContext';
@@ -28,6 +29,7 @@ export const SalaManager: React.FC = () => {
 
     const { theme } = useTheme();
 
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [modalType, setModalType] = useState<ModalType>(null);
     const [salaSelecionada, setSalaSelecionada] = useState<Sala | null>(null);
     const [salaEmEdicao, setSalaEmEdicao] = useState<Partial<Sala> | null>(null);
@@ -148,11 +150,23 @@ export const SalaManager: React.FC = () => {
                             <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
 
                             <div className="hidden md:flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
-                                <button className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm transition-all">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'grid'
+                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        }`}
+                                >
                                     <LayoutGrid className="w-4 h-4" />
                                     <span className="hidden lg:inline">Grid</span>
                                 </button>
-                                <button className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all">
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list'
+                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        }`}
+                                >
                                     <List className="w-4 h-4" />
                                     <span className="hidden lg:inline">Lista</span>
                                 </button>
@@ -294,12 +308,21 @@ export const SalaManager: React.FC = () => {
                             <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Carregando salas...</span>
                         </div>
                     ) : (
-                        <SalasGrid
-                            salas={salasFiltradas}
-                            onSalaClick={handleSalaClick}
-                            onEditSala={handleEditSala}
-                            onDeleteSala={handleDeleteSala}
-                        />
+                        viewMode === 'grid' ? (
+                            <SalasGrid
+                                salas={salasFiltradas}
+                                onSalaClick={handleSalaClick}
+                                onEditSala={handleEditSala}
+                                onDeleteSala={handleDeleteSala}
+                            />
+                        ) : (
+                            <SalasList
+                                salas={salasFiltradas}
+                                onSalaClick={handleSalaClick}
+                                onEditSala={handleEditSala}
+                                onDeleteSala={handleDeleteSala}
+                            />
+                        )
                     )}
                 </div>
             </main>
