@@ -611,9 +611,12 @@ export const meetingsApi = {
     },
 
     async getKanbanBoard(reuniaoId?: string): Promise<KanbanBoard> {
-        const response = await api.get('/tarefas/kanban', {
-            params: reuniaoId ? { reuniaoId } : {}
-        });
+        const params: Record<string, string> = {};
+        if (reuniaoId) {
+            params.reuniaoId = reuniaoId;
+        }
+
+        const response = await api.get('/tarefas/kanban', { params });
 
         const board = response.data;
         const colunas = (board.colunas ?? []).map((coluna: KanbanColumn) => ({

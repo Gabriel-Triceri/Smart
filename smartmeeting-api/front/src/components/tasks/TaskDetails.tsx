@@ -239,6 +239,42 @@ export function TaskDetails({
                             </div>
                         </div>
 
+                        {/* Reunião */}
+                        {tarefa.reuniaoTitulo && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <FileText className="w-4 h-4 text-slate-400" /> Reunião
+                                    </h3>
+                                    <div className="pl-5 border-l-2 border-slate-100 dark:border-slate-800">
+                                        <span className="text-sm font-medium text-slate-900 dark:text-white">
+                                            {tarefa.reuniaoTitulo}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Cor */}
+                                {tarefa.cor && (
+                                    <div className="space-y-3">
+                                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                            <Tag className="w-4 h-4 text-slate-400" /> Cor
+                                        </h3>
+                                        <div className="pl-5 border-l-2 border-slate-100 dark:border-slate-800">
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="w-6 h-6 rounded border border-slate-300 dark:border-slate-600"
+                                                    style={{ backgroundColor: tarefa.cor }}
+                                                />
+                                                <span className="text-sm font-medium text-slate-900 dark:text-white font-mono">
+                                                    {tarefa.cor}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Tags */}
                         {tarefa.tags && tarefa.tags.length > 0 && (
                             <div>

@@ -46,6 +46,20 @@ public class Tarefa extends Auditable { // Estende Auditable
     @Column(name = "PRIORIDADE_TAREFA")
     private PrioridadeTarefa prioridade;
 
+    @Column(name = "DATA_INICIO_TAREFA")
+    private LocalDate dataInicio;
+
+    @Column(name = "ESTIMADO_HORAS_TAREFA")
+    private Double estimadoHoras;
+
+    @ElementCollection
+    @CollectionTable(name = "TAREFA_TAGS", joinColumns = @JoinColumn(name = "ID_TAREFA"))
+    @Column(name = "TAG")
+    private java.util.List<String> tags;
+
+    @Column(name = "COR_TAREFA")
+    private String cor;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_RESPONSAVEL", foreignKey = @ForeignKey(name = "FK_TAREFA_PESSOA"))
     private Pessoa responsavel;

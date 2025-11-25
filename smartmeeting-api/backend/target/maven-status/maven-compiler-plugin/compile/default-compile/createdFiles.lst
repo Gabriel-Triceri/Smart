@@ -98,7 +98,6 @@ com\smartmeeting\repository\ReuniaoRepository.class
 com\smartmeeting\enums\StatusReuniao.class
 com\smartmeeting\controller\PermissionController.class
 com\smartmeeting\dto\TarefaDTO.class
-com\smartmeeting\config\DataSeeder.class
 com\smartmeeting\enums\TipoUsuario.class
 com\smartmeeting\dto\EstatisticasGeraisDTO.class
 com\smartmeeting\model\Sala.class

@@ -46,17 +46,23 @@ public class TarefaService {
     private final ReuniaoRepository reuniaoRepository;
     private final NotificacaoTarefaRepository notificacaoTarefaRepository;
     private final TemplateTarefaRepository templateTarefaRepository;
+    private final com.smartmeeting.repository.ComentarioTarefaRepository comentarioTarefaRepository;
+    private final com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository;
 
     public TarefaService(TarefaRepository tarefaRepository,
             PessoaRepository pessoaRepository,
             ReuniaoRepository reuniaoRepository,
             NotificacaoTarefaRepository notificacaoTarefaRepository,
-            TemplateTarefaRepository templateTarefaRepository) {
+            TemplateTarefaRepository templateTarefaRepository,
+            com.smartmeeting.repository.ComentarioTarefaRepository comentarioTarefaRepository,
+            com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository) {
         this.tarefaRepository = tarefaRepository;
         this.pessoaRepository = pessoaRepository;
         this.reuniaoRepository = reuniaoRepository;
         this.notificacaoTarefaRepository = notificacaoTarefaRepository;
         this.templateTarefaRepository = templateTarefaRepository;
+        this.comentarioTarefaRepository = comentarioTarefaRepository;
+        this.anexoTarefaRepository = anexoTarefaRepository;
     }
 
     /**
@@ -72,22 +78,100 @@ public class TarefaService {
         dto.setId(tarefa.getId());
         dto.setDescricao(tarefa.getDescricao());
         dto.setPrazo(tarefa.getPrazo());
+        dto.setPrazo_tarefa(tarefa.getPrazo() != null ? tarefa.getPrazo().toString() : null); // Compatibilidade
+                                                                                              // frontend
         dto.setConcluida(tarefa.isConcluida());
         // Garante que statusTarefa nunca seja nulo no DTO
         dto.setStatusTarefa(tarefa.getStatusTarefa() != null ? tarefa.getStatusTarefa() : StatusTarefa.TODO);
 
+        dto.setPrioridade(tarefa.getPrioridade() != null ? tarefa.getPrioridade().name() : null);
+        dto.setDataInicio(tarefa.getDataInicio());
+        dto.setEstimadoHoras(tarefa.getEstimadoHoras());
+        dto.setTags(tarefa.getTags());
+        dto.setCor(tarefa.getCor());
+
+        // Campos básicos
+        dto.setTitulo(tarefa.getDescricao()); // Usando descrição como título
+
+        // Progresso baseado no status (simulação, já que não temos campo progresso na
+        // entidade)
+        if (tarefa.getStatusTarefa() == StatusTarefa.DONE) {
+            dto.setProgresso(100);
+        } else if (tarefa.getStatusTarefa() == StatusTarefa.IN_PROGRESS) {
+            dto.setProgresso(50);
+        } else {
+            dto.setProgresso(0);
+        }
+
+        // Auditoria
+        dto.setCriadaPor(tarefa.getCreatedBy());
+        dto.setCreatedAt(tarefa.getCreatedDate());
+        dto.setAtualizadaPor(tarefa.getLastModifiedBy());
+        dto.setUpdatedAt(tarefa.getLastModifiedDate());
+
+        // Tentar buscar nomes dos usuários de auditoria (opcional, pode ser custoso)
+        // Por enquanto, vamos deixar os nomes iguais aos IDs/Usernames ou null
+        dto.setCriadaPorNome(tarefa.getCreatedBy());
+        dto.setAtualizadaPorNome(tarefa.getLastModifiedBy());
+
+        // Campos vazios por enquanto (não existem na entidade)
+        dto.setHorasTrabalhadas(0.0);
+        dto.setSubtarefas(new ArrayList<>());
+        dto.setDependencias(new ArrayList<>());
+
+        // Carregar Comentários
+        List<com.smartmeeting.dto.ComentarioTarefaDTO> comentariosDTO = comentarioTarefaRepository
+                .findByTarefaId(tarefa.getId())
+                .stream()
+                .map(c -> new com.smartmeeting.dto.ComentarioTarefaDTO()
+                        .setId(c.getId())
+                        .setTarefaId(c.getTarefa().getId())
+                        .setAutorId(c.getAutor().getId())
+                        .setAutorNome(c.getAutor().getNome())
+                        // .setAutorAvatar(c.getAutor().getAvatar()) // Avatar não existe em Pessoa
+                        .setConteudo(c.getTexto())
+                        .setCreatedAt(c.getDataCriacao())
+                        .setMencoes(new ArrayList<>()) // Mencoes não implementado no modelo simples
+                        .setAnexos(new ArrayList<>())) // Anexos de comentário não implementado
+                .collect(Collectors.toList());
+        dto.setComentarios(comentariosDTO);
+
+        // Carregar Anexos
+        List<com.smartmeeting.dto.AnexoTarefaDTO> anexosDTO = anexoTarefaRepository.findByTarefaId(tarefa.getId())
+                .stream()
+                .map(a -> new com.smartmeeting.dto.AnexoTarefaDTO()
+                        .setId(a.getId())
+                        .setNome(a.getNomeArquivo())
+                        .setTipo(a.getTipoArquivo())
+                        .setUrl(a.getUrl())
+                        .setTamanho(a.getTamanhoArquivo())
+                        .setUploadedBy(a.getAutor().getId().toString())
+                        .setUploadedByNome(a.getAutor().getNome())
+                        .setCreatedAt(a.getDataUpload()))
+                .collect(Collectors.toList());
+        dto.setAnexos(anexosDTO);
+
         // Safely get Responsavel ID
+        List<AssigneeDTO> responsaveisList = new ArrayList<>();
         if (tarefa.getResponsavel() != null) {
             try {
                 dto.setResponsavelId(tarefa.getResponsavel().getId());
+                dto.setResponsavelNome(tarefa.getResponsavel().getNome());
+                dto.setResponsavelPrincipalId(tarefa.getResponsavel().getId());
+
+                // Adicionar à lista de responsáveis
+                responsaveisList.add(toAssigneeDTO(tarefa.getResponsavel()));
             } catch (Exception e) {
                 // Log the error or handle it appropriately, e.g., set to null
                 logger.error("Error getting responsavel ID for Tarefa {}: {}", tarefa.getId(), e.getMessage(), e);
                 dto.setResponsavelId(null);
+                dto.setResponsavelPrincipalId(null);
             }
         } else {
             dto.setResponsavelId(null);
+            dto.setResponsavelPrincipalId(null);
         }
+        dto.setResponsaveis(responsaveisList);
 
         // Safely get Reuniao ID and Titulo
         if (tarefa.getReuniao() != null) {
@@ -136,6 +220,13 @@ public class TarefaService {
         tarefa.setPrazo(dto.getPrazo());
         tarefa.setConcluida(dto.isConcluida());
         tarefa.setStatusTarefa(dto.getStatusTarefa());
+        if (dto.getPrioridade() != null) {
+            tarefa.setPrioridade(PrioridadeTarefa.valueOf(dto.getPrioridade()));
+        }
+        tarefa.setDataInicio(dto.getDataInicio());
+        tarefa.setEstimadoHoras(dto.getEstimadoHoras());
+        tarefa.setTags(dto.getTags());
+        tarefa.setCor(dto.getCor());
 
         if (dto.getResponsavelId() != null) {
             Pessoa responsavel = pessoaRepository.findById(dto.getResponsavelId())
@@ -184,6 +275,13 @@ public class TarefaService {
         tarefa.setPrazo(dtoAtualizada.getPrazo());
         tarefa.setConcluida(dtoAtualizada.isConcluida());
         tarefa.setStatusTarefa(dtoAtualizada.getStatusTarefa());
+        if (dtoAtualizada.getPrioridade() != null) {
+            tarefa.setPrioridade(PrioridadeTarefa.valueOf(dtoAtualizada.getPrioridade()));
+        }
+        tarefa.setDataInicio(dtoAtualizada.getDataInicio());
+        tarefa.setEstimadoHoras(dtoAtualizada.getEstimadoHoras());
+        tarefa.setTags(dtoAtualizada.getTags());
+        tarefa.setCor(dtoAtualizada.getCor());
 
         if (dtoAtualizada.getResponsavelId() != null) {
             Pessoa responsavel = pessoaRepository.findById(dtoAtualizada.getResponsavelId())
@@ -548,18 +646,33 @@ public class TarefaService {
         logger.info("Adicionando comentário à tarefa ID {}: {}", tarefaId,
                 conteudo.substring(0, Math.min(50, conteudo.length())));
 
-        // Simular criação de comentário (para implementação futura seria necessário uma
-        // entidade Comentário)
-        Map<String, Object> comentario = Map.of(
-                "id", System.currentTimeMillis(), // ID temporário
+        // Obter usuário atual (simplificado - pegar o primeiro usuário como autor)
+        // Em produção, deveria pegar do contexto de segurança
+        Pessoa autor = pessoaRepository.findAll().stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Nenhum usuário encontrado"));
+
+        // Criar e salvar o comentário real
+        com.smartmeeting.model.ComentarioTarefa comentario = new com.smartmeeting.model.ComentarioTarefa();
+        comentario.setTexto(conteudo);
+        comentario.setTarefa(tarefa);
+        comentario.setAutor(autor);
+        comentario.setDataCriacao(LocalDateTime.now());
+
+        com.smartmeeting.model.ComentarioTarefa comentarioSalvo = comentarioTarefaRepository.save(comentario);
+
+        // Retornar como Map para compatibilidade com o controller
+        Map<String, Object> resultado = Map.of(
+                "id", comentarioSalvo.getId(),
                 "tarefaId", tarefaId,
-                "conteudo", conteudo,
+                "conteudo", comentarioSalvo.getTexto(),
                 "mencoes", mencoes != null ? mencoes : List.of(),
-                "autor", "Usuário Atual", // Em implementação real, pegaria do contexto de segurança
-                "dataCriacao", LocalDateTime.now(),
+                "autorId", comentarioSalvo.getAutor().getId(),
+                "autorNome", comentarioSalvo.getAutor().getNome(),
+                "dataCriacao", comentarioSalvo.getDataCriacao(),
                 "status", "criado");
 
-        return comentario;
+        return resultado;
     }
 
     /**

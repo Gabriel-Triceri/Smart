@@ -38,8 +38,9 @@ public class PessoaService {
      * @return DTO correspondente ou null se a entidade for nula
      */
     public PessoaDTO convertToDto(Pessoa pessoa) {
-        if (pessoa == null)
+        if (pessoa == null) {
             return null;
+        }
 
         PessoaDTO dto = new PessoaDTO();
         dto.setId(pessoa.getId());
@@ -54,13 +55,14 @@ public class PessoaService {
      * Converte um DTO de criação para a entidade Pessoa
      * 
      * @param dto DTO contendo os dados para criação
-     * @return Entidade Pessoa correspondente ou null se o DTO for nulo
+     * @return Entidade Pessoa correspondente
+     * @throws BadRequestException se o DTO for inválido
      */
     private Pessoa toEntity(PessoaCreateDTO dto) {
-        if (dto == null)
-            return null;
+        if (dto == null) {
+            throw new BadRequestException("DTO não pode ser null");
+        }
 
-        // ✅ CORREÇÃO: Verificações null para campos obrigatórios
         if (dto.getNome() == null || dto.getNome().trim().isEmpty()) {
             throw new BadRequestException("Nome não pode ser vazio");
         }
@@ -80,7 +82,6 @@ public class PessoaService {
         return pessoa;
     }
 
-    // --- Métodos de serviço ---
     public List<PessoaDTO> listarTodas() {
         return repository.findAll().stream()
                 .map(this::convertToDto)
@@ -98,7 +99,6 @@ public class PessoaService {
     }
 
     public Optional<PessoaDTO> buscarPorId(Long id) {
-        // ✅ CORREÇÃO: Verificação null para id
         if (id == null) {
             return Optional.empty();
         }
@@ -106,33 +106,25 @@ public class PessoaService {
     }
 
     public PessoaDTO salvar(PessoaCreateDTO dto) {
-        // ✅ CORREÇÃO: Verificação null para dto
         if (dto == null) {
             throw new BadRequestException("DTO não pode ser null");
         }
 
-        // ✅ CORREÇÃO: Verificação null para email
-        String email = dto.getEmail();  
+        String email = dto.getEmail();
         if (email == null) {
             throw new BadRequestException("Email não pode ser null");
         }
 
-        // Exemplo de validação de negócio que pode lançar BadRequestException
         if (repository.findByEmail(email).isPresent()) {
             throw new BadRequestException("Já existe uma pessoa cadastrada com este e-mail: " + email);
         }
 
         Pessoa pessoa = toEntity(dto);
-        if (pessoa == null) {
-            throw new BadRequestException("Erro ao criar pessoa - DTO inválido");
-        }
-
         Pessoa salvo = repository.save(pessoa);
         return convertToDto(salvo);
     }
 
     public PessoaDTO atualizar(Long id, PessoaDTO dtoAtualizada) {
-        // ✅ CORREÇÃO: Verificações null para id e dto
         if (id == null) {
             throw new BadRequestException("ID não pode ser null");
         }
@@ -142,17 +134,13 @@ public class PessoaService {
 
         return repository.findById(id)
                 .map(pessoa -> {
-                    // ✅ CORREÇÃO: Verificação null para email no DTO
                     String novoEmail = dtoAtualizada.getEmail();
                     String emailAtual = pessoa.getEmail();
 
-                    // Verifica se o e-mail foi alterado e se o novo e-mail já existe para outra
-                    // pessoa
                     if (novoEmail == null) {
                         throw new BadRequestException("Email não pode ser null");
                     }
 
-                    // Verifica se o email foi alterado
                     boolean emailAlterado = !Objects.equals(emailAtual, novoEmail);
                     if (emailAlterado && repository.findByEmail(novoEmail).isPresent()) {
                         throw new BadRequestException("Já existe outra pessoa cadastrada com o e-mail: " + novoEmail);
@@ -170,7 +158,6 @@ public class PessoaService {
     }
 
     public void deletar(Long id) {
-        // ✅ CORREÇÃO: Verificação null para id
         if (id == null) {
             throw new BadRequestException("ID não pode ser null");
         }
@@ -182,7 +169,6 @@ public class PessoaService {
     }
 
     public List<Role> listarRoles(Long pessoaId) {
-        // ✅ CORREÇÃO: Verificação null para pessoaId
         if (pessoaId == null) {
             throw new BadRequestException("ID da pessoa não pode ser null");
         }
@@ -190,7 +176,6 @@ public class PessoaService {
         Pessoa pessoa = repository.findById(pessoaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + pessoaId));
 
-        // ✅ CORREÇÃO: Verificação segura para roles
         return Optional.ofNullable(pessoa.getRoles())
                 .filter(list -> !list.isEmpty())
                 .orElseGet(ArrayList::new);
@@ -198,7 +183,6 @@ public class PessoaService {
 
     @Transactional
     public void addRoleToPessoa(Long pessoaId, Long roleId) {
-        // ✅ CORREÇÃO: Verificações null para ids
         if (pessoaId == null) {
             throw new BadRequestException("ID da pessoa não pode ser null");
         }
@@ -217,9 +201,8 @@ public class PessoaService {
             roles = new ArrayList<>();
         }
 
-        // ✅ CORREÇÃO: Verificação null para roleId
         boolean exists = roles.stream()
-                .filter(Objects::nonNull) // ✅ Filtra roles null
+                .filter(Objects::nonNull)
                 .anyMatch(r -> Objects.equals(r.getId(), roleId));
 
         if (!exists) {
@@ -231,7 +214,6 @@ public class PessoaService {
 
     @Transactional
     public void removeRoleFromPessoa(Long pessoaId, Long roleId) {
-        // ✅ CORREÇÃO: Verificações null para ids
         if (pessoaId == null) {
             throw new BadRequestException("ID da pessoa não pode ser null");
         }
@@ -242,13 +224,11 @@ public class PessoaService {
         Pessoa pessoa = repository.findById(pessoaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + pessoaId));
 
-        // valida existência do role
         roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + roleId));
 
         List<Role> roles = pessoa.getRoles();
         if (roles != null && !roles.isEmpty()) {
-            // ✅ CORREÇÃO: Verificação null antes da remoção
             boolean changed = roles.removeIf(r -> r != null && Objects.equals(r.getId(), roleId));
             if (changed) {
                 pessoa.setRoles(roles);
@@ -256,8 +236,6 @@ public class PessoaService {
             }
         }
     }
-
-    // ✅ MÉTODOS ADICIONAIS: Métodos de segurança e validação
 
     /**
      * Busca uma pessoa por ID, retornando a entidade completa
