@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     X,
     Calendar,
@@ -46,6 +46,14 @@ export function TaskDetails({
 }: TaskDetailsProps) {
     const [showFileUpload, setShowFileUpload] = useState(false);
 
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
+
     if (!tarefa) return null;
 
     const handleFileUpload = async (file: File) => {
@@ -74,18 +82,18 @@ export function TaskDetails({
     const taskPriority = tarefa.prioridade || PrioridadeTarefa.MEDIA;
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             ></div>
 
-            {/* Slide-over Panel */}
-            <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-300">
+            {/* Centered Modal Panel */}
+            <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 shadow-2xl rounded-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 overflow-hidden">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-10">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                     <div className="flex items-center gap-3">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${PRIORITY_CONFIG[taskPriority].badgeColor.replace('bg-', 'bg-opacity-10 border-').replace('text-white', 'text-slate-700 dark:text-slate-300')}`}>
                             <Flag className="w-3.5 h-3.5" />
@@ -114,10 +122,10 @@ export function TaskDetails({
                 </div>
 
                 {/* Main Content Split */}
-                <div className="flex-1 flex overflow-hidden">
+                <div className="flex-1 flex overflow-hidden min-h-0">
 
                     {/* Left Column: Details */}
-                    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+                    <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
 
                         {/* Title & Desc */}
                         <div>
@@ -126,20 +134,20 @@ export function TaskDetails({
                                     {tarefa.projectName}
                                 </div>
                             )}
-                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-4">
+                            <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-3">
                                 {tarefa.titulo}
                             </h1>
                             {tarefa.descricao ? (
-                                <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
+                                <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                                     <p className="whitespace-pre-wrap">{tarefa.descricao}</p>
                                 </div>
                             ) : (
-                                <p className="text-slate-400 italic">Sem descrição.</p>
+                                <p className="text-slate-400 italic text-sm">Sem descrição.</p>
                             )}
                         </div>
 
                         {/* Status & Progress Card */}
-                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 border border-slate-200 dark:border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-4">
                             {onUpdateStatus && (
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Status</label>
@@ -180,13 +188,13 @@ export function TaskDetails({
                         </div>
 
                         {/* Metadata Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                             {/* Dates */}
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                     <Calendar className="w-4 h-4 text-slate-400" /> Datas
                                 </h3>
-                                <div className="space-y-3 pl-6 border-l-2 border-slate-100 dark:border-slate-800">
+                                <div className="space-y-2 pl-5 border-l-2 border-slate-100 dark:border-slate-800">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-slate-500 dark:text-slate-400">Início</span>
                                         <span className="font-medium text-slate-900 dark:text-white">
@@ -210,13 +218,13 @@ export function TaskDetails({
                             </div>
 
                             {/* Assignees */}
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                     <User className="w-4 h-4 text-slate-400" /> Responsáveis
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
                                     {(tarefa.responsaveis ?? []).map((responsavel) => (
-                                        <div key={responsavel.id} className="flex items-center gap-2 p-1.5 pr-3 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                        <div key={responsavel.id} className="flex items-center gap-2 p-1 pr-3 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                                             <Avatar src={responsavel.avatar} name={responsavel.nome} className="w-6 h-6 text-xs" />
                                             <span className="text-sm text-slate-700 dark:text-slate-300">{responsavel.nome}</span>
                                             {responsavel.id === tarefa.responsavelPrincipalId && (
@@ -234,7 +242,7 @@ export function TaskDetails({
                         {/* Tags */}
                         {tarefa.tags && tarefa.tags.length > 0 && (
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
                                     <Tag className="w-4 h-4 text-slate-400" /> Tags
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
@@ -248,8 +256,8 @@ export function TaskDetails({
                         )}
 
                         {/* Attachments Section */}
-                        <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
-                            <div className="flex items-center justify-between mb-4">
+                        <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                     <Paperclip className="w-4 h-4 text-slate-400" />
                                     Anexos <span className="text-slate-400 font-normal">({(tarefa.anexos ?? []).length})</span>
@@ -266,7 +274,7 @@ export function TaskDetails({
 
                             {showFileUpload && (
                                 <div
-                                    className="mb-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                                    className="mb-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={handleFileDrop}
                                 >
@@ -311,8 +319,8 @@ export function TaskDetails({
 
                     </div>
 
-                    {/* Right Column: Comments (Fixed Sidebar) */}
-                    <div className="w-[380px] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col">
+                    {/* Right Column: Comments Sidebar */}
+                    <div className="w-[300px] md:w-[340px] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col overflow-hidden">
                         <TaskComments
                             tarefaId={tarefa.id}
                             comments={tarefa.comentarios ?? []}
