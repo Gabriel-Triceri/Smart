@@ -28,8 +28,8 @@ public class PessoaController {
      * @return ResponseEntity contendo a lista de pessoas
      */
     @GetMapping
-    public ResponseEntity<List<PessoaDTO>> listarTodas() {
-        List<PessoaDTO> pessoas = pessoaService.listarTodas();
+    public ResponseEntity<List<PessoaDTO>> listarTodas(@RequestParam(required = false) String search) {
+        List<PessoaDTO> pessoas = pessoaService.listar(search);
         return ResponseEntity.ok(pessoas);
     }
 

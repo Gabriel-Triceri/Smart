@@ -453,7 +453,8 @@ export const meetingsApi = {
         return response.data.map((pessoa: any) => ({
             ...pessoa,
             id: pessoa.id,
-            tipoUsuario: pessoa.tipoUsuario?.toString() || 'FUNCIONARIO'
+            tipoUsuario: pessoa.tipoUsuario?.toString() || 'FUNCIONARIO',
+            departamento: pessoa.tipoUsuario?.toString()
         }));
     },
 

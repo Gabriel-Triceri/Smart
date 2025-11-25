@@ -9,10 +9,13 @@ import java.util.Optional;
 @Repository
 public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
     Optional<Pessoa> findByCrachaId(String crachaId);
-    
+
     // CORRIGIDO: retorna Optional<Pessoa>
     Optional<Pessoa> findByEmail(String email);
-    
+
     // Verifica se existe uma pessoa com o email fornecido
     boolean existsByEmail(String email);
+
+    // Busca pessoas por nome ou email (case insensitive)
+    java.util.List<Pessoa> findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(String nome, String email);
 }

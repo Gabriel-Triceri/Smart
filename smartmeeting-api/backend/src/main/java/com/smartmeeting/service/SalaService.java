@@ -105,6 +105,19 @@ public class SalaService {
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Sala não encontrada com ID: " + id);
         }
+
+        // Buscar todas as reuniões associadas à sala
+        List<Reuniao> reunioesAssociadas = reuniaoRepository.findAll().stream()
+                .filter(r -> r.getSala() != null && r.getSala().getId().equals(id))
+                .collect(Collectors.toList());
+
+        // Remover a referência da sala nas reuniões (desassociar)
+        for (Reuniao reuniao : reunioesAssociadas) {
+            reuniao.setSala(null);
+            reuniaoRepository.save(reuniao);
+        }
+
+        // Agora pode deletar a sala
         repository.deleteById(id);
     }
 

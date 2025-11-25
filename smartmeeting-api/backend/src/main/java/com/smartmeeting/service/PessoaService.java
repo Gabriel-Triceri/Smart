@@ -87,6 +87,16 @@ public class PessoaService {
                 .collect(Collectors.toList());
     }
 
+    public List<PessoaDTO> listar(String termo) {
+        if (termo == null || termo.trim().isEmpty()) {
+            return listarTodas();
+        }
+        return repository.findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(termo.trim(), termo.trim())
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
     public Optional<PessoaDTO> buscarPorId(Long id) {
         // ✅ CORREÇÃO: Verificação null para id
         if (id == null) {
@@ -102,7 +112,7 @@ public class PessoaService {
         }
 
         // ✅ CORREÇÃO: Verificação null para email
-        String email = dto.getEmail();
+        String email = dto.getEmail();  
         if (email == null) {
             throw new BadRequestException("Email não pode ser null");
         }

@@ -62,8 +62,14 @@ export const SalaForm: React.FC<SalaFormProps> = ({
 
     useEffect(() => {
         if (sala) {
-            setFormData({ ...sala, recursos: sala.recursos || [] });
+            console.log('📥 Sala recebida para edição:', sala);
+            setFormData({
+                ...sala,
+                categoria: sala.categoria || 'reuniao',
+                recursos: sala.recursos || []
+            });
         } else {
+            console.log('✨ Criando nova sala (resetando form)');
             setFormData({
                 nome: '',
                 capacidade: 4,
@@ -84,20 +90,38 @@ export const SalaForm: React.FC<SalaFormProps> = ({
         const newErrors: Record<string, string> = {};
         if (!formData.nome?.trim()) newErrors.nome = 'Nome obrigatório';
         if (!formData.localizacao?.trim()) newErrors.localizacao = 'Localização obrigatória';
-        if (!formData.capacidade || formData.capacidade < 1) newErrors.capacidade = 'Capacidade inválida';
+        // Ajuste: permitir undefined/ null e tratar corretamente
+        if (formData.capacidade == null || formData.capacidade < 1) newErrors.capacidade = 'Capacidade inválida';
         if (!formData.categoria) newErrors.categoria = 'Categoria obrigatória';
+
+        if (Object.keys(newErrors).length > 0) {
+            console.log('⚠️ Erros de validação encontrados:', newErrors);
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!validateForm()) return;
+        console.log('🚀 handleSubmit acionado');
+        console.log('📦 Dados do formulário (formData):', formData);
+
+        const isValid = validateForm();
+        console.log('📝 Resultado da validação:', isValid);
+
+        if (!isValid) {
+            console.warn('⚠️ Formulário inválido. Erros:', errors);
+            return;
+        }
+
+        console.log('💾 Tentando salvar dados:', formData);
         try {
             await onSave(formData);
+            console.log('✅ Salvo com sucesso');
             onClose();
         } catch (error) {
-            console.error('Erro ao salvar sala:', error);
+            console.error('❌ Erro ao salvar sala:', error);
         }
     };
 
@@ -148,7 +172,7 @@ export const SalaForm: React.FC<SalaFormProps> = ({
                         </button>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-6 space-y-8 flex-1">
+                    <form id="sala-form" onSubmit={handleSubmit} className="p-6 space-y-8 flex-1">
                         {/* Section: Basic Info */}
                         <div className="space-y-4">
                             <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -173,8 +197,12 @@ export const SalaForm: React.FC<SalaFormProps> = ({
                                         <input
                                             type="number"
                                             min="1"
-                                            value={formData.capacidade || ''}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, capacidade: parseInt(e.target.value) }))}
+                                            value={formData.capacidade ?? ''}
+                                            onChange={(e) => {
+                                                const v = e.target.value;
+                                                // se vazio, mantém undefined para validar corretamente; caso contrário converte
+                                                setFormData(prev => ({ ...prev, capacidade: v === '' ? undefined : parseInt(v, 10) }));
+                                            }}
                                             className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all ${errors.capacidade ? 'border-red-500' : 'border-slate-200 dark:border-slate-600'} text-slate-900 dark:text-white`}
                                             placeholder="Pessoas"
                                         />
@@ -223,6 +251,7 @@ export const SalaForm: React.FC<SalaFormProps> = ({
                                         value={formData.categoria || ''}
                                         onChange={(e) => {
                                             const categoria = e.target.value as Sala['categoria'];
+                                            console.log('🔄 Mudança de categoria:', categoria);
                                             const categoriaConfig = categorias.find(c => c.value === categoria);
                                             setFormData(prev => ({ ...prev, categoria, cor: categoriaConfig?.cor || prev.cor }));
                                         }}
@@ -404,7 +433,8 @@ export const SalaForm: React.FC<SalaFormProps> = ({
                             Cancelar
                         </button>
                         <button
-                            onClick={handleSubmit}
+                            type="submit"
+                            form="sala-form"
                             disabled={isLoading}
                             className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed text-white rounded-lg transition-all shadow-sm font-medium"
                         >
@@ -412,8 +442,8 @@ export const SalaForm: React.FC<SalaFormProps> = ({
                             {isLoading ? 'Salvando...' : (sala ? 'Salvar Alterações' : 'Criar Sala')}
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 };

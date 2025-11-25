@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, User, Mail, Building2, X, Check, Loader2 } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 import { Participante } from '../../types/meetings';
 import { meetingsApi } from '../../services/meetingsApi';
 
@@ -37,14 +37,17 @@ export const ParticipanteAutocomplete: React.FC<ParticipanteAutocompleteProps> =
 
     useEffect(() => {
         const searchParticipantes = async () => {
-            if (searchTerm.length < 2) {
-                setSuggestions([]);
-                return;
-            }
             setIsLoading(true);
             try {
                 const results = await meetingsApi.searchParticipantes(searchTerm);
-                const available = results.filter(p => !value.some(selected => selected.id === p.id)).slice(0, maxItems);
+
+                // Client-side filtering as fallback (in case backend search is not active or returns all)
+                const filteredByTerm = results.filter(p =>
+                    p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    p.email.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+
+                const available = filteredByTerm.filter(p => !value.some(selected => selected.id === p.id)).slice(0, maxItems);
                 setSuggestions(available);
             } catch (error) {
                 setSuggestions([]);

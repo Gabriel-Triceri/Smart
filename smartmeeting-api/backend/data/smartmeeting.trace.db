@@ -6101,3 +6101,6 @@ Caused by: org.h2.mvstore.MVStoreException: The file is locked: C:/Users/user/De
 	at org.h2.mvstore.SingleFileStore.open(SingleFileStore.java:81)
 	at org.h2.mvstore.MVStore.<init>(MVStore.java:286)
 	... 150 more
+2025-11-24 21:37:50.238893-03:00 jdbc[23]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "PESSOA" not found (this database is empty); SQL statement:
+MERGE INTO PESSOA (ID_PESSOA, NOME_PESSOA, EMAIL_PESSOA, SENHA_PESSOA, CRACHEID_PESSOA, TIPO_USUARIO) KEY(ID_PESSOA) VALUES (1, 'Alice Admin', 'alice.admin@smart.com', '{noop}admin123', 'CR001', 'ADMIN'), (2, 'Otavio Organizador', 'otavio.organizador@smart.com', '{noop}org123', 'CR002', 'ORGANIZADOR'), (3, 'Paula Participante', 'paula.participante@smart.com', '{noop}part123', 'CR003', 'PARTICIPANTE') [42104-224]
