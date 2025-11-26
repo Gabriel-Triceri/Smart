@@ -51,6 +51,13 @@ public class SalaService {
         dto.setCapacidade(sala.getCapacidade());
         dto.setLocalizacao(sala.getLocalizacao());
         dto.setStatus(sala.getStatus());
+        dto.setEquipamentos(sala.getEquipamentos());
+        dto.setCategoria(sala.getCategoria());
+        dto.setAndar(sala.getAndar());
+        dto.setImagem(sala.getImagem());
+        dto.setObservacoes(sala.getObservacoes());
+        // Disponibilidade baseada no status
+        dto.setDisponibilidade(sala.getStatus() == SalaStatus.LIVRE);
         return dto;
     }
 
@@ -68,6 +75,11 @@ public class SalaService {
         sala.setCapacidade(dto.getCapacidade());
         sala.setLocalizacao(dto.getLocalizacao());
         sala.setStatus(dto.getStatus());
+        sala.setEquipamentos(dto.getEquipamentos());
+        sala.setCategoria(dto.getCategoria());
+        sala.setAndar(dto.getAndar());
+        sala.setImagem(dto.getImagem());
+        sala.setObservacoes(dto.getObservacoes());
         return sala;
     }
 
@@ -97,6 +109,24 @@ public class SalaService {
         sala.setCapacidade(dtoAtualizada.getCapacidade());
         sala.setLocalizacao(dtoAtualizada.getLocalizacao());
         sala.setStatus(dtoAtualizada.getStatus());
+
+        // Atualizar campos adicionais
+        if (dtoAtualizada.getEquipamentos() != null) {
+            sala.setEquipamentos(dtoAtualizada.getEquipamentos());
+        }
+        if (dtoAtualizada.getCategoria() != null) {
+            sala.setCategoria(dtoAtualizada.getCategoria());
+        }
+        if (dtoAtualizada.getAndar() != null) {
+            sala.setAndar(dtoAtualizada.getAndar());
+        }
+        if (dtoAtualizada.getImagem() != null) {
+            sala.setImagem(dtoAtualizada.getImagem());
+        }
+        if (dtoAtualizada.getObservacoes() != null) {
+            sala.setObservacoes(dtoAtualizada.getObservacoes());
+        }
+
         Sala atualizado = repository.save(sala);
         return toDTO(atualizado);
     }

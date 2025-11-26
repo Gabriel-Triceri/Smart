@@ -351,7 +351,12 @@ export const meetingsApi = {
             throw new Error('ID da sala inválido');
         }
 
+        console.log('🚀 [meetingsApi] updateSala - Payload:', { id, data });
+
         const response = await api.put(`/salas/${id}`, data);
+
+        console.log('✅ [meetingsApi] updateSala - Response:', response.data);
+
         return {
             ...response.data,
             status: DateTimeUtils.convertSalaStatusFromBackend(response.data.status)
