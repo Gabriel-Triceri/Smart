@@ -13,15 +13,15 @@ public class MovimentacaoTarefaDTO {
     private StatusTarefa statusAnterior;
     @NotNull
     private StatusTarefa statusNovo;
-    private String colunaAnterior; // Optional
-    private String colunaNova;     // Optional
+    private String colunaAnterior;
+    private String colunaNova;
     @NotBlank
     private String usuarioId;
     @NotBlank
     private String usuarioNome;
     @NotNull
     private LocalDateTime timestamp;
-    private String comentario;     // Optional
+    private String comentario; // Optional
 
     // Getters and Setters
     public Long getTarefaId() {

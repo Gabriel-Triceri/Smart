@@ -12,5 +12,5 @@ public class SalaStatisticsDTO {
     private long disponiveis;
     private long ocupadas;
     private long manutencao;
-    private double utilizacaoMedia; // Placeholder for now, requires more complex logic
+    private double utilizacaoMedia;
 }

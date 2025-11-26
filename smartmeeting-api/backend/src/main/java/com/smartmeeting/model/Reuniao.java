@@ -16,11 +16,10 @@ import java.util.List;
 @Builder
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false, exclude = { "organizador", "sala", "participantes", "presencas", "tarefas",
-        "project" }) // Excluir campos de relacionamento
-@ToString(exclude = { "organizador", "sala", "participantes", "presencas", "tarefas", "project" }) // Excluir campos de
-                                                                                                   // relacionamento do
-                                                                                                   // toString
-public class Reuniao extends Auditable { // Estende Auditable
+        "project" })
+@ToString(exclude = { "organizador", "sala", "participantes", "presencas", "tarefas", "project" })
+
+public class Reuniao extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_REUNIAO")
@@ -49,15 +48,15 @@ public class Reuniao extends Auditable { // Estende Auditable
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "ORGANIZADOR_ID", referencedColumnName = "ID_PESSOA", foreignKey = @ForeignKey(name = "FK_REUNIAO_ORGANIZADOR"))
-    @JsonManagedReference // Adicionado para o lado gerenciador do relacionamento bidirecional
+    @JsonManagedReference
     private Pessoa organizador;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "SALA_ID", referencedColumnName = "ID_SALA", foreignKey = @ForeignKey(name = "FK_REUNIAO_SALA"))
-    @JsonManagedReference // Adicionado para o lado gerenciador do relacionamento bidirecional
+    @JsonManagedReference
     private Sala sala;
 
-    @ManyToMany(fetch = FetchType.EAGER) // Alterado para EAGER
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "REUNIAO_PARTICIPANTES", joinColumns = @JoinColumn(name = "REUNIAO_ID", referencedColumnName = "ID_REUNIAO"), inverseJoinColumns = @JoinColumn(name = "PESSOA_ID", referencedColumnName = "ID_PESSOA"), foreignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_REUNIAO"), inverseForeignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_PESSOA"))
     private List<Pessoa> participantes;
 
@@ -65,7 +64,7 @@ public class Reuniao extends Auditable { // Estende Auditable
     @JsonManagedReference
     private List<Presenca> presencas;
 
-    @OneToMany(mappedBy = "reuniao", fetch = FetchType.LAZY) // Relacionamento bidirecional com Tarefa
+    @OneToMany(mappedBy = "reuniao", fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Tarefa> tarefas;
 

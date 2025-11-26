@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 public class AnexoTarefaDTO {
     private Long id;
     private String nome;
-    private String tipo; // 'documento', 'imagem', etc.
+    private String tipo;
     private String url;
     private Long tamanho;
-    private String uploadedBy; // ID do usuário
+    private String uploadedBy;
     private String uploadedByNome;
     private LocalDateTime createdAt;
 }

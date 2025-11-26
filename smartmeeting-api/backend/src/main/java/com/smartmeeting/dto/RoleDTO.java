@@ -5,14 +5,29 @@ import java.util.List;
 public class RoleDTO {
     private Long id;
     private String nome;
-    private List<String> permissions; // nomes das permissões
+    private List<String> permissions;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public List<String> getPermissions() { return permissions; }
-    public void setPermissions(List<String> permissions) { this.permissions = permissions; }
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public List<String> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(List<String> permissions) {
+        this.permissions = permissions;
+    }
 }

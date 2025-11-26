@@ -25,7 +25,7 @@ public class NotificacaoTarefa {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
-    private Pessoa usuario; // Assumindo que a notificação é para uma Pessoa
+    private Pessoa usuario;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -11,6 +11,6 @@ public class AssigneeDTO {
     private Long id;
     private String nome;
     private String email;
-    private String avatar; // Opcional
-    private String departamento; // Opcional
+    private String avatar;
+    private String departamento;
 }

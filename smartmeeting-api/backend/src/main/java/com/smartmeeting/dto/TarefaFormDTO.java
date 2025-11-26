@@ -18,7 +18,7 @@ public class TarefaFormDTO {
     private String descricao;
     private String responsavelPrincipalId;
     private List<String> responsaveisIds;
-    private LocalDate prazo; // Data de vencimento
+    private LocalDate prazo;
     private LocalDate dataInicio;
     private PrioridadeTarefa prioridade;
     private List<String> tags;

@@ -19,10 +19,10 @@ import java.time.LocalDate;
 @Accessors(chain = true)
 public class TarefaDTO {
     private Long id;
-    private String titulo; // Alias para descricao
+    private String titulo;
     private String descricao;
     private LocalDate prazo;
-    private String prazo_tarefa; // Alias para prazo (compatibilidade frontend)
+    private String prazo_tarefa;
     private boolean concluida;
     private StatusTarefa statusTarefa;
     private String prioridade;
@@ -31,9 +31,8 @@ public class TarefaDTO {
     private java.util.List<String> tags;
     private String cor;
 
-    // Responsáveis
-    private Long responsavelId; // Mantido para compatibilidade
-    private String responsavelNome; // Mantido para compatibilidade
+    private Long responsavelId;
+    private String responsavelNome;
     private Long responsavelPrincipalId;
     private java.util.List<AssigneeDTO> responsaveis;
 

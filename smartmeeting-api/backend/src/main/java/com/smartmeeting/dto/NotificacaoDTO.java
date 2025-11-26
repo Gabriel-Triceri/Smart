@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class NotificacaoDTO {
-    private Long id;                // opcional para POST, usado para PUT/atualização
-    private String mensagem;        // texto da notificação
-    private LocalDateTime dataEnvio; // data e hora do envio
-    private TipoNotificacao tipo;    // enum: EMAIL, CONSOLE, PUSH
-    private Long destinatarioId;     // id do usuário que receberá a notificação
+    private Long id;
+    private String mensagem;
+    private LocalDateTime dataEnvio;
+    private TipoNotificacao tipo;
+    private Long destinatarioId;
 }

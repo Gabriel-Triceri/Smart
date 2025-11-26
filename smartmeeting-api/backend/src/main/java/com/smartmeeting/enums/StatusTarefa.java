@@ -17,17 +17,15 @@ public enum StatusTarefa {
     private final String value;
     private final String descricao;
 
-    // Mapa estático e imutável para busca eficiente por valor, inicializado com Streams.
-    private static final Map<String, StatusTarefa> BY_VALUE =
-            Arrays.stream(values())
-                  .collect(Collectors.toUnmodifiableMap(status -> status.value, Function.identity()));
+    private static final Map<String, StatusTarefa> BY_VALUE = Arrays.stream(values())
+            .collect(Collectors.toUnmodifiableMap(status -> status.value, Function.identity()));
 
     StatusTarefa(String value, String descricao) {
         this.value = value;
         this.descricao = descricao;
     }
 
-    @JsonValue // Indica que este método deve ser usado para serializar o enum para JSON
+    @JsonValue
     public String getValue() {
         return value;
     }
@@ -36,13 +34,13 @@ public enum StatusTarefa {
         return descricao;
     }
 
-    @JsonCreator // Indica que este método deve ser usado para desserializar o enum a partir de JSON
+    @JsonCreator
     public static StatusTarefa fromValue(String value) {
         if (value == null) {
             throw new IllegalArgumentException("O status da tarefa não pode ser nulo.");
         }
-        StatusTarefa status = BY_VALUE.get(value.toLowerCase()); // Garante que a busca seja case-insensitive
-        if (status == null) { // Se não for nulo, mas for um valor inválido
+        StatusTarefa status = BY_VALUE.get(value.toLowerCase());
+        if (status == null) {
             throw new IllegalArgumentException("Status de tarefa inválido: " + value);
         }
         return status;

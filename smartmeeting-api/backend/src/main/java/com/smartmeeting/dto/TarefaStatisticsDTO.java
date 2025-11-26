@@ -14,13 +14,13 @@ import java.util.Map;
 @AllArgsConstructor
 public class TarefaStatisticsDTO {
     private long total;
-    private Map<StatusTarefa, Long> porStatus; // Changed from Record<StatusTarefa, number> to Map<StatusTarefa, Long>
-    private Map<PrioridadeTarefa, Long> porPrioridade; // Changed from Record<PrioridadeTarefa, number> to Map<PrioridadeTarefa, Long>
+    private Map<StatusTarefa, Long> porStatus;
+    private Map<PrioridadeTarefa, Long> porPrioridade;
     private List<ResponsavelStatsDTO> porResponsavel;
     private double taxaConclusao;
     private long tarefasVencendo;
     private long tarefasAtrasadas;
-    private double mediaTempoConclusao; // em horas
+    private double mediaTempoConclusao;
     private List<ProdutividadeSemanaDTO> produtividadeSemana;
 
     @Data

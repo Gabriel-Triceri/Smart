@@ -27,10 +27,6 @@ public class CalendarioService {
     }
 
     public String gerarICalParaPessoa(Long pessoaId) {
-        // Assumindo que pessoaRepository.findById(pessoaId) seria chamado aqui para
-        // validar a pessoa
-        // Mas como não temos o PessoaRepository injetado, vamos apenas buscar as
-        // reuniões
         List<Reuniao> reunioes = reuniaoRepository.findByParticipanteId(pessoaId);
         return ICalExportService.gerarCalendario(reunioes, "Minhas Reuniões - SmartMeeting");
     }

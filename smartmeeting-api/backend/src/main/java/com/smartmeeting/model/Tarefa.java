@@ -18,9 +18,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = { "responsavel", "reuniao", "project" }) // Excluir campos de
-                                                                                         // relacionamento
-public class Tarefa extends Auditable { // Estende Auditable
+@EqualsAndHashCode(callSuper = false, exclude = { "responsavel", "reuniao", "project" })
+
+public class Tarefa extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_TAREFA")

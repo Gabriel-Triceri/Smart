@@ -40,5 +40,5 @@ public class TemplateTarefa {
     @ElementCollection
     @CollectionTable(name = "template_tarefa_dependencias", joinColumns = @JoinColumn(name = "template_tarefa_id"))
     @Column(name = "dependencia")
-    private List<String> dependencias; // IDs ou títulos de outras tarefas template
+    private List<String> dependencias;
 }

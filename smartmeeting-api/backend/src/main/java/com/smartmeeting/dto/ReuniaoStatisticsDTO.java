@@ -15,9 +15,9 @@ public class ReuniaoStatisticsDTO {
     private long reunioesEmAndamento;
     private long reunioesFinalizadas;
     private long reunioesCanceladas;
-    private long proximasReunioes; // Count of upcoming meetings
+    private long proximasReunioes;
     private String salaMaisUsada;
     private long salasEmUso;
-    private double taxaParticipacao; // Placeholder for now
-    private List<ReuniaoDTO> proximasReunioesList; // List of actual upcoming meetings
+    private double taxaParticipacao;
+    private List<ReuniaoDTO> proximasReunioesList;
 }

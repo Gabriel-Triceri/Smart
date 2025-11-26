@@ -1,14 +1,13 @@
 package com.smartmeeting.dto;
 
-import com.smartmeeting.enums.StatusTarefa; // Corrected import
+import com.smartmeeting.enums.StatusTarefa;
 import jakarta.validation.constraints.NotNull;
 
 public class MovimentacaoTarefaRequest {
     @NotNull
     private StatusTarefa newStatus;
-    private Integer newPosition; // Optional, for ordering within a column
+    private Integer newPosition;
 
-    // Getters and Setters
     public StatusTarefa getNewStatus() {
         return newStatus;
     }

@@ -5,7 +5,7 @@ import jakarta.persistence.Converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Converter(autoApply = true) // Re-added autoApply = true
+@Converter(autoApply = true)
 public class PrioridadeTarefaConverter implements AttributeConverter<PrioridadeTarefa, String> {
 
     private static final Logger logger = LoggerFactory.getLogger(PrioridadeTarefaConverter.class);
@@ -25,12 +25,12 @@ public class PrioridadeTarefaConverter implements AttributeConverter<PrioridadeT
             return null;
         }
         logger.debug("Converting database column {} to enum", dbData);
-        // Handle the specific case of "MÉDIA" from the database
+
         if ("MÉDIA".equalsIgnoreCase(dbData)) {
             logger.debug("Mapped 'MÉDIA' to PrioridadeTarefa.MEDIA");
             return PrioridadeTarefa.MEDIA;
         }
-        // Also handle "MEDIA" (without accent) explicitly if it exists in the DB
+
         if ("MEDIA".equalsIgnoreCase(dbData)) {
             logger.debug("Mapped 'MEDIA' to PrioridadeTarefa.MEDIA");
             return PrioridadeTarefa.MEDIA;

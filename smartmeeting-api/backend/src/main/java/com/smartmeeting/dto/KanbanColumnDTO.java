@@ -11,10 +11,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KanbanColumnDTO {
-    private StatusTarefa id; // O ID da coluna é o StatusTarefa
+    private StatusTarefa id;
     private String titulo;
     private List<TarefaDTO> tarefas;
-    private Integer limiteMaximo; // Opcional
+    private Integer limiteMaximo;
     private String cor;
     private int ordem;
 }

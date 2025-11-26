@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString; // Importar ToString
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import java.util.List;
@@ -19,8 +19,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = {"reunioesOrganizadas", "reunioesParticipadas", "tarefasResponsavel", "presencas", "notificacoesRecebidas", "roles"}) // Excluir campos de relacionamento
-@ToString(exclude = {"reunioesOrganizadas", "reunioesParticipadas", "tarefasResponsavel", "presencas", "notificacoesRecebidas", "roles"}) // Excluir campos de relacionamento do toString
+@EqualsAndHashCode(callSuper = false, exclude = { "reunioesOrganizadas", "reunioesParticipadas", "tarefasResponsavel",
+        "presencas", "notificacoesRecebidas", "roles" }) // Excluir campos de relacionamento
+@ToString(exclude = { "reunioesOrganizadas", "reunioesParticipadas", "tarefasResponsavel", "presencas",
+        "notificacoesRecebidas", "roles" }) // Excluir campos de relacionamento do toString
 public class Pessoa extends Auditable {
 
     @Id
@@ -66,11 +68,7 @@ public class Pessoa extends Auditable {
     private List<Notificacao> notificacoesRecebidas;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "PESSOA_ROLE",
-            joinColumns = @JoinColumn(name = "ID_PESSOA"),
-            inverseJoinColumns = @JoinColumn(name = "ID_ROLE")
-    )
+    @JoinTable(name = "PESSOA_ROLE", joinColumns = @JoinColumn(name = "ID_PESSOA"), inverseJoinColumns = @JoinColumn(name = "ID_ROLE"))
     private List<Role> roles;
 
     public List<Role> getRoles() {

@@ -26,13 +26,12 @@ public class SalaDTO {
 
     private SalaStatus status;
 
-    private List<String> equipamentos; // Ex: ["Projetor", "TV"]
+    private List<String> equipamentos;
     private String categoria;
     private String andar;
     private Boolean disponibilidade;
 
     private String imagem;
     private String observacoes;
-
 
 }
