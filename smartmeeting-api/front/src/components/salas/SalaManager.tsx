@@ -1,16 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import {
-    Plus, Building, Search, Filter, X, LayoutGrid, List
+    Plus, Building, Search, Filter, X, List, Clock
 } from 'lucide-react';
 import { Sala } from '../../types/meetings';
 import { useSalas } from '../../hooks/useSalas';
-import { SalasGrid } from './SalasGrid';
 import { SalasList } from './SalasList';
 import { SalaForm } from './SalaForm';
 import { BookingSystem } from './BookingSystem';
+import { RoomTimeline } from './RoomTimeline';
 import { useTheme } from '../../context/ThemeContext';
 
 type ModalType = 'form' | 'booking' | null;
+type ViewMode = 'list' | 'timeline';
 
 export const SalaManager: React.FC = () => {
     const {
@@ -29,12 +31,13 @@ export const SalaManager: React.FC = () => {
 
     const { theme } = useTheme();
 
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<ViewMode>('list');
     const [modalType, setModalType] = useState<ModalType>(null);
     const [salaSelecionada, setSalaSelecionada] = useState<Sala | null>(null);
     const [salaEmEdicao, setSalaEmEdicao] = useState<Partial<Sala> | null>(null);
     const [termoBusca, setTermoBusca] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [timelineDate, setTimelineDate] = useState(new Date());
 
     const [filtrosLocais, setFiltrosLocais] = useState({
         categoria: '',
@@ -150,52 +153,51 @@ export const SalaManager: React.FC = () => {
                             <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
 
                             <div className="hidden md:flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'grid'
-                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
-                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                        }`}
-                                >
-                                    <LayoutGrid className="w-4 h-4" />
-                                    <span className="hidden lg:inline">Grid</span>
-                                </button>
+
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list'
-                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
-                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                        }`}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
                                 >
                                     <List className="w-4 h-4" />
                                     <span className="hidden lg:inline">Lista</span>
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('timeline')}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'timeline' ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
+                                >
+                                    <Clock className="w-4 h-4" />
+                                    <span className="hidden lg:inline">Timeline</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* Right: Actions & Search */}
                         <div className="flex items-center gap-3 flex-1 justify-end">
-                            <div className="hidden md:flex relative group max-w-md w-full">
-                                <input
-                                    type="text"
-                                    value={termoBusca}
-                                    onChange={(e) => handleSearch(e.target.value)}
-                                    placeholder="Buscar salas..."
-                                    className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-700/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-500"
-                                />
-                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                            </div>
+                            {viewMode !== 'timeline' && (
+                                <div className="hidden md:flex relative group max-w-md w-full">
+                                    <input
+                                        type="text"
+                                        value={termoBusca}
+                                        onChange={(e) => handleSearch(e.target.value)}
+                                        placeholder="Buscar salas..."
+                                        className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-700/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white placeholder-slate-500"
+                                    />
+                                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                </div>
+                            )}
 
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                className={`p-2 rounded-lg border transition-all relative ${showFilters
-                                    ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
-                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'
-                                    }`}
-                                title="Filtros Avançados"
-                            >
-                                <Filter className="w-4 h-4" />
-                            </button>
+                            {viewMode !== 'timeline' && (
+                                <button
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className={`p-2 rounded-lg border transition-all relative ${showFilters
+                                        ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'
+                                        }`}
+                                    title="Filtros Avançados"
+                                >
+                                    <Filter className="w-4 h-4" />
+                                </button>
+                            )}
 
                             <button
                                 onClick={handleCreateSala}
@@ -207,8 +209,8 @@ export const SalaManager: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Expandable Filter Area */}
-                    {showFilters && (
+                    {/* Expandable Filter Area (Only for Grid/List) */}
+                    {showFilters && viewMode !== 'timeline' && (
                         <div className="py-4 border-t border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-top-2 duration-200">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
@@ -301,33 +303,37 @@ export const SalaManager: React.FC = () => {
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-y-auto">
-                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center h-64">
                             <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-blue-600 mb-4"></div>
                             <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Carregando salas...</span>
                         </div>
                     ) : (
-                        viewMode === 'grid' ? (
-                            <SalasGrid
-                                salas={salasFiltradas}
-                                onSalaClick={handleSalaClick}
-                                onEditSala={handleEditSala}
-                                onDeleteSala={handleDeleteSala}
-                            />
-                        ) : (
-                            <SalasList
-                                salas={salasFiltradas}
-                                onSalaClick={handleSalaClick}
-                                onEditSala={handleEditSala}
-                                onDeleteSala={handleDeleteSala}
-                            />
-                        )
+                        <>
+
+                            {viewMode === 'list' && (
+                                <SalasList
+                                    salas={salasFiltradas}
+                                    onSalaClick={handleSalaClick}
+                                    onEditSala={handleEditSala}
+                                    onDeleteSala={handleDeleteSala}
+                                />
+                            )}
+                            {viewMode === 'timeline' && (
+                                <RoomTimeline
+                                    salas={salasFiltradas}
+                                    currentDate={timelineDate}
+                                    onDateChange={setTimelineDate}
+                                    isLoading={loading}
+                                />
+                            )}
+                        </>
                     )}
                 </div>
             </main>
 
-            {/* Modais */}
+            {/* Modals */}
             {modalType === 'form' && (
                 <SalaForm
                     sala={salaEmEdicao ? (salaEmEdicao as Sala) : undefined}

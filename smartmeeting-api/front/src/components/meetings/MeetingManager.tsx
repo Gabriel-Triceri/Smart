@@ -200,8 +200,8 @@ export const MeetingManager: React.FC = () => {
                                 <button
                                     onClick={() => setCurrentView('calendar')}
                                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${currentView === 'calendar'
-                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
-                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                                         }`}
                                 >
                                     <CalendarIcon className="w-4 h-4" />
@@ -210,8 +210,8 @@ export const MeetingManager: React.FC = () => {
                                 <button
                                     onClick={() => setCurrentView('list')}
                                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${currentView === 'list'
-                                            ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
-                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-white shadow-sm'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                                         }`}
                                 >
                                     <List className="w-4 h-4" />
@@ -296,6 +296,7 @@ export const MeetingManager: React.FC = () => {
                                     setReuniaoEmEdicao(null);
                                 }}
                                 isLoading={isLoading}
+                                isEditing={!!selectedReuniao}
                             />
                         </div>
                     </div>

@@ -23,7 +23,6 @@ public class MovimentacaoTarefaDTO {
     private LocalDateTime timestamp;
     private String comentario; // Optional
 
-    // Getters and Setters
     public Long getTarefaId() {
         return tarefaId;
     }

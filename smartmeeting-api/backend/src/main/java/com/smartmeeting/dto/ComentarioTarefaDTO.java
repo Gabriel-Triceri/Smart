@@ -17,14 +17,13 @@ public class ComentarioTarefaDTO {
     private Long tarefaId;
     private Long autorId;
     private String autorNome;
-    private String autorAvatar; // Pode ser null se não tiver avatar
+    private String autorAvatar;
     private String conteudo;
-    private List<MencaoDTO> mencoes; // Criar MencaoDTO se necessário, ou usar String simples se for simplificado
-    private List<AnexoTarefaDTO> anexos; // Se comentários puderem ter anexos
+    private List<MencaoDTO> mencoes;
+    private List<AnexoTarefaDTO> anexos;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Classe interna para Menção se não quiser criar arquivo separado agora
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

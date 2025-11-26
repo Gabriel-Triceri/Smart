@@ -17,7 +17,7 @@ public class ErrorResponse {
     private String error;
     private String message;
     private String path;
-    private Map<String, String> details; // Para erros de validação
+    private Map<String, String> details;
 
     public ErrorResponse(int status, String error, String message, String path) {
         this.timestamp = LocalDateTime.now();

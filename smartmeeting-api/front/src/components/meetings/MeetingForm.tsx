@@ -11,13 +11,15 @@ interface MeetingFormProps {
     onSubmit: (data: ReuniaoFormData) => Promise<void>;
     onCancel: () => void;
     isLoading?: boolean;
+    isEditing?: boolean;
 }
 
 export const MeetingForm: React.FC<MeetingFormProps> = ({
     initialData,
     onSubmit,
     onCancel,
-    isLoading = false
+    isLoading = false,
+    isEditing = false
 }) => {
     const [formData, setFormData] = useState<ReuniaoFormData>(
         ({
@@ -193,7 +195,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
             <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 sticky top-0 z-10">
                 <div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                        {initialData ? 'Editar Reunião' : 'Agendar Reunião'}
+                        {isEditing ? 'Editar Reunião' : 'Agendar Reunião'}
                     </h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Preencha os detalhes do evento</p>
                 </div>
@@ -411,7 +413,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700 transition-colors"
+                            className="px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700 transition-colors"
                             disabled={isSubmitting}
                         >
                             Cancelar
@@ -422,7 +424,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
                             className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            {initialData ? 'Atualizar Reunião' : 'Agendar Reunião'}
+                            {isEditing ? 'Atualizar Reunião' : 'Agendar Reunião'}
                         </button>
                     </div>
                 </form>
