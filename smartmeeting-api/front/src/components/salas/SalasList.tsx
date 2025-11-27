@@ -88,7 +88,6 @@ export const SalasList: React.FC<SalasListProps> = ({
                     <thead>
                         <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                             <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Sala</th>
-                            <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Status</th>
                             <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Categoria</th>
                             <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Capacidade</th>
                             <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Equipamentos</th>
@@ -126,12 +125,6 @@ export const SalasList: React.FC<SalasListProps> = ({
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${status.color}`}>
-                                            <StatusIcon className="w-3.5 h-3.5" />
-                                            {status.text}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">

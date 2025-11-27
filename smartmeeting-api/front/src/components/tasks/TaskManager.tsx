@@ -3,10 +3,7 @@ import {
     LayoutGrid,
     List,
     Plus,
-    Bell,
     RefreshCw,
-    Download,
-    Upload,
     MoreVertical,
     Eye,
     Edit,
@@ -15,8 +12,6 @@ import {
     CheckSquare,
     Search,
     Filter,
-    X,
-    ChevronDown
 } from 'lucide-react';
 import { useTarefas } from '../../hooks/useTarefas';
 import { KanbanBoard } from './KanbanBoard';
@@ -43,7 +38,7 @@ const getStatusColor = (status: string) => {
 
 const getStatusLabel = (status: string) => {
     switch (status) {
-        case StatusTarefa.TODO: return 'A fazer';
+        case StatusTarefa.TODO: return 'Não Iniciado';
         case StatusTarefa.IN_PROGRESS: return 'Em andamento';
         case StatusTarefa.REVIEW: return 'Em revisão';
         case StatusTarefa.DONE: return 'Concluído';
@@ -116,8 +111,6 @@ export function TaskManager() {
         };
         await criarTarefa(novaTarefa);
     };
-
-    const totalNotificacoesNaoLidas = notificacoes.filter(n => !n.lida).length;
 
     useEffect(() => {
         if (!tarefaSelecionada) return;

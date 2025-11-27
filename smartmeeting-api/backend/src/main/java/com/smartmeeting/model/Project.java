@@ -29,6 +29,9 @@ public class Project {
 
     private LocalDate endDate;
 
+    // Data real de término (quando o projeto foi efetivamente concluído)
+    private LocalDate actualEndDate;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ProjectStatus status;
@@ -39,4 +42,17 @@ public class Project {
     @ManyToOne
     @JoinColumn(name = "ID_OWNER", referencedColumnName = "ID_PESSOA", nullable = false)
     private Pessoa owner;
+
+    // Dados do responsável pelo projeto no cliente (opcional)
+    @Column(name = "CLIENT_CONTACT_NAME")
+    private String clientContactName;
+
+    @Column(name = "CLIENT_CONTACT_EMAIL")
+    private String clientContactEmail;
+
+    @Column(name = "CLIENT_CONTACT_PHONE")
+    private String clientContactPhone;
+
+    @Column(name = "CLIENT_CONTACT_POSITION")
+    private String clientContactPosition;
 }

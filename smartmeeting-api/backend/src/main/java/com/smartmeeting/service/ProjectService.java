@@ -4,7 +4,6 @@ import com.smartmeeting.dto.AddProjectMemberDTO;
 import com.smartmeeting.dto.CreateProjectDTO;
 import com.smartmeeting.dto.ProjectDTO;
 import com.smartmeeting.dto.ProjectMemberDTO;
-import com.smartmeeting.dto.UpdateProjectDTO;
 import com.smartmeeting.enums.ProjectRole;
 import com.smartmeeting.enums.ProjectStatus;
 import com.smartmeeting.exception.BadRequestException;
@@ -42,7 +41,6 @@ public class ProjectService {
 
     @Transactional
     public ProjectDTO createProject(CreateProjectDTO createProjectDTO, Pessoa currentUser) {
-        // ✅ CORREÇÃO: Verificação null safety para ownerId
         Long ownerId = createProjectDTO.getOwnerId();
         if (ownerId == null) {
             throw new BadRequestException("OwnerId não pode ser null");
@@ -58,6 +56,11 @@ public class ProjectService {
         project.setEndDate(createProjectDTO.getEndDate());
         project.setStatus(ProjectStatus.PLANNING);
         project.setOwner(owner);
+
+        project.setClientContactName(createProjectDTO.getClientContactName());
+        project.setClientContactEmail(createProjectDTO.getClientContactEmail());
+        project.setClientContactPhone(createProjectDTO.getClientContactPhone());
+        project.setClientContactPosition(createProjectDTO.getClientContactPosition());
 
         Project savedProject = projectRepository.save(project);
 
@@ -78,7 +81,6 @@ public class ProjectService {
     }
 
     public ProjectDTO findProjectById(Long id) {
-        // ✅ CORREÇÃO: Verificação null para id
         if (id == null) {
             throw new BadRequestException("ID do projeto não pode ser null");
         }
@@ -90,7 +92,6 @@ public class ProjectService {
 
     @Transactional
     public ProjectMember addMember(Long projectId, AddProjectMemberDTO addProjectMemberDTO, Pessoa currentUser) {
-        // ✅ CORREÇÃO: Verificação null para projectId
         if (projectId == null) {
             throw new BadRequestException("ID do projeto não pode ser null");
         }
@@ -98,12 +99,10 @@ public class ProjectService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Projeto com id " + projectId + " não encontrado."));
 
-        // ✅ IMPLEMENTAÇÃO: Autorização para adicionar membros
         if (!isOwnerOrAdmin(project, currentUser)) {
             throw new BadRequestException("Você não tem permissão para adicionar membros a este projeto.");
         }
 
-        // ✅ CORREÇÃO: Verificação null para personId
         Long personId = addProjectMemberDTO.getPersonId();
         if (personId == null) {
             throw new BadRequestException("PersonId não pode ser null");
@@ -126,33 +125,7 @@ public class ProjectService {
     }
 
     @Transactional
-    public ProjectDTO updateProject(Long id, UpdateProjectDTO updateProjectDTO, Pessoa currentUser) {
-        // ✅ CORREÇÃO: Verificação null para id
-        if (id == null) {
-            throw new BadRequestException("ID do projeto não pode ser null");
-        }
-
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Projeto com id " + id + " não encontrado."));
-
-        // ✅ IMPLEMENTAÇÃO: Autorização atualizada
-        if (!isOwnerOrAdmin(project, currentUser)) {
-            throw new BadRequestException("Você não tem permissão para atualizar este projeto.");
-        }
-
-        Optional.ofNullable(updateProjectDTO.getName()).ifPresent(project::setName);
-        Optional.ofNullable(updateProjectDTO.getDescription()).ifPresent(project::setDescription);
-        Optional.ofNullable(updateProjectDTO.getStartDate()).ifPresent(project::setStartDate);
-        Optional.ofNullable(updateProjectDTO.getEndDate()).ifPresent(project::setEndDate);
-        Optional.ofNullable(updateProjectDTO.getStatus()).ifPresent(project::setStatus);
-
-        Project updatedProject = projectRepository.save(project);
-        return convertToDto(updatedProject);
-    }
-
-    @Transactional
     public void deleteProject(Long id, Pessoa currentUser) {
-        // ✅ CORREÇÃO: Verificação null para id
         if (id == null) {
             throw new BadRequestException("ID do projeto não pode ser null");
         }
@@ -160,7 +133,6 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Projeto com id " + id + " não encontrado."));
 
-        // ✅ IMPLEMENTAÇÃO: Autorização para deletar
         if (!project.getOwner().getId().equals(currentUser.getId())) {
             throw new BadRequestException("Você não tem permissão para deletar este projeto.");
         }
@@ -170,7 +142,6 @@ public class ProjectService {
 
     @Transactional
     public void removeMember(Long projectId, Long memberId, Pessoa currentUser) {
-        // ✅ CORREÇÃO: Verificação null para projectId e memberId
         if (projectId == null) {
             throw new BadRequestException("ID do projeto não pode ser null");
         }
@@ -185,13 +156,11 @@ public class ProjectService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Membro do projeto com id " + memberId + " não encontrado."));
 
-        // ✅ CORREÇÃO: Verificação segura de projeto
         Long memberProjectId = memberToRemove.getProject().getId();
         if (!Objects.equals(memberProjectId, projectId)) {
             throw new BadRequestException("O membro não pertence a este projeto.");
         }
 
-        // ✅ IMPLEMENTAÇÃO: Autorização para remover membros
         Long currentUserId = currentUser.getId();
         Long projectOwnerId = project.getOwner().getId();
         Long memberPersonId = memberToRemove.getPerson().getId();
@@ -203,13 +172,11 @@ public class ProjectService {
         projectMemberRepository.delete(memberToRemove);
     }
 
-    // ✅ MÉTODO HELPER: Verificar se usuário é owner ou admin do projeto
     private boolean isOwnerOrAdmin(Project project, Pessoa currentUser) {
         if (currentUser == null) {
             return false;
         }
 
-        // Verificar se é owner
         Long currentUserId = currentUser.getId();
         Long ownerId = project.getOwner().getId();
 
@@ -217,14 +184,12 @@ public class ProjectService {
             return true;
         }
 
-        // Verificar se é admin/member com permissão de escrita
         Optional<ProjectMember> memberOptional = projectMemberRepository.findByProjectAndPerson(project, currentUser);
         return memberOptional.isPresent() &&
                 (memberOptional.get().getRole() == ProjectRole.ADMIN ||
                         memberOptional.get().getRole() == ProjectRole.MEMBER_EDITOR);
     }
 
-    // ✅ MÉTODO ADICIONAL: Buscar projetos do usuário atual
     public List<ProjectDTO> findMyProjects(Pessoa currentUser) {
         if (currentUser == null) {
             throw new BadRequestException("Usuário não pode ser null");
@@ -232,19 +197,15 @@ public class ProjectService {
 
         return projectRepository.findAll().stream()
                 .filter(project -> {
-                    // Projeto onde é owner
                     if (Objects.equals(project.getOwner().getId(), currentUser.getId())) {
                         return true;
                     }
-
-                    // Projeto onde é member
                     return projectMemberRepository.findByProjectAndPerson(project, currentUser).isPresent();
                 })
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
-    // ✅ MÉTODO ADICIONAL: Buscar membros do projeto
     public List<ProjectMemberDTO> findProjectMembers(Long projectId) {
         if (projectId == null) {
             throw new BadRequestException("ID do projeto não pode ser null");
@@ -265,14 +226,18 @@ public class ProjectService {
         dto.setDescription(project.getDescription());
         dto.setStartDate(project.getStartDate());
         dto.setEndDate(project.getEndDate());
+        dto.setActualEndDate(project.getActualEndDate());
         dto.setStatus(project.getStatus());
 
-        // ✅ CORREÇÃO: Verificação null para owner
+        dto.setClientContactName(project.getClientContactName());
+        dto.setClientContactEmail(project.getClientContactEmail());
+        dto.setClientContactPhone(project.getClientContactPhone());
+        dto.setClientContactPosition(project.getClientContactPosition());
+
         if (project.getOwner() != null) {
             dto.setOwner(pessoaService.convertToDto(project.getOwner()));
         }
 
-        // ✅ CORREÇÃO: Verificação null para members
         if (project.getMembers() != null) {
             dto.setMembers(project.getMembers().stream()
                     .map(this::convertMemberToDto)
@@ -285,12 +250,10 @@ public class ProjectService {
         ProjectMemberDTO dto = new ProjectMemberDTO();
         dto.setId(member.getId());
 
-        // ✅ CORREÇÃO: Verificação null para project
         if (member.getProject() != null) {
             dto.setProjectId(member.getProject().getId());
         }
 
-        // ✅ CORREÇÃO: Verificação null para person
         if (member.getPerson() != null) {
             dto.setPerson(pessoaService.convertToDto(member.getPerson()));
         }

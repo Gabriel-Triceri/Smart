@@ -54,7 +54,7 @@ const COLUMN_ACCENTS: Record<string, string> = {
 };
 
 const COLUMNS = [
-    { id: StatusTarefa.TODO, title: 'A Fazer' },
+    { id: StatusTarefa.TODO, title: 'Não Iniciado' },
     { id: StatusTarefa.IN_PROGRESS, title: 'Em Andamento' },
     { id: StatusTarefa.REVIEW, title: 'Em Revisão' },
     { id: StatusTarefa.DONE, title: 'Concluído' },

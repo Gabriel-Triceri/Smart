@@ -29,4 +29,10 @@ public class CreateProjectDTO {
 
     @NotNull(message = "O ID do proprietário é obrigatório.")
     private Long ownerId;
+
+    // Dados do responsável pelo projeto no cliente (opcional)
+    private String clientContactName;
+    private String clientContactEmail;
+    private String clientContactPhone;
+    private String clientContactPosition;
 }

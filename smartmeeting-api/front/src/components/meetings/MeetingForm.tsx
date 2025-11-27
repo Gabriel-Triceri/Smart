@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle, Calendar, Clock, MapPin, Loader2, Link as LinkIcon, FileText, CheckCircle2 } from 'lucide-react';
+import { X, Save, AlertCircle, Clock, MapPin, Loader2, Link as LinkIcon } from 'lucide-react';
 import { meetingsApi } from '../../services/meetingsApi';
 import { ReuniaoFormData, Participante, Sala } from '../../types/meetings';
 import { ReuniaoValidation } from '../../utils/validation';

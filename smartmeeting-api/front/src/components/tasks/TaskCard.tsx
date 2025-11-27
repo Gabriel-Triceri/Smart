@@ -37,7 +37,7 @@ const PRIORITY_STYLES = {
 };
 
 const STATUS_LABELS = {
-    [StatusTarefa.TODO]: 'A Fazer',
+    [StatusTarefa.TODO]: 'Não Iniciado',
     [StatusTarefa.IN_PROGRESS]: 'Em Andamento',
     [StatusTarefa.DONE]: 'Concluída',
     [StatusTarefa.REVIEW]: 'Em Revisão',

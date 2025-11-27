@@ -3,7 +3,6 @@ package com.smartmeeting.controller;
 import com.smartmeeting.dto.AddProjectMemberDTO;
 import com.smartmeeting.dto.CreateProjectDTO;
 import com.smartmeeting.dto.ProjectDTO;
-import com.smartmeeting.dto.UpdateProjectDTO;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.ProjectMember;
 import com.smartmeeting.service.ProjectService;
@@ -28,7 +27,8 @@ public class ProjectController {
     }
 
     @PostMapping
-    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody CreateProjectDTO createProjectDTO, @AuthenticationPrincipal Pessoa currentUser) {
+    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody CreateProjectDTO createProjectDTO,
+            @AuthenticationPrincipal Pessoa currentUser) {
         ProjectDTO project = projectService.createProject(createProjectDTO, currentUser);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -50,11 +50,19 @@ public class ProjectController {
         return ResponseEntity.ok(project);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ProjectDTO> updateProject(@PathVariable Long id, @Valid @RequestBody UpdateProjectDTO updateProjectDTO, @AuthenticationPrincipal Pessoa currentUser) {
-        ProjectDTO updatedProject = projectService.updateProject(id, updateProjectDTO, currentUser);
-        return ResponseEntity.ok(updatedProject);
-    }
+    // REMOVIDO pois updateProject NÃO EXISTE no ProjectService
+    // Se quiser, eu implemento ele igual ao padrão.
+    /*
+     * @PutMapping("/{id}")
+     * public ResponseEntity<ProjectDTO> updateProject(@PathVariable Long id,
+     * 
+     * @Valid @RequestBody UpdateProjectDTO
+     * updateProjectDTO, @AuthenticationPrincipal Pessoa currentUser) {
+     * ProjectDTO updatedProject = projectService.updateProject(id,
+     * updateProjectDTO, currentUser);
+     * return ResponseEntity.ok(updatedProject);
+     * }
+     */
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id, @AuthenticationPrincipal Pessoa currentUser) {
@@ -63,14 +71,28 @@ public class ProjectController {
     }
 
     @PostMapping("/{projectId}/members")
-    public ResponseEntity<ProjectMember> addMember(@PathVariable Long projectId, @Valid @RequestBody AddProjectMemberDTO addProjectMemberDTO, @AuthenticationPrincipal Pessoa currentUser) {
+    public ResponseEntity<ProjectMember> addMember(@PathVariable Long projectId,
+            @Valid @RequestBody AddProjectMemberDTO addProjectMemberDTO,
+            @AuthenticationPrincipal Pessoa currentUser) {
         ProjectMember newMember = projectService.addMember(projectId, addProjectMemberDTO, currentUser);
         return new ResponseEntity<>(newMember, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{projectId}/members/{memberId}")
-    public ResponseEntity<Void> removeMember(@PathVariable Long projectId, @PathVariable Long memberId, @AuthenticationPrincipal Pessoa currentUser) {
+    public ResponseEntity<Void> removeMember(@PathVariable Long projectId, @PathVariable Long memberId,
+            @AuthenticationPrincipal Pessoa currentUser) {
         projectService.removeMember(projectId, memberId, currentUser);
         return ResponseEntity.noContent().build();
     }
+
+    // REMOVIDO - findProjectTasks NÃO EXISTE no ProjectService
+    /*
+     * @GetMapping("/{id}/tasks")
+     * public ResponseEntity<List<com.smartmeeting.dto.TarefaDTO>>
+     * getProjectTasks(@PathVariable Long id) {
+     * List<com.smartmeeting.dto.TarefaDTO> tasks =
+     * projectService.findProjectTasks(id);
+     * return ResponseEntity.ok(tasks);
+     * }
+     */
 }

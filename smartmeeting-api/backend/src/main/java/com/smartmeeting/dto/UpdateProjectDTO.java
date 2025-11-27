@@ -18,5 +18,13 @@ public class UpdateProjectDTO {
 
     private LocalDate endDate;
 
+    private LocalDate actualEndDate;
+
     private ProjectStatus status;
+
+    // Dados do responsável pelo projeto no cliente (opcional)
+    private String clientContactName;
+    private String clientContactEmail;
+    private String clientContactPhone;
+    private String clientContactPosition;
 }

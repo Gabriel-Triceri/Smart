@@ -17,7 +17,14 @@ public class ProjectDTO {
     private String description;
     private LocalDate startDate;
     private LocalDate endDate;
+    private LocalDate actualEndDate;
     private ProjectStatus status;
     private List<ProjectMemberDTO> members;
     private PessoaDTO owner;
+
+    // Dados do responsável pelo projeto no cliente
+    private String clientContactName;
+    private String clientContactEmail;
+    private String clientContactPhone;
+    private String clientContactPosition;
 }

@@ -1,7 +1,7 @@
 import { StatusTarefa, PrioridadeTarefa } from "../types/meetings";
 
 export const STATUS_CONFIG: Record<StatusTarefa, { label: string; color: string; icon: string; }> = {
-    [StatusTarefa.TODO]: { label: 'A Fazer', color: 'bg-gray-100 text-gray-800', icon: '○' },
+    [StatusTarefa.TODO]: { label: 'Não Iniciado', color: 'bg-gray-100 text-gray-800', icon: '○' },
     [StatusTarefa.IN_PROGRESS]: { label: 'Em Andamento', color: 'bg-blue-100 text-blue-800', icon: '◐' },
     [StatusTarefa.REVIEW]: { label: 'Em Revisão', color: 'bg-purple-100 text-purple-800', icon: '◉' },
     [StatusTarefa.DONE]: { label: 'Concluído', color: 'bg-green-100 text-green-800', icon: '✓' },
