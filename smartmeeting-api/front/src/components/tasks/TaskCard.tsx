@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
     Calendar,
-    Clock,
     Paperclip,
     MessageSquare,
     AlertTriangle,
@@ -11,9 +10,8 @@ import {
     Copy,
     ArrowRight
 } from 'lucide-react';
-import { Tarefa, StatusTarefa, PrioridadeTarefa } from '../../types/meetings';
-import { format, isAfter, isBefore, isToday, isTomorrow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Tarefa, StatusTarefa } from '../../types/meetings';
+import { formatDateFriendly, isDateBefore, isDateAfter } from '../../utils/dateHelpers';
 
 interface TaskCardProps {
     tarefa: Tarefa;
@@ -27,14 +25,6 @@ interface TaskCardProps {
     compact?: boolean;
     children?: React.ReactNode;
 }
-
-const PRIORITY_STYLES = {
-    [PrioridadeTarefa.BAIXA]: { label: 'Baixa', class: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
-    [PrioridadeTarefa.MEDIA]: { label: 'Média', class: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300' },
-    [PrioridadeTarefa.ALTA]: { label: 'Alta', class: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' },
-    [PrioridadeTarefa.CRITICA]: { label: 'Crítica', class: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
-    [PrioridadeTarefa.URGENTE]: { label: 'Urgente', class: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400' }
-};
 
 const STATUS_LABELS = {
     [StatusTarefa.TODO]: 'Não Iniciado',
@@ -58,18 +48,11 @@ export function TaskCard({
     const [showMenu, setShowMenu] = useState(false);
     const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        if (isToday(date)) return 'Hoje';
-        if (isTomorrow(date)) return 'Amanhã';
-        return format(date, 'dd/MM', { locale: ptBR });
-    };
-
     const getDateStatus = (dateStr: string) => {
         const date = new Date(dateStr);
         const now = new Date();
-        if (isBefore(date, now)) return 'overdue';
-        if (isAfter(date, now) && date.getTime() - now.getTime() < 3 * 24 * 60 * 60 * 1000) return 'due-soon';
+        if (isDateBefore(date, now)) return 'overdue';
+        if (isDateAfter(date, now) && date.getTime() - now.getTime() < 3 * 24 * 60 * 60 * 1000) return 'due-soon';
         return 'normal';
     };
 
@@ -120,7 +103,6 @@ export function TaskCard({
     };
 
     const projectBarColor = tarefa.projectName ? getProjectColor(tarefa.projectName) : 'bg-transparent';
-    const priorityConfig = PRIORITY_STYLES[tarefa.prioridade || PrioridadeTarefa.MEDIA];
 
     return (
         <div
@@ -149,10 +131,7 @@ export function TaskCard({
             {/* Top Meta: Labels & Menu */}
             <div className="flex items-start justify-between mb-3 pl-2">
                 <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 pr-6">
-                    {/* Priority Badge */}
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide border border-transparent ${priorityConfig.class}`}>
-                        {priorityConfig.label}
-                    </span>
+                    {/* Priority Badge REMOVED */}
 
                     {tarefa.projectName && (
                         <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 truncate max-w-[100px]" title={tarefa.projectName}>
@@ -261,18 +240,6 @@ export function TaskCard({
                 </div>
             )}
 
-            {/* Progress Bar */}
-            {tarefa.progresso > 0 && (
-                <div className="pl-2 pr-1 mb-3">
-                    <div className="h-1 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-blue-500 rounded-full"
-                            style={{ width: `${tarefa.progresso}%` }}
-                        />
-                    </div>
-                </div>
-            )}
-
             {/* Footer: Date, Stats, Assignees */}
             <div className="pl-2 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between mt-auto">
                 <div className="flex items-center gap-3">
@@ -280,7 +247,7 @@ export function TaskCard({
                     {tarefa.prazo_tarefa && (
                         <div className={`flex items-center text-xs font-medium ${isOverdue ? 'text-red-600 dark:text-red-400' : isDueSoon ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}>
                             <Calendar className="w-3 h-3 mr-1" />
-                            <span>{formatDate(tarefa.prazo_tarefa)}</span>
+                            <span>{formatDateFriendly(tarefa.prazo_tarefa)}</span>
                         </div>
                     )}
 
@@ -305,33 +272,6 @@ export function TaskCard({
                     </div>
                 </div>
 
-                {/* Assignees Avatars */}
-                {showAssignee && tarefa.responsaveis && tarefa.responsaveis.length > 0 && (
-                    <div className="flex -space-x-1.5 overflow-hidden p-0.5">
-                        {tarefa.responsaveis.slice(0, 3).map((r) => (
-                            <div
-                                key={r.id}
-                                className={`
-                                    w-5 h-5 rounded-full ring-2 ring-white dark:ring-slate-800 flex items-center justify-center 
-                                    text-[9px] font-bold text-white shadow-sm
-                                    ${getAvatarColor(r.nome || '')}
-                                `}
-                                title={r.nome}
-                            >
-                                {!imageErrors[r.id] && r.avatar ? (
-                                    <img src={r.avatar} alt={r.nome} className="w-full h-full rounded-full object-cover" onError={() => setImageErrors(prev => ({ ...prev, [r.id]: true }))} />
-                                ) : (
-                                    getInitials(r.nome || '')
-                                )}
-                            </div>
-                        ))}
-                        {tarefa.responsaveis.length > 3 && (
-                            <div className="w-5 h-5 rounded-full ring-2 ring-white dark:ring-slate-800 bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[8px] text-slate-500 font-medium">
-                                +{tarefa.responsaveis.length - 3}
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
         </div>
     );

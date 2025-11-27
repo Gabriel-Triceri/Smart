@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { MessageSquare, Send } from 'lucide-react';
 import { ComentarioTarefa } from '../../types/meetings';
 import { Avatar } from '../../components/common/Avatar';
-import { formatDate } from '../../utils/formatters';
+import { formatDate } from '../../utils/dateHelpers';
 
 interface TaskCommentsProps {
     tarefaId: string;

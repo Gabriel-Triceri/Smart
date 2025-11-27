@@ -20,9 +20,15 @@ import { TaskDetails } from './TaskDetails';
 import { TaskFilters } from './TaskFilters';
 import { StatusTarefa, TarefaFormData, PrioridadeTarefa, Tarefa } from '../../types/meetings';
 import { useTheme } from '../../context/ThemeContext';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatDate } from '../../utils/dateHelpers';
 import { Avatar } from '../../components/common/Avatar';
+
+// Helper component purely for the spinner icon availability
+const Loader2 = ({ className }: { className?: string }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+);
 
 type ViewMode = 'kanban' | 'lista';
 
@@ -200,7 +206,7 @@ export function TaskManager() {
                                         <>
                                             <Calendar className="w-4 h-4 text-slate-400" />
                                             <span className="text-xs font-medium">
-                                                {format(new Date(tarefa.prazo_tarefa), 'dd/MM/yyyy', { locale: ptBR })}
+                                                {formatDate(tarefa.prazo_tarefa, 'dd/MM/yyyy')}
                                             </span>
                                         </>
                                     ) : (
@@ -334,7 +340,7 @@ export function TaskManager() {
                         <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-200">
                             <TaskFilters
                                 filters={filtros}
-                                onFiltersChange={setFiltros}
+                                onFiltersChange={aplicarFiltros}
                                 tarefas={tarefas}
                                 assignees={assigneesDisponiveis}
                             />
@@ -396,10 +402,3 @@ export function TaskManager() {
         </div>
     );
 }
-
-// Helper component purely for the spinner icon availability
-const Loader2 = ({ className }: { className?: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-);

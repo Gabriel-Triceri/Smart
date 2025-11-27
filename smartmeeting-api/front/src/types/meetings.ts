@@ -329,6 +329,7 @@ export interface FiltroTarefas {
     atrasadas?: boolean;
     semResponsavel?: boolean;
     proximas?: number;
+    projectName?: string[];
 }
 
 export interface StatisticsTarefas {

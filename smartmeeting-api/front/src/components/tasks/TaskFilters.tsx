@@ -1,6 +1,6 @@
-import { Filter, X, Calendar, User, Flag, Tag, Search, ListChecks, LucideIcon, Clock } from 'lucide-react';
+import { X, Calendar, User, ListChecks, LucideIcon, Briefcase } from 'lucide-react';
 import { FiltroTarefas, Tarefa, Assignee } from '../../types/meetings';
-import { STATUS_OPTIONS, PRIORITY_OPTIONS } from '../../config/taskConfig';
+import { STATUS_OPTIONS } from '../../config/taskConfig';
 
 interface TaskFiltersProps {
     filters: FiltroTarefas;
@@ -28,7 +28,7 @@ export function TaskFilters({
     const clearAllFilters = () => onFiltersChange({});
 
     const hasActiveFilters = Object.keys(filters).length > 0;
-    const uniqueTags = [...new Set(tarefas.flatMap(t => t.tags || []))];
+    const uniqueProjects = [...new Set(tarefas.map(t => t.projectName).filter(Boolean) as string[])];
 
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
@@ -38,33 +38,14 @@ export function TaskFilters({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <CompactSelect icon={User} value={filters.responsaveis?.[0] || ''} onChange={(val) => updateFilter('responsaveis', val ? [val] : undefined)} options={assignees.map(a => ({ value: a.id, label: a.nome }))} placeholder="Responsável" />
                     <CompactSelect icon={ListChecks} value={filters.status?.[0] || ''} onChange={(val) => updateFilter('status', val ? [val] : undefined)} options={STATUS_OPTIONS} placeholder="Status" />
-                    <CompactSelect icon={Flag} value={filters.prioridade?.[0] || ''} onChange={(val) => updateFilter('prioridade', val ? [val] : undefined)} options={PRIORITY_OPTIONS} placeholder="Prioridade" />
-                    <CompactSelect icon={Tag} value={filters.tags?.[0] || ''} onChange={(val) => updateFilter('tags', val ? [val] : undefined)} options={uniqueTags.map(tag => ({ value: tag, label: tag }))} placeholder="Tags" />
+                    <CompactSelect icon={Briefcase} value={filters.projectName?.[0] || ''} onChange={(val) => updateFilter('projectName', val ? [val] : undefined)} options={uniqueProjects.map(p => ({ value: p, label: p }))} placeholder="Projeto" />
                 </div>
 
                 {/* Secondary Actions & Date Range */}
                 <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
 
-                    {/* Quick Toggles */}
-                    <div className="flex gap-2">
-                        <FilterButton
-                            active={filters.atribuidasPorMim || false}
-                            onClick={() => updateFilter('atribuidasPorMim', !filters.atribuidasPorMim)}
-                            icon={User}
-                            label="Minhas"
-                        />
-                        <FilterButton
-                            active={filters.semResponsavel || false}
-                            onClick={() => updateFilter('semResponsavel', !filters.semResponsavel)}
-                            label="Sem Resp."
-                        />
-                        <FilterButton
-                            active={filters.proximas === 5}
-                            onClick={() => updateFilter('proximas', filters.proximas === 5 ? undefined : 5)}
-                            icon={Clock}
-                            label="Top 5"
-                        />
-                    </div>
+                    {/* Date Range Only */}
+                    <div className="flex-1"></div>
 
                     {/* Date Range */}
                     <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 w-full md:w-auto">
@@ -125,19 +106,6 @@ export function TaskFilters({
     );
 }
 
-const FilterButton = ({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon?: LucideIcon, label: string }) => (
-    <button
-        onClick={onClick}
-        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all border flex items-center gap-1.5 ${active
-                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
-            }`}
-    >
-        {Icon && <Icon className="w-3.5 h-3.5" />}
-        {label}
-    </button>
-);
-
 // Componente Select Ultra Compacto
 interface CompactSelectProps {
     icon: LucideIcon;
@@ -172,15 +140,11 @@ function getFilterLabel(key: string, value: any): string {
         case 'busca': return `Busca: "${value.length > 15 ? value.substring(0, 15) + '...' : value}"`;
         case 'responsaveis': return `Resp: ${Array.isArray(value) ? value.length : 1}`;
         case 'status': return `Status: ${Array.isArray(value) ? value.length : 1}`;
-        case 'prioridade': return `Prioridade: ${Array.isArray(value) ? value.length : 1}`;
-        case 'tags': return `Tags: ${Array.isArray(value) ? value.length : 1}`;
+        case 'projectName': return `Projeto: ${Array.isArray(value) ? value.length : 1}`;
         case 'prazo_tarefaInicio': return `De: ${value}`;
         case 'prazo_tarefaFim': return `Até: ${value}`;
         case 'vencendo': return 'Vence em 3 dias';
         case 'atrasadas': return 'Atrasadas';
-        case 'atribuidasPorMim': return 'Minhas Tarefas';
-        case 'semResponsavel': return 'Sem Responsável';
-        case 'proximas': return `Top ${value}`;
         default: return `${key}`;
     }
 }

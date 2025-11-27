@@ -1,4 +1,5 @@
 import { Reuniao, ReuniaoFormData, ReuniaoCreateDTO, StatusReuniao, SalaStatus } from '../types/meetings';
+import { formatDate, formatTime, getTimeDifference } from './dateHelpers';
 
 /**
  * Utilitários para conversão entre formatos de data/hora do frontend e backend
@@ -125,27 +126,32 @@ export class DateTimeUtils {
         return inicio.toTimeString().substring(0, 5);
     }
 
+
+
     /**
      * Calcula duração em minutos entre dois horários
      */
     static calculateDuration(horaInicio: string, horaFim: string): number {
         const inicio = new Date(`2000-01-01T${horaInicio}:00`);
         const fim = new Date(`2000-01-01T${horaFim}:00`);
-        return Math.round((fim.getTime() - inicio.getTime()) / (1000 * 60));
+        return getTimeDifference(inicio, fim);
     }
 
     /**
      * Formata data para exibição
      */
     static formatDateForDisplay(dateString: string): string {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
+        return formatDate(dateString, 'dd/MM/yyyy');
     }
 
     /**
      * Formata hora para exibição
      */
     static formatTimeForDisplay(timeString: string): string {
+        // Se for apenas horário HH:mm:ss ou HH:mm
+        if (timeString.includes('T')) {
+            return formatTime(timeString);
+        }
         return timeString.substring(0, 5);
     }
 
@@ -154,13 +160,12 @@ export class DateTimeUtils {
      */
     static formatDateTimeForDisplay(dateTimeString: string): { data: string; horaInicio: string; horaFim: string; duracao: number } {
         const inicio = new Date(dateTimeString);
-        // Nota: duração não está disponível diretamente, seria necessário传入
 
         return {
-            data: inicio.toLocaleDateString('pt-BR'),
-            horaInicio: inicio.toTimeString().substring(0, 5),
+            data: formatDate(inicio, 'dd/MM/yyyy'),
+            horaInicio: formatTime(inicio),
             horaFim: '', // Seria necessário calcular baseado na duração
-            duracao: 0   // Seria necessário传入 como parâmetro
+            duracao: 0   // Seria necessário passar como parâmetro
         };
     }
 

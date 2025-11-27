@@ -132,7 +132,9 @@ const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
         atualizadaPorNome: task.atualizadaPorNome,
         createdAt: task.createdAt ?? new Date().toISOString(),
         updatedAt: task.updatedAt ?? new Date().toISOString(),
-        deletedAt: task.deletedAt
+        deletedAt: task.deletedAt,
+        projectId: task.projectId ?? task.project?.id,
+        projectName: task.projectName ?? task.project?.name
     };
 };
 

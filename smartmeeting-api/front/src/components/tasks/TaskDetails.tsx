@@ -18,7 +18,8 @@ import {
 import {
     Tarefa, StatusTarefa, PrioridadeTarefa
 } from '../../types/meetings';
-import { formatDate, formatFileSize } from '../../utils/formatters';
+import { formatDate } from '../../utils/dateHelpers';
+import { formatFileSize } from '../../utils/helpers';
 import { Avatar } from '../../components/common/Avatar';
 import { TaskComments } from '../../components/tasks/TaskComments';
 import { PRIORITY_CONFIG, STATUS_OPTIONS } from '../../config/taskConfig';

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-    X, Calendar, Clock, MapPin, Video, Users,
-    FileText, CheckCircle, AlertTriangle,
-    Edit, Trash2, ExternalLink, Bell, BellOff, Link as LinkIcon, Search
+    X, Calendar, Clock, MapPin, Users,
+    FileText, CheckCircle,
+    Edit, Trash2, Bell, BellOff, Link as LinkIcon, Search
 } from 'lucide-react';
 import { Reuniao, StatusReuniao } from '../../types/meetings';
-import { format, isValid } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatDate } from '../../utils/dateHelpers';
 import { useTarefas } from '../../hooks/useTarefas';
 import { meetingsApi } from '../../services/meetingsApi';
 import { getReuniaoHoraFim, getReuniaoHoraInicio } from '../../utils/reuniaoHelpers';
@@ -31,27 +30,22 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
     const [activeTab, setActiveTab] = useState<'info' | 'participantes' | 'tarefas'>('info');
     const [removingParticipantId, setRemovingParticipantId] = useState<number | null>(null);
 
-    const formatDateSafe = (date: string | Date, formatString: string) => {
-        const d = new Date(date);
-        return isValid(d) ? format(d, formatString, { locale: ptBR }) : 'Data inválida';
-    };
-
     const getStatusStyles = (status: string) => {
         switch (status) {
-            case 'agendada': return { color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-800' };
-            case 'em_andamento': return { color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-900/30', border: 'border-emerald-200 dark:border-emerald-800' };
-            case 'finalizada': return { color: 'text-slate-700 dark:text-slate-300', bg: 'bg-slate-100 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700' };
-            case 'cancelada': return { color: 'text-red-700 dark:text-red-300', bg: 'bg-red-50 dark:bg-red-900/30', border: 'border-red-200 dark:border-red-800' };
+            case StatusReuniao.AGENDADA: return { color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-800' };
+            case StatusReuniao.EM_ANDAMENTO: return { color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-900/30', border: 'border-emerald-200 dark:border-emerald-800' };
+            case StatusReuniao.FINALIZADA: return { color: 'text-slate-700 dark:text-slate-300', bg: 'bg-slate-100 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700' };
+            case StatusReuniao.CANCELADA: return { color: 'text-red-700 dark:text-red-300', bg: 'bg-red-50 dark:bg-red-900/30', border: 'border-red-200 dark:border-red-800' };
             default: return { color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200' };
         }
     };
 
     const getStatusLabel = (status: string) => {
         const labels: Record<string, string> = {
-            agendada: 'Agendada',
-            em_andamento: 'Em andamento',
-            finalizada: 'Finalizada',
-            cancelada: 'Cancelada'
+            [StatusReuniao.AGENDADA]: 'Agendada',
+            [StatusReuniao.EM_ANDAMENTO]: 'Em andamento',
+            [StatusReuniao.FINALIZADA]: 'Finalizada',
+            [StatusReuniao.CANCELADA]: 'Cancelada'
         };
         return labels[status] || status;
     };
@@ -63,7 +57,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
     const statusStyle = getStatusStyles(reuniao.status);
 
     const TarefasTab: React.FC = () => {
-        const { tarefas: todasAsTarefas, loading, error } = useTarefas();
+        const { tarefas: todasAsTarefas, loading } = useTarefas();
         const [tarefasVinculadas, setTarefasVinculadas] = useState<string[]>([]);
         const [termoBusca, setTermoBusca] = useState('');
 
@@ -182,7 +176,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                     <div className="bg-white dark:bg-slate-800 px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start sticky top-0 z-10">
                         <div className="flex gap-4">
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${statusStyle.bg} ${statusStyle.color}`}>
-                                {reuniao.status === 'agendada' ? <Calendar className="w-6 h-6" /> : <CheckCircle className="w-6 h-6" />}
+                                {reuniao.status === StatusReuniao.AGENDADA ? <Calendar className="w-6 h-6" /> : <CheckCircle className="w-6 h-6" />}
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
@@ -235,8 +229,8 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
-                                            ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                        ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                                        : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'
                                         }`}
                                 >
                                     <tab.icon className="w-4 h-4" />
@@ -268,7 +262,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                 <div>
                                                     <p className="text-xs text-slate-500">Data</p>
                                                     <p className="text-sm font-medium text-slate-900 dark:text-white">
-                                                        {formatDateSafe(reuniao.dataHoraInicio, "EEEE, d 'de' MMMM")}
+                                                        {formatDate(reuniao.dataHoraInicio, "EEEE, d 'de' MMMM")}
                                                     </p>
                                                 </div>
                                             </div>
@@ -360,8 +354,8 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${p.status === 'confirmado' ? 'bg-green-100 text-green-700' :
-                                                            p.status === 'pendente' ? 'bg-yellow-100 text-yellow-700' :
-                                                                'bg-red-100 text-red-700'
+                                                        p.status === 'pendente' ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-red-100 text-red-700'
                                                         }`}>
                                                         {p.status}
                                                     </span>

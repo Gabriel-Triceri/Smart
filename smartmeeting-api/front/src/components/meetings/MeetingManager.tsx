@@ -16,6 +16,7 @@ import { Calendar } from '../Calendar';
 import { MeetingList } from './MeetingList';
 import { MeetingForm } from './MeetingForm';
 import { MeetingDetailsModal } from './MeetingDetailsModal';
+import { formatDate, formatTime } from '../../utils/dateHelpers';
 
 type ViewType = 'calendar' | 'list';
 type ModalType = 'form' | 'details' | null;
@@ -52,19 +53,6 @@ export const MeetingManager: React.FC = () => {
         );
     }, [reunioes, searchTerm]);
 
-    const formatDate = (d: Date) => {
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd}`;
-    };
-
-    const formatTime = (d: Date) => {
-        const hh = String(d.getHours()).padStart(2, '0');
-        const mm = String(d.getMinutes()).padStart(2, '0');
-        return `${hh}:${mm}`;
-    };
-
     const parseReuniaoToForm = (reuniao: Reuniao): Partial<ReuniaoFormData> => {
         const start = reuniao.dataHoraInicio ? new Date(reuniao.dataHoraInicio) : new Date();
         const dur = reuniao.duracaoMinutos ?? 60;
@@ -73,7 +61,7 @@ export const MeetingManager: React.FC = () => {
         return {
             titulo: reuniao.titulo,
             pauta: reuniao.pauta,
-            data: formatDate(start),
+            data: formatDate(start, 'yyyy-MM-dd'),
             horaInicio: formatTime(start),
             horaFim: formatTime(end),
             salaId: reuniao.sala?.id ?? undefined,

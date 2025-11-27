@@ -267,7 +267,57 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         try {
             setLoading(true);
             const tarefasData = await meetingsApi.getAllTarefas(novosFiltros);
-            setTarefas(tarefasData);
+
+            // Client-side filtering fallback
+            const filteredTarefas = tarefasData.filter(tarefa => {
+                // Filter by Assignee
+                if (novosFiltros.responsaveis && novosFiltros.responsaveis.length > 0) {
+                    const hasAssignee = tarefa.responsaveis.some(r => novosFiltros.responsaveis?.includes(r.id));
+                    if (!hasAssignee) return false;
+                }
+
+                // Filter by Status
+                if (novosFiltros.status && novosFiltros.status.length > 0) {
+                    if (!novosFiltros.status.includes(tarefa.status)) return false;
+                }
+
+                // Filter by Project
+                if (novosFiltros.projectName && novosFiltros.projectName.length > 0) {
+                    if (!tarefa.projectName || !novosFiltros.projectName.includes(tarefa.projectName)) return false;
+                }
+
+                // Filter by Date Range
+                if (novosFiltros.prazo_tarefaInicio) {
+                    if (!tarefa.prazo_tarefa || tarefa.prazo_tarefa < novosFiltros.prazo_tarefaInicio) return false;
+                }
+                if (novosFiltros.prazo_tarefaFim) {
+                    if (!tarefa.prazo_tarefa || tarefa.prazo_tarefa > novosFiltros.prazo_tarefaFim) return false;
+                }
+
+                // Filter by "Vencendo" (Due in 3 days)
+                if (novosFiltros.vencendo) {
+                    if (!tarefa.prazo_tarefa) return false;
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+                    const prazo = new Date(tarefa.prazo_tarefa + 'T00:00:00');
+                    const diffTime = prazo.getTime() - hoje.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays < 0 || diffDays > 3) return false;
+                }
+
+                // Filter by "Atrasadas"
+                if (novosFiltros.atrasadas) {
+                    if (!tarefa.prazo_tarefa) return false;
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+                    const prazo = new Date(tarefa.prazo_tarefa + 'T00:00:00');
+                    if (prazo >= hoje) return false;
+                }
+
+                return true;
+            });
+
+            setTarefas(filteredTarefas);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao aplicar filtros');
         } finally {
