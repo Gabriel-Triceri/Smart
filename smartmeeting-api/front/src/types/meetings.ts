@@ -307,10 +307,10 @@ export interface TarefaFormData {
     prazo_tarefa?: string;
     dataInicio?: string;
     prioridade: PrioridadeTarefa;
-    tags?: string[];
     estimadoHoras?: number;
     reuniaoId?: string;
-    tarefaPaiId?: string;
+    projectId?: string;
+    dependencias?: string[];
     cor?: string;
 }
 

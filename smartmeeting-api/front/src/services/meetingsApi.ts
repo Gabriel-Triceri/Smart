@@ -115,11 +115,11 @@ const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
         responsavelPrincipalId,
         prazo_tarefa: prazo,
         dataInicio: task.dataInicio ?? fallback?.dataInicio ?? '',
-        tags: task.tags ?? fallback?.tags ?? [],
+    tags: task.tags ?? [],
         estimadoHoras: task.estimadoHoras ?? fallback?.estimadoHoras,
         horasTrabalhadas: task.horasTrabalhadas ?? 0,
         reuniaoId: task.reuniaoId ? String(task.reuniaoId) : fallback?.reuniaoId,
-        tarefaPaiId: task.tarefaPaiId ? String(task.tarefaPaiId) : fallback?.tarefaPaiId,
+    tarefaPaiId: task.tarefaPaiId ? String(task.tarefaPaiId) : undefined,
         subtarefas: task.subtarefas ?? [],
         dependencias: task.dependencias ?? [],
         progresso: task.progresso ?? 0,
@@ -173,6 +173,23 @@ const mapTarefaFormToBackend = (
 
     if (data.reuniaoId) {
         payload.reuniaoId = Number(data.reuniaoId);
+    }
+
+    if ((data as any).projectId) {
+        // projectId pode ser string (uuid) ou number; enviar conforme disponível
+        payload.projectId = (data as any).projectId;
+    }
+
+    if (Array.isArray((data as any).dependencias) && (data as any).dependencias.length > 0) {
+        // Enviar array de dependências (ids)
+        payload.dependencias = (data as any).dependencias.map((d: any) => {
+            const n = Number(d);
+            return Number.isNaN(n) ? d : n;
+        });
+    } else if ((data as any).tarefaPaiId) {
+        // Compatibilidade: se ainda vier tarefaPaiId, enviar como único valor
+        const tpid = Number((data as any).tarefaPaiId);
+        payload.dependencias = !Number.isNaN(tpid) ? [tpid] : [(data as any).tarefaPaiId];
     }
 
     if (includeDefaults) {

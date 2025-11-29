@@ -3,12 +3,9 @@ import {
     X,
     Calendar,
     Clock,
-    User,
     Flag,
-    Tag,
     Save,
     Loader2,
-    Check,
     ChevronDown
 } from 'lucide-react';
 import {
@@ -24,6 +21,7 @@ interface TaskFormProps {
     onSubmit: (data: TarefaFormData) => Promise<void>;
     assignees?: Assignee[];
     reuniaoId?: string;
+    tarefas?: Tarefa[];
 }
 
 type FormState = Omit<TarefaFormData, 'estimadoHoras'> & {
@@ -38,17 +36,14 @@ const PRIORIDADE_OPTIONS = [
     { value: PrioridadeTarefa.URGENTE, label: 'Urgente', color: 'bg-purple-100 text-purple-700' }
 ];
 
-const TAGS_SUGESTOES = [
-    'Backend', 'Frontend', 'Design', 'API', 'Banco de Dados', 'Testing',
-    'Documentação', 'Reunião', 'Revisão', 'Deploy', 'Bug', 'Feature'
-];
-
 export function TaskForm({
     tarefa,
     onClose,
     onSubmit,
     assignees = [],
     reuniaoId
+    ,
+    tarefas = []
 }: TaskFormProps) {
 
     const [formData, setFormData] = useState<FormState>({
@@ -59,14 +54,12 @@ export function TaskForm({
         prazo_tarefa: '',
         dataInicio: '',
         prioridade: PrioridadeTarefa.MEDIA,
-        tags: [],
         estimadoHoras: '',
         reuniaoId: reuniaoId,
-        cor: ''
+        cor: '',
+        dependencias: []
     });
-
-    const [availableTags, setAvailableTags] = useState<string[]>(TAGS_SUGESTOES);
-    const [newTag, setNewTag] = useState('');
+    const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
     const [showAssigneesDropdown, setShowAssigneesDropdown] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -81,13 +74,14 @@ export function TaskForm({
                 prazo_tarefa: tarefa.prazo_tarefa ? tarefa.prazo_tarefa.split('T')[0] : '',
                 dataInicio: tarefa.dataInicio ? tarefa.dataInicio.split('T')[0] : '',
                 prioridade: tarefa.prioridade || PrioridadeTarefa.MEDIA,
-                tags: [...(tarefa.tags ?? [])],
                 estimadoHoras: tarefa.estimadoHoras !== undefined && tarefa.estimadoHoras !== null
                     ? String(tarefa.estimadoHoras)
                     : '',
                 reuniaoId: tarefa.reuniaoId,
-                cor: tarefa.cor || ''
+                cor: tarefa.cor || '',
+                dependencias: tarefa.dependencias ?? (tarefa.tarefaPaiId ? [tarefa.tarefaPaiId] : [])
             });
+            setSelectedProjectId(tarefa.projectId || undefined);
         } else {
             setFormData(prev => ({ ...prev, reuniaoId }));
         }
@@ -97,9 +91,9 @@ export function TaskForm({
         const newErrors: Record<string, string> = {};
         if (!formData.titulo.trim()) newErrors.titulo = 'Título é obrigatório';
         if (!formData.responsavelPrincipalId) newErrors.responsavelPrincipalId = 'Responsável principal é obrigatório';
-        if (!formData.prazo_tarefa) newErrors.prazo_tarefa = 'Data de vencimento é obrigatória';
+        if (!formData.prazo_tarefa) newErrors.prazo_tarefa = 'Data de término é obrigatória';
         else if (formData.dataInicio && new Date(formData.dataInicio) >= new Date(formData.prazo_tarefa)) {
-            newErrors.prazo_tarefa = 'Data de vencimento deve ser posterior à data de início';
+            newErrors.prazo_tarefa = 'Data de término deve ser posterior à data de início';
         }
         if (formData.estimadoHoras && Number(formData.estimadoHoras) <= 0) newErrors.estimadoHoras = 'Tempo estimado deve ser maior que zero';
         setErrors(newErrors);
@@ -117,6 +111,10 @@ export function TaskForm({
             const estimadoNumber = formData.estimadoHoras ? Number(formData.estimadoHoras) : undefined;
             const { estimadoHoras: _estimado, ...rest } = formData;
             const payload: TarefaFormData = { ...rest, prazo_tarefa: usedPrazo, estimadoHoras: estimadoNumber };
+            if (selectedProjectId) {
+                // @ts-ignore - projectId é opcional no form backend mapper
+                (payload as any).projectId = selectedProjectId;
+            }
             await onSubmit(payload);
             onClose();
         } catch (error) {
@@ -127,18 +125,11 @@ export function TaskForm({
         }
     };
 
-    const handleAddTag = (tag: string) => {
-        const trimmedTag = tag.trim();
-        if (trimmedTag && !(formData.tags ?? []).includes(trimmedTag)) {
-            setFormData(prev => ({ ...prev, tags: [...(prev.tags || []), trimmedTag] }));
-            if (!availableTags.includes(trimmedTag)) setAvailableTags(prev => [...prev, trimmedTag]);
-        }
-        setNewTag('');
+    const handleSelectDependency = (selectedIds: string[]) => {
+        setFormData(prev => ({ ...prev, dependencias: selectedIds }));
     };
 
-    const handleRemoveTag = (tagToRemove: string) => {
-        setFormData(prev => ({ ...prev, tags: (prev.tags ?? []).filter(tag => tag !== tagToRemove) }));
-    };
+    const projects = Array.from(new Map((tarefas || []).filter(t => t.projectId || t.projectName).map(t => [t.projectId || t.projectName, { id: t.projectId, name: t.projectName }])).values()).filter(Boolean as any);
 
     const handleAssigneeToggle = (assigneeId: string) => {
         setFormData(prev => {
@@ -307,9 +298,9 @@ export function TaskForm({
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Data de Vencimento <span className="text-red-500">*</span>
-                            </label>
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                    Data de Término <span className="text-red-500">*</span>
+                                </label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <input
@@ -344,52 +335,38 @@ export function TaskForm({
                         {errors.estimadoHoras && <p className="mt-1.5 text-sm text-red-500">{errors.estimadoHoras}</p>}
                     </div>
 
-                    {/* Tags */}
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                            Tags
-                        </label>
-                        <div className="flex gap-2 mb-3">
-                            <input
-                                type="text"
-                                value={newTag}
-                                onChange={(e) => setNewTag(e.target.value)}
-                                onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(newTag); } }}
-                                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white"
-                                placeholder="Digite nova tag..."
-                            />
-                            <button
-                                type="button"
-                                onClick={() => handleAddTag(newTag)}
-                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium transition-colors"
+                    {/* Projeto & Dependência */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Projeto</label>
+                            <select
+                                value={selectedProjectId || ''}
+                                onChange={(e) => { setSelectedProjectId(e.target.value || undefined); }}
+                                className="w-full pl-3 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white appearance-none cursor-pointer"
                             >
-                                Adicionar
-                            </button>
+                                <option value="">Nenhum</option>
+                                {projects.map((p: any, idx) => (
+                                    <option key={idx} value={p.id || p.name}>{p.name || p.id}</option>
+                                ))}
+                            </select>
                         </div>
 
-                        <div className="flex flex-wrap gap-2 mb-4">
-                            {(formData.tags ?? []).map((tag, index) => (
-                                <span key={index} className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-sm font-medium rounded-full border border-blue-100 dark:border-blue-800">
-                                    {tag}
-                                    <button type="button" onClick={() => handleRemoveTag(tag)} className="ml-1.5 text-blue-400 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-300">
-                                        <X className="w-3 h-3" />
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5">
-                            <span className="text-xs text-slate-400 mr-1 py-1">Sugestões:</span>
-                            {availableTags.filter(tag => !(formData.tags ?? []).includes(tag)).slice(0, 6).map(tag => (
-                                <button
-                                    key={tag}
-                                    type="button"
-                                    onClick={() => handleAddTag(tag)}
-                                    className="px-2 py-0.5 bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 text-xs rounded transition-colors"
-                                >
-                                    + {tag}
-                                </button>
-                            ))}
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Dependência (antecedente)</label>
+                            <select
+                                multiple
+                                value={formData.dependencias || []}
+                                onChange={(e) => {
+                                    const options = Array.from(e.target.selectedOptions || []);
+                                    const ids = options.map(o => o.value);
+                                    handleSelectDependency(ids);
+                                }}
+                                className="w-full h-36 px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-900 dark:text-white appearance-none cursor-pointer"
+                            >
+                                {tarefas.filter(t => !tarefa || t.id !== tarefa.id).map(t => (
+                                    <option key={t.id} value={t.id}>{t.titulo}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </form>

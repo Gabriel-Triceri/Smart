@@ -33,6 +33,8 @@ interface TaskDetailsProps {
     onAttachFile?: (tarefaId: string, file: File) => Promise<void>;
     onUpdateStatus?: (tarefaId: string, status: StatusTarefa) => Promise<void>;
     onUpdateProgress?: (tarefaId: string, progresso: number) => Promise<void>;
+    tarefas?: Tarefa[];
+    onOpenTask?: (tarefa: Tarefa) => void;
 }
 
 export function TaskDetails({
@@ -43,7 +45,9 @@ export function TaskDetails({
     onAddComment,
     onAttachFile,
     onUpdateStatus,
-    onUpdateProgress
+    onUpdateProgress,
+    tarefas,
+    onOpenTask
 }: TaskDetailsProps) {
     const [showFileUpload, setShowFileUpload] = useState(false);
 
@@ -130,11 +134,15 @@ export function TaskDetails({
 
                         {/* Title & Desc */}
                         <div>
-                            {tarefa.projectName && (
+                            {tarefa.projectName ? (
                                 <div className="mb-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
                                     {tarefa.projectName}
                                 </div>
-                            )}
+                            ) : tarefa.projectId ? (
+                                <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                    Projeto: {tarefa.projectId}
+                                </div>
+                            ) : null}
                             <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-3">
                                 {tarefa.titulo}
                             </h1>
@@ -203,7 +211,7 @@ export function TaskDetails({
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 dark:text-slate-400">Vencimento</span>
+                                        <span className="text-slate-500 dark:text-slate-400">Data de Término</span>
                                         <span className={`font-medium ${tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600' : 'text-slate-900 dark:text-white'}`}>
                                             {tarefa.prazo_tarefa ? formatDate(tarefa.prazo_tarefa, "dd/MM/yyyy") : '-'}
                                         </span>
@@ -273,6 +281,32 @@ export function TaskDetails({
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Dependências */}
+                        {(tarefa.dependencias && tarefa.dependencias.length > 0) && (
+                            <div>
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
+                                    Dependências
+                                </h3>
+                                <div className="pl-5 border-l-2 border-slate-100 dark:border-slate-800">
+                                    <div className="flex flex-col gap-2">
+                                        {tarefa.dependencias.map((depId) => {
+                                            const dep = Array.isArray(tarefas) ? tarefas.find((t) => String(t.id) === String(depId)) : undefined;
+                                            const title = dep ? dep.titulo : depId;
+                                            return (
+                                                <button
+                                                    key={depId}
+                                                    onClick={() => dep && onOpenTask && onOpenTask(dep)}
+                                                    className="text-sm text-blue-600 dark:text-blue-400 text-left hover:underline"
+                                                >
+                                                    {title}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             </div>
                         )}
 

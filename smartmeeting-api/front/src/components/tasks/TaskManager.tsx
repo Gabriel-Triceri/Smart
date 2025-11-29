@@ -68,7 +68,7 @@ export function TaskManager() {
         tarefas,
         loading,
         error,
-        notificacoes,
+        notificacoes: _notificacoes,
         filtros,
         tarefaSelecionada,
         exibirFormulario,
@@ -82,7 +82,7 @@ export function TaskManager() {
         setTarefaSelecionada,
         setExibirFormulario,
         setExibirDetalhes,
-        setFiltros,
+        setFiltros: _setFiltros,
         assigneesDisponiveis
     } = useTarefas();
 
@@ -112,7 +112,6 @@ export function TaskManager() {
             prioridade: tarefaOriginal.prioridade,
             prazo_tarefa: tarefaOriginal.prazo_tarefa,
             estimadoHoras: tarefaOriginal.estimadoHoras,
-            tags: tarefaOriginal.tags,
             responsaveisIds: tarefaOriginal.responsaveis?.map(r => r.id) || [],
         };
         await criarTarefa(novaTarefa);
@@ -381,12 +380,14 @@ export function TaskManager() {
                     onClose={() => { setExibirFormulario(false); setTarefaSelecionada(null); }}
                     onSubmit={tarefaSelecionada ? (data) => handleUpdateTask(tarefaSelecionada.id, data) : handleCreateTask}
                     assignees={assigneesDisponiveis}
+                    tarefas={tarefas}
                 />
             )}
 
             {exibirDetalhes && tarefaSelecionada && (
                 <TaskDetails
                     tarefa={tarefaSelecionada}
+                    tarefas={tarefas}
                     onClose={() => { setExibirDetalhes(false); setTarefaSelecionada(null); }}
                     onEdit={handleEditTask}
                     onDelete={deletarTarefa}
@@ -394,6 +395,7 @@ export function TaskManager() {
                     onAttachFile={async (_, __) => { /* TODO */ }}
                     onUpdateStatus={handleUpdateTaskStatus}
                     onUpdateProgress={async (_, __) => { /* TODO */ }}
+                    onOpenTask={handleViewTask}
                 />
             )}
 
