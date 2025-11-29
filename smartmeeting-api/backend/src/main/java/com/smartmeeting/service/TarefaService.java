@@ -93,15 +93,8 @@ public class TarefaService {
         // Campos básicos
         dto.setTitulo(tarefa.getDescricao()); // Usando descrição como título
 
-        // Progresso baseado no status (simulação, já que não temos campo progresso na
-        // entidade)
-        if (tarefa.getStatusTarefa() == StatusTarefa.DONE) {
-            dto.setProgresso(100);
-        } else if (tarefa.getStatusTarefa() == StatusTarefa.IN_PROGRESS) {
-            dto.setProgresso(50);
-        } else {
-            dto.setProgresso(0);
-        }
+        // Progresso real
+        dto.setProgresso(tarefa.getProgresso() != null ? tarefa.getProgresso() : 0);
 
         // Auditoria
         dto.setCriadaPor(tarefa.getCreatedBy());
@@ -227,6 +220,7 @@ public class TarefaService {
         tarefa.setEstimadoHoras(dto.getEstimadoHoras());
         tarefa.setTags(dto.getTags());
         tarefa.setCor(dto.getCor());
+        tarefa.setProgresso(dto.getProgresso() != null ? dto.getProgresso() : 0);
 
         if (dto.getResponsavelId() != null) {
             Pessoa responsavel = pessoaRepository.findById(dto.getResponsavelId())
@@ -282,6 +276,9 @@ public class TarefaService {
         tarefa.setEstimadoHoras(dtoAtualizada.getEstimadoHoras());
         tarefa.setTags(dtoAtualizada.getTags());
         tarefa.setCor(dtoAtualizada.getCor());
+        if (dtoAtualizada.getProgresso() != null) {
+            tarefa.setProgresso(dtoAtualizada.getProgresso());
+        }
 
         if (dtoAtualizada.getResponsavelId() != null) {
             Pessoa responsavel = pessoaRepository.findById(dtoAtualizada.getResponsavelId())
@@ -750,16 +747,41 @@ public class TarefaService {
 
         logger.info("Atualizando progresso da tarefa ID {} para {}%", tarefaId, progresso);
 
-        // Atualizar status baseado no progresso
+        // Atualizar status baseado no progresso APENAS se for 100% ou 0% para manter
+        // consistência,
+        // mas sem forçar status intermediários que o usuário não queira.
+        // O problema relatado foi o inverso (status mudando progresso), que foi
+        // resolvido no toDTO.
+        // Aqui, mantemos a lógica de que se o usuário setar 100%, vira DONE.
+
+        tarefa.setProgresso(progresso);
+
         if (progresso == 100) {
             tarefa.setStatusTarefa(StatusTarefa.DONE);
             tarefa.setConcluida(true);
-        } else if (progresso > 0) {
-            tarefa.setStatusTarefa(StatusTarefa.IN_PROGRESS);
+        } else if (progresso == 0 && tarefa.getStatusTarefa() == StatusTarefa.DONE) {
+            // Se estava DONE e voltou pra 0, volta pra TODO? Ou deixa o usuário decidir?
+            // Vamos ser conservadores e apenas mudar se for explicitamente 100 -> DONE.
+            // Se o usuário mudar o progresso manualmente, ele provavelmente quer controlar
+            // isso.
+            // Vou remover a automação de status -> progresso aqui também para evitar
+            // efeitos colaterais indesejados,
+            // exceto talvez o 100% -> DONE que é muito comum.
+        }
+
+        // Decisão: Manter apenas a atualização do progresso. O status o usuário muda se
+        // quiser.
+        // Exceto talvez marcar como concluída se 100%.
+        if (progresso == 100) {
+            tarefa.setConcluida(true);
+            if (tarefa.getStatusTarefa() != StatusTarefa.DONE) {
+                tarefa.setStatusTarefa(StatusTarefa.DONE);
+            }
+        } else if (tarefa.isConcluida() && progresso < 100) {
             tarefa.setConcluida(false);
-        } else {
-            tarefa.setStatusTarefa(StatusTarefa.TODO);
-            tarefa.setConcluida(false);
+            if (tarefa.getStatusTarefa() == StatusTarefa.DONE) {
+                tarefa.setStatusTarefa(StatusTarefa.IN_PROGRESS);
+            }
         }
 
         Tarefa atualizada = tarefaRepository.save(tarefa);
@@ -787,6 +809,7 @@ public class TarefaService {
         novaTarefa.setStatusTarefa(StatusTarefa.TODO);
         novaTarefa.setConcluida(false);
         novaTarefa.setPrioridade(tarefaOriginal.getPrioridade());
+        novaTarefa.setProgresso(0);
 
         // Manter o mesmo responsável se especificado
         if (tarefaOriginal.getResponsavel() != null) {

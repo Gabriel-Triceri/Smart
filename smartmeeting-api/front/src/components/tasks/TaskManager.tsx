@@ -83,7 +83,8 @@ export function TaskManager() {
         setExibirFormulario,
         setExibirDetalhes,
         setFiltros: _setFiltros,
-        assigneesDisponiveis
+        assigneesDisponiveis,
+        atualizarProgresso
     } = useTarefas();
 
     const { theme } = useTheme();
@@ -384,15 +385,15 @@ export function TaskManager() {
                 />
             )}
 
-            {exibirDetalhes && tarefaSelecionada && (
+                    {exibirDetalhes && tarefaSelecionada && (
                     <TaskDetails
                     tarefa={tarefaSelecionada}
                     tarefas={tarefas}
                     onClose={() => { setExibirDetalhes(false); setTarefaSelecionada(null); }}
                     onEdit={handleEditTask}
                     onDelete={deletarTarefa}
-                    onAttachFile={async (_, __) => { /* TODO */ }}
                     onUpdateStatus={handleUpdateTaskStatus}
+                    onUpdateProgress={atualizarProgresso}
                     onOpenTask={handleViewTask}
                 />
             )}

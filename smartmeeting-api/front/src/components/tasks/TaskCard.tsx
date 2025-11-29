@@ -86,6 +86,20 @@ export function TaskCard({
                         </span>
                     )}
 
+                    {/* Progress mini-tag */}
+                    {typeof tarefa.progresso === 'number' && (
+                        <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-medium truncate max-w-[60px] ${
+                                tarefa.progresso >= 100 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 border border-emerald-200' :
+                                tarefa.progresso >= 50 ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300 border border-blue-200' :
+                                'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300 border border-amber-200'
+                            }`}
+                            title={`Progresso: ${tarefa.progresso}%`}
+                        >
+                            {tarefa.progresso}%
+                        </span>
+                    )}
+
                     {tarefa.reuniaoTitulo && (
                         <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300 truncate max-w-[80px]">
                             Meet

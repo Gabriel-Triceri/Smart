@@ -117,17 +117,28 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         try {
             const tarefaAtualizada = await meetingsApi.updateTarefa(id, data);
 
-            setTarefas(prev => prev.map(t => t.id === id ? tarefaAtualizada : t));
+            // Preserve progresso unless the caller explicitly provided a progresso in the update data.
+            // This prevents status changes (via update) from accidentally resetting percentual.
+            const prev = tarefas.find(t => t.id === id);
+            const explicitProgressoProvided = typeof (data as any).progresso !== 'undefined';
+
+            const progressoParaState = explicitProgressoProvided
+                ? (tarefaAtualizada.progresso ?? (prev?.progresso ?? 0))
+                : (prev?.progresso ?? (tarefaAtualizada.progresso ?? 0));
+
+            const tarefaParaState = { ...tarefaAtualizada, progresso: progressoParaState };
+
+            setTarefas(prevList => prevList.map(t => t.id === id ? tarefaParaState : t));
             if (tarefaSelecionada?.id === id) {
-                setTarefaSelecionada(tarefaAtualizada);
+                setTarefaSelecionada(tarefaParaState);
             }
 
-            return tarefaAtualizada;
+            return tarefaParaState;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao atualizar tarefa');
             throw err;
         }
-    }, [tarefaSelecionada]);
+    }, [tarefaSelecionada, tarefas]);
 
     const deletarTarefa = useCallback(async (id: string) => {
         try {
@@ -152,8 +163,12 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         try {
             const tarefaAtualizada = await meetingsApi.moverTarefa(tarefaId, novoStatus, newPosition);
 
+            // Preserve previous progresso if backend didn't return it (avoid resetting to 0 on move)
+            const prevProgress = tarefa.progresso ?? 0;
+            const tarefaParaState = { ...tarefaAtualizada, progresso: tarefaAtualizada.progresso ?? prevProgress };
+
             setTarefas(prev => prev.map(t =>
-                t.id === tarefaId ? tarefaAtualizada : t
+                t.id === tarefaId ? tarefaParaState : t
             ));
 
             const movimentacao: MovimentacaoTarefa = {
@@ -167,7 +182,7 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
 
             await meetingsApi.registrarMovimentacao(movimentacao);
 
-            return tarefaAtualizada;
+            return tarefaParaState;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao mover tarefa');
             throw err;
@@ -229,31 +244,43 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         try {
             const tarefaAtualizada = await meetingsApi.atribuirTarefa(tarefaId, responsavelId, principal);
 
-            setTarefas(prev => prev.map(t => t.id === tarefaId ? tarefaAtualizada : t));
+            // Preserve existing progresso (caller did not intend to change percentual when assigning)
+            const prev = tarefas.find(t => t.id === tarefaId);
+            const tarefaParaState = { ...tarefaAtualizada, progresso: tarefaAtualizada.progresso ?? (prev?.progresso ?? 0) };
+
+            setTarefas(prevList => prevList.map(t => t.id === tarefaId ? tarefaParaState : t));
 
             if (tarefaSelecionada?.id === tarefaId) {
-                setTarefaSelecionada(tarefaAtualizada);
+                setTarefaSelecionada(tarefaParaState);
             }
 
-            return tarefaAtualizada;
+            return tarefaParaState;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao atribuir tarefa');
             throw err;
         }
-    }, [tarefaSelecionada]);
+    }, [tarefaSelecionada, tarefas]);
 
     // Progresso
     const atualizarProgresso = useCallback(async (tarefaId: string, progresso: number) => {
         try {
+            // Preserve the current status locally: some backends may change status when progresso reaches 100%
+            // but the UI should not automatically change status when the user edits the percentual.
+            const prev = tarefas.find(t => t.id === tarefaId);
+            const prevStatus = prev?.status;
+
             const tarefaAtualizada = await meetingsApi.atualizarProgresso(tarefaId, progresso);
 
-            setTarefas(prev => prev.map(t => t.id === tarefaId ? tarefaAtualizada : t));
+            // If backend modified status, keep the previous status in the local state to avoid surprising UX changes.
+            const tarefaParaState = { ...tarefaAtualizada, status: prevStatus ?? tarefaAtualizada.status };
+
+            setTarefas(prevList => prevList.map(t => t.id === tarefaId ? tarefaParaState : t));
 
             if (tarefaSelecionada?.id === tarefaId) {
-                setTarefaSelecionada(tarefaAtualizada);
+                setTarefaSelecionada(tarefaParaState);
             }
 
-            return tarefaAtualizada;
+            return tarefaParaState;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao atualizar progresso');
             throw err;

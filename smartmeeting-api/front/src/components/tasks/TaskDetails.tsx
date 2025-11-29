@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     X,
     Calendar,
@@ -6,21 +6,21 @@ import {
     User,
     Flag,
     Tag,
-    Paperclip,
-    Plus,
-    Download,
-    ExternalLink,
     Edit,
     Trash2,
     CheckCircle2,
-    FileText
+    FileText,
+    MessageSquare,
+    ChevronRight,
+    CornerDownRight,
+    Percent
 } from 'lucide-react';
 import {
     Tarefa, StatusTarefa, PrioridadeTarefa
 } from '../../types/meetings';
 import { formatDate } from '../../utils/dateHelpers';
 import { formatFileSize } from '../../utils/helpers';
-import { Avatar } from '../../components/common/Avatar';
+import { Avatar } from '../common/Avatar';
 import { PRIORITY_CONFIG, STATUS_OPTIONS } from '../../config/taskConfig';
 
 interface TaskDetailsProps {
@@ -28,10 +28,10 @@ interface TaskDetailsProps {
     onClose: () => void;
     onEdit?: (tarefa: Tarefa) => void;
     onDelete?: (tarefaId: string) => void;
-    // onAddComment removed - comments sidebar not shown in details
+    onAddComment?: (tarefaId: string, conteudo: string) => Promise<void>;
     onAttachFile?: (tarefaId: string, file: File) => Promise<void>;
     onUpdateStatus?: (tarefaId: string, status: StatusTarefa) => Promise<void>;
-    // onUpdateProgress removed - progress not shown in details
+    onUpdateProgress?: (tarefaId: string, progress: number) => Promise<void>;
     tarefas?: Tarefa[];
     onOpenTask?: (tarefa: Tarefa) => void;
 }
@@ -41,12 +41,26 @@ export function TaskDetails({
     onClose,
     onEdit,
     onDelete,
+    onAddComment,
     onAttachFile,
     onUpdateStatus,
+    onUpdateProgress,
     tarefas,
     onOpenTask
 }: TaskDetailsProps) {
     const [showFileUpload, setShowFileUpload] = useState(false);
+    const [history, setHistory] = useState<Array<{ id: string; author: string; text: string; createdAt: string }>>([]);
+    const [newMessage, setNewMessage] = useState('');
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+
+    // Progress local state
+    const [progressInput, setProgressInput] = useState<string>('0');
+
+    const scrollToBottom = () => {
+        try {
+            scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+        } catch (e) { /* ignore */ }
+    };
 
     // Lock body scroll when modal is open
     useEffect(() => {
@@ -55,6 +69,13 @@ export function TaskDetails({
             document.body.style.overflow = 'unset';
         };
     }, []);
+
+    // Sync local progress when task changes
+    useEffect(() => {
+        if (tarefa) {
+            setProgressInput(String(tarefa.progresso || 0));
+        }
+    }, [tarefa]);
 
     if (!tarefa) return null;
 
@@ -68,6 +89,20 @@ export function TaskDetails({
         }
     };
 
+    useEffect(() => {
+        const msgs: Array<{ id: string; author: string; text: string; createdAt: string }> = [];
+        if (tarefa.descricao) {
+            msgs.push({ id: `desc-${tarefa.id}`, author: tarefa.criadaPorNome || 'Sistema', text: tarefa.descricao, createdAt: tarefa.createdAt || new Date().toISOString() });
+        }
+        if (Array.isArray(tarefa.comentarios) && tarefa.comentarios.length > 0) {
+            tarefa.comentarios.forEach(c => msgs.push({ id: c.id, author: c.autorNome || 'Usuário', text: c.conteudo, createdAt: c.createdAt }));
+        }
+        msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        setHistory(msgs);
+        // small timeout to allow render
+        setTimeout(() => scrollToBottom(), 50);
+    }, [tarefa]);
+
     const handleFileDrop = (e: React.DragEvent) => {
         e.preventDefault();
         const file = e.dataTransfer.files?.[0];
@@ -79,125 +114,245 @@ export function TaskDetails({
         if (file) handleFileUpload(file);
     };
 
+    const handleProgressBlur = () => {
+        if (!onUpdateProgress) return;
+        let val = parseInt(progressInput, 10);
+        if (isNaN(val)) val = 0;
+        if (val < 0) val = 0;
+        if (val > 100) val = 100;
+
+        if (val !== (tarefa.progresso || 0)) {
+            onUpdateProgress(tarefa.id, val);
+        }
+        setProgressInput(String(val));
+    };
+
     // progress removed from details view
     const taskPriority = tarefa.prioridade || PrioridadeTarefa.MEDIA;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             ></div>
 
-            {/* Centered Modal Panel */}
-            <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 shadow-2xl rounded-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 overflow-hidden">
+            {/* Centered Modal Panel - Redesigned Layout */}
+            <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 md:shadow-2xl md:rounded-2xl flex flex-col h-full md:h-[90vh] md:max-h-[900px] animate-in zoom-in-95 duration-200 overflow-hidden border border-transparent md:border-slate-200 dark:md:border-slate-800">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                     <div className="flex items-center gap-3">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${PRIORITY_CONFIG[taskPriority].badgeColor.replace('bg-', 'bg-opacity-10 border-').replace('text-white', 'text-slate-700 dark:text-slate-300')}`}>
-                            <Flag className="w-3.5 h-3.5" />
-                            {PRIORITY_CONFIG[taskPriority].label}
-                        </span>
-                        <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
-                        <span className="text-sm text-slate-500 dark:text-slate-400 font-mono">#{tarefa.id.substring(0, 6)}</span>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                #{tarefa.id.substring(0, 8)}
+                            </span>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                {tarefa.projectName || 'Sem Projeto'}
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        {onEdit && (
-                            <button onClick={() => onEdit(tarefa)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 rounded-lg transition-colors" title="Editar">
-                                <Edit className="w-4 h-4" />
-                            </button>
-                        )}
+                    <div className="flex items-center gap-1.5">
                         {onDelete && (
-                            <button onClick={() => onDelete(tarefa.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir">
+                            <button onClick={() => onDelete(tarefa.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-red-900/20 rounded-lg transition-all" title="Excluir">
                                 <Trash2 className="w-4 h-4" />
                             </button>
                         )}
-                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
-                        <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1.5"></div>
+                        <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
-                {/* Main Content Split */}
-                <div className="flex-1 flex overflow-hidden min-h-0">
+                {/* Main Content Split: Two Columns */}
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
-                    {/* Left Column: Details */}
-                    <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6">
+                    {/* Left Column: Primary Content (Title, Description, Activity) */}
+                    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-white dark:bg-slate-900 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
 
-                        {/* Title & Desc */}
+                        {/* Title Section */}
                         <div>
-                            {tarefa.projectName ? (
-                                <div className="mb-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                                    {tarefa.projectName}
+                            {tarefa.projectId && (
+                                <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                    <Tag className="w-3 h-3" />
+                                    <span>Projeto: {tarefa.projectId}</span>
                                 </div>
-                            ) : tarefa.projectId ? (
-                                <div className="mb-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                                    Projeto: {tarefa.projectId}
-                                </div>
-                            ) : null}
-                            <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-tight mb-3">
+                            )}
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
                                 {tarefa.titulo}
                             </h1>
-                            {tarefa.descricao ? (
-                                <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                                    <p className="whitespace-pre-wrap">{tarefa.descricao}</p>
-                                </div>
-                            ) : (
-                                <p className="text-slate-400 italic text-sm">Sem descrição.</p>
-                            )}
                         </div>
 
-                        {/* Status & Progress Card */}
-                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 grid grid-cols-1 gap-4">
+                        {/* Activity / Chat Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                                <MessageSquare className="w-4 h-4 text-slate-400" />
+                                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Histórico da tarefa</h2>
+                            </div>
+
+                            <div className="bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col min-h-[300px] max-h-[500px]">
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    {history.length === 0 ? (
+                                        <div className="h-full flex flex-col items-center justify-center text-slate-400 italic text-sm py-10">
+                                            <MessageSquare className="w-8 h-8 mb-2 opacity-20" />
+                                            <span>Sem histórico de atividades.</span>
+                                        </div>
+                                    ) : (
+                                        history.map((m) => {
+                                            const isMe = m.author === 'Você';
+                                            return (
+                                                <div key={m.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                                    <div className="flex items-center gap-2 mb-1 px-1">
+                                                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                                            {m.author}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400">
+                                                            {new Date(m.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                    <div className={`px-4 py-2.5 rounded-2xl max-w-[90%] text-sm leading-relaxed shadow-sm ${isMe
+                                                        ? 'bg-blue-600 text-white rounded-tr-none'
+                                                        : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-none'
+                                                        }`}>
+                                                        {m.text}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                    <div ref={scrollRef} />
+                                </div>
+
+                                {/* Input Area */}
+                                <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="relative">
+                                        <input
+                                            value={newMessage}
+                                            onChange={(e) => setNewMessage(e.target.value)}
+                                            onKeyDown={async (e) => {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    if (!newMessage.trim()) return;
+                                                    const text = newMessage.trim();
+                                                    const msg = { id: `local-${Date.now()}`, author: 'Você', text, createdAt: new Date().toISOString() };
+                                                    setHistory(prev => [...prev, msg]);
+                                                    setNewMessage('');
+                                                    setTimeout(() => scrollToBottom(), 50);
+                                                    if (onAddComment) {
+                                                        try { await onAddComment(tarefa.id, text); } catch (err) { console.error('Erro ao enviar comentário:', err); }
+                                                    }
+                                                }
+                                            }}
+                                            placeholder="Adicione um comentário ou atualização..."
+                                            className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border-0 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-shadow"
+                                        />
+                                        <button
+                                            onClick={async () => {
+                                                if (!newMessage.trim()) return;
+                                                const text = newMessage.trim();
+                                                const msg = { id: `local-${Date.now()}`, author: 'Você', text, createdAt: new Date().toISOString() };
+                                                setHistory(prev => [...prev, msg]);
+                                                setNewMessage('');
+                                                setTimeout(() => scrollToBottom(), 50);
+                                                if (onAddComment) {
+                                                    try { await onAddComment(tarefa.id, text); } catch (err) { console.error('Erro ao enviar comentário:', err); }
+                                                }
+                                            }}
+                                            type="button"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={!newMessage.trim()}
+                                        >
+                                            <CornerDownRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Attachments Section REMOVED from UI */}
+                    </div>
+
+                    {/* Right Column: Sidebar (Metadata) */}
+                    <div className="w-full md:w-80 lg:w-96 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-black/20 overflow-y-auto p-6 space-y-8">
+
+                        <div className="space-y-4">
+                            {/* Status Select */}
                             {onUpdateStatus && (
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Status</label>
+                                <div className="bg-white dark:bg-slate-800 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                                     <div className="relative">
                                         <select
                                             value={tarefa.status}
                                             onChange={(e) => onUpdateStatus(tarefa.id, e.target.value as StatusTarefa)}
-                                            className="w-full pl-3 pr-10 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none shadow-sm cursor-pointer"
+                                            className="w-full pl-3 pr-10 py-2.5 bg-transparent border-none rounded-lg text-sm font-semibold text-slate-700 dark:text-white focus:ring-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                                         >
                                             {STATUS_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                                         </select>
-                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
                                             <CheckCircle2 className="w-4 h-4" />
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* progress display removed from details */}
+                            {/* Progress Input */}
+                            {onUpdateProgress && (
+                                <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                        <Percent className="w-3.5 h-3.5" /> Conclusão
+                                    </label>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={progressInput}
+                                            onChange={(e) => setProgressInput(e.target.value)}
+                                            onBlur={handleProgressBlur}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleProgressBlur()}
+                                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        />
+                                        <span className="text-sm font-bold text-slate-600 dark:text-slate-300">%</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-blue-500 rounded-full transition-all duration-500 ease-out"
+                                            style={{ width: `${Math.min(100, Math.max(0, parseInt(progressInput) || 0))}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Metadata Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        {/* Details Group */}
+                        <div className="space-y-6">
+
+                            {/* Priority Section REMOVED from UI */}
+
                             {/* Dates */}
                             <div className="space-y-3">
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-slate-400" /> Datas
-                                </h3>
-                                <div className="space-y-2 pl-5 border-l-2 border-slate-100 dark:border-slate-800">
-                                    <div className="flex justify-between text-sm">
+                                <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    <Calendar className="w-3.5 h-3.5" /> Datas
+                                </label>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                                         <span className="text-slate-500 dark:text-slate-400">Início</span>
-                                        <span className="font-medium text-slate-900 dark:text-white">
+                                        <span className="font-medium text-slate-900 dark:text-white font-mono">
                                             {tarefa.dataInicio ? formatDate(tarefa.dataInicio, "dd/MM/yyyy") : '-'}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 dark:text-slate-400">Data de Término</span>
-                                        <span className={`font-medium ${tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600' : 'text-slate-900 dark:text-white'}`}>
+                                    <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                        <span className="text-slate-500 dark:text-slate-400">Prazo</span>
+                                        <span className={`font-medium font-mono ${tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded' : 'text-slate-900 dark:text-white'}`}>
                                             {tarefa.prazo_tarefa ? formatDate(tarefa.prazo_tarefa, "dd/MM/yyyy") : '-'}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 dark:text-slate-400">Estimado</span>
-                                        <span className="font-medium text-slate-900 dark:text-white flex items-center gap-1">
-                                            <Clock className="w-3.5 h-3.5" />
+                                    <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                        <span className="text-slate-500 dark:text-slate-400">Estimativa</span>
+                                        <span className="font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
+                                            <Clock className="w-3.5 h-3.5 text-slate-400" />
                                             {tarefa.estimadoHoras ? `${tarefa.estimadoHoras}h` : '-'}
                                         </span>
                                     </div>
@@ -206,70 +361,38 @@ export function TaskDetails({
 
                             {/* Assignees */}
                             <div className="space-y-3">
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <User className="w-4 h-4 text-slate-400" /> Responsáveis
-                                </h3>
-                                <div className="flex flex-wrap gap-2">
+                                <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    <User className="w-3.5 h-3.5" /> Responsáveis
+                                </label>
+                                <div className="flex flex-col gap-2">
                                     {(tarefa.responsaveis ?? []).map((responsavel) => (
-                                        <div key={responsavel.id} className="flex items-center gap-2 p-1 pr-3 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                                            <Avatar src={responsavel.avatar} name={responsavel.nome} className="w-6 h-6 text-xs" />
-                                            <span className="text-sm text-slate-700 dark:text-slate-300">{responsavel.nome}</span>
-                                            {responsavel.id === tarefa.responsavelPrincipalId && (
-                                                <div className="w-2 h-2 rounded-full bg-blue-500 ml-1" title="Principal"></div>
-                                            )}
+                                        <div key={responsavel.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                            <Avatar src={responsavel.avatar} name={responsavel.nome} className="w-8 h-8 text-xs ring-2 ring-white dark:ring-slate-900" />
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{responsavel.nome}</span>
+                                                {responsavel.id === tarefa.responsavelPrincipalId && (
+                                                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Principal</span>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                     {(tarefa.responsaveis ?? []).length === 0 && (
-                                        <span className="text-sm text-slate-400 italic">Nenhum responsável</span>
+                                        <span className="text-sm text-slate-400 italic pl-2">Nenhum responsável</span>
                                     )}
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Reunião */}
-                        {tarefa.reuniaoTitulo && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <div className="h-px bg-slate-200 dark:bg-slate-700 my-4"></div>
+
+                            {/* Tags Section REMOVED from UI */}
+
+                            {/* Dependencies */}
+                            {(tarefa.dependencias && tarefa.dependencias.length > 0) && (
                                 <div className="space-y-3">
-                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                        <FileText className="w-4 h-4 text-slate-400" /> Reunião
-                                    </h3>
-                                    <div className="pl-5 border-l-2 border-slate-100 dark:border-slate-800">
-                                        <span className="text-sm font-medium text-slate-900 dark:text-white">
-                                            {tarefa.reuniaoTitulo}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Cor */}
-                                {tarefa.cor && (
-                                    <div className="space-y-3">
-                                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                            <Tag className="w-4 h-4 text-slate-400" /> Cor
-                                        </h3>
-                                        <div className="pl-5 border-l-2 border-slate-100 dark:border-slate-800">
-                                            <div className="flex items-center gap-2">
-                                                <div
-                                                    className="w-6 h-6 rounded border border-slate-300 dark:border-slate-600"
-                                                    style={{ backgroundColor: tarefa.cor }}
-                                                />
-                                                <span className="text-sm font-medium text-slate-900 dark:text-white font-mono">
-                                                    {tarefa.cor}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Dependências */}
-                        {(tarefa.dependencias && tarefa.dependencias.length > 0) && (
-                            <div>
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
-                                    Dependências
-                                </h3>
-                                <div className="pl-5 border-l-2 border-slate-100 dark:border-slate-800">
-                                    <div className="flex flex-col gap-2">
+                                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        Dependências
+                                    </label>
+                                    <div className="flex flex-col gap-1">
                                         {tarefa.dependencias.map((depId) => {
                                             const dep = Array.isArray(tarefas) ? tarefas.find((t) => String(t.id) === String(depId)) : undefined;
                                             const title = dep ? dep.titulo : depId;
@@ -277,98 +400,35 @@ export function TaskDetails({
                                                 <button
                                                     key={depId}
                                                     onClick={() => dep && onOpenTask && onOpenTask(dep)}
-                                                    className="text-sm text-blue-600 dark:text-blue-400 text-left hover:underline"
+                                                    className="group flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
                                                 >
-                                                    {title}
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 group-hover:bg-blue-500"></div>
+                                                    <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                                                        {title}
+                                                    </span>
+                                                    <ChevronRight className="w-3 h-3 ml-auto text-slate-300 group-hover:text-blue-500" />
                                                 </button>
                                             );
                                         })}
                                     </div>
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Tags */}
-                        {tarefa.tags && tarefa.tags.length > 0 && (
-                            <div>
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
-                                    <Tag className="w-4 h-4 text-slate-400" /> Tags
-                                </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {tarefa.tags.map((tag, idx) => (
-                                        <span key={idx} className="px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Attachments Section */}
-                        <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <Paperclip className="w-4 h-4 text-slate-400" />
-                                    Anexos <span className="text-slate-400 font-normal">({(tarefa.anexos ?? []).length})</span>
-                                </h3>
-                                {onAttachFile && (
-                                    <button
-                                        onClick={() => setShowFileUpload(!showFileUpload)}
-                                        className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
-                                    >
-                                        <Plus className="w-3.5 h-3.5" /> Adicionar
-                                    </button>
-                                )}
-                            </div>
-
-                            {showFileUpload && (
-                                <div
-                                    className="mb-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onDrop={handleFileDrop}
-                                >
-                                    <input type="file" onChange={handleFileSelect} className="hidden" id="file-upload" />
-                                    <label htmlFor="file-upload" className="cursor-pointer block">
-                                        <div className="mx-auto w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-2">
-                                                <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                            </div>
-                                        <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">Clique para upload ou arraste</p>
-                                        <p className="text-xs text-slate-400 mt-1">Qualquer formato (max 10MB)</p>
-                                    </label>
-                                </div>
                             )}
 
-                            <div className="space-y-2">
-                                {(tarefa.anexos ?? []).map((anexo) => (
-                                    <div key={anexo.id} className="group flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
-                                        <div className="flex items-center gap-3 overflow-hidden">
-                                            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                                                <FileText className="w-5 h-5 text-slate-500" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{anexo.nome}</p>
-                                                <p className="text-xs text-slate-500">{formatFileSize(anexo.tamanho)} • {anexo.uploadedByNome}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <a href={anexo.url} download className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
-                                                <Download className="w-4 h-4" />
-                                            </a>
-                                            <a href={anexo.url} target="_blank" rel="noopener noreferrer" className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
-                                                <ExternalLink className="w-4 h-4" />
-                                            </a>
+                            {/* Metadata Extras */}
+                            <div className="grid grid-cols-1 gap-4 pt-2">
+                                {tarefa.reuniaoTitulo && (
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] text-slate-400 uppercase">Reunião Vinculada</label>
+                                        <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 font-medium bg-slate-100 dark:bg-slate-800 p-2 rounded-md">
+                                            <FileText className="w-4 h-4 text-slate-400" />
+                                            <span className="truncate">{tarefa.reuniaoTitulo}</span>
                                         </div>
                                     </div>
-                                ))}
-                                {(tarefa.anexos ?? []).length === 0 && !showFileUpload && (
-                                    <p className="text-sm text-slate-400 italic py-2">Nenhum arquivo anexado.</p>
                                 )}
                             </div>
+
                         </div>
-
                     </div>
-
-                    {/* Right Column: comments sidebar removed */}
                 </div>
             </div>
         </div>

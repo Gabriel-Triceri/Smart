@@ -52,6 +52,9 @@ public class Tarefa extends Auditable {
     @Column(name = "ESTIMADO_HORAS_TAREFA")
     private Double estimadoHoras;
 
+    @Column(name = "PROGRESSO_TAREFA")
+    private Integer progresso;
+
     @ElementCollection
     @CollectionTable(name = "TAREFA_TAGS", joinColumns = @JoinColumn(name = "ID_TAREFA"))
     @Column(name = "TAG")
