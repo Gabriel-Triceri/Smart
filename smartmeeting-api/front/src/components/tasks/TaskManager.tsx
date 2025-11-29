@@ -4,10 +4,6 @@ import {
     List,
     Plus,
     RefreshCw,
-    MoreVertical,
-    Eye,
-    Edit,
-    Trash2,
     Calendar,
     CheckSquare,
     Search,
@@ -23,7 +19,6 @@ import { useTheme } from '../../context/ThemeContext';
 import { formatDate } from '../../utils/dateHelpers';
 import { Avatar } from '../../components/common/Avatar';
 
-// Helper component purely for the spinner icon availability
 const Loader2 = ({ className }: { className?: string }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
@@ -52,14 +47,14 @@ const getStatusLabel = (status: string) => {
     }
 };
 
-const getPrioridadeIndicator = (prioridade: string) => {
+const getPrioridadeBorderColor = (prioridade: string) => {
     switch (prioridade) {
-        case PrioridadeTarefa.CRITICA: return 'bg-red-500 shadow-red-500/50';
-        case PrioridadeTarefa.URGENTE: return 'bg-orange-500 shadow-orange-500/50';
-        case PrioridadeTarefa.ALTA: return 'bg-amber-500 shadow-amber-500/50';
-        case PrioridadeTarefa.MEDIA: return 'bg-blue-500 shadow-blue-500/50';
-        case PrioridadeTarefa.BAIXA: return 'bg-slate-400 shadow-slate-400/50';
-        default: return 'bg-gray-300';
+        case PrioridadeTarefa.CRITICA: return 'border-l-red-500';
+        case PrioridadeTarefa.URGENTE: return 'border-l-orange-500';
+        case PrioridadeTarefa.ALTA: return 'border-l-amber-500';
+        case PrioridadeTarefa.MEDIA: return 'border-l-blue-500';
+        case PrioridadeTarefa.BAIXA: return 'border-l-slate-400';
+        default: return 'border-l-gray-300';
     }
 };
 
@@ -91,7 +86,6 @@ export function TaskManager() {
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [searchTerm, setSearchTerm] = useState('');
     const [showFilters, setShowFilters] = useState(false);
-    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
     const handleCreateTask = async (data: TarefaFormData) => { await criarTarefa(data); };
     const handleUpdateTask = async (id: string, data: Partial<TarefaFormData>) => { await atualizarTarefa(id, data); };
@@ -130,13 +124,19 @@ export function TaskManager() {
     // Renderização da lista
     const renderLista = () => (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 hidden md:grid grid-cols-12 gap-4 items-center">
-                <div className="col-span-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tarefa</div>
-                <div className="col-span-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</div>
-                <div className="col-span-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Responsável</div>
-                <div className="col-span-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Prazo</div>
-                <div className="col-span-1 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Ações</div>
+            {/* 
+               Header: MUDANÇA PARA GRID DE 8 COLUNAS (grid-cols-8)
+               Distribuição: 3 (Tarefa) + 1 (Status) + 1 (Progresso) + 1 (Resp) + 1 (Início) + 1 (Término) = 8
+            */}
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 hidden md:grid grid-cols-8 gap-4 items-center">
+                <div className="col-span-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-4">Tarefa</div>
+                <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Status</div>
+                <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Progresso</div>
+                <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Responsável</div>
+                <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Início</div>
+                <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Término</div>
             </div>
+
             <div className="divide-y divide-slate-100 dark:divide-slate-700">
                 {loading ? (
                     <div className="p-12 text-center">
@@ -156,89 +156,96 @@ export function TaskManager() {
                         const responsaveis = tarefa.responsaveis || [];
                         const responsavelPrincipal = responsaveis.find(r => String(r.id) === String(tarefa.responsavelPrincipalId)) || responsaveis[0];
                         const outrosResponsaveis = responsaveis.length > 1 ? responsaveis.length - 1 : 0;
+                        const borderClass = getPrioridadeBorderColor(tarefa.prioridade);
+
                         return (
                             <div
                                 key={tarefa.id}
-                                className="group p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer relative grid grid-cols-12 gap-4 items-center"
+                                className={`group bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer 
+                                grid grid-cols-1 md:grid-cols-8 gap-4 items-center px-6 py-5 border-l-[4px] ${borderClass}`}
                                 onClick={() => handleViewTask(tarefa)}
                             >
-                                <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-md ${getPrioridadeIndicator(tarefa.prioridade).split(' ')[0]}`}></div>
-                                <div className="col-span-12 md:col-span-4 ml-3">
-                                    <h3 className="font-medium text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                        {tarefa.titulo}
-                                    </h3>
-                                    {tarefa.descricao && (
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{tarefa.descricao}</p>
-                                    )}
+                                {/* Coluna 1: Título (3/8) */}
+                                <div className="col-span-1 md:col-span-3 min-w-0 pr-4">
+                                    <div className="flex flex-col">
+                                        <h3 className="font-medium text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                                            {tarefa.titulo}
+                                        </h3>
+                                        {tarefa.descricao && (
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-1 font-normal">
+                                                {tarefa.descricao}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="col-span-6 md:col-span-2">
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border ${getStatusColor(tarefa.status)}`}>
+
+                                {/* Coluna 2: Status (1/8) - Centralizado */}
+                                <div className="col-span-1 md:col-span-1 flex justify-center">
+                                    <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border w-[90px] whitespace-nowrap ${getStatusColor(tarefa.status)}`}>
                                         {getStatusLabel(tarefa.status)}
                                     </span>
                                 </div>
-                                <div className="col-span-12 md:col-span-3 flex items-center gap-2">
+
+                                {/* Coluna 3: Progresso (1/8) - Centralizado */}
+                                <div className="col-span-1 md:col-span-1 flex items-center justify-center">
+                                    <div className="flex flex-col items-center w-full max-w-[60px]">
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{tarefa.progresso ?? 0}%</span>
+                                        <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                            <div 
+                                                className={`h-full rounded-full ${
+                                                    (tarefa.progresso ?? 0) === 100 ? 'bg-emerald-500' : 'bg-blue-500'
+                                                }`}
+                                                style={{ width: `${Math.min(100, Math.max(0, tarefa.progresso ?? 0))}%` }} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Coluna 4: Responsável (1/8) - Centralizado */}
+                                <div className="col-span-1 md:col-span-1 flex items-center justify-center">
                                     {responsaveis.length > 0 ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex -space-x-2">
-                                                {responsaveis.slice(0, 3).map((resp, idx) => (
-                                                    <div key={resp.id} className="relative transition-transform hover:-translate-y-1" style={{ zIndex: 10 - idx }}>
-                                                        <Avatar src={resp.avatar} name={resp.nome} className="ring-2 ring-white dark:ring-slate-800 w-8 h-8 text-xs" />
-                                                    </div>
-                                                ))}
-                                                {outrosResponsaveis > 0 && (
-                                                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-300 ring-2 ring-white dark:ring-slate-800">
-                                                        +{outrosResponsaveis}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {responsavelPrincipal && (
-                                                <span className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-[100px] hidden lg:block">
-                                                    {responsavelPrincipal.nome}
-                                                </span>
+                                        <div className="flex -space-x-2 shrink-0">
+                                            {responsaveis.slice(0, 3).map((resp, idx) => (
+                                                <div key={resp.id} className="relative transition-transform hover:-translate-y-1 z-10">
+                                                    <Avatar src={resp.avatar} name={resp.nome} className="ring-2 ring-white dark:ring-slate-800 w-7 h-7 text-[10px]" />
+                                                </div>
+                                            ))}
+                                            {outrosResponsaveis > 0 && (
+                                                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-[10px] font-medium text-slate-600 dark:text-slate-300 ring-2 ring-white dark:ring-slate-800 z-0">
+                                                    +{outrosResponsaveis}
+                                                </div>
                                             )}
                                         </div>
-                                    ) : (
-                                        <span className="text-xs text-slate-400 italic">Não atribuído</span>
-                                    )}
-                                </div>
-                                <div className="col-span-6 md:col-span-2 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                    {tarefa.prazo_tarefa ? (
-                                        <>
-                                            <Calendar className="w-4 h-4 text-slate-400" />
-                                            <span className="text-xs font-medium">
-                                                {formatDate(tarefa.prazo_tarefa, 'dd/MM/yyyy')}
-                                            </span>
-                                        </>
                                     ) : (
                                         <span className="text-xs text-slate-400">-</span>
                                     )}
                                 </div>
-                                <div className="col-span-6 md:col-span-1 flex justify-end">
-                                    <div className="relative">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setActiveDropdown(activeDropdown === String(tarefa.id) ? null : String(tarefa.id));
-                                            }}
-                                            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                                        >
-                                            <MoreVertical className="w-4 h-4" />
-                                        </button>
-                                        {activeDropdown === String(tarefa.id) && (
-                                            <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 py-1">
-                                                <button onClick={(e) => { e.stopPropagation(); handleViewTask(tarefa); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2">
-                                                    <Eye className="w-4 h-4" /> Ver Detalhes
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); handleEditTask(tarefa); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2">
-                                                    <Edit className="w-4 h-4" /> Editar
-                                                </button>
-                                                <div className="my-1 border-t border-slate-100 dark:border-slate-700"></div>
-                                                <button onClick={(e) => { e.stopPropagation(); deletarTarefa(tarefa.id); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
-                                                    <Trash2 className="w-4 h-4" /> Excluir
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
+
+                                {/* Coluna 5: Data Início (1/8) - Centralizado */}
+                                <div className="col-span-1 md:col-span-1 flex items-center justify-center">
+                                    {tarefa.dataInicio ? (
+                                        <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                                            {formatDate(tarefa.dataInicio, 'dd/MM/yyyy')}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs text-slate-400">-</span>
+                                    )}
+                                </div>
+
+                                {/* Coluna 6: Data Término (1/8) - Centralizado */}
+                                <div className="col-span-1 md:col-span-1 flex items-center justify-center">
+                                    {tarefa.prazo_tarefa ? (
+                                        <div className={`flex items-center gap-1.5 text-xs font-medium ${
+                                            new Date(tarefa.prazo_tarefa) < new Date() && tarefa.status !== StatusTarefa.DONE 
+                                            ? 'text-red-600 dark:text-red-400' 
+                                            : 'text-slate-700 dark:text-slate-300'
+                                        }`}>
+                                            <Calendar className="w-3.5 h-3.5 opacity-70" />
+                                            <span>{formatDate(tarefa.prazo_tarefa, 'dd/MM/yyyy')}</span>
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-slate-400">-</span>
+                                    )}
                                 </div>
                             </div>
                         )
@@ -385,8 +392,8 @@ export function TaskManager() {
                 />
             )}
 
-                    {exibirDetalhes && tarefaSelecionada && (
-                    <TaskDetails
+            {exibirDetalhes && tarefaSelecionada && (
+                <TaskDetails
                     tarefa={tarefaSelecionada}
                     tarefas={tarefas}
                     onClose={() => { setExibirDetalhes(false); setTarefaSelecionada(null); }}

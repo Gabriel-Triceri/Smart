@@ -5,7 +5,6 @@ import {
     Clock,
     User,
     Tag,
-    Trash2,
     CheckCircle2,
     FileText,
     MessageSquare,
@@ -13,9 +12,7 @@ import {
     CornerDownRight,
     Percent
 } from 'lucide-react';
-import {
-    Tarefa, StatusTarefa, PrioridadeTarefa
-} from '../../types/meetings';
+import { Tarefa, StatusTarefa } from '../../types/meetings';
 import { formatDate } from '../../utils/dateHelpers';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
@@ -28,7 +25,7 @@ interface TaskDetailsProps {
     onAddComment?: (tarefaId: string, conteudo: string) => Promise<void>;
     onAttachFile?: (tarefaId: string, file: File) => Promise<void>;
     onUpdateStatus?: (tarefaId: string, status: StatusTarefa) => Promise<void>;
-    onUpdateProgress?: (tarefaId: string, progress: number) => Promise<void>;
+    onUpdateProgress?: (tarefaId: string, progress: number) => Promise<Tarefa>;
     tarefas?: Tarefa[];
     onOpenTask?: (tarefa: Tarefa) => void;
 }
@@ -36,8 +33,6 @@ interface TaskDetailsProps {
 export function TaskDetails({
     tarefa,
     onClose,
-    onEdit,
-    onDelete,
     onAddComment,
     onAttachFile,
     onUpdateStatus,
@@ -45,7 +40,7 @@ export function TaskDetails({
     tarefas,
     onOpenTask
 }: TaskDetailsProps) {
-    const [showFileUpload, setShowFileUpload] = useState(false);
+    
     const [history, setHistory] = useState<Array<{ id: string; author: string; text: string; createdAt: string }>>([]);
     const [newMessage, setNewMessage] = useState('');
     const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -80,7 +75,6 @@ export function TaskDetails({
         if (!onAttachFile) return;
         try {
             await onAttachFile(tarefa.id, file);
-            setShowFileUpload(false);
         } catch (error) {
             console.error('Erro ao anexar arquivo:', error);
         }
@@ -100,16 +94,7 @@ export function TaskDetails({
         setTimeout(() => scrollToBottom(), 50);
     }, [tarefa]);
 
-    const handleFileDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files?.[0];
-        if (file) handleFileUpload(file);
-    };
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) handleFileUpload(file);
-    };
+    
 
     const handleProgressBlur = () => {
         if (!onUpdateProgress) return;
@@ -124,8 +109,7 @@ export function TaskDetails({
         setProgressInput(String(val));
     };
 
-    // progress removed from details view
-    const taskPriority = tarefa.prioridade || PrioridadeTarefa.MEDIA;
+  
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4">
@@ -152,12 +136,6 @@ export function TaskDetails({
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                        {onDelete && (
-                            <button onClick={() => onDelete(tarefa.id)} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-red-900/20 rounded-lg transition-all" title="Excluir">
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        )}
-                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1.5"></div>
                         <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                             <X className="w-5 h-5" />
                         </button>
@@ -181,6 +159,29 @@ export function TaskDetails({
                             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
                                 {tarefa.titulo}
                             </h1>
+                            {/* Dependencies inside description for visibility */}
+                            {(tarefa.dependencias && tarefa.dependencias.length > 0) && (
+                                <div className="mt-4 bg-slate-50/50 dark:bg-slate-800/20 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                        <Tag className="w-3 h-3" /> Dependências
+                                    </label>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {tarefa.dependencias.map((depId) => {
+                                            const dep = Array.isArray(tarefas) ? tarefas.find((t) => String(t.id) === String(depId)) : undefined;
+                                            const title = dep ? dep.titulo : depId;
+                                            return (
+                                                <button
+                                                    key={depId}
+                                                    onClick={() => dep && onOpenTask && onOpenTask(dep)}
+                                                    className="text-sm px-3 py-1 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                    title={dep ? `Abrir tarefa: ${title}` : `Dependência: ${depId}`}>
+                                                    {title}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Activity / Chat Section */}
