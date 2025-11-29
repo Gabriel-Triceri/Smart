@@ -4,9 +4,7 @@ import {
     Calendar,
     Clock,
     User,
-    Flag,
     Tag,
-    Edit,
     Trash2,
     CheckCircle2,
     FileText,
@@ -19,9 +17,8 @@ import {
     Tarefa, StatusTarefa, PrioridadeTarefa
 } from '../../types/meetings';
 import { formatDate } from '../../utils/dateHelpers';
-import { formatFileSize } from '../../utils/helpers';
+import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
-import { PRIORITY_CONFIG, STATUS_OPTIONS } from '../../config/taskConfig';
 
 interface TaskDetailsProps {
     tarefa: Tarefa | null;

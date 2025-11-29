@@ -72,11 +72,9 @@ com\smartmeeting\repository\PermissionRepository.class
 com\smartmeeting\service\CsvExportService.class
 com\smartmeeting\config\SecurityConfig.class
 com\smartmeeting\controller\SalaController.class
-com\smartmeeting\service\DashboardService.class
 com\smartmeeting\service\RelatorioService.class
 com\smartmeeting\dto\UsoSalaDTO.class
 com\smartmeeting\service\PessoaService.class
-com\smartmeeting\controller\DashboardController.class
 com\smartmeeting\repository\TemplateTarefaRepository.class
 com\smartmeeting\service\TarefaService$1.class
 com\smartmeeting\enums\StatusTarefa.class
@@ -91,7 +89,6 @@ com\smartmeeting\dto\PresencaDTO.class
 com\smartmeeting\dto\TarefaStatisticsDTO.class
 com\smartmeeting\dto\AssigneeDTO.class
 com\smartmeeting\service\ReuniaoService.class
-com\smartmeeting\dto\DashboardDTO.class
 com\smartmeeting\dto\NotificacaoTarefaDTO.class
 com\smartmeeting\enums\PrioridadeTarefa.class
 com\smartmeeting\repository\ReuniaoRepository.class
@@ -113,7 +110,6 @@ com\smartmeeting\dto\MovimentacaoTarefaDTO.class
 com\smartmeeting\service\NotificacaoService.class
 com\smartmeeting\dto\TemplateTarefaDTO.class
 com\smartmeeting\model\Project.class
-com\smartmeeting\service\DashboardService$1.class
 com\smartmeeting\api\SmartmeetingApiApplication.class
 com\smartmeeting\repository\SalaRepository.class
 com\smartmeeting\controller\RelatorioController.class

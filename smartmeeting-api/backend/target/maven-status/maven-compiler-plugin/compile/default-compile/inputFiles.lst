@@ -1,3 +1,4 @@
+C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\ComentarioTarefaDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\controller\AuthController.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\MetricasReunioesDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\NotificacaoDTO.java
@@ -8,7 +9,6 @@ C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmee
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\UpdateProjectDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\enums\TipoNotificacaoTarefa.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\repository\ProjectRepository.java
-C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\DashboardDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\service\CalendarioService.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\api\SmartmeetingApiApplication.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\PermissionDTO.java
@@ -52,8 +52,10 @@ C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmee
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\ProjectMember.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\Project.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\enums\ProjectStatus.java
+C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\ComentarioTarefa.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\controller\ReuniaoController.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\enums\SalaStatus.java
+C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\repository\AnexoTarefaRepository.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\NotificacaoTarefa.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\PessoaCreateDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\TarefaStatisticsDTO.java
@@ -61,7 +63,6 @@ C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmee
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\service\TarefaService.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\security\JwtTokenProvider.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\repository\TarefaRepository.java
-C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\controller\DashboardController.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\service\PresencaService.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\KanbanBoardDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\service\email\template\EmailTemplateBuilder.java
@@ -81,6 +82,7 @@ C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmee
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\repository\PessoaRepository.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\service\scheduling\NotificacaoAgendadaService.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\Tarefa.java
+C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\repository\ComentarioTarefaRepository.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\Reuniao.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\security\UserPrincipal.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\Presenca.java
@@ -97,6 +99,8 @@ C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmee
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\TaxaPresencaDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\exception\ForbiddenException.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\security\JwtAuthenticationFilter.java
+C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\AnexoTarefa.java
+C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\AnexoTarefaDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\repository\PresencaRepository.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\controller\PresencaController.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\AddProjectMemberDTO.java
@@ -106,12 +110,10 @@ C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmee
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\ErrorResponse.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\service\CsvExportService.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\RoleDTO.java
-C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\service\DashboardService.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\enums\StatusTarefa.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\security\CustomUserDetailsService.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\repository\RoleRepository.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\security\JwtAuthenticationEntryPoint.java
-C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\config\DataSeeder.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\controller\PermissionController.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\MovimentacaoTarefaDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\enums\PrioridadeTarefaConverter.java
