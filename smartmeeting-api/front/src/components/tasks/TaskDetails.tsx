@@ -21,7 +21,6 @@ import {
 import { formatDate } from '../../utils/dateHelpers';
 import { formatFileSize } from '../../utils/helpers';
 import { Avatar } from '../../components/common/Avatar';
-import { TaskComments } from '../../components/tasks/TaskComments';
 import { PRIORITY_CONFIG, STATUS_OPTIONS } from '../../config/taskConfig';
 
 interface TaskDetailsProps {
@@ -29,10 +28,10 @@ interface TaskDetailsProps {
     onClose: () => void;
     onEdit?: (tarefa: Tarefa) => void;
     onDelete?: (tarefaId: string) => void;
-    onAddComment?: (tarefaId: string, conteudo: string) => Promise<void>;
+    // onAddComment removed - comments sidebar not shown in details
     onAttachFile?: (tarefaId: string, file: File) => Promise<void>;
     onUpdateStatus?: (tarefaId: string, status: StatusTarefa) => Promise<void>;
-    onUpdateProgress?: (tarefaId: string, progresso: number) => Promise<void>;
+    // onUpdateProgress removed - progress not shown in details
     tarefas?: Tarefa[];
     onOpenTask?: (tarefa: Tarefa) => void;
 }
@@ -42,10 +41,8 @@ export function TaskDetails({
     onClose,
     onEdit,
     onDelete,
-    onAddComment,
     onAttachFile,
     onUpdateStatus,
-    onUpdateProgress,
     tarefas,
     onOpenTask
 }: TaskDetailsProps) {
@@ -82,8 +79,7 @@ export function TaskDetails({
         if (file) handleFileUpload(file);
     };
 
-    const safeProgresso = Number(tarefa.progresso) || 0;
-    const progressPercentage = Math.min(100, Math.max(0, safeProgresso));
+    // progress removed from details view
     const taskPriority = tarefa.prioridade || PrioridadeTarefa.MEDIA;
 
     return (
@@ -156,7 +152,7 @@ export function TaskDetails({
                         </div>
 
                         {/* Status & Progress Card */}
-                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 grid grid-cols-1 gap-4">
                             {onUpdateStatus && (
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Status</label>
@@ -175,25 +171,7 @@ export function TaskDetails({
                                 </div>
                             )}
 
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Progresso</label>
-                                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{Math.round(progressPercentage)}%</span>
-                                </div>
-                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 mb-2">
-                                    <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${progressPercentage}%` }}></div>
-                                </div>
-                                {onUpdateProgress && (
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        value={progressPercentage}
-                                        onChange={(e) => onUpdateProgress(tarefa.id, parseInt(e.target.value))}
-                                        className="w-full h-1 bg-transparent appearance-none cursor-pointer accent-blue-600"
-                                    />
-                                )}
-                            </div>
+                            {/* progress display removed from details */}
                         </div>
 
                         {/* Metadata Grid */}
@@ -352,8 +330,8 @@ export function TaskDetails({
                                     <input type="file" onChange={handleFileSelect} className="hidden" id="file-upload" />
                                     <label htmlFor="file-upload" className="cursor-pointer block">
                                         <div className="mx-auto w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-2">
-                                            <UploadIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                        </div>
+                                                <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                            </div>
                                         <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">Clique para upload ou arraste</p>
                                         <p className="text-xs text-slate-400 mt-1">Qualquer formato (max 10MB)</p>
                                     </label>
@@ -390,20 +368,9 @@ export function TaskDetails({
 
                     </div>
 
-                    {/* Right Column: Comments Sidebar */}
-                    <div className="w-[300px] md:w-[340px] border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col overflow-hidden">
-                        <TaskComments
-                            tarefaId={tarefa.id}
-                            comments={tarefa.comentarios ?? []}
-                            onAddComment={onAddComment}
-                        />
-                    </div>
+                    {/* Right Column: comments sidebar removed */}
                 </div>
             </div>
         </div>
     );
 }
-
-const UploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
-);

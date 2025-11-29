@@ -385,16 +385,14 @@ export function TaskManager() {
             )}
 
             {exibirDetalhes && tarefaSelecionada && (
-                <TaskDetails
+                    <TaskDetails
                     tarefa={tarefaSelecionada}
                     tarefas={tarefas}
                     onClose={() => { setExibirDetalhes(false); setTarefaSelecionada(null); }}
                     onEdit={handleEditTask}
                     onDelete={deletarTarefa}
-                    onAddComment={async (_, __) => { /* TODO */ }}
                     onAttachFile={async (_, __) => { /* TODO */ }}
                     onUpdateStatus={handleUpdateTaskStatus}
-                    onUpdateProgress={async (_, __) => { /* TODO */ }}
                     onOpenTask={handleViewTask}
                 />
             )}
