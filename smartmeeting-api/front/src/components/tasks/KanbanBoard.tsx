@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult, DroppableProps } from 'react-beautiful-dnd';
 import TaskCard from './TaskCard';
 import TaskForm from './TaskForm';
-import { Tarefa, Assignee, TarefaFormData, StatusTarefa } from '../../types/meetings';
+import { Tarefa, Assignee, TarefaFormData, StatusTarefa, KanbanColumnConfig } from '../../types/meetings';
+import { meetingsApi } from '../../services/meetingsApi';
 
 /* --- CORREÇÃO PARA REACT 18 (STRICT MODE) --- */
 export const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -34,6 +35,25 @@ const RefreshCwIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+const EditIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const CheckIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
+        <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const XIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
+        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
 interface KanbanBoardProps {
     tarefas: Tarefa[];
     assignees: Assignee[];
@@ -53,7 +73,7 @@ const COLUMN_ACCENTS: Record<string, string> = {
     [StatusTarefa.DONE]: 'bg-emerald-500',
 };
 
-const COLUMNS = [
+const DEFAULT_COLUMNS = [
     { id: StatusTarefa.TODO, title: 'Não Iniciado' },
     { id: StatusTarefa.IN_PROGRESS, title: 'Em Andamento' },
     { id: StatusTarefa.REVIEW, title: 'Em Revisão' },
@@ -72,10 +92,55 @@ export function KanbanBoard({
 }: KanbanBoardProps) {
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
+    const [columns, setColumns] = useState<KanbanColumnConfig[]>([]);
+    const [editingColumn, setEditingColumn] = useState<StatusTarefa | null>(null);
+    const [tempTitle, setTempTitle] = useState('');
 
-    const tarefasPorStatus: Record<StatusTarefa, Tarefa[]> = COLUMNS.reduce((acc, col) => {
-        acc[col.id] = tarefas
-            .filter(t => t.status === col.id)
+    useEffect(() => {
+        loadColumns();
+    }, []);
+
+    const loadColumns = async () => {
+        try {
+            const cols = await meetingsApi.getKanbanColumns();
+            // Sort columns to match the enum order if needed, or rely on backend order
+            // Here we map backend columns to ensure we have all statuses
+            const orderedColumns = DEFAULT_COLUMNS.map(defaultCol => {
+                const found = cols.find(c => c.status === defaultCol.id);
+                return found ? { status: defaultCol.id, title: found.title } : { status: defaultCol.id, title: defaultCol.title };
+            });
+            setColumns(orderedColumns);
+        } catch (error) {
+            console.error('Failed to load kanban columns', error);
+            // Fallback to defaults
+            setColumns(DEFAULT_COLUMNS.map(c => ({ status: c.id, title: c.title })));
+        }
+    };
+
+    const handleStartEditColumn = (col: KanbanColumnConfig) => {
+        setEditingColumn(col.status);
+        setTempTitle(col.title);
+    };
+
+    const handleCancelEditColumn = () => {
+        setEditingColumn(null);
+        setTempTitle('');
+    };
+
+    const handleSaveColumn = async (status: StatusTarefa) => {
+        if (!tempTitle.trim()) return;
+        try {
+            const updated = await meetingsApi.updateKanbanColumn(status, tempTitle);
+            setColumns(prev => prev.map(c => c.status === status ? updated : c));
+            setEditingColumn(null);
+        } catch (error) {
+            console.error('Failed to update column title', error);
+        }
+    };
+
+    const tarefasPorStatus: Record<StatusTarefa, Tarefa[]> = columns.reduce((acc, col) => {
+        acc[col.status] = tarefas
+            .filter(t => t.status === col.status)
             .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0));
         return acc;
     }, {} as Record<StatusTarefa, Tarefa[]>);
@@ -110,12 +175,13 @@ export function KanbanBoard({
             <div className="flex-1">
                 <DragDropContext onDragEnd={onDragEnd}>
                     <div className="flex h-full gap-6 pb-2">
-                        {COLUMNS.map(column => {
-                            const columnTasks = tarefasPorStatus[column.id] ?? [];
-                            const accentColor = COLUMN_ACCENTS[column.id] || 'bg-gray-400';
+                        {columns.map(column => {
+                            const columnTasks = tarefasPorStatus[column.status] ?? [];
+                            const accentColor = COLUMN_ACCENTS[column.status] || 'bg-gray-400';
+                            const isEditing = editingColumn === column.status;
 
                             return (
-                                <StrictModeDroppable droppableId={column.id} key={String(column.id)}>
+                                <StrictModeDroppable droppableId={column.status} key={String(column.status)}>
                                     {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
@@ -123,15 +189,51 @@ export function KanbanBoard({
                                             className="flex-shrink-0 w-[320px] flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-slate-800/20 border border-slate-200/50 dark:border-slate-700/50"
                                         >
                                             {/* Cabeçalho da Coluna */}
-                                            <div className="px-4 py-3 flex items-center justify-between flex-shrink-0">
-                                                <div className="flex items-center gap-2">
+                                            <div className="px-4 py-3 flex items-center justify-between flex-shrink-0 group/header">
+                                                <div className="flex items-center gap-2 flex-1">
                                                     <div className={`w-2 h-2 rounded-full ${accentColor}`} />
-                                                    <h3 className="font-semibold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide">
-                                                        {column.title}
-                                                    </h3>
-                                                    <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
-                                                        {columnTasks.length}
-                                                    </span>
+
+                                                    {isEditing ? (
+                                                        <div className="flex items-center gap-1 flex-1">
+                                                            <input
+                                                                type="text"
+                                                                value={tempTitle}
+                                                                onChange={e => setTempTitle(e.target.value)}
+                                                                className="flex-1 min-w-0 text-sm px-2 py-1 rounded border border-blue-400 outline-none bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"
+                                                                autoFocus
+                                                                onKeyDown={e => {
+                                                                    if (e.key === 'Enter') handleSaveColumn(column.status);
+                                                                    if (e.key === 'Escape') handleCancelEditColumn();
+                                                                }}
+                                                            />
+                                                            <button onClick={() => handleSaveColumn(column.status)} className="p-1 text-emerald-500 hover:bg-emerald-100 rounded">
+                                                                <CheckIcon />
+                                                            </button>
+                                                            <button onClick={handleCancelEditColumn} className="p-1 text-red-500 hover:bg-red-100 rounded">
+                                                                <XIcon />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <h3
+                                                                className="font-semibold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                                                onDoubleClick={() => handleStartEditColumn(column)}
+                                                                title="Clique duplo para editar"
+                                                            >
+                                                                {column.title}
+                                                            </h3>
+                                                            <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                                {columnTasks.length}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleStartEditColumn(column)}
+                                                                className="opacity-0 group-hover/header:opacity-100 ml-2 p-1 text-slate-400 hover:text-blue-500 transition-all"
+                                                                title="Editar nome da coluna"
+                                                            >
+                                                                <EditIcon />
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
                                                 <div className="flex items-center">
                                                     {loading && <RefreshCwIcon className="w-3 h-3 animate-spin text-slate-400" />}
@@ -179,7 +281,7 @@ export function KanbanBoard({
                                                 ))}
                                                 {provided.placeholder}
 
-                                                {column.id === StatusTarefa.TODO && (
+                                                {column.status === StatusTarefa.TODO && (
                                                     <button
                                                         onClick={handleAddTask}
                                                         className="w-full py-2 flex items-center justify-center text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-white dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-slate-700/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-300 transition-all group mt-2"

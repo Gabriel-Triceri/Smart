@@ -73,6 +73,9 @@ export function TaskManager() {
         deletarTarefa,
         moverTarefa,
         aplicarFiltros,
+        adicionarComentario,
+        atualizarComentario,
+        removerComentario,
         buscarTarefas,
         setTarefaSelecionada,
         setExibirFormulario,
@@ -125,11 +128,12 @@ export function TaskManager() {
     const renderLista = () => (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             {/* 
-               Header: MUDANÇA PARA GRID DE 8 COLUNAS (grid-cols-8)
-               Distribuição: 3 (Tarefa) + 1 (Status) + 1 (Progresso) + 1 (Resp) + 1 (Início) + 1 (Término) = 8
+               Header: MUDANÇA PARA GRID DE 9 COLUNAS (grid-cols-9)
+               Distribuição: 3 (Tarefa) + 1 (Projeto) + 1 (Status) + 1 (Progresso) + 1 (Resp) + 1 (Início) + 1 (Término) = 9
             */}
-            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 hidden md:grid grid-cols-8 gap-4 items-center">
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 hidden md:grid grid-cols-9 gap-4 items-center">
                 <div className="col-span-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-4">Tarefa</div>
+                <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Projeto</div>
                 <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Status</div>
                 <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Progresso</div>
                 <div className="col-span-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Responsável</div>
@@ -154,7 +158,6 @@ export function TaskManager() {
                 ) : (
                     tarefas.map((tarefa) => {
                         const responsaveis = tarefa.responsaveis || [];
-                        const responsavelPrincipal = responsaveis.find(r => String(r.id) === String(tarefa.responsavelPrincipalId)) || responsaveis[0];
                         const outrosResponsaveis = responsaveis.length > 1 ? responsaveis.length - 1 : 0;
                         const borderClass = getPrioridadeBorderColor(tarefa.prioridade);
 
@@ -162,7 +165,7 @@ export function TaskManager() {
                             <div
                                 key={tarefa.id}
                                 className={`group bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer 
-                                grid grid-cols-1 md:grid-cols-8 gap-4 items-center px-6 py-5 border-l-[4px] ${borderClass}`}
+                                grid grid-cols-1 md:grid-cols-9 gap-4 items-center px-6 py-5 border-l-[4px] ${borderClass}`}
                                 onClick={() => handleViewTask(tarefa)}
                             >
                                 {/* Coluna 1: Título (3/8) */}
@@ -179,7 +182,12 @@ export function TaskManager() {
                                     </div>
                                 </div>
 
-                                {/* Coluna 2: Status (1/8) - Centralizado */}
+                                {/* Coluna 2: Projeto (1/9) - Centralizado */}
+                                <div className="col-span-1 md:col-span-1 flex items-center justify-center">
+                                    <span className="text-xs text-slate-600 dark:text-slate-400 truncate text-center max-w-[140px]">{tarefa.projectName ? tarefa.projectName : '-'}</span>
+                                </div>
+
+                                {/* Coluna 3: Status (1/9) - Centralizado */}
                                 <div className="col-span-1 md:col-span-1 flex justify-center">
                                     <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border w-[90px] whitespace-nowrap ${getStatusColor(tarefa.status)}`}>
                                         {getStatusLabel(tarefa.status)}
@@ -205,7 +213,7 @@ export function TaskManager() {
                                 <div className="col-span-1 md:col-span-1 flex items-center justify-center">
                                     {responsaveis.length > 0 ? (
                                         <div className="flex -space-x-2 shrink-0">
-                                            {responsaveis.slice(0, 3).map((resp, idx) => (
+                                            {responsaveis.slice(0, 3).map((resp) => (
                                                 <div key={resp.id} className="relative transition-transform hover:-translate-y-1 z-10">
                                                     <Avatar src={resp.avatar} name={resp.nome} className="ring-2 ring-white dark:ring-slate-800 w-7 h-7 text-[10px]" />
                                                 </div>
@@ -402,6 +410,9 @@ export function TaskManager() {
                     onUpdateStatus={handleUpdateTaskStatus}
                     onUpdateProgress={atualizarProgresso}
                     onOpenTask={handleViewTask}
+                    onAddComment={adicionarComentario}
+                    onEditComment={atualizarComentario}
+                    onDeleteComment={removerComentario}
                 />
             )}
 

@@ -22,7 +22,8 @@ import {
     MovimentacaoTarefa,
     SalaStatus,
     PrioridadeTarefa,
-    KanbanColumn
+    KanbanColumn,
+    KanbanColumnConfig
 } from '../types/meetings';
 
 import { DateTimeUtils } from '../utils/dateTimeUtils';
@@ -115,11 +116,11 @@ const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
         responsavelPrincipalId,
         prazo_tarefa: prazo,
         dataInicio: task.dataInicio ?? fallback?.dataInicio ?? '',
-    tags: task.tags ?? [],
+        tags: task.tags ?? [],
         estimadoHoras: task.estimadoHoras ?? fallback?.estimadoHoras,
         horasTrabalhadas: task.horasTrabalhadas ?? 0,
         reuniaoId: task.reuniaoId ? String(task.reuniaoId) : fallback?.reuniaoId,
-    tarefaPaiId: task.tarefaPaiId ? String(task.tarefaPaiId) : undefined,
+        tarefaPaiId: task.tarefaPaiId ? String(task.tarefaPaiId) : undefined,
         subtarefas: task.subtarefas ?? [],
         dependencias: task.dependencias ?? [],
         progresso: task.progresso ?? 0,
@@ -519,6 +520,16 @@ export const meetingsApi = {
     // TAREFAS / KANBAN
     // ===========================================
 
+    async getKanbanColumns(): Promise<KanbanColumnConfig[]> {
+        const response = await api.get<KanbanColumnConfig[]>('/kanban/columns');
+        return response.data;
+    },
+
+    async updateKanbanColumn(status: StatusTarefa, title: string): Promise<KanbanColumnConfig> {
+        const response = await api.put<KanbanColumnConfig>(`/kanban/columns/${status}`, { title });
+        return response.data;
+    },
+
     async getAllTarefas(filtros?: FiltroTarefas): Promise<Tarefa[]> {
         const response = await api.get('/tarefas', { params: filtros });
         return normalizeTaskArray(response.data ?? []);
@@ -590,6 +601,17 @@ export const meetingsApi = {
         });
 
         return response.data;
+    },
+
+    async atualizarComentario(tarefaId: string, comentarioId: string, conteudo: string): Promise<ComentarioTarefa> {
+        if (!tarefaId || !comentarioId) throw new Error('IDs inválidos');
+        const response = await api.put(`/tarefas/${tarefaId}/comentarios/${comentarioId}`, { conteudo });
+        return response.data;
+    },
+
+    async deletarComentario(tarefaId: string, comentarioId: string): Promise<void> {
+        if (!tarefaId || !comentarioId) throw new Error('IDs inválidos');
+        await api.delete(`/tarefas/${tarefaId}/comentarios/${comentarioId}`);
     },
 
     async anexarArquivo(tarefaId: string, arquivo: File): Promise<AnexoTarefa> {

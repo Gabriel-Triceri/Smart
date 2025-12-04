@@ -214,6 +214,33 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         }
     }, [tarefaSelecionada]);
 
+    const atualizarComentario = useCallback(async (tarefaId: string, comentarioId: string, conteudo: string) => {
+        try {
+            const comentarioAtualizado = await meetingsApi.atualizarComentario(tarefaId, comentarioId, conteudo);
+            setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, comentarios: t.comentarios.map(c => c.id === comentarioId ? comentarioAtualizado : c) } : t));
+            if (tarefaSelecionada?.id === tarefaId) {
+                setTarefaSelecionada(prev => prev ? { ...prev, comentarios: prev.comentarios.map(c => c.id === comentarioId ? comentarioAtualizado : c) } : prev);
+            }
+            return comentarioAtualizado;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Erro ao atualizar comentário');
+            throw err;
+        }
+    }, [tarefaSelecionada]);
+
+    const removerComentario = useCallback(async (tarefaId: string, comentarioId: string) => {
+        try {
+            await meetingsApi.deletarComentario(tarefaId, comentarioId);
+            setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, comentarios: t.comentarios.filter(c => c.id !== comentarioId) } : t));
+            if (tarefaSelecionada?.id === tarefaId) {
+                setTarefaSelecionada(prev => prev ? { ...prev, comentarios: prev.comentarios.filter(c => c.id !== comentarioId) } : prev);
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Erro ao remover comentário');
+            throw err;
+        }
+    }, [tarefaSelecionada]);
+
     // Anexos
     const anexarArquivo = useCallback(async (tarefaId: string, arquivo: File) => {
         try {
@@ -457,6 +484,8 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         deletarTarefa,
         moverTarefa,
         adicionarComentario,
+        atualizarComentario,
+        removerComentario,
         anexarArquivo,
         atribuirTarefa,
         atualizarProgresso,

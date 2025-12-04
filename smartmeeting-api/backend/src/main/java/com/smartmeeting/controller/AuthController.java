@@ -25,9 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import jakarta.validation.Valid;
 
-/**
- * Controller responsável pela autenticação de usuários
- */
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {

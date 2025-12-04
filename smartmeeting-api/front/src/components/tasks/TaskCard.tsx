@@ -13,6 +13,9 @@ interface TaskCardProps {
     isDragging?: boolean;
     compact?: boolean;
     children?: React.ReactNode;
+    onEdit?: (tarefa: Tarefa) => void;
+    onDelete?: (id: string) => void;
+    onDuplicate?: (id: string) => void;
 }
 
 export function TaskCard({
@@ -90,13 +93,12 @@ export function TaskCard({
 
                     {typeof tarefa.progresso === 'number' && (
                         <span
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${
-                                tarefa.progresso >= 100
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${tarefa.progresso >= 100
                                     ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 border border-emerald-200'
                                     : tarefa.progresso >= 50
-                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300 border border-blue-200'
-                                    : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300 border border-amber-200'
-                            }`}
+                                        ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300 border border-blue-200'
+                                        : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300 border border-amber-200'
+                                }`}
                         >
                             {tarefa.progresso}%
                         </span>
@@ -104,13 +106,12 @@ export function TaskCard({
 
                     {tarefa.prazo_tarefa && (
                         <span
-                            className={`flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium ${
-                                isOverdue
+                            className={`flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium ${isOverdue
                                     ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200'
                                     : isDueSoon
-                                    ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200'
-                                    : 'text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600'
-                            }`}
+                                        ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200'
+                                        : 'text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600'
+                                }`}
                         >
                             <Calendar className="w-3 h-3 mr-1" />
                             {formatDateFriendly(tarefa.prazo_tarefa)}

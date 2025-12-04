@@ -10,9 +10,11 @@ import {
     MessageSquare,
     ChevronRight,
     CornerDownRight,
-    Percent
+    Percent,
+    Edit3,
+    Trash2
 } from 'lucide-react';
-import { Tarefa, StatusTarefa } from '../../types/meetings';
+import { Tarefa, StatusTarefa, ComentarioTarefa } from '../../types/meetings';
 import { formatDate } from '../../utils/dateHelpers';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
@@ -22,7 +24,9 @@ interface TaskDetailsProps {
     onClose: () => void;
     onEdit?: (tarefa: Tarefa) => void;
     onDelete?: (tarefaId: string) => void;
-    onAddComment?: (tarefaId: string, conteudo: string) => Promise<void>;
+    onAddComment?: (tarefaId: string, conteudo: string) => Promise<ComentarioTarefa>;
+    onEditComment?: (tarefaId: string, comentarioId: string, conteudo: string) => Promise<ComentarioTarefa>;
+    onDeleteComment?: (tarefaId: string, comentarioId: string) => Promise<void>;
     onAttachFile?: (tarefaId: string, file: File) => Promise<void>;
     onUpdateStatus?: (tarefaId: string, status: StatusTarefa) => Promise<void>;
     onUpdateProgress?: (tarefaId: string, progress: number) => Promise<Tarefa>;
@@ -33,25 +37,79 @@ interface TaskDetailsProps {
 export function TaskDetails({
     tarefa,
     onClose,
+    onEdit,
+    onDelete,
     onAddComment,
+    onEditComment,
+    onDeleteComment,
     onAttachFile,
     onUpdateStatus,
     onUpdateProgress,
     tarefas,
     onOpenTask
 }: TaskDetailsProps) {
-    
-    const [history, setHistory] = useState<Array<{ id: string; author: string; text: string; createdAt: string }>>([]);
+
+    interface HistoryEntry {
+        id: string;
+        author: string;
+        text: string;
+        createdAt: string;
+        authorId?: string;
+    }
+    const [history, setHistory] = useState<HistoryEntry[]>([]);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingText, setEditingText] = useState<string>('');
     const [newMessage, setNewMessage] = useState('');
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
     // Progress local state
     const [progressInput, setProgressInput] = useState<string>('0');
+    const [columns, setColumns] = useState<{ status: StatusTarefa; title: string }[]>([]);
+
+    useEffect(() => {
+        const loadColumns = async () => {
+            try {
+                const { meetingsApi } = await import('../../services/meetingsApi');
+                const cols = await meetingsApi.getKanbanColumns();
+                setColumns(cols);
+            } catch (error) {
+                console.error('Failed to load kanban columns', error);
+            }
+        };
+        loadColumns();
+    }, []);
 
     const scrollToBottom = () => {
         try {
             scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
         } catch (e) { /* ignore */ }
+    };
+
+    // Try to determine logged-in user's full name from JWT token payload (safe fallback to 'Você')
+    const getLoggedUserFullName = (): string => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) return 'Você';
+            const parts = token.split('.');
+            if (parts.length < 2) return 'Você';
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            return (payload.name || payload.nome || payload.usuarioNome || payload.fullName || payload.preferred_username || payload.email?.split?.('@')?.[0]) || 'Você';
+        } catch (err) {
+            return 'Você';
+        }
+    };
+
+    const getLoggedUserId = (): string | null => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) return null;
+            const parts = token.split('.');
+            if (parts.length < 2) return null;
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            return payload.sub || payload.usuarioId || payload.id || null;
+        } catch (err) {
+            return null;
+        }
     };
 
     // Lock body scroll when modal is open
@@ -71,22 +129,26 @@ export function TaskDetails({
 
     if (!tarefa) return null;
 
-    const handleFileUpload = async (file: File) => {
-        if (!onAttachFile) return;
-        try {
-            await onAttachFile(tarefa.id, file);
-        } catch (error) {
-            console.error('Erro ao anexar arquivo:', error);
-        }
-    };
+    // Prevent lint errors for props that will be wired/used later
+    // (these are optional handlers provided by the parent hook)
+    void onEditComment;
+    void onDeleteComment;
+    void onAttachFile;
 
     useEffect(() => {
+        // Build history only from real user comments (exclude the auto-generated description/system message)
         const msgs: Array<{ id: string; author: string; text: string; createdAt: string }> = [];
-        if (tarefa.descricao) {
-            msgs.push({ id: `desc-${tarefa.id}`, author: tarefa.criadaPorNome || 'Sistema', text: tarefa.descricao, createdAt: tarefa.createdAt || new Date().toISOString() });
-        }
         if (Array.isArray(tarefa.comentarios) && tarefa.comentarios.length > 0) {
-            tarefa.comentarios.forEach(c => msgs.push({ id: c.id, author: c.autorNome || 'Usuário', text: c.conteudo, createdAt: c.createdAt }));
+            tarefa.comentarios.forEach((c) => {
+                const entry: HistoryEntry = {
+                    id: c.id,
+                    author: c.autorNome || 'Usuário',
+                    text: c.conteudo,
+                    createdAt: c.createdAt,
+                    authorId: c.autorId
+                };
+                msgs.push(entry);
+            });
         }
         msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         setHistory(msgs);
@@ -94,7 +156,7 @@ export function TaskDetails({
         setTimeout(() => scrollToBottom(), 50);
     }, [tarefa]);
 
-    
+
 
     const handleProgressBlur = () => {
         if (!onUpdateProgress) return;
@@ -109,7 +171,7 @@ export function TaskDetails({
         setProgressInput(String(val));
     };
 
-  
+
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4">
@@ -136,6 +198,13 @@ export function TaskDetails({
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                        <button
+                            onClick={() => onEdit && onEdit(tarefa)}
+                            className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                            title="Editar tarefa"
+                        >
+                            <Edit3 className="w-5 h-5" />
+                        </button>
                         <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                             <X className="w-5 h-5" />
                         </button>
@@ -200,9 +269,9 @@ export function TaskDetails({
                                         </div>
                                     ) : (
                                         history.map((m) => {
-                                            const isMe = m.author === 'Você';
+                                            const isOwner = !!(m.authorId && getLoggedUserId() && String(m.authorId) === String(getLoggedUserId()));
                                             return (
-                                                <div key={m.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                                <div key={m.id} className={`flex flex-col items-start`}>
                                                     <div className="flex items-center gap-2 mb-1 px-1">
                                                         <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                                                             {m.author}
@@ -210,13 +279,31 @@ export function TaskDetails({
                                                         <span className="text-[10px] text-slate-400">
                                                             {new Date(m.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                                         </span>
+                                                        {isOwner && (
+                                                            <div className="ml-2 flex items-center gap-1">
+                                                                <button onClick={(e) => { e.stopPropagation(); setEditingId(m.id); setEditingText(m.text); }} title="Editar" className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+                                                                    <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                                                                </button>
+                                                                <button onClick={async (e) => { e.stopPropagation(); if (!confirm('Apagar esse comentário?')) return; try { if (onDeleteComment) { await onDeleteComment(tarefa.id, m.id); setHistory(prev => prev.filter(x => x.id !== m.id)); } } catch (err) { console.error('Erro ao deletar comentário', err); } }} title="Apagar" className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+                                                                    <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div className={`px-4 py-2.5 rounded-2xl max-w-[90%] text-sm leading-relaxed shadow-sm ${isMe
-                                                        ? 'bg-blue-600 text-white rounded-tr-none'
-                                                        : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-none'
-                                                        }`}>
-                                                        {m.text}
-                                                    </div>
+
+                                                    {editingId === m.id ? (
+                                                        <div className="w-full max-w-[90%]">
+                                                            <textarea value={editingText} onChange={(e) => setEditingText(e.target.value)} className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white" />
+                                                            <div className="mt-2 flex gap-2">
+                                                                <button onClick={async (e) => { e.stopPropagation(); try { if (onEditComment) { const saved = await onEditComment(tarefa.id, m.id, editingText); const updatedText = saved?.conteudo ?? editingText; setHistory(prev => prev.map(x => x.id === m.id ? { ...x, text: updatedText } : x)); } else { setHistory(prev => prev.map(x => x.id === m.id ? { ...x, text: editingText } : x)); } setEditingId(null); setEditingText(''); } catch (err) { console.error('Erro ao editar comentário', err); } }} className="px-3 py-1 rounded bg-blue-600 text-white">Salvar</button>
+                                                                <button onClick={(e) => { e.stopPropagation(); setEditingId(null); setEditingText(''); }} className="px-3 py-1 rounded bg-slate-200 dark:bg-slate-700">Cancelar</button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className={`px-4 py-2.5 rounded-2xl max-w-[90%] text-sm leading-relaxed shadow-sm bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-none`}>
+                                                            {m.text}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })
@@ -233,15 +320,27 @@ export function TaskDetails({
                                             onKeyDown={async (e) => {
                                                 if (e.key === 'Enter' && !e.shiftKey) {
                                                     e.preventDefault();
+                                                    e.stopPropagation();
                                                     if (!newMessage.trim()) return;
                                                     const text = newMessage.trim();
-                                                    const msg = { id: `local-${Date.now()}`, author: 'Você', text, createdAt: new Date().toISOString() };
-                                                    setHistory(prev => [...prev, msg]);
                                                     setNewMessage('');
-                                                    setTimeout(() => scrollToBottom(), 50);
+                                                    // Prefer server-returned author name when possible
                                                     if (onAddComment) {
-                                                        try { await onAddComment(tarefa.id, text); } catch (err) { console.error('Erro ao enviar comentário:', err); }
+                                                        try {
+                                                            const saved = await onAddComment(tarefa.id, text);
+                                                            const authorName = saved?.autorNome || getLoggedUserFullName();
+                                                            const msg = { id: `local-${Date.now()}`, author: authorName, text, createdAt: new Date().toISOString() };
+                                                            setHistory(prev => [...prev, msg]);
+                                                        } catch (err) {
+                                                            console.error('Erro ao enviar comentário:', err);
+                                                            const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
+                                                            setHistory(prev => [...prev, msg]);
+                                                        }
+                                                    } else {
+                                                        const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
+                                                        setHistory(prev => [...prev, msg]);
                                                     }
+                                                    setTimeout(() => scrollToBottom(), 50);
                                                 }
                                             }}
                                             placeholder="Adicione um comentário ou atualização..."
@@ -251,13 +350,23 @@ export function TaskDetails({
                                             onClick={async () => {
                                                 if (!newMessage.trim()) return;
                                                 const text = newMessage.trim();
-                                                const msg = { id: `local-${Date.now()}`, author: 'Você', text, createdAt: new Date().toISOString() };
-                                                setHistory(prev => [...prev, msg]);
                                                 setNewMessage('');
-                                                setTimeout(() => scrollToBottom(), 50);
                                                 if (onAddComment) {
-                                                    try { await onAddComment(tarefa.id, text); } catch (err) { console.error('Erro ao enviar comentário:', err); }
+                                                    try {
+                                                        const saved = await onAddComment(tarefa.id, text);
+                                                        const authorName = saved?.autorNome || getLoggedUserFullName();
+                                                        const msg = { id: `local-${Date.now()}`, author: authorName, text, createdAt: new Date().toISOString() };
+                                                        setHistory(prev => [...prev, msg]);
+                                                    } catch (err) {
+                                                        console.error('Erro ao enviar comentário:', err);
+                                                        const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
+                                                        setHistory(prev => [...prev, msg]);
+                                                    }
+                                                } else {
+                                                    const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
+                                                    setHistory(prev => [...prev, msg]);
                                                 }
+                                                setTimeout(() => scrollToBottom(), 50);
                                             }}
                                             type="button"
                                             className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -286,7 +395,13 @@ export function TaskDetails({
                                             onChange={(e) => onUpdateStatus(tarefa.id, e.target.value as StatusTarefa)}
                                             className="w-full pl-3 pr-10 py-2.5 bg-transparent border-none rounded-lg text-sm font-semibold text-slate-700 dark:text-white focus:ring-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                                         >
-                                            {STATUS_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                            {columns.length > 0 ? (
+                                                columns.map(col => (
+                                                    <option key={col.status} value={col.status}>{col.title}</option>
+                                                ))
+                                            ) : (
+                                                STATUS_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)
+                                            )}
                                         </select>
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
                                             <CheckCircle2 className="w-4 h-4" />
@@ -381,8 +496,6 @@ export function TaskDetails({
                             </div>
 
                             <div className="h-px bg-slate-200 dark:bg-slate-700 my-4"></div>
-
-                            {/* Tags Section REMOVED from UI */}
 
                             {/* Dependencies */}
                             {(tarefa.dependencias && tarefa.dependencias.length > 0) && (
