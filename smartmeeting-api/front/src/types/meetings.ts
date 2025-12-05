@@ -381,14 +381,14 @@ export interface TemplateTarefa {
 export interface ChecklistItem {
     id: string;
     tarefaId: string;
-    titulo: string;
+    descricao: string;
     concluido: boolean;
     ordem: number;
-    criadoPor?: string;
-    criadoPorNome?: string;
-    concluidoPor?: string;
+    responsavelId?: string;
+    responsavelNome?: string;
+    concluidoPorId?: string;
     concluidoPorNome?: string;
-    concluidoEm?: string;
+    dataConclusao?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -513,13 +513,13 @@ export interface ReorderColumnsRequest {
 }
 
 export interface CreateChecklistItemRequest {
-    tarefaId: string;
-    titulo: string;
+    descricao: string;
+    responsavelId?: number;
     ordem?: number;
 }
 
 export interface UpdateChecklistItemRequest {
-    titulo?: string;
-    concluido?: boolean;
+    descricao?: string;
+    responsavelId?: number;
     ordem?: number;
 }

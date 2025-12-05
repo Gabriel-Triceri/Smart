@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     CheckSquare,
     Square,
@@ -64,8 +64,7 @@ export function ChecklistSection({
         try {
             setAddingItem(true);
             const newItem = await meetingsApi.createChecklistItem(tarefaId, {
-                tarefaId,
-                titulo: newItemText.trim(),
+                descricao: newItemText.trim(),
                 ordem: items.length
             });
             const updatedItems = [...items, newItem];
@@ -106,7 +105,7 @@ export function ChecklistSection({
 
     const handleStartEdit = (item: ChecklistItem) => {
         setEditingId(item.id);
-        setEditingText(item.titulo);
+        setEditingText(item.descricao);
     };
 
     const handleSaveEdit = async (itemId: string) => {
@@ -117,7 +116,7 @@ export function ChecklistSection({
 
         try {
             const updatedItem = await meetingsApi.updateChecklistItem(tarefaId, itemId, {
-                titulo: editingText.trim()
+                descricao: editingText.trim()
             });
             const updatedItems = items.map(item =>
                 item.id === itemId ? updatedItem : item
@@ -165,11 +164,10 @@ export function ChecklistSection({
                     )}
                 </div>
                 {totalCount > 0 && (
-                    <span className={`text-xs font-medium ${
-                        progressPercent === 100
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-slate-500 dark:text-slate-400'
-                    }`}>
+                    <span className={`text-xs font-medium ${progressPercent === 100
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-slate-500 dark:text-slate-400'
+                        }`}>
                         {progressPercent}%
                     </span>
                 )}
@@ -179,9 +177,8 @@ export function ChecklistSection({
             {totalCount > 0 && (
                 <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
-                        className={`h-full rounded-full transition-all duration-500 ease-out ${
-                            progressPercent === 100 ? 'bg-emerald-500' : 'bg-blue-500'
-                        }`}
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${progressPercent === 100 ? 'bg-emerald-500' : 'bg-blue-500'
+                            }`}
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
@@ -194,11 +191,10 @@ export function ChecklistSection({
                     .map((item) => (
                         <div
                             key={item.id}
-                            className={`group flex items-center gap-2 p-2 rounded-lg transition-colors ${
-                                item.concluido
-                                    ? 'bg-slate-50 dark:bg-slate-800/30'
-                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                            }`}
+                            className={`group flex items-center gap-2 p-2 rounded-lg transition-colors ${item.concluido
+                                ? 'bg-slate-50 dark:bg-slate-800/30'
+                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                }`}
                         >
                             {!readonly && (
                                 <GripVertical className="w-4 h-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 cursor-grab" />
@@ -247,13 +243,12 @@ export function ChecklistSection({
                             ) : (
                                 <span
                                     onClick={() => !readonly && handleStartEdit(item)}
-                                    className={`flex-1 text-sm ${
-                                        item.concluido
-                                            ? 'text-slate-400 dark:text-slate-500 line-through'
-                                            : 'text-slate-700 dark:text-slate-200'
-                                    } ${!readonly ? 'cursor-pointer hover:text-blue-600 dark:hover:text-blue-400' : ''}`}
+                                    className={`flex-1 text-sm ${item.concluido
+                                        ? 'text-slate-400 dark:text-slate-500 line-through'
+                                        : 'text-slate-700 dark:text-slate-200'
+                                        } ${!readonly ? 'cursor-pointer hover:text-blue-600 dark:hover:text-blue-400' : ''}`}
                                 >
-                                    {item.titulo}
+                                    {item.descricao}
                                 </span>
                             )}
 
