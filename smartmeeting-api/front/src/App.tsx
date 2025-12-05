@@ -6,7 +6,7 @@ import { SalaManager } from './components/salas/SalaManager';
 import { TaskManager } from './components/tasks/TaskManager';
 import { PermissionManager } from './components/permissions/PermissionManager';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
-import ThemeToggle from './components/common/ThemeToggle'; // Importa ThemeToggle
+import ThemeToggle from './components/common/ThemeToggle'; 
 import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X } from 'lucide-react';
 import { inicializarDados } from './services/seedData';
 
@@ -27,12 +27,12 @@ interface NavigationProps {
     setShowMobile?: (state: boolean) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 function Navigation({ activeView, setActiveView, items, showMobile = false, setShowMobile }: NavigationProps) {
     return (
         <nav className={`${showMobile ? 'space-y-2 py-4 border-t border-mono-200 dark:border-mono-700 md:hidden' : 'hidden md:flex items-center space-x-1'}`}>
             {items.map(item => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                
                 const Icon = item.icon;
                 const isActive = activeView === item.id;
 
@@ -164,7 +164,6 @@ function App() {
                     </div>
                 </footer>
             </div>
-            {/* Removido: </ThemeProvider> */}
         </ErrorBoundary>
     );
 }

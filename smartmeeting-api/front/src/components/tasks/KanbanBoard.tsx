@@ -4,6 +4,7 @@ import TaskCard from './TaskCard';
 import TaskForm from './TaskForm';
 import { Tarefa, Assignee, TarefaFormData, StatusTarefa, KanbanColumnConfig, KanbanColumnDynamic, CreateKanbanColumnRequest } from '../../types/meetings';
 import { meetingsApi } from '../../services/meetingsApi';
+import { ProjectPermissionsModal } from '../permissions/ProjectPermissionsModal';
 
 /* --- CORREÇÃO PARA REACT 18 (STRICT MODE) --- */
 export const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -65,6 +66,12 @@ const SettingsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
         <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const ShieldIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 
@@ -130,6 +137,9 @@ export function KanbanBoard({
     const [newColumnTitle, setNewColumnTitle] = useState('');
     const [newColumnColor, setNewColumnColor] = useState(COLUMN_COLORS[0]);
     const [addingColumn, setAddingColumn] = useState(false);
+
+    // State for permissions modal
+    const [showPermissionsModal, setShowPermissionsModal] = useState(false);
 
     useEffect(() => {
         loadColumns();
@@ -392,16 +402,25 @@ export function KanbanBoard({
                             );
                         })}
 
-                        {/* Add Column Button (only visible when projectId is provided) */}
+                        {/* Add Column Button & Permissions Button (only visible when projectId is provided) */}
                         {projectId && (
-                            <div className="flex-shrink-0 w-72 min-w-[18rem]">
+                            <div className="flex-shrink-0 w-72 min-w-[18rem] space-y-3">
                                 <button
                                     onClick={() => setShowAddColumnModal(true)}
-                                    className="w-full h-32 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
+                                    className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
                                 >
-                                    <PlusIcon className="w-6 h-6 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                    <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
                                     <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
                                         Adicionar Coluna
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => setShowPermissionsModal(true)}
+                                    className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
+                                >
+                                    <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
+                                    <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
+                                        Permissões
                                     </span>
                                 </button>
                             </div>
@@ -502,6 +521,17 @@ export function KanbanBoard({
                     }}
                     onSubmit={handleFormSubmit}
                     assignees={assignees}
+                />
+            )}
+
+            {/* Project Permissions Modal */}
+            {projectId && (
+                <ProjectPermissionsModal
+                    projectId={projectId}
+                    projectName="Projeto"
+                    members={assignees}
+                    isOpen={showPermissionsModal}
+                    onClose={() => setShowPermissionsModal(false)}
                 />
             )}
         </div>
