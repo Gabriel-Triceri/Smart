@@ -968,15 +968,25 @@ export const meetingsApi = {
 
     /**
      * Verifica se uma pessoa tem uma permissão específica no projeto
+     * Se personId não for fornecido, verifica para o usuário atual (logado)
      */
-    async checkPermission(projectId: string, personId: string, permissionType: PermissionType): Promise<boolean> {
-        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(personId)) {
-            throw new Error('IDs inválidos');
+    async checkPermission(projectId: string, personId: string | undefined, permissionType: PermissionType): Promise<boolean> {
+        if (!IdValidation.isValidId(projectId)) {
+            throw new Error('ID do projeto inválido');
         }
+
+        // personId é opcional - se não fornecido, backend usa o usuário atual
+        if (personId !== undefined && !IdValidation.isValidId(personId)) {
+            throw new Error('ID da pessoa inválido');
+        }
+
         try {
-            const response = await api.get(`/projects/${projectId}/permissions/check`, {
-                params: { personId, permission: permissionType }
-            });
+            const params: Record<string, string> = { permission: permissionType };
+            if (personId) {
+                params.personId = personId;
+            }
+
+            const response = await api.get(`/projects/${projectId}/permissions/check`, { params });
             return response.data?.hasPermission ?? false;
         } catch {
             return false;

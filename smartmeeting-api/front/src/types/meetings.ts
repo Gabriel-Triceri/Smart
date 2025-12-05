@@ -446,36 +446,22 @@ export interface KanbanColumnDynamic {
 }
 
 
-// Permissão de Projeto (estilo Pipefy)
+/**
+ * Tipos de permissões granulares no sistema (sincronizado com backend)
+ * Cada tipo representa uma ação específica que pode ser permitida ou negada
+ */
 export enum PermissionType {
-    VIEW_PROJECT = 'VIEW_PROJECT',
-    EDIT_PROJECT = 'EDIT_PROJECT',
-    DELETE_PROJECT = 'DELETE_PROJECT',
-    MANAGE_MEMBERS = 'MANAGE_MEMBERS',
-    CREATE_TASK = 'CREATE_TASK',
-    EDIT_TASK = 'EDIT_TASK',
-    DELETE_TASK = 'DELETE_TASK',
-    ASSIGN_TASK = 'ASSIGN_TASK',
-    MOVE_TASK = 'MOVE_TASK',
-    COMMENT_TASK = 'COMMENT_TASK',
-    VIEW_REPORTS = 'VIEW_REPORTS',
-    EXPORT_DATA = 'EXPORT_DATA',
-    MANAGE_COLUMNS = 'MANAGE_COLUMNS',
-    MANAGE_AUTOMATIONS = 'MANAGE_AUTOMATIONS',
-    MANAGE_INTEGRATIONS = 'MANAGE_INTEGRATIONS',
-    VIEW_HISTORY = 'VIEW_HISTORY',
-    MANAGE_CHECKLIST = 'MANAGE_CHECKLIST',
-    UPLOAD_ATTACHMENTS = 'UPLOAD_ATTACHMENTS',
-    DELETE_ATTACHMENTS = 'DELETE_ATTACHMENTS',
-    MANAGE_LABELS = 'MANAGE_LABELS',
-    SET_DUE_DATES = 'SET_DUE_DATES',
-    CHANGE_PRIORITY = 'CHANGE_PRIORITY',
-    BULK_ACTIONS = 'BULK_ACTIONS',
-    ADMIN = 'ADMIN',
+    // ========================================
+    // PERMISSÕES OFICIAIS (sincronizadas com backend)
+    // ========================================
+
+    // Permissões de Projeto
     PROJECT_VIEW = 'PROJECT_VIEW',
     PROJECT_EDIT = 'PROJECT_EDIT',
     PROJECT_DELETE = 'PROJECT_DELETE',
     PROJECT_MANAGE_MEMBERS = 'PROJECT_MANAGE_MEMBERS',
+
+    // Permissões de Tarefas
     TASK_CREATE = 'TASK_CREATE',
     TASK_VIEW = 'TASK_VIEW',
     TASK_EDIT = 'TASK_EDIT',
@@ -484,18 +470,96 @@ export enum PermissionType {
     TASK_ASSIGN = 'TASK_ASSIGN',
     TASK_COMMENT = 'TASK_COMMENT',
     TASK_ATTACH = 'TASK_ATTACH',
+
+    // Permissões de Kanban
     KANBAN_VIEW = 'KANBAN_VIEW',
     KANBAN_MANAGE_COLUMNS = 'KANBAN_MANAGE_COLUMNS',
+
+    // Permissões de Reuniões
     MEETING_CREATE = 'MEETING_CREATE',
     MEETING_VIEW = 'MEETING_VIEW',
     MEETING_EDIT = 'MEETING_EDIT',
     MEETING_DELETE = 'MEETING_DELETE',
     MEETING_MANAGE_PARTICIPANTS = 'MEETING_MANAGE_PARTICIPANTS',
+
+    // Permissões Administrativas
     ADMIN_MANAGE_USERS = 'ADMIN_MANAGE_USERS',
     ADMIN_MANAGE_ROLES = 'ADMIN_MANAGE_ROLES',
     ADMIN_VIEW_REPORTS = 'ADMIN_VIEW_REPORTS',
-    ADMIN_SYSTEM_SETTINGS = 'ADMIN_SYSTEM_SETTINGS'
+    ADMIN_SYSTEM_SETTINGS = 'ADMIN_SYSTEM_SETTINGS',
+
+    // ========================================
+    // PERMISSÕES LEGADAS (mantidas para compatibilidade)
+    // @deprecated - Use as versões oficiais acima
+    // ========================================
+    /** @deprecated Use PROJECT_VIEW */
+    VIEW_PROJECT = 'VIEW_PROJECT',
+    /** @deprecated Use PROJECT_EDIT */
+    EDIT_PROJECT = 'EDIT_PROJECT',
+    /** @deprecated Use PROJECT_DELETE */
+    DELETE_PROJECT = 'DELETE_PROJECT',
+    /** @deprecated Use PROJECT_MANAGE_MEMBERS */
+    MANAGE_MEMBERS = 'MANAGE_MEMBERS',
+    /** @deprecated Use TASK_CREATE */
+    CREATE_TASK = 'CREATE_TASK',
+    /** @deprecated Use TASK_EDIT */
+    EDIT_TASK = 'EDIT_TASK',
+    /** @deprecated Use TASK_DELETE */
+    DELETE_TASK = 'DELETE_TASK',
+    /** @deprecated Use TASK_ASSIGN */
+    ASSIGN_TASK = 'ASSIGN_TASK',
+    /** @deprecated Use TASK_MOVE */
+    MOVE_TASK = 'MOVE_TASK',
+    /** @deprecated Use TASK_COMMENT */
+    COMMENT_TASK = 'COMMENT_TASK',
+    /** @deprecated Use KANBAN_MANAGE_COLUMNS */
+    MANAGE_COLUMNS = 'MANAGE_COLUMNS',
+    /** @deprecated Não suportado no backend */
+    ADMIN = 'ADMIN',
+    /** @deprecated Não suportado no backend */
+    VIEW_REPORTS = 'VIEW_REPORTS',
+    /** @deprecated Não suportado no backend */
+    EXPORT_DATA = 'EXPORT_DATA',
+    /** @deprecated Não suportado no backend */
+    MANAGE_AUTOMATIONS = 'MANAGE_AUTOMATIONS',
+    /** @deprecated Não suportado no backend */
+    MANAGE_INTEGRATIONS = 'MANAGE_INTEGRATIONS',
+    /** @deprecated Não suportado no backend */
+    VIEW_HISTORY = 'VIEW_HISTORY',
+    /** @deprecated Não suportado no backend */
+    MANAGE_CHECKLIST = 'MANAGE_CHECKLIST',
+    /** @deprecated Use TASK_ATTACH */
+    UPLOAD_ATTACHMENTS = 'UPLOAD_ATTACHMENTS',
+    /** @deprecated Não suportado no backend */
+    DELETE_ATTACHMENTS = 'DELETE_ATTACHMENTS',
+    /** @deprecated Não suportado no backend */
+    MANAGE_LABELS = 'MANAGE_LABELS',
+    /** @deprecated Não suportado no backend */
+    SET_DUE_DATES = 'SET_DUE_DATES',
+    /** @deprecated Não suportado no backend */
+    CHANGE_PRIORITY = 'CHANGE_PRIORITY',
+    /** @deprecated Não suportado no backend */
+    BULK_ACTIONS = 'BULK_ACTIONS'
 }
+
+/**
+ * Mapeamento de permissões legadas para oficiais
+ * Use para converter código antigo
+ */
+export const LEGACY_PERMISSION_MAP: Partial<Record<PermissionType, PermissionType>> = {
+    [PermissionType.VIEW_PROJECT]: PermissionType.PROJECT_VIEW,
+    [PermissionType.EDIT_PROJECT]: PermissionType.PROJECT_EDIT,
+    [PermissionType.DELETE_PROJECT]: PermissionType.PROJECT_DELETE,
+    [PermissionType.MANAGE_MEMBERS]: PermissionType.PROJECT_MANAGE_MEMBERS,
+    [PermissionType.CREATE_TASK]: PermissionType.TASK_CREATE,
+    [PermissionType.EDIT_TASK]: PermissionType.TASK_EDIT,
+    [PermissionType.DELETE_TASK]: PermissionType.TASK_DELETE,
+    [PermissionType.ASSIGN_TASK]: PermissionType.TASK_ASSIGN,
+    [PermissionType.MOVE_TASK]: PermissionType.TASK_MOVE,
+    [PermissionType.COMMENT_TASK]: PermissionType.TASK_COMMENT,
+    [PermissionType.MANAGE_COLUMNS]: PermissionType.KANBAN_MANAGE_COLUMNS,
+    [PermissionType.UPLOAD_ATTACHMENTS]: PermissionType.TASK_ATTACH
+};
 
 // Project Role enum
 export enum ProjectRole {

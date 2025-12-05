@@ -58,8 +58,6 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
-                                "/tarefas",
-                                "/tarefas/",
                                 "/webjars/**",
                                 "/h2-console/**", // ✅ permite acesso ao console do H2
                                 "/error" // ✅ permite acesso ao endpoint de erro do Spring Boot

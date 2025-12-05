@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult, DroppableProps } from 'react-beautiful-dnd';
 import TaskCard from './TaskCard';
 import TaskForm from './TaskForm';
-import { Tarefa, Assignee, TarefaFormData, StatusTarefa, KanbanColumnConfig, KanbanColumnDynamic, CreateKanbanColumnRequest } from '../../types/meetings';
+import { Tarefa, Assignee, TarefaFormData, StatusTarefa, KanbanColumnConfig, KanbanColumnDynamic, CreateKanbanColumnRequest, PermissionType } from '../../types/meetings';
 import { meetingsApi } from '../../services/meetingsApi';
 import { ProjectPermissionsModal } from '../permissions/ProjectPermissionsModal';
+import { CanDo } from '../permissions/CanDo';
 
 /* --- CORREÇÃO PARA REACT 18 (STRICT MODE) --- */
 export const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -387,13 +388,15 @@ export function KanbanBoard({
                                                 {provided.placeholder}
 
                                                 {column.status === StatusTarefa.TODO && (
-                                                    <button
-                                                        onClick={handleAddTask}
-                                                        className="w-full py-2 flex items-center justify-center text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-white dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-slate-700/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-300 transition-all group mt-2"
-                                                    >
-                                                        <PlusIcon className="w-4 h-4 mr-1.5 transition-transform group-hover:scale-110" />
-                                                        Nova Tarefa
-                                                    </button>
+                                                    <CanDo permission={PermissionType.TASK_CREATE} projectId={projectId} global={!projectId}>
+                                                        <button
+                                                            onClick={handleAddTask}
+                                                            className="w-full py-2 flex items-center justify-center text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-white dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-slate-700/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-300 transition-all group mt-2"
+                                                        >
+                                                            <PlusIcon className="w-4 h-4 mr-1.5 transition-transform group-hover:scale-110" />
+                                                            Nova Tarefa
+                                                        </button>
+                                                    </CanDo>
                                                 )}
                                             </div>
                                         </div>
@@ -402,27 +405,33 @@ export function KanbanBoard({
                             );
                         })}
 
-                        {/* Add Column Button & Permissions Button (only visible when projectId is provided) */}
+                        {/* Add Column Button & Permissions Button (only visible when projectId is provided and user has permission) */}
                         {projectId && (
                             <div className="flex-shrink-0 w-72 min-w-[18rem] space-y-3">
-                                <button
-                                    onClick={() => setShowAddColumnModal(true)}
-                                    className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
-                                >
-                                    <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                                    <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
-                                        Adicionar Coluna
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={() => setShowPermissionsModal(true)}
-                                    className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
-                                >
-                                    <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
-                                    <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
-                                        Permissões
-                                    </span>
-                                </button>
+                                {/* Adicionar Coluna - requer permissão de gerenciar colunas do Kanban */}
+                                <CanDo permission={PermissionType.KANBAN_MANAGE_COLUMNS} projectId={projectId}>
+                                    <button
+                                        onClick={() => setShowAddColumnModal(true)}
+                                        className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
+                                    >
+                                        <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                        <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
+                                            Adicionar Coluna
+                                        </span>
+                                    </button>
+                                </CanDo>
+                                {/* Permissões - requer permissão de gerenciar membros */}
+                                <CanDo permission={PermissionType.PROJECT_MANAGE_MEMBERS} projectId={projectId}>
+                                    <button
+                                        onClick={() => setShowPermissionsModal(true)}
+                                        className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
+                                    >
+                                        <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
+                                        <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
+                                            Permissões
+                                        </span>
+                                    </button>
+                                </CanDo>
                             </div>
                         )}
                     </div>

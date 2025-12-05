@@ -28,25 +28,72 @@ public class ReuniaoController {
     private final PessoaService pessoaService;
     private final TarefaService tarefaService;
 
+    private final com.smartmeeting.service.ProjectPermissionService projectPermissionService;
+
     public ReuniaoController(ReuniaoService service, ReuniaoMapper mapper, EmailService emailService,
-            SalaService salaService, PessoaService pessoaService, TarefaService tarefaService) {
+                             SalaService salaService, PessoaService pessoaService, TarefaService tarefaService,
+                             com.smartmeeting.service.ProjectPermissionService projectPermissionService) {
         this.service = service;
         this.mapper = mapper;
         this.emailService = emailService;
         this.salaService = salaService;
         this.pessoaService = pessoaService;
         this.tarefaService = tarefaService;
+        this.projectPermissionService = projectPermissionService;
     }
 
     /**
-     * Lista todas as reuniões cadastradas
+     * Lista todas as reuniões cadastradas (filtradas por permissão do usuário)
      */
     @GetMapping
     public ResponseEntity<List<ReuniaoDTO>> listar() {
-        List<ReuniaoDTO> reunioes = service.listarTodas().stream()
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        // Admin global pode ver todas as reuniões
+        boolean isAdmin = com.smartmeeting.util.SecurityUtils.isAdmin();
+
+        List<ReuniaoDTO> reunioesFiltradas = service.listarTodas().stream()
+                .filter(reuniao -> {
+                    // Admin global tem acesso a tudo
+                    if (isAdmin) {
+                        return true;
+                    }
+
+                    // Se o usuário é organizador, pode ver
+                    if (reuniao.getOrganizador() != null &&
+                            reuniao.getOrganizador().getId().equals(currentUserId)) {
+                        return true;
+                    }
+
+                    // Se o usuário é participante, pode ver
+                    if (reuniao.getParticipantes() != null &&
+                            reuniao.getParticipantes().stream()
+                                    .anyMatch(p -> p.getId().equals(currentUserId))) {
+                        return true;
+                    }
+
+                    // Verificar permissão no projeto associado
+                    if (reuniao.getProject() != null) {
+                        return projectPermissionService.hasPermission(
+                                reuniao.getProject().getId(),
+                                currentUserId,
+                                com.smartmeeting.enums.PermissionType.MEETING_VIEW) ||
+                                projectPermissionService.hasPermission(
+                                        reuniao.getProject().getId(),
+                                        currentUserId,
+                                        com.smartmeeting.enums.PermissionType.PROJECT_VIEW);
+                    }
+
+                    // Reuniões sem projeto e sem ser organizador/participante: não visível
+                    return false;
+                })
                 .map(mapper::toDTO)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(reunioes);
+
+        return ResponseEntity.ok(reunioesFiltradas);
     }
 
     /**
@@ -55,7 +102,19 @@ public class ReuniaoController {
     @GetMapping("/{id}")
     public ResponseEntity<ReuniaoDTO> buscarPorId(@PathVariable("id") Long id) {
         return service.buscarPorId(id)
-                .map(mapper::toDTO)
+                .map(reuniao -> {
+                    // Validação de permissão
+                    if (reuniao.getProject() != null) {
+                        if (!projectPermissionService.hasPermissionForCurrentUser(reuniao.getProject().getId(),
+                                com.smartmeeting.enums.PermissionType.MEETING_VIEW) &&
+                                !projectPermissionService.hasPermissionForCurrentUser(reuniao.getProject().getId(),
+                                        com.smartmeeting.enums.PermissionType.PROJECT_VIEW)) {
+                            throw new com.smartmeeting.exception.ForbiddenException(
+                                    "Você não tem permissão para visualizar esta reunião.");
+                        }
+                    }
+                    return mapper.toDTO(reuniao);
+                })
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -63,10 +122,23 @@ public class ReuniaoController {
     /**
      * Cria uma nova reunião
      */
+
     @PostMapping
-    // @PreAuthorize("hasAuthority('CRIAR_REUNIAO')")
     public ResponseEntity<ReuniaoDTO> criar(@Valid @RequestBody ReuniaoDTO dto) {
+        // Validação de permissão (se o DTO tiver projectId, o que não parece ter
+        // explícito, mas pode vir no contexto)
+        // Assumindo que a criação de reunião pode estar ligada a um projeto
+
         Reuniao reuniao = mapper.toEntity(dto);
+
+        if (reuniao.getProject() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(reuniao.getProject().getId(),
+                    com.smartmeeting.enums.PermissionType.MEETING_CREATE)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para criar reuniões neste projeto.");
+            }
+        }
+
         Reuniao reuniaoCriada = service.salvar(reuniao);
         return ResponseEntity.ok(mapper.toDTO(reuniaoCriada));
     }
@@ -76,6 +148,17 @@ public class ReuniaoController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<ReuniaoDTO> atualizar(@PathVariable("id") Long id, @Valid @RequestBody ReuniaoDTO dto) {
+        // Validação de permissão
+        service.buscarPorId(id).ifPresent(existing -> {
+            if (existing.getProject() != null) {
+                if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProject().getId(),
+                        com.smartmeeting.enums.PermissionType.MEETING_EDIT)) {
+                    throw new com.smartmeeting.exception.ForbiddenException(
+                            "Você não tem permissão para editar esta reunião.");
+                }
+            }
+        });
+
         Reuniao reuniaoAtualizada = mapper.toEntity(dto);
         Reuniao reuniao = service.atualizar(id, reuniaoAtualizada);
         return ResponseEntity.ok(mapper.toDTO(reuniao));
@@ -86,6 +169,17 @@ public class ReuniaoController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable("id") Long id) {
+        // Validação de permissão
+        service.buscarPorId(id).ifPresent(existing -> {
+            if (existing.getProject() != null) {
+                if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProject().getId(),
+                        com.smartmeeting.enums.PermissionType.MEETING_DELETE)) {
+                    throw new com.smartmeeting.exception.ForbiddenException(
+                            "Você não tem permissão para excluir esta reunião.");
+                }
+            }
+        });
+
         service.deletar(id);
         return ResponseEntity.noContent().build();
     }

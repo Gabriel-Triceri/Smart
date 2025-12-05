@@ -18,12 +18,17 @@ interface UseProjectPermissionsReturn {
     updatePermissions: (memberId: string, permissions: Record<PermissionType, boolean>) => Promise<MemberPermissions | null>;
     updateMemberRole: (memberId: string, role: ProjectRole) => Promise<MemberPermissions | null>;
     resetMemberPermissions: (memberId: string) => Promise<MemberPermissions | null>;
-    checkPermission: (personId: string, permissionType: PermissionType) => Promise<boolean>;
+    /**
+     * Verifica se uma pessoa tem permissão específica no projeto
+     * Se personId for undefined, verifica para o usuário atual
+     */
+    checkPermission: (personId: string | undefined, permissionType: PermissionType) => Promise<boolean>;
     getRoleTemplate: (role: ProjectRole) => Promise<Record<PermissionType, boolean>>;
 
     // Helpers
     getMemberById: (memberId: string) => MemberPermissions | undefined;
-    hasPermission: (memberId: string, permissionType: PermissionType) => boolean;
+    /** Verifica permissão de um membro (por memberId) usando cache local */
+    hasPermission: (memberId: string | undefined, permissionType: PermissionType) => boolean;
 }
 
 export function useProjectPermissions(projectId: string): UseProjectPermissionsReturn {
@@ -141,8 +146,9 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
     }, [projectId]);
 
     // Check if person has specific permission
+    // Se personId não for fornecido, verifica para o usuário atual
     const checkPermission = useCallback(async (
-        personId: string,
+        personId: string | undefined,
         permissionType: PermissionType
     ): Promise<boolean> => {
         if (!projectId) return false;
@@ -175,7 +181,10 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
     }, [members]);
 
     // Helper: Check if member has permission (from local state)
-    const hasPermission = useCallback((memberId: string, permissionType: PermissionType): boolean => {
+    // Se memberId for undefined, retorna false (use checkPermission para verificar usuário atual via API)
+    const hasPermission = useCallback((memberId: string | undefined, permissionType: PermissionType): boolean => {
+        if (!memberId) return false;
+
         const member = members.find(m => String(m.projectMemberId) === memberId);
         if (!member) return false;
 
@@ -190,11 +199,18 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
         );
     }, [members]);
 
-    // Load data on mount
+    // Load data on mount and poll every 30 seconds
     useEffect(() => {
         if (projectId) {
             loadMembers();
             loadAvailableTypes();
+
+            // Polling para manter permissões atualizadas
+            const intervalId = setInterval(() => {
+                loadMembers();
+            }, 30000); // 30 segundos
+
+            return () => clearInterval(intervalId);
         }
     }, [projectId, loadMembers, loadAvailableTypes]);
 
@@ -221,6 +237,10 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
     [PermissionType.PROJECT_EDIT]: 'Editar Projeto',
     [PermissionType.PROJECT_DELETE]: 'Excluir Projeto',
     [PermissionType.PROJECT_MANAGE_MEMBERS]: 'Gerenciar Membros',
+    [PermissionType.VIEW_PROJECT]: 'Visualizar Projeto (Legado)',
+    [PermissionType.EDIT_PROJECT]: 'Editar Projeto (Legado)',
+    [PermissionType.DELETE_PROJECT]: 'Excluir Projeto (Legado)',
+    [PermissionType.MANAGE_MEMBERS]: 'Gerenciar Membros (Legado)',
 
     // Tarefas
     [PermissionType.TASK_CREATE]: 'Criar Tarefas',
@@ -231,10 +251,17 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
     [PermissionType.TASK_ASSIGN]: 'Atribuir Responsáveis',
     [PermissionType.TASK_COMMENT]: 'Comentar em Tarefas',
     [PermissionType.TASK_ATTACH]: 'Anexar Arquivos',
+    [PermissionType.CREATE_TASK]: 'Criar Tarefas (Legado)',
+    [PermissionType.EDIT_TASK]: 'Editar Tarefas (Legado)',
+    [PermissionType.DELETE_TASK]: 'Excluir Tarefas (Legado)',
+    [PermissionType.ASSIGN_TASK]: 'Atribuir Tarefas (Legado)',
+    [PermissionType.MOVE_TASK]: 'Mover Tarefas (Legado)',
+    [PermissionType.COMMENT_TASK]: 'Comentar Tarefas (Legado)',
 
     // Kanban
     [PermissionType.KANBAN_VIEW]: 'Visualizar Kanban',
     [PermissionType.KANBAN_MANAGE_COLUMNS]: 'Gerenciar Colunas',
+    [PermissionType.MANAGE_COLUMNS]: 'Gerenciar Colunas (Legado)',
 
     // Reuniões
     [PermissionType.MEETING_CREATE]: 'Criar Reuniões',
@@ -247,7 +274,22 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
     [PermissionType.ADMIN_MANAGE_USERS]: 'Gerenciar Usuários',
     [PermissionType.ADMIN_MANAGE_ROLES]: 'Gerenciar Papéis',
     [PermissionType.ADMIN_VIEW_REPORTS]: 'Visualizar Relatórios',
-    [PermissionType.ADMIN_SYSTEM_SETTINGS]: 'Configurações do Sistema'
+    [PermissionType.ADMIN_SYSTEM_SETTINGS]: 'Configurações do Sistema',
+    [PermissionType.ADMIN]: 'Administrador (Legado)',
+
+    // Outros (Legado/Pipefy)
+    [PermissionType.VIEW_REPORTS]: 'Visualizar Relatórios',
+    [PermissionType.EXPORT_DATA]: 'Exportar Dados',
+    [PermissionType.MANAGE_AUTOMATIONS]: 'Gerenciar Automações',
+    [PermissionType.MANAGE_INTEGRATIONS]: 'Gerenciar Integrações',
+    [PermissionType.VIEW_HISTORY]: 'Visualizar Histórico',
+    [PermissionType.MANAGE_CHECKLIST]: 'Gerenciar Checklist',
+    [PermissionType.UPLOAD_ATTACHMENTS]: 'Upload de Anexos',
+    [PermissionType.DELETE_ATTACHMENTS]: 'Excluir Anexos',
+    [PermissionType.MANAGE_LABELS]: 'Gerenciar Etiquetas',
+    [PermissionType.SET_DUE_DATES]: 'Definir Prazos',
+    [PermissionType.CHANGE_PRIORITY]: 'Alterar Prioridade',
+    [PermissionType.BULK_ACTIONS]: 'Ações em Massa'
 };
 
 // Permission categories for grouping in UI
@@ -306,31 +348,38 @@ export const PREDEFINED_ROLE_PERMISSIONS: Record<ProjectRole, Record<PermissionT
         return acc;
     }, {} as Record<PermissionType, boolean>),
 
-    [ProjectRole.MEMBER_EDITOR]: {
-        [PermissionType.PROJECT_VIEW]: true,
-        [PermissionType.PROJECT_EDIT]: false,
-        [PermissionType.PROJECT_DELETE]: false,
-        [PermissionType.PROJECT_MANAGE_MEMBERS]: false,
-        [PermissionType.TASK_CREATE]: true,
-        [PermissionType.TASK_VIEW]: true,
-        [PermissionType.TASK_EDIT]: true,
-        [PermissionType.TASK_DELETE]: false,
-        [PermissionType.TASK_MOVE]: true,
-        [PermissionType.TASK_ASSIGN]: false,
-        [PermissionType.TASK_COMMENT]: true,
-        [PermissionType.TASK_ATTACH]: true,
-        [PermissionType.KANBAN_VIEW]: true,
-        [PermissionType.KANBAN_MANAGE_COLUMNS]: false,
-        [PermissionType.MEETING_CREATE]: true,
-        [PermissionType.MEETING_VIEW]: true,
-        [PermissionType.MEETING_EDIT]: false,
-        [PermissionType.MEETING_DELETE]: false,
-        [PermissionType.MEETING_MANAGE_PARTICIPANTS]: false,
-        [PermissionType.ADMIN_MANAGE_USERS]: false,
-        [PermissionType.ADMIN_MANAGE_ROLES]: false,
-        [PermissionType.ADMIN_VIEW_REPORTS]: false,
-        [PermissionType.ADMIN_SYSTEM_SETTINGS]: false
-    }
+    [ProjectRole.MEMBER_EDITOR]: Object.values(PermissionType).reduce((acc, type) => {
+        // Default to false
+        acc[type] = false;
+
+        // Enable specific permissions
+        if ([
+            PermissionType.PROJECT_VIEW,
+            PermissionType.TASK_CREATE,
+            PermissionType.TASK_VIEW,
+            PermissionType.TASK_EDIT,
+            PermissionType.TASK_MOVE,
+            PermissionType.TASK_COMMENT,
+            PermissionType.TASK_ATTACH,
+            PermissionType.KANBAN_VIEW,
+            PermissionType.MEETING_CREATE,
+            PermissionType.MEETING_VIEW,
+            PermissionType.VIEW_PROJECT,
+            PermissionType.CREATE_TASK,
+            PermissionType.EDIT_TASK,
+            PermissionType.MOVE_TASK,
+            PermissionType.COMMENT_TASK,
+            PermissionType.UPLOAD_ATTACHMENTS,
+            PermissionType.VIEW_HISTORY,
+            PermissionType.MANAGE_CHECKLIST,
+            PermissionType.SET_DUE_DATES,
+            PermissionType.CHANGE_PRIORITY
+        ].includes(type)) {
+            acc[type] = true;
+        }
+
+        return acc;
+    }, {} as Record<PermissionType, boolean>)
 };
 
 export default useProjectPermissions;

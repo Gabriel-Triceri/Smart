@@ -32,7 +32,7 @@ public class ProjectService {
     private final PessoaService pessoaService;
 
     public ProjectService(ProjectRepository projectRepository, ProjectMemberRepository projectMemberRepository,
-            PessoaRepository pessoaRepository, PessoaService pessoaService) {
+                          PessoaRepository pessoaRepository, PessoaService pessoaService) {
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.pessoaRepository = pessoaRepository;
@@ -172,6 +172,10 @@ public class ProjectService {
         projectMemberRepository.delete(memberToRemove);
     }
 
+    /**
+     * Verifica se o usuário é OWNER ou ADMIN do projeto
+     * MEMBER_EDITOR NÃO tem permissões administrativas
+     */
     private boolean isOwnerOrAdmin(Project project, Pessoa currentUser) {
         if (currentUser == null) {
             return false;
@@ -180,14 +184,41 @@ public class ProjectService {
         Long currentUserId = currentUser.getId();
         Long ownerId = project.getOwner().getId();
 
+        // Owner sempre tem permissão
         if (Objects.equals(currentUserId, ownerId)) {
             return true;
         }
 
+        // Verificar se é ADMIN do projeto (MEMBER_EDITOR não é considerado admin)
         Optional<ProjectMember> memberOptional = projectMemberRepository.findByProjectAndPerson(project, currentUser);
         return memberOptional.isPresent() &&
-                (memberOptional.get().getRole() == ProjectRole.ADMIN ||
-                        memberOptional.get().getRole() == ProjectRole.MEMBER_EDITOR);
+                memberOptional.get().getRole() == ProjectRole.ADMIN;
+    }
+
+    /**
+     * Verifica se o usuário pode editar o projeto (OWNER, ADMIN ou MEMBER_EDITOR)
+     */
+    private boolean canEditProject(Project project, Pessoa currentUser) {
+        if (currentUser == null) {
+            return false;
+        }
+
+        Long currentUserId = currentUser.getId();
+        Long ownerId = project.getOwner().getId();
+
+        // Owner sempre pode editar
+        if (Objects.equals(currentUserId, ownerId)) {
+            return true;
+        }
+
+        // Verificar role do membro
+        Optional<ProjectMember> memberOptional = projectMemberRepository.findByProjectAndPerson(project, currentUser);
+        if (memberOptional.isEmpty()) {
+            return false;
+        }
+
+        ProjectRole role = memberOptional.get().getRole();
+        return role == ProjectRole.ADMIN || role == ProjectRole.MEMBER_EDITOR;
     }
 
     public List<ProjectDTO> findMyProjects(Pessoa currentUser) {

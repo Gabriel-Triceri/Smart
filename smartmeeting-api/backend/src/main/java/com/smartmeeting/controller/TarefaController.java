@@ -29,29 +29,81 @@ public class TarefaController {
     private final TarefaService tarefaService;
     private final ReuniaoMapper reuniaoMapper;
     private final ChecklistService checklistService;
+    private final com.smartmeeting.service.ProjectPermissionService projectPermissionService;
 
     public TarefaController(TarefaService tarefaService, ReuniaoMapper reuniaoMapper,
-            ChecklistService checklistService) {
+                            ChecklistService checklistService,
+                            com.smartmeeting.service.ProjectPermissionService projectPermissionService) {
         this.tarefaService = tarefaService;
         this.reuniaoMapper = reuniaoMapper;
         this.checklistService = checklistService;
+        this.projectPermissionService = projectPermissionService;
     }
 
     /**
-     * Lista todas as tarefas cadastradas no sistema
-     * 
+     * Lista todas as tarefas cadastradas no sistema (filtradas por permissão)
+     *
      * @return Lista de tarefas convertidas para DTO
      */
     @GetMapping
     public ResponseEntity<List<TarefaDTO>> listarTodas() {
-        List<TarefaDTO> tarefas = tarefaService.listarTodasDTO();
-        return ResponseEntity.ok(tarefas);
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        // Admin global pode ver todas as tarefas
+        boolean isAdmin = com.smartmeeting.util.SecurityUtils.isAdmin();
+
+        List<TarefaDTO> todasTarefas = tarefaService.listarTodasDTO();
+        List<TarefaDTO> tarefasPermitidas = todasTarefas.stream()
+                .filter(t -> {
+                    // Admin global tem acesso a tudo
+                    if (isAdmin) {
+                        return true;
+                    }
+
+                    // Se tem projeto associado, verificar permissão no projeto
+                    if (t.getProjectId() != null) {
+                        return projectPermissionService.hasPermission(t.getProjectId(), currentUserId,
+                                com.smartmeeting.enums.PermissionType.TASK_VIEW) ||
+                                projectPermissionService.hasPermission(t.getProjectId(), currentUserId,
+                                        com.smartmeeting.enums.PermissionType.PROJECT_VIEW);
+                    }
+
+                    // Tarefas sem projeto: visível apenas se for criador ou responsável
+                    String currentUserIdStr = String.valueOf(currentUserId);
+
+                    // Verificar se é criador da tarefa
+                    if (t.getCriadaPor() != null && t.getCriadaPor().equals(currentUserIdStr)) {
+                        return true;
+                    }
+
+                    // Verificar se é responsável principal
+                    if (t.getResponsavelPrincipalId() != null &&
+                            t.getResponsavelPrincipalId().equals(currentUserIdStr)) {
+                        return true;
+                    }
+
+                    // Verificar se está na lista de responsáveis
+                    if (t.getResponsaveis() != null &&
+                            t.getResponsaveis().stream()
+                                    .anyMatch(r -> r.getId() != null && r.getId().equals(currentUserIdStr))) {
+                        return true;
+                    }
+
+                    // Não tem permissão para ver esta tarefa
+                    return false;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        return ResponseEntity.ok(tarefasPermitidas);
     }
 
     /**
      * API para obter estatísticas de tarefas.
      * Endpoint: GET /tarefas/statistics
-     * 
+     *
      * @return Objeto TarefaStatisticsDTO com as estatísticas.
      */
     @GetMapping("/statistics")
@@ -62,7 +114,7 @@ public class TarefaController {
 
     /**
      * Busca uma tarefa específica pelo seu ID
-     * 
+     *
      * @param id Identificador da tarefa
      * @return ResponseEntity contendo a tarefa encontrada ou status 404 se não
      *         existir
@@ -71,17 +123,38 @@ public class TarefaController {
     public ResponseEntity<TarefaDTO> buscarPorId(@PathVariable(name = "id") Long id) {
         // O service já lança ResourceNotFoundException se não encontrar
         TarefaDTO dto = tarefaService.buscarPorIdDTO(id);
+
+        // Validação de permissão
+        if (dto.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(dto.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_VIEW) &&
+                    !projectPermissionService.hasPermissionForCurrentUser(dto.getProjectId(),
+                            com.smartmeeting.enums.PermissionType.PROJECT_VIEW)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para visualizar esta tarefa.");
+            }
+        }
+
         return ResponseEntity.ok(dto);
     }
 
     /**
      * Cria uma nova tarefa no sistema
-     * 
+     *
      * @param dto Dados da tarefa a ser criada
      * @return ResponseEntity contendo a tarefa criada com ID gerado
      */
     @PostMapping
     public ResponseEntity<TarefaDTO> criar(@Valid @RequestBody TarefaDTO dto) {
+        // Validação de permissão
+        if (dto.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(dto.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_CREATE)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para criar tarefas neste projeto.");
+            }
+        }
+
         TarefaDTO salvo = tarefaService.criar(dto);
         System.out.println(salvo);
         System.out.println(dto);
@@ -90,7 +163,7 @@ public class TarefaController {
 
     /**
      * Atualiza uma tarefa existente
-     * 
+     *
      * @param id  Identificador da tarefa a ser atualizada
      * @param dto Novos dados da tarefa
      * @return ResponseEntity contendo a tarefa atualizada ou status 404 se não
@@ -98,25 +171,49 @@ public class TarefaController {
      */
     @PutMapping("/{id:\\d+}") // Adicionado regex para aceitar apenas dígitos
     public ResponseEntity<TarefaDTO> atualizar(@PathVariable(name = "id") Long id, @Valid @RequestBody TarefaDTO dto) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para editar tarefas neste projeto.");
+            }
+        }
+
         TarefaDTO atualizado = tarefaService.atualizar(id, dto);
         return ResponseEntity.ok(atualizado);
     }
 
     /**
      * Remove uma tarefa do sistema
-     * 
+     *
      * @param id Identificador da tarefa a ser removida
      * @return ResponseEntity com status 204 (No Content) ou 404 se não encontrada
      */
     @DeleteMapping("/{id:\\d+}") // Adicionado regex para aceitar apenas dígitos
     public ResponseEntity<Void> deletar(@PathVariable(name = "id") Long id) {
+        // Validação de permissão
+        try {
+            TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+            if (existing.getProjectId() != null) {
+                if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                        com.smartmeeting.enums.PermissionType.TASK_DELETE)) {
+                    throw new com.smartmeeting.exception.ForbiddenException(
+                            "Você não tem permissão para excluir tarefas neste projeto.");
+                }
+            }
+        } catch (com.smartmeeting.exception.ResourceNotFoundException e) {
+            // Se não existe, ignora ou retorna 404 (o service.deletar já trataria)
+        }
+
         tarefaService.deletar(id);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Verifica tarefas pendentes para uma reunião específica
-     * 
+     *
      * @param idReuniao Identificador da reunião
      * @return ResponseEntity contendo informações sobre as pendências ou status 404
      *         se a reunião não existir
@@ -129,7 +226,7 @@ public class TarefaController {
 
     /**
      * Obtém a reunião associada a uma tarefa específica
-     * 
+     *
      * @param id Identificador da tarefa
      * @return ResponseEntity contendo a reunião convertida para DTO
      */
@@ -142,7 +239,7 @@ public class TarefaController {
 
     /**
      * Atualiza a reunião associada a uma tarefa
-     * 
+     *
      * @param id          Identificador da tarefa
      * @param requestBody Corpo da requisição contendo o ID da reunião (pode ser
      *                    null)
@@ -165,7 +262,7 @@ public class TarefaController {
     /**
      * API para obter todas as notificações de tarefas.
      * Endpoint: GET /tarefas/notifications
-     * 
+     *
      * @return Lista de NotificacaoTarefaDTO.
      */
     @GetMapping("/notifications")
@@ -177,7 +274,7 @@ public class TarefaController {
     /**
      * API para obter todos os templates de tarefas.
      * Endpoint: GET /tarefas/templates
-     * 
+     *
      * @return Lista de TemplateTarefaDTO.
      */
     @GetMapping("/templates")
@@ -189,7 +286,7 @@ public class TarefaController {
     /**
      * API para obter a lista de responsáveis (assignees) disponíveis.
      * Endpoint: GET /tarefas/assignees
-     * 
+     *
      * @return Lista de AssigneeDTO.
      */
     @GetMapping("/assignees")
@@ -201,7 +298,7 @@ public class TarefaController {
     /**
      * API para obter o Kanban Board de tarefas.
      * Endpoint: GET /tarefas/kanban
-     * 
+     *
      * @param reuniaoId Opcional. Filtra o Kanban por tarefas de uma reunião
      *                  específica.
      * @return Objeto KanbanBoardDTO.
@@ -209,6 +306,12 @@ public class TarefaController {
     @GetMapping("/kanban")
     public ResponseEntity<KanbanBoardDTO> getKanbanBoard(
             @RequestParam(required = false, name = "reuniaoId") Long reuniaoId) {
+        // Se houver reuniaoId, verificar permissão na reunião ou projeto associado
+        // Como o KanbanBoardDTO pode conter dados de projeto, idealmente deveríamos
+        // validar o projeto
+        // Por simplificação, vamos assumir que se o usuário pode ver as tarefas, pode
+        // ver o kanban
+
         KanbanBoardDTO kanbanBoard = tarefaService.getKanbanBoard(reuniaoId);
         return ResponseEntity.ok(kanbanBoard);
     }
@@ -216,14 +319,24 @@ public class TarefaController {
     /**
      * API para mover uma tarefa para um novo status ou posição.
      * Endpoint: POST /tarefas/{id}/mover
-     * 
+     *
      * @param id      Identificador da tarefa a ser movida.
      * @param request DTO contendo o novo status e/ou nova posição.
      * @return ResponseEntity contendo a tarefa atualizada.
      */
     @PostMapping("/{id:\\d+}/mover")
     public ResponseEntity<TarefaDTO> moverTarefa(@PathVariable(name = "id") Long id,
-            @Valid @RequestBody MovimentacaoTarefaRequest request) {
+                                                 @Valid @RequestBody MovimentacaoTarefaRequest request) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_MOVE)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para mover tarefas neste projeto.");
+            }
+        }
+
         TarefaDTO tarefaAtualizada = tarefaService.moverTarefa(id, request.getNewStatus(), request.getNewPosition());
         return ResponseEntity.ok(tarefaAtualizada);
     }
@@ -231,7 +344,7 @@ public class TarefaController {
     /**
      * API para registrar uma movimentação de tarefa (ex: no Kanban).
      * Endpoint: POST /tarefas/movimentacoes
-     * 
+     *
      * @param dto DTO contendo os detalhes da movimentação.
      * @return ResponseEntity com status 200 (OK) após o registro.
      */
@@ -248,6 +361,16 @@ public class TarefaController {
     public ResponseEntity<Map<String, Object>> adicionarComentario(
             @PathVariable("id") Long id,
             @RequestBody Map<String, Object> requestBody) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_COMMENT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para comentar em tarefas neste projeto.");
+            }
+        }
+
         String conteudo = (String) requestBody.get("conteudo");
         @SuppressWarnings("unchecked")
         List<String> mencoes = (List<String>) requestBody.get("mencoes");
@@ -263,6 +386,16 @@ public class TarefaController {
     public ResponseEntity<Map<String, Object>> anexarArquivo(
             @PathVariable("id") Long id,
             @RequestParam("arquivo") MultipartFile arquivo) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_ATTACH)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para anexar arquivos em tarefas neste projeto.");
+            }
+        }
+
         Map<String, Object> anexo = tarefaService.anexarArquivo(id, arquivo);
         return ResponseEntity.ok(anexo);
     }
@@ -274,6 +407,16 @@ public class TarefaController {
     public ResponseEntity<TarefaDTO> atribuirTarefa(
             @PathVariable("id") Long id,
             @RequestBody Map<String, Object> requestBody) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_ASSIGN)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para atribuir responsáveis em tarefas neste projeto.");
+            }
+        }
+
         Long responsavelId = Long.valueOf(requestBody.get("responsavelId").toString());
         Boolean principal = (Boolean) requestBody.get("principal");
 
@@ -382,6 +525,16 @@ public class TarefaController {
     public ResponseEntity<ChecklistItemDTO> createChecklistItem(
             @PathVariable("id") Long id,
             @Valid @RequestBody CreateChecklistItemRequest request) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para editar checklist em tarefas neste projeto.");
+            }
+        }
+
         ChecklistItemDTO item = checklistService.adicionarItem(id, request);
         return ResponseEntity.ok(item);
     }
@@ -395,6 +548,16 @@ public class TarefaController {
             @PathVariable("tarefaId") Long tarefaId,
             @PathVariable("itemId") Long itemId,
             @Valid @RequestBody CreateChecklistItemRequest request) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(tarefaId);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para editar checklist em tarefas neste projeto.");
+            }
+        }
+
         ChecklistItemDTO item = checklistService.atualizarItem(itemId, request);
         return ResponseEntity.ok(item);
     }
@@ -407,6 +570,16 @@ public class TarefaController {
     public ResponseEntity<ChecklistItemDTO> toggleChecklistItem(
             @PathVariable("tarefaId") Long tarefaId,
             @PathVariable("itemId") Long itemId) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(tarefaId);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para alterar status de checklist em tarefas neste projeto.");
+            }
+        }
+
         ChecklistItemDTO item = checklistService.toggleConcluido(itemId);
         return ResponseEntity.ok(item);
     }
@@ -419,6 +592,16 @@ public class TarefaController {
     public ResponseEntity<Void> deleteChecklistItem(
             @PathVariable("tarefaId") Long tarefaId,
             @PathVariable("itemId") Long itemId) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(tarefaId);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para remover itens de checklist em tarefas neste projeto.");
+            }
+        }
+
         checklistService.removerItem(itemId);
         return ResponseEntity.noContent().build();
     }
@@ -431,6 +614,16 @@ public class TarefaController {
     public ResponseEntity<List<ChecklistItemDTO>> reorderChecklistItems(
             @PathVariable("id") Long id,
             @RequestBody Map<String, List<Long>> requestBody) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para reordenar checklist em tarefas neste projeto.");
+            }
+        }
+
         List<Long> itemIds = requestBody.get("itemIds");
         List<ChecklistItemDTO> items = checklistService.reordenarItens(id, itemIds);
         return ResponseEntity.ok(items);

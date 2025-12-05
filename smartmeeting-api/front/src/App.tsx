@@ -6,9 +6,10 @@ import { SalaManager } from './components/salas/SalaManager';
 import { TaskManager } from './components/tasks/TaskManager';
 import { PermissionManager } from './components/permissions/PermissionManager';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
-import ThemeToggle from './components/common/ThemeToggle'; 
+import ThemeToggle from './components/common/ThemeToggle';
 import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X } from 'lucide-react';
 import { inicializarDados } from './services/seedData';
+import { authService } from './services/authService';
 
 type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas' | 'permissions';
 
@@ -17,6 +18,8 @@ interface NavigationItem {
     label: string;
     description: string;
     icon: React.FC<{ className?: string }>;
+    /** Roles permitidas para ver este item de navegacao */
+    allowedRoles?: string[];
 }
 
 interface NavigationProps {
@@ -29,10 +32,20 @@ interface NavigationProps {
 
 
 function Navigation({ activeView, setActiveView, items, showMobile = false, setShowMobile }: NavigationProps) {
+    const userRoles = authService.getRoles();
+
+    // Filtrar itens baseado nas roles do usuario
+    const visibleItems = items.filter(item => {
+        if (!item.allowedRoles || item.allowedRoles.length === 0) {
+            return true; // Sem restricao
+        }
+        return item.allowedRoles.some(role => userRoles.includes(role));
+    });
+
     return (
         <nav className={`${showMobile ? 'space-y-2 py-4 border-t border-mono-200 dark:border-mono-700 md:hidden' : 'hidden md:flex items-center space-x-1'}`}>
-            {items.map(item => {
-                
+            {visibleItems.map(item => {
+
                 const Icon = item.icon;
                 const isActive = activeView === item.id;
 
@@ -82,11 +95,12 @@ function App() {
     }, []);
 
     const navigationItems = useMemo<NavigationItem[]>(() => [
-        { id: 'dashboard', label: 'Dashboard Executivo', description: 'Métricas e indicadores', icon: BarChart3 },
-        { id: 'meetings', label: 'Gestão de Reuniões', description: 'Calendário e organização', icon: Calendar },
-        { id: 'salas', label: 'Gestão de Salas', description: 'Salas e recursos', icon: Building },
-        { id: 'tarefas', label: 'Gestão de Tarefas', description: 'Kanban e produtividade', icon: CheckSquare },
-        { id: 'permissions', label: 'Gestão de Permissões', description: 'Permissões, roles e usuários', icon: Shield }
+        { id: 'dashboard', label: 'Dashboard Executivo', description: 'Metricas e indicadores', icon: BarChart3 },
+        { id: 'meetings', label: 'Gestao de Reunioes', description: 'Calendario e organizacao', icon: Calendar },
+        { id: 'salas', label: 'Gestao de Salas', description: 'Salas e recursos', icon: Building },
+        { id: 'tarefas', label: 'Gestao de Tarefas', description: 'Kanban e produtividade', icon: CheckSquare },
+        // Gestao de Permissoes - apenas ADMIN pode acessar
+        { id: 'permissions', label: 'Gestao de Permissoes', description: 'Permissoes, roles e usuarios', icon: Shield, allowedRoles: ['ADMIN'] }
     ], []);
 
     const viewComponents: Record<ActiveView, React.ReactNode> = {

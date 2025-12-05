@@ -82,7 +82,7 @@ public class PessoaController {
      * @return ResponseEntity com status 204 (No Content) ou 404 se não encontrada
      */
     @DeleteMapping("/{id}")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarPessoa(@PathVariable Long id) {
         pessoaService.deletar(id);
         return ResponseEntity.noContent().build();
@@ -90,7 +90,7 @@ public class PessoaController {
 
     // --- Roles de uma pessoa ---
     @GetMapping("/{id}/roles")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<String>> listarRoles(@PathVariable Long id) {
         List<String> roles = pessoaService.listarRoles(id).stream()
                 .map(Role::getNome)
@@ -99,14 +99,14 @@ public class PessoaController {
     }
 
     @PostMapping("/{id}/roles/{roleId}")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> adicionarRole(@PathVariable Long id, @PathVariable Long roleId) {
         pessoaService.addRoleToPessoa(id, roleId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/roles/{roleId}")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removerRole(@PathVariable Long id, @PathVariable Long roleId) {
         pessoaService.removeRoleFromPessoa(id, roleId);
         return ResponseEntity.noContent().build();

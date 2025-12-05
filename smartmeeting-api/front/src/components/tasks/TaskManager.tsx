@@ -14,7 +14,8 @@ import { KanbanBoard } from './KanbanBoard';
 import { TaskForm } from './TaskForm';
 import { TaskDetails } from './TaskDetails';
 import { TaskFilters } from './TaskFilters';
-import { StatusTarefa, TarefaFormData, PrioridadeTarefa, Tarefa } from '../../types/meetings';
+import { StatusTarefa, TarefaFormData, PrioridadeTarefa, Tarefa, PermissionType } from '../../types/meetings';
+import { CanDo } from '../permissions/CanDo';
 import { useTheme } from '../../context/ThemeContext';
 import { formatDate } from '../../utils/dateHelpers';
 import { Avatar } from '../../components/common/Avatar';
@@ -337,16 +338,19 @@ export function TaskManager() {
                                 )}
                             </button>
 
-                            <button
-                                onClick={() => {
-                                    setTarefaSelecionada(null);
-                                    setExibirFormulario(true);
-                                }}
-                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all active:scale-95"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">Nova Tarefa</span>
-                            </button>
+                            {/* Botão Nova Tarefa - visível apenas para usuários com permissão TASK_CREATE (global) ou ADMIN */}
+                            <CanDo permission={PermissionType.TASK_CREATE} global>
+                                <button
+                                    onClick={() => {
+                                        setTarefaSelecionada(null);
+                                        setExibirFormulario(true);
+                                    }}
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all active:scale-95"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Nova Tarefa</span>
+                                </button>
+                            </CanDo>
                         </div>
                     </div>
 

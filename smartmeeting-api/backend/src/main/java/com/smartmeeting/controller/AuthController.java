@@ -116,6 +116,7 @@ public class AuthController {
 
     /**
      * Endpoint para renovação de token JWT
+     * Usa o token atual para gerar um novo token sem requerer senha
      * @param requestBody Map contendo o token atual
      * @return Novo token JWT
      */
@@ -141,18 +142,28 @@ public class AuthController {
             Pessoa pessoa = pessoaRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-            // Criar nova autenticação
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            pessoa.getEmail(),
-                            null // Não precisamos da senha para refresh
-                    )
+            // Extrair roles e permissions do token atual (já validado)
+            List<String> currentRoles = tokenProvider.getRoles(token);
+            List<String> currentPermissions = tokenProvider.getPermissions(token);
+
+            // Criar authorities a partir dos dados do token
+            List<GrantedAuthority> authorities = new java.util.ArrayList<>();
+            currentRoles.forEach(role -> authorities.add(() -> "ROLE_" + role));
+            currentPermissions.forEach(perm -> authorities.add(() -> perm));
+
+            // Criar Authentication sem usar o AuthenticationManager (não requer senha)
+            com.smartmeeting.security.UserPrincipal userPrincipal =
+                    com.smartmeeting.security.UserPrincipal.create(pessoa);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userPrincipal,
+                    null,
+                    userPrincipal.getAuthorities()
             );
 
             // Gerar novo token
             String newJwt = tokenProvider.generateToken(authentication);
 
-            // Extrair roles e permissions
+            // Extrair roles e permissions atualizados (podem ter mudado no banco)
             List<String> allAuthorities = authentication.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .toList();

@@ -16,7 +16,8 @@ import {
     CheckSquare,
     History
 } from 'lucide-react';
-import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem } from '../../types/meetings';
+import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem, PermissionType } from '../../types/meetings';
+import { CanDo } from '../permissions/CanDo';
 import { formatDate } from '../../utils/dateHelpers';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
@@ -205,13 +206,16 @@ export function TaskDetails({
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                        <button
-                            onClick={() => onEdit && onEdit(tarefa)}
-                            className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                            title="Editar tarefa"
-                        >
-                            <Edit3 className="w-5 h-5" />
-                        </button>
+                        {/* Botão de editar - apenas visível para usuários com permissão TASK_EDIT */}
+                        <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                            <button
+                                onClick={() => onEdit && onEdit(tarefa)}
+                                className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                title="Editar tarefa"
+                            >
+                                <Edit3 className="w-5 h-5" />
+                            </button>
+                        </CanDo>
                         <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                             <X className="w-5 h-5" />
                         </button>

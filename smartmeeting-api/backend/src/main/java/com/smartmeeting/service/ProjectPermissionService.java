@@ -58,8 +58,7 @@ public class ProjectPermissionService {
                     PermissionType.TASK_CREATE, PermissionType.TASK_VIEW, PermissionType.TASK_EDIT,
                     PermissionType.TASK_MOVE, PermissionType.TASK_COMMENT, PermissionType.TASK_ATTACH,
                     PermissionType.KANBAN_VIEW,
-                    PermissionType.MEETING_VIEW, PermissionType.MEETING_CREATE
-            );
+                    PermissionType.MEETING_VIEW, PermissionType.MEETING_CREATE);
             for (PermissionType perm : PermissionType.values()) {
                 templateRepository.save(new RolePermissionTemplate(
                         ProjectRole.MEMBER_EDITOR, perm, memberPermissions.contains(perm)));
@@ -90,6 +89,10 @@ public class ProjectPermissionService {
      * Verifica se um usuário tem uma permissão específica em um projeto
      */
     public boolean hasPermission(Long projectId, Long personId, PermissionType permissionType) {
+        // Admin global tem acesso a tudo
+        if (com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            return true;
+        }
         return permissionRepository.hasPermission(projectId, personId, permissionType);
     }
 
@@ -100,6 +103,21 @@ public class ProjectPermissionService {
         if (!hasPermission(projectId, personId, permissionType)) {
             throw new ForbiddenException("Você não tem permissão para: " + permissionType.getDescricao());
         }
+    }
+
+    /**
+     * Verifica se o usuário atual tem permissão (para uso em @PreAuthorize)
+     */
+    public boolean hasPermissionForCurrentUser(Long projectId, PermissionType permissionType) {
+        // Admin global tem acesso a tudo
+        if (com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            return true;
+        }
+
+        Long userId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (userId == null)
+            return false;
+        return hasPermission(projectId, userId, permissionType);
     }
 
     /**
@@ -242,8 +260,7 @@ public class ProjectPermissionService {
         return templates.stream()
                 .collect(Collectors.toMap(
                         RolePermissionTemplate::getPermissionType,
-                        RolePermissionTemplate::isDefaultGranted
-                ));
+                        RolePermissionTemplate::isDefaultGranted));
     }
 
     // Métodos auxiliares de conversão
@@ -265,8 +282,7 @@ public class ProjectPermissionService {
         Map<String, Boolean> permissionMap = permissions.stream()
                 .collect(Collectors.toMap(
                         p -> p.getPermissionType().name(),
-                        ProjectPermission::isGranted
-                ));
+                        ProjectPermission::isGranted));
         dto.setPermissionMap(permissionMap);
 
         return dto;
