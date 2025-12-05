@@ -82,6 +82,8 @@ public class JwtTokenProvider {
                 .subject(userPrincipal.getUsername())
                 .issuedAt(now)
                 .expiration(expiryDate)
+                .claim("userId", userPrincipal.getId())
+                .claim("nome", userPrincipal.getNome())
                 .claim("roles", roles)
                 .claim("permissions", permissions)
                 .signWith(signingKey, Jwts.SIG.HS512)

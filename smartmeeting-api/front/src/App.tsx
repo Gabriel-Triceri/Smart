@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { HomeDashboard } from './pages/HomeDashboard';
 import { MeetingManager } from './components/meetings/MeetingManager';
@@ -11,6 +11,7 @@ import UserMenu from './components/common/UserMenu';
 import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X } from 'lucide-react';
 import { inicializarDados } from './services/seedData';
 import { authService } from './services/authService';
+import { usePermissionWebSocket } from './hooks/usePermissionWebSocket';
 
 type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas' | 'permissions';
 
@@ -81,6 +82,21 @@ function App() {
     const [mounted, setMounted] = useState(false);
     const [activeView, setActiveView] = useState<ActiveView>('meetings');
     const [showNavigation, setShowNavigation] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    // Callback quando permissoes sao atualizadas via WebSocket
+    const handlePermissionsUpdated = useCallback((projectId: number) => {
+        console.log('[App] Permissoes atualizadas para projeto:', projectId);
+        // Incrementa a key para forcar re-render dos componentes filhos
+        setRefreshKey(prev => prev + 1);
+    }, []);
+
+    // Conectar ao WebSocket de permissoes
+    const { isConnected } = usePermissionWebSocket({
+        onPermissionsUpdated: handlePermissionsUpdated,
+        onConnected: () => console.log('[App] WebSocket conectado'),
+        onDisconnected: () => console.log('[App] WebSocket desconectado')
+    });
 
     useEffect(() => {
         setMounted(true);
@@ -96,20 +112,21 @@ function App() {
     }, []);
 
     const navigationItems = useMemo<NavigationItem[]>(() => [
-        { id: 'dashboard', label: 'Dashboard Executivo', description: 'Metricas e indicadores', icon: BarChart3 },
-        { id: 'meetings', label: 'Gestao de Reunioes', description: 'Calendario e organizacao', icon: Calendar },
-        { id: 'salas', label: 'Gestao de Salas', description: 'Salas e recursos', icon: Building },
-        { id: 'tarefas', label: 'Gestao de Tarefas', description: 'Kanban e produtividade', icon: CheckSquare },
+        { id: 'dashboard', label: 'Dashboard', description: 'Metricas e indicadores', icon: BarChart3 },
+        { id: 'meetings', label: 'Reunioes', description: 'Calendario e organizacao', icon: Calendar },
+        { id: 'salas', label: 'Salas', description: 'Salas e recursos', icon: Building },
+        { id: 'tarefas', label: 'Tarefas', description: 'Kanban e produtividade', icon: CheckSquare },
         // Gestao de Permissoes - apenas ADMIN pode acessar
-        { id: 'permissions', label: 'Gestao de Permissoes', description: 'Permissoes, roles e usuarios', icon: Shield, allowedRoles: ['ADMIN'] }
+        { id: 'permissions', label: 'Permissoes', description: 'Permissoes, roles e usuarios', icon: Shield, allowedRoles: ['ADMIN'] }
     ], []);
 
+    // Os componentes usam refreshKey para re-renderizar quando permissoes mudam
     const viewComponents: Record<ActiveView, React.ReactNode> = {
-        dashboard: <HomeDashboard />,
-        meetings: <MeetingManager />,
-        salas: <SalaManager />,
-        tarefas: <TaskManager />,
-        permissions: <PermissionManager />
+        dashboard: <HomeDashboard key={`dashboard-${refreshKey}`} />,
+        meetings: <MeetingManager key={`meetings-${refreshKey}`} />,
+        salas: <SalaManager key={`salas-${refreshKey}`} />,
+        tarefas: <TaskManager key={`tarefas-${refreshKey}`} />,
+        permissions: <PermissionManager key={`permissions-${refreshKey}`} />
     };
 
     if (!mounted) return <LoadingSkeleton />;
@@ -185,6 +202,7 @@ function App() {
             </div>
         </ErrorBoundary>
     );
+    
 }
 
 export default App;

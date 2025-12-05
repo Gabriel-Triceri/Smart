@@ -14,6 +14,7 @@ import com.smartmeeting.model.RolePermissionTemplate;
 import com.smartmeeting.repository.ProjectMemberRepository;
 import com.smartmeeting.repository.ProjectPermissionRepository;
 import com.smartmeeting.repository.RolePermissionTemplateRepository;
+import com.smartmeeting.websocket.PermissionWebSocketHandler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class ProjectPermissionService {
     private final ProjectPermissionRepository permissionRepository;
     private final ProjectMemberRepository memberRepository;
     private final RolePermissionTemplateRepository templateRepository;
+    private final PermissionWebSocketHandler webSocketHandler;
 
     /**
      * Inicializa os templates de permissões por role (executado no startup)
@@ -192,6 +194,12 @@ public class ProjectPermissionService {
         log.info("Permissões atualizadas para membro {} no projeto {}",
                 member.getPerson().getNome(), member.getProject().getName());
 
+        // Notifica o usuario via WebSocket sobre a mudanca de permissoes
+        webSocketHandler.notifyPermissionsUpdated(
+                member.getPerson().getId(),
+                member.getProject().getId()
+        );
+
         return getMemberPermissions(member.getId());
     }
 
@@ -217,6 +225,12 @@ public class ProjectPermissionService {
         // Inicializa novas permissões baseadas no novo role
         initializePermissionsForMember(member);
 
+        // Notifica o usuario via WebSocket sobre a mudanca de role/permissoes
+        webSocketHandler.notifyPermissionsUpdated(
+                member.getPerson().getId(),
+                member.getProject().getId()
+        );
+
         return getMemberPermissions(projectMemberId);
     }
 
@@ -233,6 +247,12 @@ public class ProjectPermissionService {
 
         // Reinicializa com base no template do role
         initializePermissionsForMember(member);
+
+        // Notifica o usuario via WebSocket sobre o reset de permissoes
+        webSocketHandler.notifyPermissionsUpdated(
+                member.getPerson().getId(),
+                member.getProject().getId()
+        );
 
         return getMemberPermissions(projectMemberId);
     }

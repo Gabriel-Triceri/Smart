@@ -121,9 +121,9 @@ export const authService = {
             const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
 
             return {
-                id: payload.sub || payload.usuarioId || payload.id || null,
-                name: payload.name || payload.nome || payload.usuarioNome || payload.fullName || null,
-                email: payload.email || payload.preferred_username || null,
+                id: payload.userId || payload.sub || payload.usuarioId || payload.id || null,
+                name: payload.nome || payload.name || payload.usuarioNome || payload.fullName || null,
+                email: payload.sub || payload.email || payload.preferred_username || null,
                 roles: authService.getRoles()
             };
         } catch (error) {
