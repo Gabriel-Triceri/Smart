@@ -10,6 +10,7 @@ import java.util.Map;
 @Service
 public class CsvExportService {
 
+    @SuppressWarnings("unchecked")
     public String exportToCsv(Map<String, Object> data) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);

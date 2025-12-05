@@ -79,9 +79,9 @@ public class JwtTokenProvider {
                 .collect(Collectors.toList());
 
         return Jwts.builder()
-                .setSubject(userPrincipal.getUsername())
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
+                .subject(userPrincipal.getUsername())
+                .issuedAt(now)
+                .expiration(expiryDate)
                 .claim("roles", roles)
                 .claim("permissions", permissions)
                 .signWith(signingKey, Jwts.SIG.HS512)

@@ -12,12 +12,16 @@ import {
     CornerDownRight,
     Percent,
     Edit3,
-    Trash2
+    Trash2,
+    CheckSquare,
+    History
 } from 'lucide-react';
-import { Tarefa, StatusTarefa, ComentarioTarefa } from '../../types/meetings';
+import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem } from '../../types/meetings';
 import { formatDate } from '../../utils/dateHelpers';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
+import { ChecklistSection } from './ChecklistSection';
+import { HistorySection } from './HistorySection';
 
 interface TaskDetailsProps {
     tarefa: Tarefa | null;
@@ -30,6 +34,7 @@ interface TaskDetailsProps {
     onAttachFile?: (tarefaId: string, file: File) => Promise<void>;
     onUpdateStatus?: (tarefaId: string, status: StatusTarefa) => Promise<void>;
     onUpdateProgress?: (tarefaId: string, progress: number) => Promise<Tarefa>;
+    onChecklistChange?: (tarefaId: string, items: ChecklistItem[]) => void;
     tarefas?: Tarefa[];
     onOpenTask?: (tarefa: Tarefa) => void;
 }
@@ -45,6 +50,7 @@ export function TaskDetails({
     onAttachFile,
     onUpdateStatus,
     onUpdateProgress,
+    onChecklistChange,
     tarefas,
     onOpenTask
 }: TaskDetailsProps) {
@@ -57,6 +63,7 @@ export function TaskDetails({
         authorId?: string;
     }
     const [history, setHistory] = useState<HistoryEntry[]>([]);
+    const [activeTab, setActiveTab] = useState<'comments' | 'checklist' | 'history'>('comments');
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingText, setEditingText] = useState<string>('');
     const [newMessage, setNewMessage] = useState('');
@@ -253,12 +260,62 @@ export function TaskDetails({
                             )}
                         </div>
 
-                        {/* Activity / Chat Section */}
+                        {/* Activity / Chat Section with Tabs */}
                         <div className="space-y-4">
-                            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                                <MessageSquare className="w-4 h-4 text-slate-400" />
-                                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Histórico da tarefa</h2>
+                            {/* Tabs */}
+                            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                <button
+                                    onClick={() => setActiveTab('comments')}
+                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                                        activeTab === 'comments'
+                                            ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                >
+                                    <MessageSquare className="w-4 h-4" />
+                                    <span>Comentários</span>
+                                    {tarefa.comentarios?.length > 0 && (
+                                        <span className="px-1.5 py-0.5 text-xs bg-slate-200 dark:bg-slate-600 rounded-full">
+                                            {tarefa.comentarios.length}
+                                        </span>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('checklist')}
+                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                                        activeTab === 'checklist'
+                                            ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                >
+                                    <CheckSquare className="w-4 h-4" />
+                                    <span>Checklist</span>
+                                    {(tarefa.checklistTotal ?? 0) > 0 && (
+                                        <span className="px-1.5 py-0.5 text-xs bg-slate-200 dark:bg-slate-600 rounded-full">
+                                            {tarefa.checklistConcluidos ?? 0}/{tarefa.checklistTotal ?? 0}
+                                        </span>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('history')}
+                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                                        activeTab === 'history'
+                                            ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                >
+                                    <History className="w-4 h-4" />
+                                    <span>Histórico</span>
+                                </button>
                             </div>
+
+                            {/* Tab Content - Comments */}
+                            {activeTab === 'comments' && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                                        <MessageSquare className="w-4 h-4 text-slate-400" />
+                                        <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Comentários</h2>
+                                    </div>
 
                             <div className="bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col min-h-[300px] max-h-[500px]">
                                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -377,6 +434,26 @@ export function TaskDetails({
                                     </div>
                                 </div>
                             </div>
+                                </div>
+                            )}
+
+                            {/* Tab Content - Checklist */}
+                            {activeTab === 'checklist' && (
+                                <div className="bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800 p-4">
+                                    <ChecklistSection
+                                        tarefaId={tarefa.id}
+                                        initialItems={tarefa.checklist || []}
+                                        onItemsChange={(items) => onChecklistChange?.(tarefa.id, items)}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Tab Content - History */}
+                            {activeTab === 'history' && (
+                                <div className="bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800 p-4">
+                                    <HistorySection tarefaId={tarefa.id} />
+                                </div>
+                            )}
                         </div>
 
                         {/* Attachments Section REMOVED from UI */}

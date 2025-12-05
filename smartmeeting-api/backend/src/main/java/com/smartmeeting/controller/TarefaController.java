@@ -8,7 +8,10 @@ import com.smartmeeting.dto.TarefaStatisticsDTO;
 import com.smartmeeting.dto.TemplateTarefaDTO;
 import com.smartmeeting.dto.MovimentacaoTarefaRequest;
 import com.smartmeeting.dto.MovimentacaoTarefaDTO;
+import com.smartmeeting.dto.ChecklistItemDTO;
+import com.smartmeeting.dto.CreateChecklistItemRequest;
 import com.smartmeeting.service.TarefaService;
+import com.smartmeeting.service.ChecklistService;
 import com.smartmeeting.mapper.ReuniaoMapper;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.dto.ReuniaoDTO;
@@ -25,10 +28,13 @@ public class TarefaController {
 
     private final TarefaService tarefaService;
     private final ReuniaoMapper reuniaoMapper;
+    private final ChecklistService checklistService;
 
-    public TarefaController(TarefaService tarefaService, ReuniaoMapper reuniaoMapper) {
+    public TarefaController(TarefaService tarefaService, ReuniaoMapper reuniaoMapper,
+            ChecklistService checklistService) {
         this.tarefaService = tarefaService;
         this.reuniaoMapper = reuniaoMapper;
+        this.checklistService = checklistService;
     }
 
     /**
@@ -352,5 +358,81 @@ public class TarefaController {
     public ResponseEntity<Void> marcarNotificacaoLida(@PathVariable("id") Long id) {
         tarefaService.marcarNotificacaoLida(id);
         return ResponseEntity.ok().build();
+    }
+
+    // ===========================================
+    // CHECKLIST ENDPOINTS
+    // ===========================================
+
+    /**
+     * Obtém todos os itens do checklist de uma tarefa
+     * Endpoint: GET /tarefas/{id}/checklist
+     */
+    @GetMapping("/{id}/checklist")
+    public ResponseEntity<List<ChecklistItemDTO>> getChecklistItems(@PathVariable("id") Long id) {
+        List<ChecklistItemDTO> items = checklistService.getChecklistDaTarefa(id);
+        return ResponseEntity.ok(items);
+    }
+
+    /**
+     * Adiciona um novo item ao checklist
+     * Endpoint: POST /tarefas/{id}/checklist
+     */
+    @PostMapping("/{id}/checklist")
+    public ResponseEntity<ChecklistItemDTO> createChecklistItem(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody CreateChecklistItemRequest request) {
+        ChecklistItemDTO item = checklistService.adicionarItem(id, request);
+        return ResponseEntity.ok(item);
+    }
+
+    /**
+     * Atualiza um item do checklist
+     * Endpoint: PUT /tarefas/{tarefaId}/checklist/{itemId}
+     */
+    @PutMapping("/{tarefaId}/checklist/{itemId}")
+    public ResponseEntity<ChecklistItemDTO> updateChecklistItem(
+            @PathVariable("tarefaId") Long tarefaId,
+            @PathVariable("itemId") Long itemId,
+            @Valid @RequestBody CreateChecklistItemRequest request) {
+        ChecklistItemDTO item = checklistService.atualizarItem(itemId, request);
+        return ResponseEntity.ok(item);
+    }
+
+    /**
+     * Alterna o estado de conclusão de um item do checklist
+     * Endpoint: PATCH /tarefas/{tarefaId}/checklist/{itemId}/toggle
+     */
+    @PatchMapping("/{tarefaId}/checklist/{itemId}/toggle")
+    public ResponseEntity<ChecklistItemDTO> toggleChecklistItem(
+            @PathVariable("tarefaId") Long tarefaId,
+            @PathVariable("itemId") Long itemId) {
+        ChecklistItemDTO item = checklistService.toggleConcluido(itemId);
+        return ResponseEntity.ok(item);
+    }
+
+    /**
+     * Remove um item do checklist
+     * Endpoint: DELETE /tarefas/{tarefaId}/checklist/{itemId}
+     */
+    @DeleteMapping("/{tarefaId}/checklist/{itemId}")
+    public ResponseEntity<Void> deleteChecklistItem(
+            @PathVariable("tarefaId") Long tarefaId,
+            @PathVariable("itemId") Long itemId) {
+        checklistService.removerItem(itemId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Reordena os itens do checklist
+     * Endpoint: PATCH /tarefas/{id}/checklist/reorder
+     */
+    @PatchMapping("/{id}/checklist/reorder")
+    public ResponseEntity<List<ChecklistItemDTO>> reorderChecklistItems(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, List<Long>> requestBody) {
+        List<Long> itemIds = requestBody.get("itemIds");
+        List<ChecklistItemDTO> items = checklistService.reordenarItens(id, itemIds);
+        return ResponseEntity.ok(items);
     }
 }

@@ -12,20 +12,24 @@ import java.util.List;
 public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     /**
      * Busca tarefas por ID da reunião
+     * 
      * @param idReuniao ID da reunião
      * @return Lista de tarefas da reunião
      */
     List<Tarefa> findByReuniaoId(Long idReuniao);
-    
+
     /*
      * Busca tarefas por status
+     * 
      * @param status Status da tarefa (enum StatusTarefa)
+     * 
      * @return Lista de tarefas com o status especificado
      */
     List<Tarefa> findByStatusTarefa(StatusTarefa status);
-    
+
     /**
      * Busca tarefas que não possuem um determinado status
+     * 
      * @param status Status da tarefa a ser excluído da busca (enum StatusTarefa)
      * @return Lista de tarefas com status diferente do especificado
      */
@@ -34,6 +38,12 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     List<Tarefa> findByPrazoBetween(LocalDate inicio, LocalDate fim);
 
     long countByConcluida(boolean concluida);
+
+    /**
+     * Busca tarefas por ID do projeto
+     * 
+     * @param projectId ID do projeto
+     * @return Lista de tarefas do projeto
+     */
+    List<Tarefa> findByProjectId(Long projectId);
 }
-
-

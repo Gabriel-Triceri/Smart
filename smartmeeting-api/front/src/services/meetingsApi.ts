@@ -23,7 +23,17 @@ import {
     SalaStatus,
     PrioridadeTarefa,
     KanbanColumn,
-    KanbanColumnConfig
+    KanbanColumnConfig,
+    // Novos tipos para funcionalidades Pipefy-like
+    ChecklistItem,
+    TarefaHistory,
+    KanbanColumnDynamic,
+    ProjectPermission,
+    PermissionType,
+    CreateKanbanColumnRequest,
+    UpdateKanbanColumnRequest,
+    CreateChecklistItemRequest,
+    UpdateChecklistItemRequest
 } from '../types/meetings';
 
 import { DateTimeUtils } from '../utils/dateTimeUtils';
@@ -106,6 +116,12 @@ const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
     const responsavelPrincipalId = String(task.responsavelPrincipalId ?? task.responsavelId ?? fallback?.responsavelPrincipalId ?? '');
     const responsaveis = normalizeAssignees(task, fallback?.responsaveisIds ?? []);
 
+    // Checklist data
+    const checklist = task.checklist ?? [];
+    const checklistTotal = task.checklistTotal ?? checklist.length;
+    const checklistConcluidos = task.checklistConcluidos ?? checklist.filter((item: any) => item.concluido).length;
+    const checklistProgresso = checklistTotal > 0 ? Math.round((checklistConcluidos / checklistTotal) * 100) : 0;
+
     return {
         id: String(task.id ?? task.tarefaId ?? generateClientId()),
         titulo,
@@ -135,7 +151,12 @@ const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
         updatedAt: task.updatedAt ?? new Date().toISOString(),
         deletedAt: task.deletedAt,
         projectId: task.projectId ?? task.project?.id,
-        projectName: task.projectName ?? task.project?.name
+        projectName: task.projectName ?? task.project?.name,
+        // Checklist fields
+        checklist,
+        checklistTotal,
+        checklistConcluidos,
+        checklistProgresso
     };
 };
 
@@ -758,5 +779,176 @@ export const meetingsApi = {
             throw new Error('ID da tarefa inválido');
         }
         await api.patch(`/tarefas/${tarefaId}/reuniao`, { reuniaoId: null });
+    },
+
+    // ===========================================
+    // CHECKLIST (Mini-tarefas dentro de uma tarefa)
+    // ===========================================
+
+    async getChecklistItems(tarefaId: string): Promise<ChecklistItem[]> {
+        if (!IdValidation.isValidId(tarefaId)) {
+            throw new Error('ID da tarefa inválido');
+        }
+        const response = await api.get(`/tarefas/${tarefaId}/checklist`);
+        return response.data ?? [];
+    },
+
+    async createChecklistItem(tarefaId: string, data: CreateChecklistItemRequest): Promise<ChecklistItem> {
+        if (!IdValidation.isValidId(tarefaId)) {
+            throw new Error('ID da tarefa inválido');
+        }
+        const response = await api.post(`/tarefas/${tarefaId}/checklist`, data);
+        return response.data;
+    },
+
+    async updateChecklistItem(tarefaId: string, itemId: string, data: UpdateChecklistItemRequest): Promise<ChecklistItem> {
+        if (!IdValidation.isValidId(tarefaId) || !IdValidation.isValidId(itemId)) {
+            throw new Error('IDs inválidos');
+        }
+        const response = await api.put(`/tarefas/${tarefaId}/checklist/${itemId}`, data);
+        return response.data;
+    },
+
+    async toggleChecklistItem(tarefaId: string, itemId: string): Promise<ChecklistItem> {
+        if (!IdValidation.isValidId(tarefaId) || !IdValidation.isValidId(itemId)) {
+            throw new Error('IDs inválidos');
+        }
+        const response = await api.patch(`/tarefas/${tarefaId}/checklist/${itemId}/toggle`);
+        return response.data;
+    },
+
+    async deleteChecklistItem(tarefaId: string, itemId: string): Promise<void> {
+        if (!IdValidation.isValidId(tarefaId) || !IdValidation.isValidId(itemId)) {
+            throw new Error('IDs inválidos');
+        }
+        await api.delete(`/tarefas/${tarefaId}/checklist/${itemId}`);
+    },
+
+    async reorderChecklistItems(tarefaId: string, itemIds: string[]): Promise<ChecklistItem[]> {
+        if (!IdValidation.isValidId(tarefaId)) {
+            throw new Error('ID da tarefa inválido');
+        }
+        const response = await api.patch(`/tarefas/${tarefaId}/checklist/reorder`, { itemIds });
+        return response.data ?? [];
+    },
+
+    // ===========================================
+    // HISTÓRICO DA TAREFA (Pipefy-like)
+    // ===========================================
+
+    async getTarefaHistory(tarefaId: string): Promise<TarefaHistory[]> {
+        if (!IdValidation.isValidId(tarefaId)) {
+            throw new Error('ID da tarefa inválido');
+        }
+        const response = await api.get(`/tarefas/${tarefaId}/historico`);
+        return response.data ?? [];
+    },
+
+    // ===========================================
+    // COLUNAS KANBAN DINÂMICAS (por projeto)
+    // ===========================================
+
+    async getKanbanColumnsByProject(projectId: string): Promise<KanbanColumnDynamic[]> {
+        if (!IdValidation.isValidId(projectId)) {
+            throw new Error('ID do projeto inválido');
+        }
+        const response = await api.get(`/kanban/columns/project/${projectId}`);
+        return response.data ?? [];
+    },
+
+    async createKanbanColumnDynamic(data: CreateKanbanColumnRequest): Promise<KanbanColumnDynamic> {
+        const response = await api.post('/kanban/columns', data);
+        return response.data;
+    },
+
+    async updateKanbanColumnDynamic(columnId: string, data: UpdateKanbanColumnRequest): Promise<KanbanColumnDynamic> {
+        if (!IdValidation.isValidId(columnId)) {
+            throw new Error('ID da coluna inválido');
+        }
+        const response = await api.put(`/kanban/columns/${columnId}`, data);
+        return response.data;
+    },
+
+    async deleteKanbanColumnDynamic(columnId: string): Promise<void> {
+        if (!IdValidation.isValidId(columnId)) {
+            throw new Error('ID da coluna inválido');
+        }
+        await api.delete(`/kanban/columns/${columnId}`);
+    },
+
+    async reorderKanbanColumns(projectId: string, columnIds: string[]): Promise<KanbanColumnDynamic[]> {
+        if (!IdValidation.isValidId(projectId)) {
+            throw new Error('ID do projeto inválido');
+        }
+        const response = await api.patch(`/kanban/columns/project/${projectId}/reorder`, { columnIds });
+        return response.data ?? [];
+    },
+
+    // ===========================================
+    // PERMISSÕES DE PROJETO (Pipefy-like RBAC)
+    // ===========================================
+
+    async getProjectPermissions(projectId: string): Promise<ProjectPermission[]> {
+        if (!IdValidation.isValidId(projectId)) {
+            throw new Error('ID do projeto inválido');
+        }
+        const response = await api.get(`/projects/${projectId}/permissions`);
+        return response.data ?? [];
+    },
+
+    async getMemberPermissions(projectId: string, memberId: string): Promise<ProjectPermission[]> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
+            throw new Error('IDs inválidos');
+        }
+        const response = await api.get(`/projects/${projectId}/permissions/member/${memberId}`);
+        return response.data ?? [];
+    },
+
+    async grantPermission(projectId: string, memberId: string, permissionType: PermissionType): Promise<ProjectPermission> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
+            throw new Error('IDs inválidos');
+        }
+        const response = await api.post(`/projects/${projectId}/permissions`, {
+            memberId,
+            permissionType
+        });
+        return response.data;
+    },
+
+    async revokePermission(projectId: string, permissionId: string): Promise<void> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(permissionId)) {
+            throw new Error('IDs inválidos');
+        }
+        await api.delete(`/projects/${projectId}/permissions/${permissionId}`);
+    },
+
+    async checkPermission(projectId: string, memberId: string, permissionType: PermissionType): Promise<boolean> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
+            throw new Error('IDs inválidos');
+        }
+        try {
+            const response = await api.get(`/projects/${projectId}/permissions/check`, {
+                params: { memberId, permissionType }
+            });
+            return response.data?.hasPermission ?? false;
+        } catch {
+            return false;
+        }
+    },
+
+    async applyRolePermissions(projectId: string, memberId: string, roleName: string): Promise<ProjectPermission[]> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
+            throw new Error('IDs inválidos');
+        }
+        const response = await api.post(`/projects/${projectId}/permissions/apply-role`, {
+            memberId,
+            roleName
+        });
+        return response.data ?? [];
+    },
+
+    async getAvailablePermissionTypes(): Promise<PermissionType[]> {
+        const response = await api.get('/projects/permissions/types');
+        return response.data ?? Object.values(PermissionType);
     },
 };

@@ -2,7 +2,8 @@ import React from 'react';
 import {
     Calendar,
     Paperclip,
-    MessageSquare
+    MessageSquare,
+    CheckSquare
 } from 'lucide-react';
 import { Tarefa } from '../../types/meetings';
 import { formatDateFriendly, isDateBefore, isDateAfter } from '../../utils/dateHelpers';
@@ -152,6 +153,20 @@ export function TaskCard({
 
                     {!compact && (
                         <>
+                            {/* Checklist Progress */}
+                            {(tarefa.checklistTotal ?? 0) > 0 && (
+                                <div className={`flex items-center text-[10px] ${
+                                    tarefa.checklistConcluidos === tarefa.checklistTotal
+                                        ? 'text-emerald-500'
+                                        : 'text-slate-400'
+                                }`}>
+                                    <CheckSquare className="w-3 h-3" />
+                                    <span className="ml-0.5">
+                                        {tarefa.checklistConcluidos ?? 0}/{tarefa.checklistTotal}
+                                    </span>
+                                </div>
+                            )}
+
                             {tarefa.anexos && tarefa.anexos.length > 0 && (
                                 <div className="flex items-center text-[10px] text-slate-400">
                                     <Paperclip className="w-3 h-3" />

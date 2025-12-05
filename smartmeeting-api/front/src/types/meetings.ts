@@ -282,6 +282,11 @@ export interface Tarefa {
     projectId?: string;
     projectName?: string;
     deletedAt?: string;
+    // Campos de Checklist
+    checklist?: ChecklistItem[];
+    checklistProgresso?: number;
+    checklistTotal?: number;
+    checklistConcluidos?: number;
 }
 
 export interface KanbanColumn {
@@ -368,4 +373,153 @@ export interface TemplateTarefa {
     tags?: string[];
     estimadaHoras?: number;
     dependencias?: string[];
+}
+
+// ===== NOVAS INTERFACES PARA FUNCIONALIDADES PIPEFY-LIKE =====
+
+// Checklist Item (Mini-tarefas dentro de uma tarefa)
+export interface ChecklistItem {
+    id: string;
+    tarefaId: string;
+    titulo: string;
+    concluido: boolean;
+    ordem: number;
+    criadoPor?: string;
+    criadoPorNome?: string;
+    concluidoPor?: string;
+    concluidoPorNome?: string;
+    concluidoEm?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// Histórico de ações em uma tarefa
+export enum HistoryActionType {
+    CREATED = 'CREATED',
+    UPDATED = 'UPDATED',
+    STATUS_CHANGED = 'STATUS_CHANGED',
+    ASSIGNED = 'ASSIGNED',
+    UNASSIGNED = 'UNASSIGNED',
+    COMMENT_ADDED = 'COMMENT_ADDED',
+    COMMENT_EDITED = 'COMMENT_EDITED',
+    COMMENT_DELETED = 'COMMENT_DELETED',
+    ATTACHMENT_ADDED = 'ATTACHMENT_ADDED',
+    ATTACHMENT_REMOVED = 'ATTACHMENT_REMOVED',
+    DUE_DATE_CHANGED = 'DUE_DATE_CHANGED',
+    PRIORITY_CHANGED = 'PRIORITY_CHANGED',
+    PROGRESS_UPDATED = 'PROGRESS_UPDATED',
+    TITLE_CHANGED = 'TITLE_CHANGED',
+    DESCRIPTION_CHANGED = 'DESCRIPTION_CHANGED',
+    CHECKLIST_ITEM_ADDED = 'CHECKLIST_ITEM_ADDED',
+    CHECKLIST_ITEM_COMPLETED = 'CHECKLIST_ITEM_COMPLETED',
+    CHECKLIST_ITEM_UNCOMPLETED = 'CHECKLIST_ITEM_UNCOMPLETED',
+    CHECKLIST_ITEM_REMOVED = 'CHECKLIST_ITEM_REMOVED',
+    MOVED_TO_PROJECT = 'MOVED_TO_PROJECT'
+}
+
+export interface TarefaHistory {
+    id: string;
+    tarefaId: string;
+    actionType: HistoryActionType;
+    actionDescription: string;
+    oldValue?: string;
+    newValue?: string;
+    userId: string;
+    userNome: string;
+    userAvatar?: string;
+    createdAt: string;
+}
+
+// Coluna Kanban Dinâmica (por projeto)
+export interface KanbanColumnDynamic {
+    id: string;
+    projectId: string;
+    title: string;
+    description?: string;
+    color: string;
+    ordem: number;
+    wipLimit?: number;
+    isDoneColumn: boolean;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// Permissão de Projeto (estilo Pipefy)
+export enum PermissionType {
+    VIEW_PROJECT = 'VIEW_PROJECT',
+    EDIT_PROJECT = 'EDIT_PROJECT',
+    DELETE_PROJECT = 'DELETE_PROJECT',
+    MANAGE_MEMBERS = 'MANAGE_MEMBERS',
+    CREATE_TASK = 'CREATE_TASK',
+    EDIT_TASK = 'EDIT_TASK',
+    DELETE_TASK = 'DELETE_TASK',
+    ASSIGN_TASK = 'ASSIGN_TASK',
+    MOVE_TASK = 'MOVE_TASK',
+    COMMENT_TASK = 'COMMENT_TASK',
+    VIEW_REPORTS = 'VIEW_REPORTS',
+    EXPORT_DATA = 'EXPORT_DATA',
+    MANAGE_COLUMNS = 'MANAGE_COLUMNS',
+    MANAGE_AUTOMATIONS = 'MANAGE_AUTOMATIONS',
+    MANAGE_INTEGRATIONS = 'MANAGE_INTEGRATIONS',
+    VIEW_HISTORY = 'VIEW_HISTORY',
+    MANAGE_CHECKLIST = 'MANAGE_CHECKLIST',
+    UPLOAD_ATTACHMENTS = 'UPLOAD_ATTACHMENTS',
+    DELETE_ATTACHMENTS = 'DELETE_ATTACHMENTS',
+    MANAGE_LABELS = 'MANAGE_LABELS',
+    SET_DUE_DATES = 'SET_DUE_DATES',
+    CHANGE_PRIORITY = 'CHANGE_PRIORITY',
+    BULK_ACTIONS = 'BULK_ACTIONS',
+    ADMIN = 'ADMIN'
+}
+
+export interface ProjectPermission {
+    id: string;
+    projectId: string;
+    memberId: string;
+    memberNome?: string;
+    memberEmail?: string;
+    permissionType: PermissionType;
+    grantedBy: string;
+    grantedByNome?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// DTOs para criação/atualização
+export interface CreateKanbanColumnRequest {
+    projectId: string;
+    title: string;
+    description?: string;
+    color?: string;
+    ordem?: number;
+    wipLimit?: number;
+    isDoneColumn?: boolean;
+}
+
+export interface UpdateKanbanColumnRequest {
+    title?: string;
+    description?: string;
+    color?: string;
+    ordem?: number;
+    wipLimit?: number;
+    isDoneColumn?: boolean;
+    isActive?: boolean;
+}
+
+export interface ReorderColumnsRequest {
+    projectId: string;
+    columnIds: string[];
+}
+
+export interface CreateChecklistItemRequest {
+    tarefaId: string;
+    titulo: string;
+    ordem?: number;
+}
+
+export interface UpdateChecklistItemRequest {
+    titulo?: string;
+    concluido?: boolean;
+    ordem?: number;
 }
