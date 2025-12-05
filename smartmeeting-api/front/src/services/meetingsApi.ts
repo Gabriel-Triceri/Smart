@@ -30,6 +30,10 @@ import {
     KanbanColumnDynamic,
     ProjectPermission,
     PermissionType,
+    ProjectRole,
+    MemberPermissions,
+    ProjectPermissionDTO,
+    UpdatePermissionsRequest,
     CreateKanbanColumnRequest,
     UpdateKanbanColumnRequest,
     CreateChecklistItemRequest,
@@ -840,7 +844,7 @@ export const meetingsApi = {
         if (!IdValidation.isValidId(tarefaId)) {
             throw new Error('ID da tarefa inválido');
         }
-        const response = await api.get(`/tarefas/${tarefaId}/historico`);
+        const response = await api.get(`/tarefas/${tarefaId}/history`);
         return response.data ?? [];
     },
 
@@ -888,7 +892,10 @@ export const meetingsApi = {
     // PERMISSÕES DE PROJETO (Pipefy-like RBAC)
     // ===========================================
 
-    async getProjectPermissions(projectId: string): Promise<ProjectPermission[]> {
+    /**
+     * Lista todas as permissões de todos os membros de um projeto
+     */
+    async getAllMemberPermissions(projectId: string): Promise<MemberPermissions[]> {
         if (!IdValidation.isValidId(projectId)) {
             throw new Error('ID do projeto inválido');
         }
@@ -896,39 +903,79 @@ export const meetingsApi = {
         return response.data ?? [];
     },
 
-    async getMemberPermissions(projectId: string, memberId: string): Promise<ProjectPermission[]> {
+    /**
+     * Obtém permissões de um membro específico pelo projectMemberId
+     */
+    async getMemberPermissions(projectId: string, memberId: string): Promise<MemberPermissions> {
         if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
             throw new Error('IDs inválidos');
         }
-        const response = await api.get(`/projects/${projectId}/permissions/member/${memberId}`);
-        return response.data ?? [];
-    },
-
-    async grantPermission(projectId: string, memberId: string, permissionType: PermissionType): Promise<ProjectPermission> {
-        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
-            throw new Error('IDs inválidos');
-        }
-        const response = await api.post(`/projects/${projectId}/permissions`, {
-            memberId,
-            permissionType
-        });
+        const response = await api.get(`/projects/${projectId}/permissions/members/${memberId}`);
         return response.data;
     },
 
-    async revokePermission(projectId: string, permissionId: string): Promise<void> {
-        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(permissionId)) {
+    /**
+     * Obtém permissões de uma pessoa específica no projeto
+     */
+    async getPersonPermissions(projectId: string, personId: string): Promise<MemberPermissions> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(personId)) {
             throw new Error('IDs inválidos');
         }
-        await api.delete(`/projects/${projectId}/permissions/${permissionId}`);
+        const response = await api.get(`/projects/${projectId}/permissions/person/${personId}`);
+        return response.data;
     },
 
-    async checkPermission(projectId: string, memberId: string, permissionType: PermissionType): Promise<boolean> {
+    /**
+     * Atualiza permissões de um membro
+     */
+    async updateMemberPermissions(
+        projectId: string,
+        memberId: string,
+        permissions: Record<PermissionType, boolean>
+    ): Promise<MemberPermissions> {
         if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
+            throw new Error('IDs inválidos');
+        }
+        const request: UpdatePermissionsRequest = {
+            projectMemberId: Number(memberId),
+            permissions
+        };
+        const response = await api.put(`/projects/${projectId}/permissions/members/${memberId}`, request);
+        return response.data;
+    },
+
+    /**
+     * Atualiza o role de um membro (reseta permissões para o padrão do novo role)
+     */
+    async updateMemberRole(projectId: string, memberId: string, role: ProjectRole): Promise<MemberPermissions> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
+            throw new Error('IDs inválidos');
+        }
+        const response = await api.put(`/projects/${projectId}/permissions/members/${memberId}/role`, { role });
+        return response.data;
+    },
+
+    /**
+     * Reseta permissões de um membro para o padrão do seu role
+     */
+    async resetMemberPermissions(projectId: string, memberId: string): Promise<MemberPermissions> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
+            throw new Error('IDs inválidos');
+        }
+        const response = await api.post(`/projects/${projectId}/permissions/members/${memberId}/reset`);
+        return response.data;
+    },
+
+    /**
+     * Verifica se uma pessoa tem uma permissão específica no projeto
+     */
+    async checkPermission(projectId: string, personId: string, permissionType: PermissionType): Promise<boolean> {
+        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(personId)) {
             throw new Error('IDs inválidos');
         }
         try {
             const response = await api.get(`/projects/${projectId}/permissions/check`, {
-                params: { memberId, permissionType }
+                params: { personId, permission: permissionType }
             });
             return response.data?.hasPermission ?? false;
         } catch {
@@ -936,19 +983,52 @@ export const meetingsApi = {
         }
     },
 
-    async applyRolePermissions(projectId: string, memberId: string, roleName: string): Promise<ProjectPermission[]> {
-        if (!IdValidation.isValidId(projectId) || !IdValidation.isValidId(memberId)) {
-            throw new Error('IDs inválidos');
+    /**
+     * Lista todos os tipos de permissões disponíveis
+     */
+    async getAvailablePermissionTypes(projectId: string): Promise<ProjectPermissionDTO[]> {
+        if (!IdValidation.isValidId(projectId)) {
+            throw new Error('ID do projeto inválido');
         }
-        const response = await api.post(`/projects/${projectId}/permissions/apply-role`, {
-            memberId,
-            roleName
-        });
+        const response = await api.get(`/projects/${projectId}/permissions/types`);
         return response.data ?? [];
     },
 
-    async getAvailablePermissionTypes(): Promise<PermissionType[]> {
-        const response = await api.get('/projects/permissions/types');
-        return response.data ?? Object.values(PermissionType);
+    /**
+     * Obtém template de permissões para um role específico
+     */
+    async getRolePermissionTemplate(projectId: string, role: ProjectRole): Promise<Record<PermissionType, boolean>> {
+        if (!IdValidation.isValidId(projectId)) {
+            throw new Error('ID do projeto inválido');
+        }
+        const response = await api.get(`/projects/${projectId}/permissions/templates/${role}`);
+        return response.data ?? {};
+    },
+
+    // Métodos legados mantidos para compatibilidade (deprecados)
+    /** @deprecated Use getAllMemberPermissions instead */
+    async getProjectPermissions(projectId: string): Promise<ProjectPermission[]> {
+        console.warn('getProjectPermissions is deprecated. Use getAllMemberPermissions instead.');
+        const members = await this.getAllMemberPermissions(projectId);
+        // Converte para formato antigo para compatibilidade
+        const permissions: ProjectPermission[] = [];
+        members.forEach(member => {
+            member.permissions.forEach(perm => {
+                if (perm.granted) {
+                    permissions.push({
+                        id: String(perm.id ?? 0),
+                        projectId: String(member.projectId),
+                        memberId: String(member.projectMemberId),
+                        memberNome: member.personName,
+                        memberEmail: member.personEmail,
+                        permissionType: perm.permissionType,
+                        grantedBy: '',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+            });
+        });
+        return permissions;
     },
 };

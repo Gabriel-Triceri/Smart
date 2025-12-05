@@ -445,6 +445,7 @@ export interface KanbanColumnDynamic {
     updatedAt: string;
 }
 
+
 // Permissão de Projeto (estilo Pipefy)
 export enum PermissionType {
     VIEW_PROJECT = 'VIEW_PROJECT',
@@ -470,7 +471,64 @@ export enum PermissionType {
     SET_DUE_DATES = 'SET_DUE_DATES',
     CHANGE_PRIORITY = 'CHANGE_PRIORITY',
     BULK_ACTIONS = 'BULK_ACTIONS',
-    ADMIN = 'ADMIN'
+    ADMIN = 'ADMIN',
+    PROJECT_VIEW = 'PROJECT_VIEW',
+    PROJECT_EDIT = 'PROJECT_EDIT',
+    PROJECT_DELETE = 'PROJECT_DELETE',
+    PROJECT_MANAGE_MEMBERS = 'PROJECT_MANAGE_MEMBERS',
+    TASK_CREATE = 'TASK_CREATE',
+    TASK_VIEW = 'TASK_VIEW',
+    TASK_EDIT = 'TASK_EDIT',
+    TASK_DELETE = 'TASK_DELETE',
+    TASK_MOVE = 'TASK_MOVE',
+    TASK_ASSIGN = 'TASK_ASSIGN',
+    TASK_COMMENT = 'TASK_COMMENT',
+    TASK_ATTACH = 'TASK_ATTACH',
+    KANBAN_VIEW = 'KANBAN_VIEW',
+    KANBAN_MANAGE_COLUMNS = 'KANBAN_MANAGE_COLUMNS',
+    MEETING_CREATE = 'MEETING_CREATE',
+    MEETING_VIEW = 'MEETING_VIEW',
+    MEETING_EDIT = 'MEETING_EDIT',
+    MEETING_DELETE = 'MEETING_DELETE',
+    MEETING_MANAGE_PARTICIPANTS = 'MEETING_MANAGE_PARTICIPANTS',
+    ADMIN_MANAGE_USERS = 'ADMIN_MANAGE_USERS',
+    ADMIN_MANAGE_ROLES = 'ADMIN_MANAGE_ROLES',
+    ADMIN_VIEW_REPORTS = 'ADMIN_VIEW_REPORTS',
+    ADMIN_SYSTEM_SETTINGS = 'ADMIN_SYSTEM_SETTINGS'
+}
+
+// Project Role enum
+export enum ProjectRole {
+    OWNER = 'OWNER',
+    ADMIN = 'ADMIN',
+    MEMBER_EDITOR = 'MEMBER_EDITOR'
+}
+
+// Individual permission DTO
+export interface ProjectPermissionDTO {
+    id?: number;
+    projectMemberId: number;
+    permissionType: PermissionType;
+    permissionDescription: string;
+    granted: boolean;
+}
+
+// Member permissions (complete view)
+export interface MemberPermissions {
+    projectId: number;
+    projectMemberId: number;
+    personId: number;
+    personName: string;
+    personEmail: string;
+    role: ProjectRole;
+    permissions: ProjectPermissionDTO[];
+    permissionMap?: Record<PermissionType, boolean>;
+}
+
+// Update permissions request
+export interface UpdatePermissionsRequest {
+    projectMemberId: number;
+    permissions: Record<PermissionType, boolean>;
 }
 
 export interface ProjectPermission {

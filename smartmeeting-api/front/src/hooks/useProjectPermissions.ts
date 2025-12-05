@@ -1,41 +1,46 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ProjectPermission, PermissionType } from '../types/meetings';
+import {
+    MemberPermissions,
+    PermissionType,
+    ProjectRole,
+    ProjectPermissionDTO
+} from '../types/meetings';
 import { meetingsApi } from '../services/meetingsApi';
 
 interface UseProjectPermissionsReturn {
-    permissions: ProjectPermission[];
+    members: MemberPermissions[];
     loading: boolean;
     error: string | null;
-    availableTypes: PermissionType[];
+    availablePermissionTypes: ProjectPermissionDTO[];
 
     // Actions
-    loadPermissions: () => Promise<void>;
-    grantPermission: (memberId: string, permissionType: PermissionType) => Promise<ProjectPermission | null>;
-    revokePermission: (permissionId: string) => Promise<boolean>;
-    checkPermission: (memberId: string, permissionType: PermissionType) => Promise<boolean>;
-    applyRole: (memberId: string, roleName: string) => Promise<ProjectPermission[]>;
-    getMemberPermissions: (memberId: string) => Promise<ProjectPermission[]>;
+    loadMembers: () => Promise<void>;
+    updatePermissions: (memberId: string, permissions: Record<PermissionType, boolean>) => Promise<MemberPermissions | null>;
+    updateMemberRole: (memberId: string, role: ProjectRole) => Promise<MemberPermissions | null>;
+    resetMemberPermissions: (memberId: string) => Promise<MemberPermissions | null>;
+    checkPermission: (personId: string, permissionType: PermissionType) => Promise<boolean>;
+    getRoleTemplate: (role: ProjectRole) => Promise<Record<PermissionType, boolean>>;
 
     // Helpers
+    getMemberById: (memberId: string) => MemberPermissions | undefined;
     hasPermission: (memberId: string, permissionType: PermissionType) => boolean;
-    getPermissionsByMember: (memberId: string) => ProjectPermission[];
 }
 
 export function useProjectPermissions(projectId: string): UseProjectPermissionsReturn {
-    const [permissions, setPermissions] = useState<ProjectPermission[]>([]);
+    const [members, setMembers] = useState<MemberPermissions[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [availableTypes, setAvailableTypes] = useState<PermissionType[]>([]);
+    const [availablePermissionTypes, setAvailablePermissionTypes] = useState<ProjectPermissionDTO[]>([]);
 
-    // Load all permissions for the project
-    const loadPermissions = useCallback(async () => {
+    // Load all member permissions for the project
+    const loadMembers = useCallback(async () => {
         if (!projectId) return;
 
         try {
             setLoading(true);
             setError(null);
-            const data = await meetingsApi.getProjectPermissions(projectId);
-            setPermissions(data);
+            const data = await meetingsApi.getAllMemberPermissions(projectId);
+            setMembers(data);
         } catch (err) {
             console.error('Erro ao carregar permissões:', err);
             setError('Falha ao carregar permissões do projeto');
@@ -46,266 +51,286 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
 
     // Load available permission types
     const loadAvailableTypes = useCallback(async () => {
+        if (!projectId) return;
+
         try {
-            const types = await meetingsApi.getAvailablePermissionTypes();
-            setAvailableTypes(types);
+            const types = await meetingsApi.getAvailablePermissionTypes(projectId);
+            setAvailablePermissionTypes(types);
         } catch (err) {
             console.error('Erro ao carregar tipos de permissão:', err);
-            setAvailableTypes(Object.values(PermissionType));
+            // Fallback para os tipos do enum
+            const fallbackTypes: ProjectPermissionDTO[] = Object.values(PermissionType).map(type => ({
+                projectMemberId: 0,
+                permissionType: type,
+                permissionDescription: PERMISSION_LABELS[type] || type,
+                granted: false
+            }));
+            setAvailablePermissionTypes(fallbackTypes);
         }
-    }, []);
+    }, [projectId]);
 
-    // Grant a permission to a member
-    const grantPermission = useCallback(async (
+    // Update permissions for a member
+    const updatePermissions = useCallback(async (
         memberId: string,
-        permissionType: PermissionType
-    ): Promise<ProjectPermission | null> => {
+        permissions: Record<PermissionType, boolean>
+    ): Promise<MemberPermissions | null> => {
         if (!projectId) return null;
 
         try {
             setError(null);
-            const newPermission = await meetingsApi.grantPermission(projectId, memberId, permissionType);
-            setPermissions(prev => [...prev, newPermission]);
-            return newPermission;
+            const updated = await meetingsApi.updateMemberPermissions(projectId, memberId, permissions);
+
+            // Update local state
+            setMembers(prev => prev.map(m =>
+                m.projectMemberId === updated.projectMemberId ? updated : m
+            ));
+
+            return updated;
         } catch (err) {
-            console.error('Erro ao conceder permissão:', err);
-            setError('Falha ao conceder permissão');
+            console.error('Erro ao atualizar permissões:', err);
+            setError('Falha ao atualizar permissões');
             return null;
         }
     }, [projectId]);
 
-    // Revoke a permission
-    const revokePermission = useCallback(async (permissionId: string): Promise<boolean> => {
-        if (!projectId) return false;
+    // Update member role
+    const updateMemberRole = useCallback(async (
+        memberId: string,
+        role: ProjectRole
+    ): Promise<MemberPermissions | null> => {
+        if (!projectId) return null;
 
         try {
             setError(null);
-            await meetingsApi.revokePermission(projectId, permissionId);
-            setPermissions(prev => prev.filter(p => p.id !== permissionId));
-            return true;
+            const updated = await meetingsApi.updateMemberRole(projectId, memberId, role);
+
+            // Update local state
+            setMembers(prev => prev.map(m =>
+                m.projectMemberId === updated.projectMemberId ? updated : m
+            ));
+
+            return updated;
         } catch (err) {
-            console.error('Erro ao revogar permissão:', err);
-            setError('Falha ao revogar permissão');
-            return false;
+            console.error('Erro ao atualizar role:', err);
+            setError('Falha ao atualizar role do membro');
+            return null;
         }
     }, [projectId]);
 
-    // Check if a member has a specific permission
+    // Reset member permissions to default
+    const resetMemberPermissions = useCallback(async (
+        memberId: string
+    ): Promise<MemberPermissions | null> => {
+        if (!projectId) return null;
+
+        try {
+            setError(null);
+            const updated = await meetingsApi.resetMemberPermissions(projectId, memberId);
+
+            // Update local state
+            setMembers(prev => prev.map(m =>
+                m.projectMemberId === updated.projectMemberId ? updated : m
+            ));
+
+            return updated;
+        } catch (err) {
+            console.error('Erro ao resetar permissões:', err);
+            setError('Falha ao resetar permissões');
+            return null;
+        }
+    }, [projectId]);
+
+    // Check if person has specific permission
     const checkPermission = useCallback(async (
-        memberId: string,
+        personId: string,
         permissionType: PermissionType
     ): Promise<boolean> => {
         if (!projectId) return false;
 
         try {
-            return await meetingsApi.checkPermission(projectId, memberId, permissionType);
+            return await meetingsApi.checkPermission(projectId, personId, permissionType);
         } catch (err) {
             console.error('Erro ao verificar permissão:', err);
             return false;
         }
     }, [projectId]);
 
-    // Apply a role's permissions to a member
-    const applyRole = useCallback(async (
-        memberId: string,
-        roleName: string
-    ): Promise<ProjectPermission[]> => {
-        if (!projectId) return [];
+    // Get role template
+    const getRoleTemplate = useCallback(async (
+        role: ProjectRole
+    ): Promise<Record<PermissionType, boolean>> => {
+        if (!projectId) return {} as Record<PermissionType, boolean>;
 
         try {
-            setError(null);
-            const newPermissions = await meetingsApi.applyRolePermissions(projectId, memberId, roleName);
-            setPermissions(prev => {
-                const otherPermissions = prev.filter(p => p.memberId !== memberId);
-                return [...otherPermissions, ...newPermissions];
-            });
-            return newPermissions;
+            return await meetingsApi.getRolePermissionTemplate(projectId, role);
         } catch (err) {
-            console.error('Erro ao aplicar role:', err);
-            setError('Falha ao aplicar role');
-            return [];
+            console.error('Erro ao buscar template de role:', err);
+            return PREDEFINED_ROLE_PERMISSIONS[role] || {};
         }
     }, [projectId]);
 
-    // Get permissions for a specific member from API
-    const getMemberPermissions = useCallback(async (memberId: string): Promise<ProjectPermission[]> => {
-        if (!projectId) return [];
-
-        try {
-            return await meetingsApi.getMemberPermissions(projectId, memberId);
-        } catch (err) {
-            console.error('Erro ao buscar permissões do membro:', err);
-            return [];
-        }
-    }, [projectId]);
+    // Helper: Get member by ID
+    const getMemberById = useCallback((memberId: string): MemberPermissions | undefined => {
+        return members.find(m => String(m.projectMemberId) === memberId);
+    }, [members]);
 
     // Helper: Check if member has permission (from local state)
     const hasPermission = useCallback((memberId: string, permissionType: PermissionType): boolean => {
-        return permissions.some(
-            p => p.memberId === memberId &&
-                (p.permissionType === permissionType || p.permissionType === PermissionType.ADMIN)
+        const member = members.find(m => String(m.projectMemberId) === memberId);
+        if (!member) return false;
+
+        // Check permissionMap first (faster)
+        if (member.permissionMap) {
+            return member.permissionMap[permissionType] === true;
+        }
+
+        // Fallback to permissions array
+        return member.permissions.some(p =>
+            p.permissionType === permissionType && p.granted
         );
-    }, [permissions]);
+    }, [members]);
 
-    // Helper: Get all permissions for a member (from local state)
-    const getPermissionsByMember = useCallback((memberId: string): ProjectPermission[] => {
-        return permissions.filter(p => p.memberId === memberId);
-    }, [permissions]);
-
-    // Load permissions on mount
+    // Load data on mount
     useEffect(() => {
         if (projectId) {
-            loadPermissions();
+            loadMembers();
             loadAvailableTypes();
         }
-    }, [projectId, loadPermissions, loadAvailableTypes]);
+    }, [projectId, loadMembers, loadAvailableTypes]);
 
     return {
-        permissions,
+        members,
         loading,
         error,
-        availableTypes,
-        loadPermissions,
-        grantPermission,
-        revokePermission,
+        availablePermissionTypes,
+        loadMembers,
+        updatePermissions,
+        updateMemberRole,
+        resetMemberPermissions,
         checkPermission,
-        applyRole,
-        getMemberPermissions,
-        hasPermission,
-        getPermissionsByMember
+        getRoleTemplate,
+        getMemberById,
+        hasPermission
     };
 }
 
 // Permission labels in Portuguese
 export const PERMISSION_LABELS: Record<PermissionType, string> = {
-    [PermissionType.VIEW_PROJECT]: 'Visualizar Projeto',
-    [PermissionType.EDIT_PROJECT]: 'Editar Projeto',
-    [PermissionType.DELETE_PROJECT]: 'Excluir Projeto',
-    [PermissionType.MANAGE_MEMBERS]: 'Gerenciar Membros',
-    [PermissionType.CREATE_TASK]: 'Criar Tarefas',
-    [PermissionType.EDIT_TASK]: 'Editar Tarefas',
-    [PermissionType.DELETE_TASK]: 'Excluir Tarefas',
-    [PermissionType.ASSIGN_TASK]: 'Atribuir Tarefas',
-    [PermissionType.MOVE_TASK]: 'Mover Tarefas',
-    [PermissionType.COMMENT_TASK]: 'Comentar em Tarefas',
-    [PermissionType.VIEW_REPORTS]: 'Visualizar Relatórios',
-    [PermissionType.EXPORT_DATA]: 'Exportar Dados',
-    [PermissionType.MANAGE_COLUMNS]: 'Gerenciar Colunas',
-    [PermissionType.MANAGE_AUTOMATIONS]: 'Gerenciar Automações',
-    [PermissionType.MANAGE_INTEGRATIONS]: 'Gerenciar Integrações',
-    [PermissionType.VIEW_HISTORY]: 'Visualizar Histórico',
-    [PermissionType.MANAGE_CHECKLIST]: 'Gerenciar Checklist',
-    [PermissionType.UPLOAD_ATTACHMENTS]: 'Enviar Anexos',
-    [PermissionType.DELETE_ATTACHMENTS]: 'Excluir Anexos',
-    [PermissionType.MANAGE_LABELS]: 'Gerenciar Etiquetas',
-    [PermissionType.SET_DUE_DATES]: 'Definir Prazos',
-    [PermissionType.CHANGE_PRIORITY]: 'Alterar Prioridade',
-    [PermissionType.BULK_ACTIONS]: 'Ações em Massa',
-    [PermissionType.ADMIN]: 'Administrador'
+    // Projeto
+    [PermissionType.PROJECT_VIEW]: 'Visualizar Projeto',
+    [PermissionType.PROJECT_EDIT]: 'Editar Projeto',
+    [PermissionType.PROJECT_DELETE]: 'Excluir Projeto',
+    [PermissionType.PROJECT_MANAGE_MEMBERS]: 'Gerenciar Membros',
+
+    // Tarefas
+    [PermissionType.TASK_CREATE]: 'Criar Tarefas',
+    [PermissionType.TASK_VIEW]: 'Visualizar Tarefas',
+    [PermissionType.TASK_EDIT]: 'Editar Tarefas',
+    [PermissionType.TASK_DELETE]: 'Excluir Tarefas',
+    [PermissionType.TASK_MOVE]: 'Mover Tarefas',
+    [PermissionType.TASK_ASSIGN]: 'Atribuir Responsáveis',
+    [PermissionType.TASK_COMMENT]: 'Comentar em Tarefas',
+    [PermissionType.TASK_ATTACH]: 'Anexar Arquivos',
+
+    // Kanban
+    [PermissionType.KANBAN_VIEW]: 'Visualizar Kanban',
+    [PermissionType.KANBAN_MANAGE_COLUMNS]: 'Gerenciar Colunas',
+
+    // Reuniões
+    [PermissionType.MEETING_CREATE]: 'Criar Reuniões',
+    [PermissionType.MEETING_VIEW]: 'Visualizar Reuniões',
+    [PermissionType.MEETING_EDIT]: 'Editar Reuniões',
+    [PermissionType.MEETING_DELETE]: 'Excluir Reuniões',
+    [PermissionType.MEETING_MANAGE_PARTICIPANTS]: 'Gerenciar Participantes',
+
+    // Admin
+    [PermissionType.ADMIN_MANAGE_USERS]: 'Gerenciar Usuários',
+    [PermissionType.ADMIN_MANAGE_ROLES]: 'Gerenciar Papéis',
+    [PermissionType.ADMIN_VIEW_REPORTS]: 'Visualizar Relatórios',
+    [PermissionType.ADMIN_SYSTEM_SETTINGS]: 'Configurações do Sistema'
 };
 
 // Permission categories for grouping in UI
 export const PERMISSION_CATEGORIES: Record<string, PermissionType[]> = {
     'Projeto': [
-        PermissionType.VIEW_PROJECT,
-        PermissionType.EDIT_PROJECT,
-        PermissionType.DELETE_PROJECT,
-        PermissionType.MANAGE_MEMBERS
+        PermissionType.PROJECT_VIEW,
+        PermissionType.PROJECT_EDIT,
+        PermissionType.PROJECT_DELETE,
+        PermissionType.PROJECT_MANAGE_MEMBERS
     ],
     'Tarefas': [
-        PermissionType.CREATE_TASK,
-        PermissionType.EDIT_TASK,
-        PermissionType.DELETE_TASK,
-        PermissionType.ASSIGN_TASK,
-        PermissionType.MOVE_TASK,
-        PermissionType.COMMENT_TASK
+        PermissionType.TASK_CREATE,
+        PermissionType.TASK_VIEW,
+        PermissionType.TASK_EDIT,
+        PermissionType.TASK_DELETE,
+        PermissionType.TASK_MOVE,
+        PermissionType.TASK_ASSIGN,
+        PermissionType.TASK_COMMENT,
+        PermissionType.TASK_ATTACH
     ],
-    'Dados e Relatórios': [
-        PermissionType.VIEW_REPORTS,
-        PermissionType.EXPORT_DATA,
-        PermissionType.VIEW_HISTORY
+    'Kanban': [
+        PermissionType.KANBAN_VIEW,
+        PermissionType.KANBAN_MANAGE_COLUMNS
     ],
-    'Configurações': [
-        PermissionType.MANAGE_COLUMNS,
-        PermissionType.MANAGE_AUTOMATIONS,
-        PermissionType.MANAGE_INTEGRATIONS,
-        PermissionType.MANAGE_LABELS
+    'Reuniões': [
+        PermissionType.MEETING_CREATE,
+        PermissionType.MEETING_VIEW,
+        PermissionType.MEETING_EDIT,
+        PermissionType.MEETING_DELETE,
+        PermissionType.MEETING_MANAGE_PARTICIPANTS
     ],
-    'Anexos e Checklist': [
-        PermissionType.MANAGE_CHECKLIST,
-        PermissionType.UPLOAD_ATTACHMENTS,
-        PermissionType.DELETE_ATTACHMENTS
-    ],
-    'Outros': [
-        PermissionType.SET_DUE_DATES,
-        PermissionType.CHANGE_PRIORITY,
-        PermissionType.BULK_ACTIONS
-    ],
-    'Especial': [
-        PermissionType.ADMIN
+    'Administração': [
+        PermissionType.ADMIN_MANAGE_USERS,
+        PermissionType.ADMIN_MANAGE_ROLES,
+        PermissionType.ADMIN_VIEW_REPORTS,
+        PermissionType.ADMIN_SYSTEM_SETTINGS
     ]
 };
 
-// Predefined roles with their permissions
-export const PREDEFINED_ROLES: Record<string, PermissionType[]> = {
-    'Visualizador': [
-        PermissionType.VIEW_PROJECT,
-        PermissionType.VIEW_REPORTS,
-        PermissionType.VIEW_HISTORY
-    ],
-    'Membro': [
-        PermissionType.VIEW_PROJECT,
-        PermissionType.CREATE_TASK,
-        PermissionType.EDIT_TASK,
-        PermissionType.MOVE_TASK,
-        PermissionType.COMMENT_TASK,
-        PermissionType.VIEW_REPORTS,
-        PermissionType.VIEW_HISTORY,
-        PermissionType.MANAGE_CHECKLIST,
-        PermissionType.UPLOAD_ATTACHMENTS,
-        PermissionType.SET_DUE_DATES
-    ],
-    'Colaborador': [
-        PermissionType.VIEW_PROJECT,
-        PermissionType.CREATE_TASK,
-        PermissionType.EDIT_TASK,
-        PermissionType.DELETE_TASK,
-        PermissionType.ASSIGN_TASK,
-        PermissionType.MOVE_TASK,
-        PermissionType.COMMENT_TASK,
-        PermissionType.VIEW_REPORTS,
-        PermissionType.VIEW_HISTORY,
-        PermissionType.MANAGE_CHECKLIST,
-        PermissionType.UPLOAD_ATTACHMENTS,
-        PermissionType.DELETE_ATTACHMENTS,
-        PermissionType.SET_DUE_DATES,
-        PermissionType.CHANGE_PRIORITY
-    ],
-    'Gerente': [
-        PermissionType.VIEW_PROJECT,
-        PermissionType.EDIT_PROJECT,
-        PermissionType.MANAGE_MEMBERS,
-        PermissionType.CREATE_TASK,
-        PermissionType.EDIT_TASK,
-        PermissionType.DELETE_TASK,
-        PermissionType.ASSIGN_TASK,
-        PermissionType.MOVE_TASK,
-        PermissionType.COMMENT_TASK,
-        PermissionType.VIEW_REPORTS,
-        PermissionType.EXPORT_DATA,
-        PermissionType.MANAGE_COLUMNS,
-        PermissionType.VIEW_HISTORY,
-        PermissionType.MANAGE_CHECKLIST,
-        PermissionType.UPLOAD_ATTACHMENTS,
-        PermissionType.DELETE_ATTACHMENTS,
-        PermissionType.MANAGE_LABELS,
-        PermissionType.SET_DUE_DATES,
-        PermissionType.CHANGE_PRIORITY,
-        PermissionType.BULK_ACTIONS
-    ],
-    'Administrador': [
-        PermissionType.ADMIN
-    ]
+// Role labels
+export const ROLE_LABELS: Record<ProjectRole, string> = {
+    [ProjectRole.OWNER]: 'Proprietário',
+    [ProjectRole.ADMIN]: 'Administrador',
+    [ProjectRole.MEMBER_EDITOR]: 'Membro Editor'
+};
+
+// Predefined role permissions (fallback if API fails)
+export const PREDEFINED_ROLE_PERMISSIONS: Record<ProjectRole, Record<PermissionType, boolean>> = {
+    [ProjectRole.OWNER]: Object.values(PermissionType).reduce((acc, type) => {
+        acc[type] = true;
+        return acc;
+    }, {} as Record<PermissionType, boolean>),
+
+    [ProjectRole.ADMIN]: Object.values(PermissionType).reduce((acc, type) => {
+        acc[type] = type !== PermissionType.PROJECT_DELETE && type !== PermissionType.ADMIN_SYSTEM_SETTINGS;
+        return acc;
+    }, {} as Record<PermissionType, boolean>),
+
+    [ProjectRole.MEMBER_EDITOR]: {
+        [PermissionType.PROJECT_VIEW]: true,
+        [PermissionType.PROJECT_EDIT]: false,
+        [PermissionType.PROJECT_DELETE]: false,
+        [PermissionType.PROJECT_MANAGE_MEMBERS]: false,
+        [PermissionType.TASK_CREATE]: true,
+        [PermissionType.TASK_VIEW]: true,
+        [PermissionType.TASK_EDIT]: true,
+        [PermissionType.TASK_DELETE]: false,
+        [PermissionType.TASK_MOVE]: true,
+        [PermissionType.TASK_ASSIGN]: false,
+        [PermissionType.TASK_COMMENT]: true,
+        [PermissionType.TASK_ATTACH]: true,
+        [PermissionType.KANBAN_VIEW]: true,
+        [PermissionType.KANBAN_MANAGE_COLUMNS]: false,
+        [PermissionType.MEETING_CREATE]: true,
+        [PermissionType.MEETING_VIEW]: true,
+        [PermissionType.MEETING_EDIT]: false,
+        [PermissionType.MEETING_DELETE]: false,
+        [PermissionType.MEETING_MANAGE_PARTICIPANTS]: false,
+        [PermissionType.ADMIN_MANAGE_USERS]: false,
+        [PermissionType.ADMIN_MANAGE_ROLES]: false,
+        [PermissionType.ADMIN_VIEW_REPORTS]: false,
+        [PermissionType.ADMIN_SYSTEM_SETTINGS]: false
+    }
 };
 
 export default useProjectPermissions;

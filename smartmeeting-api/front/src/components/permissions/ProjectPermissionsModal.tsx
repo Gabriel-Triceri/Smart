@@ -1,12 +1,9 @@
-import React from 'react';
 import { X } from 'lucide-react';
-import { Assignee } from '../../types/meetings';
 import { ProjectPermissionsManager } from './ProjectPermissionsManager';
 
 interface ProjectPermissionsModalProps {
     projectId: string;
     projectName?: string;
-    members: Assignee[];
     isOpen: boolean;
     onClose: () => void;
 }
@@ -14,7 +11,6 @@ interface ProjectPermissionsModalProps {
 export const ProjectPermissionsModal: React.FC<ProjectPermissionsModalProps> = ({
     projectId,
     projectName,
-    members,
     isOpen,
     onClose
 }) => {
@@ -53,7 +49,6 @@ export const ProjectPermissionsModal: React.FC<ProjectPermissionsModalProps> = (
                     <ProjectPermissionsManager
                         projectId={projectId}
                         projectName={projectName}
-                        members={members}
                     />
                 </div>
             </div>

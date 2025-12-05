@@ -529,7 +529,6 @@ export function KanbanBoard({
                 <ProjectPermissionsModal
                     projectId={projectId}
                     projectName="Projeto"
-                    members={assignees}
                     isOpen={showPermissionsModal}
                     onClose={() => setShowPermissionsModal(false)}
                 />
