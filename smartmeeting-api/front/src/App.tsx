@@ -7,6 +7,7 @@ import { TaskManager } from './components/tasks/TaskManager';
 import { PermissionManager } from './components/permissions/PermissionManager';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
 import ThemeToggle from './components/common/ThemeToggle';
+import UserMenu from './components/common/UserMenu';
 import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X } from 'lucide-react';
 import { inicializarDados } from './services/seedData';
 import { authService } from './services/authService';
@@ -137,9 +138,13 @@ function App() {
                             {/* Navegação desktop */}
                             <Navigation activeView={activeView} setActiveView={setActiveView} items={navigationItems} />
 
-                            {/* Botão de tema e menu mobile */}
-                            <div className="flex items-center gap-3">
+                            {/* Botão de tema, menu do usuário e menu mobile */}
+                            <div className="flex items-center gap-2">
                                 <ThemeToggle />
+
+                                {/* Menu do usuário logado */}
+                                <UserMenu />
+
                                 <button
                                     onClick={() => setShowNavigation(!showNavigation)}
                                     className="md:hidden p-2 text-mono-600 dark:text-mono-400 hover:text-mono-900 dark:hover:text-mono-100 hover:bg-mono-50 dark:hover:bg-mono-700 rounded-lg transition-colors"

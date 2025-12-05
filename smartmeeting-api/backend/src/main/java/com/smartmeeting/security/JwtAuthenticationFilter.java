@@ -82,16 +82,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
 
-                UsernamePasswordAuthenticationToken authentication;
-                if (authorities.isEmpty()) {
-                    // Fallback: carrega do banco e usa suas authorities
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    logger.debug("[JWT FILTER] Fallback UserDetails carregado: {}", userDetails.getUsername());
-                    authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                } else {
-                    // Usa authorities derivadas do token
-                    authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
-                }
+                // SEMPRE carregar o UserDetails para ter o UserPrincipal com ID correto
+                // As authorities do token são usadas para verificação, mas precisamos do UserPrincipal
+                // para que SecurityUtils.getCurrentUserId() funcione corretamente
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                logger.debug("[JWT FILTER] UserDetails carregado: {}", userDetails.getUsername());
+
+                // Usa as authorities do UserDetails (que vêm do banco) para garantir consistência
+                // Se preferir usar as do token: new UsernamePasswordAuthenticationToken(userDetails, null, authorities)
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
