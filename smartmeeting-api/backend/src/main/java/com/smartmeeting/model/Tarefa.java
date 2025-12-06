@@ -28,6 +28,9 @@ public class Tarefa extends Auditable {
     @Column(name = "ID_TAREFA")
     private Long id;
 
+    @Column(name = "TITULO_TAREFA")
+    private String titulo;
+
     @Column(name = "DESCRICAO_TAREFA", nullable = false)
     private String descricao;
 
@@ -75,10 +78,10 @@ public class Tarefa extends Auditable {
     @JoinColumn(name = "ID_PROJECT")
     private Project project;
 
-    @Override
     public String toString() {
         return "Tarefa{" +
                 "id=" + id +
+                ", titulo='" + titulo + '\'' +
                 ", descricao='" + descricao + '\'' +
                 ", prazo=" + prazo +
                 ", concluida=" + concluida +

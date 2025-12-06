@@ -50,12 +50,12 @@ public class TarefaService {
     private final com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository;
 
     public TarefaService(TarefaRepository tarefaRepository,
-                         PessoaRepository pessoaRepository,
-                         ReuniaoRepository reuniaoRepository,
-                         NotificacaoTarefaRepository notificacaoTarefaRepository,
-                         TemplateTarefaRepository templateTarefaRepository,
-                         com.smartmeeting.repository.ComentarioTarefaRepository comentarioTarefaRepository,
-                         com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository) {
+            PessoaRepository pessoaRepository,
+            ReuniaoRepository reuniaoRepository,
+            NotificacaoTarefaRepository notificacaoTarefaRepository,
+            TemplateTarefaRepository templateTarefaRepository,
+            com.smartmeeting.repository.ComentarioTarefaRepository comentarioTarefaRepository,
+            com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository) {
         this.tarefaRepository = tarefaRepository;
         this.pessoaRepository = pessoaRepository;
         this.reuniaoRepository = reuniaoRepository;
@@ -91,7 +91,10 @@ public class TarefaService {
         dto.setCor(tarefa.getCor());
 
         // Campos básicos
-        dto.setTitulo(tarefa.getDescricao()); // Usando descrição como título
+        // Se o título for nulo (tarefas antigas), usa a descrição (ou parte dela) como
+        // fallback
+        dto.setTitulo(tarefa.getTitulo() != null && !tarefa.getTitulo().isEmpty() ? tarefa.getTitulo()
+                : tarefa.getDescricao());
 
         // Progresso real
         dto.setProgresso(tarefa.getProgresso() != null ? tarefa.getProgresso() : 0);
@@ -209,6 +212,7 @@ public class TarefaService {
         if (dto == null)
             return null;
         Tarefa tarefa = new Tarefa();
+        tarefa.setTitulo(dto.getTitulo());
         tarefa.setDescricao(dto.getDescricao());
         tarefa.setPrazo(dto.getPrazo());
         tarefa.setConcluida(dto.isConcluida());
@@ -262,12 +266,14 @@ public class TarefaService {
         return toDTO(salvo);
     }
 
+    @Transactional
     public TarefaDTO atualizar(Long id, TarefaDTO dtoAtualizada) {
         Tarefa tarefa = tarefaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + id));
 
         // Atualiza apenas campos que foram fornecidos (não sobrescreve com null)
-        // Para descricao: se vier null, mantém o valor existente; se vier vazio, aceita string vazia
+        // Para descricao: se vier null, mantém o valor existente; se vier vazio, aceita
+        // string vazia
         if (dtoAtualizada.getDescricao() != null) {
             tarefa.setDescricao(dtoAtualizada.getDescricao());
         } else if (tarefa.getDescricao() == null) {
@@ -952,7 +958,7 @@ public class TarefaService {
      */
     @Transactional
     public List<TarefaDTO> criarTarefasPorTemplate(Long templateId, List<Long> responsaveisIds,
-                                                   List<String> datasVencimento, Long reuniaoId) {
+            List<String> datasVencimento, Long reuniaoId) {
         TemplateTarefa template = templateTarefaRepository.findById(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Template não encontrado com ID: " + templateId));
 

@@ -173,11 +173,15 @@ const mapTarefaFormToBackend = (
     const payload: Record<string, unknown> = {};
 
     const titulo = data.titulo?.trim();
+    if (titulo !== undefined) {
+        payload.titulo = titulo;
+    }
+
     const descricao = data.descricao?.trim();
-    if (titulo || descricao) {
-        payload.descricao = [titulo, descricao].filter(Boolean).join(' - ');
+    if (descricao !== undefined) {
+        payload.descricao = descricao;
     } else if (includeDefaults) {
-        payload.descricao = 'Tarefa sem descrição';
+        payload.descricao = '';
     }
 
     const prazo = data.prazo_tarefa?.trim();
