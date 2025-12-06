@@ -85,28 +85,36 @@ export function TaskCard({
 
             {/* Header: Project & Date */}
             <div className="flex items-center justify-between pl-2.5 min-h-[16px]">
-                <div className="flex items-center gap-2 overflow-hidden">
+                <div className="flex items-center gap-2 overflow-hidden flex-1">
                     {tarefa.projectName ? (
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate max-w-[120px]">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                             {tarefa.projectName}
                         </span>
                     ) : <span />}
                 </div>
 
-                {/* Date Badge */}
-                {(tarefa.prazo_tarefa || tarefa.dataInicio) && (
-                    <div className={`flex items-center gap-1 px-1.5 rounded text-[10px] font-medium whitespace-nowrap ${isOverdue
-                            ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10'
-                            : isDueSoon
-                                ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10'
-                                : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50'
-                        }`}>
-                        <Calendar className="w-3 h-3" />
-                        <span>
-                            {tarefa.prazo_tarefa ? formatDateFriendly(tarefa.prazo_tarefa) : formatDateFriendly(tarefa.dataInicio!)}
-                        </span>
-                    </div>
-                )}
+                {/* Dates Section */}
+                <div className="flex items-center gap-1 ml-2">
+                    {/* Start Date */}
+                    {tarefa.dataInicio && (
+                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700`}>
+                            <span>{formatDateFriendly(tarefa.dataInicio)}</span>
+                        </div>
+                    )}
+
+                    {/* Deadline Badge */}
+                    {tarefa.prazo_tarefa && (
+                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${isOverdue
+                                ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10'
+                                : isDueSoon
+                                    ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10'
+                                    : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50'
+                            }`}>
+                            <Calendar className="w-3 h-3" />
+                            <span>{formatDateFriendly(tarefa.prazo_tarefa)}</span>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Main Content */}
