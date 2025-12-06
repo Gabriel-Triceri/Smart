@@ -35,6 +35,7 @@ public class TarefaDTO {
     private String responsavelNome;
     private Long responsavelPrincipalId;
     private java.util.List<AssigneeDTO> responsaveis;
+    private java.util.List<String> responsaveisIds; // IDs enviados pelo frontend para atualização
 
     // Relacionamentos
     private Long reuniaoId;

@@ -147,18 +147,20 @@ public class TarefaService {
                 .collect(Collectors.toList());
         dto.setAnexos(anexosDTO);
 
-        // Safely get Responsavel ID
+        // Safely get Responsavel ID (Principal)
         List<AssigneeDTO> responsaveisList = new ArrayList<>();
+        java.util.Set<Long> idsAdicionados = new java.util.HashSet<>();
+
         if (tarefa.getResponsavel() != null) {
             try {
                 dto.setResponsavelId(tarefa.getResponsavel().getId());
                 dto.setResponsavelNome(tarefa.getResponsavel().getNome());
                 dto.setResponsavelPrincipalId(tarefa.getResponsavel().getId());
 
-                // Adicionar à lista de responsáveis
+                // Adicionar o responsável principal à lista
                 responsaveisList.add(toAssigneeDTO(tarefa.getResponsavel()));
+                idsAdicionados.add(tarefa.getResponsavel().getId());
             } catch (Exception e) {
-                // Log the error or handle it appropriately, e.g., set to null
                 logger.error("Error getting responsavel ID for Tarefa {}: {}", tarefa.getId(), e.getMessage(), e);
                 dto.setResponsavelId(null);
                 dto.setResponsavelPrincipalId(null);
@@ -167,6 +169,17 @@ public class TarefaService {
             dto.setResponsavelId(null);
             dto.setResponsavelPrincipalId(null);
         }
+
+        // Adicionar participantes (que não sejam o responsável principal)
+        if (tarefa.getParticipantes() != null && !tarefa.getParticipantes().isEmpty()) {
+            for (Pessoa participante : tarefa.getParticipantes()) {
+                if (!idsAdicionados.contains(participante.getId())) {
+                    responsaveisList.add(toAssigneeDTO(participante));
+                    idsAdicionados.add(participante.getId());
+                }
+            }
+        }
+
         dto.setResponsaveis(responsaveisList);
 
         // Safely get Reuniao ID and Titulo
@@ -313,11 +326,41 @@ public class TarefaService {
             tarefa.setProgresso(dtoAtualizada.getProgresso());
         }
 
-        if (dtoAtualizada.getResponsavelId() != null) {
+        // Atualizar responsável principal
+        if (dtoAtualizada.getResponsavelPrincipalId() != null) {
+            Pessoa responsavel = pessoaRepository.findById(dtoAtualizada.getResponsavelPrincipalId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Responsável não encontrado com ID: " + dtoAtualizada.getResponsavelPrincipalId()));
+            tarefa.setResponsavel(responsavel);
+        } else if (dtoAtualizada.getResponsavelId() != null) {
             Pessoa responsavel = pessoaRepository.findById(dtoAtualizada.getResponsavelId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Responsável não encontrado com ID: " + dtoAtualizada.getResponsavelId()));
             tarefa.setResponsavel(responsavel);
+        }
+
+        // Atualizar participantes (responsaveisIds contém todos os IDs, incluindo o principal)
+        if (dtoAtualizada.getResponsaveisIds() != null) {
+            java.util.Set<Pessoa> participantes = new java.util.HashSet<>();
+            Long principalId = tarefa.getResponsavel() != null ? tarefa.getResponsavel().getId() : null;
+
+            for (String idStr : dtoAtualizada.getResponsaveisIds()) {
+                try {
+                    Long pessoaId = Long.parseLong(idStr);
+                    // Não adicionar o principal na lista de participantes (ele já está em responsavel)
+                    if (principalId != null && pessoaId.equals(principalId)) {
+                        continue;
+                    }
+                    Pessoa participante = pessoaRepository.findById(pessoaId)
+                            .orElseThrow(() -> new ResourceNotFoundException(
+                                    "Participante não encontrado com ID: " + pessoaId));
+                    participantes.add(participante);
+                } catch (NumberFormatException e) {
+                    logger.warn("ID de participante inválido: {}", idStr);
+                }
+            }
+            tarefa.setParticipantes(participantes);
+            logger.info("Participantes atualizados para tarefa {}: {} participantes", id, participantes.size());
         }
 
         if (dtoAtualizada.getReuniaoId() != null) {

@@ -18,7 +18,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = { "responsavel", "reuniao", "project" })
+@EqualsAndHashCode(callSuper = false, exclude = { "responsavel", "reuniao", "project", "participantes" })
 
 public class Tarefa extends Auditable {
 
@@ -69,6 +69,14 @@ public class Tarefa extends Auditable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_RESPONSAVEL", foreignKey = @ForeignKey(name = "FK_TAREFA_PESSOA"))
     private Pessoa responsavel;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "TAREFA_PARTICIPANTES",
+            joinColumns = @JoinColumn(name = "ID_TAREFA"),
+            inverseJoinColumns = @JoinColumn(name = "ID_PESSOA")
+    )
+    private java.util.Set<Pessoa> participantes = new java.util.HashSet<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_REUNIAO", foreignKey = @ForeignKey(name = "FK_TAREFA_REUNIAO"))

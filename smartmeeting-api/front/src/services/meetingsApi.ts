@@ -120,15 +120,6 @@ const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
     const responsavelPrincipalId = String(task.responsavelPrincipalId ?? task.responsavelId ?? fallback?.responsavelPrincipalId ?? '');
     const responsaveis = normalizeAssignees(task, fallback?.responsaveisIds ?? []);
 
-    console.log('🔧 [mapBackendTask] Mapeando tarefa:', {
-        taskId: task.id,
-        rawResponsaveis: task.responsaveis,
-        rawResponsavelPrincipalId: task.responsavelPrincipalId,
-        rawResponsavelId: task.responsavelId,
-        mappedResponsaveis: responsaveis,
-        mappedResponsavelPrincipalId: responsavelPrincipalId
-    });
-
     // Checklist data
     const checklist = task.checklist ?? [];
     const checklistTotal = task.checklistTotal ?? checklist.length;
@@ -231,15 +222,21 @@ const mapTarefaFormToBackend = (
         const responsavelId = Number(data.responsavelPrincipalId);
         if (!Number.isNaN(responsavelId)) {
             payload.responsavelId = responsavelId;
+            payload.responsavelPrincipalId = responsavelId; // Enviar também como responsavelPrincipalId
         }
     }
 
-    // Lista de responsáveis (IDs) - fallback para o primeiro se principal não definido
+    // Lista de responsáveis (IDs) - enviar para o backend salvar os participantes
     if (Array.isArray((data as any).responsaveisIds) && (data as any).responsaveisIds.length > 0) {
+        // Enviar a lista completa de IDs para o backend
+        payload.responsaveisIds = (data as any).responsaveisIds;
+
+        // Fallback para o primeiro se principal não definido
         if (!payload.responsavelId) {
             const firstId = Number((data as any).responsaveisIds[0]);
             if (!Number.isNaN(firstId)) {
                 payload.responsavelId = firstId;
+                payload.responsavelPrincipalId = firstId;
             }
         }
     }
@@ -443,11 +440,7 @@ export const meetingsApi = {
             throw new Error('ID da sala inválido');
         }
 
-        console.log('🚀 [meetingsApi] updateSala - Payload:', { id, data });
-
         const response = await api.put(`/salas/${id}`, data);
-
-        console.log('✅ [meetingsApi] updateSala - Response:', response.data);
 
         return {
             ...response.data,
@@ -640,11 +633,7 @@ export const meetingsApi = {
             return acc;
         }, {} as Record<string, unknown>);
 
-        console.log('📤 [meetingsApi] updateTarefa - Input:', data);
-        console.log('📤 [meetingsApi] updateTarefa - Payload enviado:', cleanedData);
-
         const response = await api.put(`/tarefas/${id}`, cleanedData);
-        console.log('📥 [meetingsApi] updateTarefa - Response:', response.data);
         return mapBackendTask(response.data, data as TarefaFormData);
     },
 

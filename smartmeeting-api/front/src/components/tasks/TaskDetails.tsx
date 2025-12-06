@@ -266,11 +266,6 @@ export function TaskDetails({
                 responsavelPrincipalId: editResponsavelPrincipalId,
                 responsaveisIds: responsaveisFinais
             };
-            console.log('📤 [TaskDetails] handleSaveResponsaveis - Enviando:', {
-                editResponsavelPrincipalId,
-                responsaveisFinais,
-                updateData
-            });
             const tarefaAtualizada = await onUpdateTask(tarefa.id, updateData);
 
             // Sincronizar estado local com os dados retornados da API
@@ -975,11 +970,6 @@ export function TaskDetails({
                                                         <div
                                                             className="flex items-center gap-2 flex-1 cursor-pointer"
                                                             onClick={() => {
-                                                                console.log('🖱️ [TaskDetails] Clicou para definir principal:', {
-                                                                    assigneeId: assignee.id,
-                                                                    assigneeNome: assignee.nome,
-                                                                    editResponsavelPrincipalIdAntes: editResponsavelPrincipalId
-                                                                });
                                                                 setEditResponsavelPrincipalId(assignee.id);
                                                                 // Ao definir como principal, adiciona automaticamente à lista se não estiver
                                                                 if (!editResponsaveisIds.includes(assignee.id)) {
@@ -1027,6 +1017,7 @@ export function TaskDetails({
                                         </div>
                                     ) : (
                                         <div className="flex flex-col gap-2">
+                                            {console.log('👥 [TaskDetails] Responsáveis da tarefa:', tarefa.responsaveis, 'Principal ID:', tarefa.responsavelPrincipalId)}
                                             {(tarefa.responsaveis ?? []).map((responsavel) => (
                                                 <div
                                                     key={responsavel.id}
@@ -1036,8 +1027,10 @@ export function TaskDetails({
                                                     <Avatar src={responsavel.avatar} name={responsavel.nome} className="w-8 h-8 text-xs ring-2 ring-white dark:ring-slate-900" />
                                                     <div className="flex flex-col">
                                                         <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{responsavel.nome}</span>
-                                                        {responsavel.id === tarefa.responsavelPrincipalId && (
+                                                        {String(responsavel.id) === String(tarefa.responsavelPrincipalId) ? (
                                                             <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Principal</span>
+                                                        ) : (
+                                                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Participante</span>
                                                         )}
                                                     </div>
                                                 </div>
