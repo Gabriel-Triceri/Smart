@@ -120,6 +120,15 @@ const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
     const responsavelPrincipalId = String(task.responsavelPrincipalId ?? task.responsavelId ?? fallback?.responsavelPrincipalId ?? '');
     const responsaveis = normalizeAssignees(task, fallback?.responsaveisIds ?? []);
 
+    console.log('🔧 [mapBackendTask] Mapeando tarefa:', {
+        taskId: task.id,
+        rawResponsaveis: task.responsaveis,
+        rawResponsavelPrincipalId: task.responsavelPrincipalId,
+        rawResponsavelId: task.responsavelId,
+        mappedResponsaveis: responsaveis,
+        mappedResponsavelPrincipalId: responsavelPrincipalId
+    });
+
     // Checklist data
     const checklist = task.checklist ?? [];
     const checklistTotal = task.checklistTotal ?? checklist.length;

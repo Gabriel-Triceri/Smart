@@ -90,13 +90,6 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
         }
     }, []);
 
-    // 🔧 **CORREÇÃO APLICADA AQUI**
-    // Evita que o modal de detalhes reabra sozinho após recarregar tarefas
-    useEffect(() => {
-        setExibirDetalhes(false);
-        setTarefaSelecionada(null);
-    }, [tarefas]);
-
     // CRUD de Tarefas
     const criarTarefa = useCallback(async (data: TarefaFormData) => {
         try {
@@ -116,29 +109,53 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
     const atualizarTarefa = useCallback(async (id: string, data: Partial<TarefaFormData>) => {
         try {
             const tarefaAtualizada = await meetingsApi.updateTarefa(id, data);
+            const idStr = String(id);
 
             // Preserve progresso unless the caller explicitly provided a progresso in the update data.
-            // This prevents status changes (via update) from accidentally resetting percentual.
-            const prev = tarefas.find(t => t.id === id);
             const explicitProgressoProvided = typeof (data as any).progresso !== 'undefined';
 
-            const progressoParaState = explicitProgressoProvided
-                ? (tarefaAtualizada.progresso ?? (prev?.progresso ?? 0))
-                : (prev?.progresso ?? (tarefaAtualizada.progresso ?? 0));
+            // Helper function para calcular o estado final da tarefa
+            const computeTarefaParaState = (prev: Tarefa | undefined): Tarefa => {
+                const progressoParaState = explicitProgressoProvided
+                    ? (tarefaAtualizada.progresso ?? (prev?.progresso ?? 0))
+                    : (prev?.progresso ?? (tarefaAtualizada.progresso ?? 0));
+                return { ...tarefaAtualizada, progresso: progressoParaState };
+            };
 
-            const tarefaParaState = { ...tarefaAtualizada, progresso: progressoParaState };
+            // Atualizar lista de tarefas
+            setTarefas(prevList => {
+                const prev = prevList.find(t => String(t.id) === idStr);
+                const tarefaParaState = computeTarefaParaState(prev);
+                return prevList.map(t => String(t.id) === idStr ? tarefaParaState : t);
+            });
 
-            setTarefas(prevList => prevList.map(t => t.id === id ? tarefaParaState : t));
-            if (tarefaSelecionada?.id === id) {
-                setTarefaSelecionada(tarefaParaState);
-            }
+            // Atualizar tarefaSelecionada independentemente (recalcula o estado)
+            setTarefaSelecionada(prev => {
+                console.log('🔄 [useTarefas] setTarefaSelecionada callback:', {
+                    prevId: prev?.id,
+                    idStr,
+                    match: prev && String(prev.id) === idStr,
+                    newResponsaveis: tarefaAtualizada.responsaveis,
+                    newResponsavelPrincipalId: tarefaAtualizada.responsavelPrincipalId
+                });
+                if (prev && String(prev.id) === idStr) {
+                    const updated = computeTarefaParaState(prev);
+                    console.log('✅ [useTarefas] Atualizando tarefaSelecionada:', {
+                        responsaveis: updated.responsaveis,
+                        responsavelPrincipalId: updated.responsavelPrincipalId
+                    });
+                    return updated;
+                }
+                return prev;
+            });
 
-            return tarefaParaState;
+            // Retornar a tarefa atualizada (sem preservar progresso antigo para o retorno)
+            return tarefaAtualizada;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao atualizar tarefa');
             throw err;
         }
-    }, [tarefaSelecionada, tarefas]);
+    }, []);
 
     const deletarTarefa = useCallback(async (id: string) => {
         try {
@@ -157,23 +174,34 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
 
     // Movimentação no Kanban
     const moverTarefa = useCallback(async (tarefaId: string, novoStatus: StatusTarefa, newPosition?: number) => {
-        const tarefa = tarefas.find(t => t.id === tarefaId);
-        if (!tarefa) return;
+        const idStr = String(tarefaId);
+
+        // Buscar tarefa atual para validação (usando ref para evitar stale closure)
+        let tarefaAnterior: Tarefa | undefined;
+        setTarefas(prevList => {
+            tarefaAnterior = prevList.find(t => String(t.id) === idStr);
+            return prevList; // Não altera ainda
+        });
+
+        if (!tarefaAnterior) return;
 
         try {
             const tarefaAtualizada = await meetingsApi.moverTarefa(tarefaId, novoStatus, newPosition);
 
-            // Preserve previous progresso if backend didn't return it (avoid resetting to 0 on move)
-            const prevProgress = tarefa.progresso ?? 0;
-            const tarefaParaState = { ...tarefaAtualizada, progresso: tarefaAtualizada.progresso ?? prevProgress };
+            let tarefaParaState: Tarefa = tarefaAtualizada;
 
-            setTarefas(prev => prev.map(t =>
-                t.id === tarefaId ? tarefaParaState : t
-            ));
+            // Atualizar lista de tarefas usando functional update
+            setTarefas(prevList => {
+                const prev = prevList.find(t => String(t.id) === idStr);
+                const prevProgress = prev?.progresso ?? 0;
+                tarefaParaState = { ...tarefaAtualizada, progresso: tarefaAtualizada.progresso ?? prevProgress };
+                return prevList.map(t => String(t.id) === idStr ? tarefaParaState : t);
+            });
 
+            // Registrar movimentação
             const movimentacao: MovimentacaoTarefa = {
                 tarefaId: Number(tarefaId),
-                statusAnterior: tarefa.status ?? StatusTarefa.TODO,
+                statusAnterior: tarefaAnterior.status ?? StatusTarefa.TODO,
                 statusNovo: novoStatus,
                 usuarioId: 'current-user',
                 usuarioNome: 'Usuário Atual',
@@ -187,7 +215,7 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
             setError(err instanceof Error ? err.message : 'Erro ao mover tarefa');
             throw err;
         }
-    }, [tarefas]);
+    }, []);
 
     // Comentários
     const adicionarComentario = useCallback(async (tarefaId: string, conteudo: string, mencoes?: string[]) => {
@@ -270,49 +298,64 @@ export function useTarefas({ reuniaoId, filtrosIniciais }: UseTarefasProps = {})
     const atribuirTarefa = useCallback(async (tarefaId: string, responsavelId: string, principal = false) => {
         try {
             const tarefaAtualizada = await meetingsApi.atribuirTarefa(tarefaId, responsavelId, principal);
+            const idStr = String(tarefaId);
 
-            // Preserve existing progresso (caller did not intend to change percentual when assigning)
-            const prev = tarefas.find(t => t.id === tarefaId);
-            const tarefaParaState = { ...tarefaAtualizada, progresso: tarefaAtualizada.progresso ?? (prev?.progresso ?? 0) };
+            let tarefaParaState: Tarefa = tarefaAtualizada;
 
-            setTarefas(prevList => prevList.map(t => t.id === tarefaId ? tarefaParaState : t));
+            // Atualizar lista de tarefas usando functional update
+            setTarefas(prevList => {
+                const prev = prevList.find(t => String(t.id) === idStr);
+                tarefaParaState = { ...tarefaAtualizada, progresso: tarefaAtualizada.progresso ?? (prev?.progresso ?? 0) };
+                return prevList.map(t => String(t.id) === idStr ? tarefaParaState : t);
+            });
 
-            if (tarefaSelecionada?.id === tarefaId) {
-                setTarefaSelecionada(tarefaParaState);
-            }
+            // Usar functional update para atualizar tarefaSelecionada
+            setTarefaSelecionada(prev => {
+                if (prev && String(prev.id) === idStr) {
+                    return tarefaParaState;
+                }
+                return prev;
+            });
 
             return tarefaParaState;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao atribuir tarefa');
             throw err;
         }
-    }, [tarefaSelecionada, tarefas]);
+    }, []);
 
     // Progresso
     const atualizarProgresso = useCallback(async (tarefaId: string, progresso: number) => {
         try {
-            // Preserve the current status locally: some backends may change status when progresso reaches 100%
-            // but the UI should not automatically change status when the user edits the percentual.
-            const prev = tarefas.find(t => t.id === tarefaId);
-            const prevStatus = prev?.status;
-
             const tarefaAtualizada = await meetingsApi.atualizarProgresso(tarefaId, progresso);
+            const idStr = String(tarefaId);
 
-            // If backend modified status, keep the previous status in the local state to avoid surprising UX changes.
-            const tarefaParaState = { ...tarefaAtualizada, status: prevStatus ?? tarefaAtualizada.status };
+            let tarefaParaState: Tarefa = tarefaAtualizada;
 
-            setTarefas(prevList => prevList.map(t => t.id === tarefaId ? tarefaParaState : t));
+            // Atualizar lista de tarefas usando functional update
+            setTarefas(prevList => {
+                // Preserve the current status locally: some backends may change status when progresso reaches 100%
+                const prev = prevList.find(t => String(t.id) === idStr);
+                const prevStatus = prev?.status;
+                // If backend modified status, keep the previous status in the local state
+                tarefaParaState = { ...tarefaAtualizada, status: prevStatus ?? tarefaAtualizada.status };
+                return prevList.map(t => String(t.id) === idStr ? tarefaParaState : t);
+            });
 
-            if (tarefaSelecionada?.id === tarefaId) {
-                setTarefaSelecionada(tarefaParaState);
-            }
+            // Usar functional update para atualizar tarefaSelecionada
+            setTarefaSelecionada(prev => {
+                if (prev && String(prev.id) === idStr) {
+                    return tarefaParaState;
+                }
+                return prev;
+            });
 
             return tarefaParaState;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao atualizar progresso');
             throw err;
         }
-    }, [tarefaSelecionada]);
+    }, []);
 
     // Filtros e Busca
     const aplicarFiltros = useCallback(async (novosFiltros: FiltroTarefas) => {

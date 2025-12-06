@@ -118,8 +118,12 @@ export function TaskManager() {
 
     useEffect(() => {
         if (!tarefaSelecionada) return;
-        const existe = tarefas.some(t => String(t.id) === String(tarefaSelecionada.id));
-        if (!existe) {
+        // Só fecha se a tarefa foi realmente deletada (não existe na lista)
+        // Usa comparação de string para garantir compatibilidade entre number e string IDs
+        const tarefaId = String(tarefaSelecionada.id);
+        const existe = tarefas.some(t => String(t.id) === tarefaId);
+        if (!existe && tarefas.length > 0) {
+            // Só fecha se a lista já foi carregada (length > 0) e a tarefa não existe
             setExibirDetalhes(false);
             setTarefaSelecionada(null);
         }
@@ -416,11 +420,9 @@ export function TaskManager() {
                     onEditComment={atualizarComentario}
                     onDeleteComment={removerComentario}
                     onUpdateTask={async (tarefaId, data) => {
-                        await handleUpdateTask(tarefaId, data);
-                        // Refresh the selected task with updated data
-                        const updated = tarefas.find(t => t.id === tarefaId);
-                        if (updated) setTarefaSelecionada({ ...updated, ...data });
-                        return updated as any;
+                        // A função atualizarTarefa já atualiza o tarefaSelecionada internamente
+                        const tarefaAtualizada = await atualizarTarefa(tarefaId, data);
+                        return tarefaAtualizada;
                     }}
                     assignees={assigneesDisponiveis}
                 />
