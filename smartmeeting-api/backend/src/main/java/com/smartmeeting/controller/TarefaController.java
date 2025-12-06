@@ -52,7 +52,7 @@ public class TarefaController {
             return ResponseEntity.ok(List.of());
         }
 
-        // Admin global pode ver todas as tarefas
+        // Admin global tem acesso a tudo (bypass total)
         boolean isAdmin = com.smartmeeting.util.SecurityUtils.isAdmin();
 
         List<TarefaDTO> todasTarefas = tarefaService.listarTodasDTO();
@@ -249,6 +249,15 @@ public class TarefaController {
     public ResponseEntity<TarefaDTO> atualizarReuniaoDaTarefa(
             @PathVariable(name = "id") Long id,
             @RequestBody Map<String, Object> requestBody) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para editar esta tarefa.");
+            }
+        }
 
         Long reuniaoId = null;
         if (requestBody.containsKey("reuniaoId") && requestBody.get("reuniaoId") != null) {
@@ -350,6 +359,22 @@ public class TarefaController {
      */
     @PostMapping("/movimentacoes")
     public ResponseEntity<Void> registrarMovimentacao(@Valid @RequestBody MovimentacaoTarefaDTO dto) {
+        // Validação de permissão (se tiver tarefaId, verificar permissão)
+        if (dto.getTarefaId() != null) {
+            try {
+                TarefaDTO existing = tarefaService.buscarPorIdDTO(Long.valueOf(dto.getTarefaId()));
+                if (existing.getProjectId() != null) {
+                    if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                            com.smartmeeting.enums.PermissionType.TASK_MOVE)) {
+                        throw new com.smartmeeting.exception.ForbiddenException(
+                                "Você não tem permissão para mover tarefas neste projeto.");
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Ignora se tarefaId não for um número válido
+            }
+        }
+
         tarefaService.registrarMovimentacao(dto);
         return ResponseEntity.ok().build();
     }
@@ -431,6 +456,16 @@ public class TarefaController {
     public ResponseEntity<TarefaDTO> atualizarProgresso(
             @PathVariable("id") Long id,
             @RequestBody Map<String, Integer> requestBody) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para editar o progresso desta tarefa.");
+            }
+        }
+
         Integer progresso = requestBody.get("progresso");
         TarefaDTO tarefaAtualizada = tarefaService.atualizarProgresso(id, progresso);
         return ResponseEntity.ok(tarefaAtualizada);
@@ -443,6 +478,16 @@ public class TarefaController {
     public ResponseEntity<TarefaDTO> duplicarTarefa(
             @PathVariable("id") Long id,
             @RequestBody(required = false) Map<String, Object> modificacoes) {
+        // Validação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_CREATE)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para duplicar tarefas neste projeto.");
+            }
+        }
+
         TarefaDTO novaTarefa = tarefaService.duplicarTarefa(id, modificacoes);
         return ResponseEntity.ok(novaTarefa);
     }

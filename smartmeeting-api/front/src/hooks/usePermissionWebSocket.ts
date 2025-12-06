@@ -34,6 +34,8 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isConnectingRef = useRef(false); // Previne conexoes duplicadas (StrictMode)
+    const isMountedRef = useRef(true);
     const [isConnected, setIsConnected] = useState(false);
     const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
 
@@ -43,10 +45,17 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
             return;
         }
 
-        // Fechar conexao existente
-        if (wsRef.current) {
+        // Prevenir conexoes duplicadas (React StrictMode)
+        if (isConnectingRef.current || (wsRef.current && wsRef.current.readyState === WebSocket.OPEN)) {
+            return;
+        }
+
+        // Fechar conexao existente que nao esta aberta
+        if (wsRef.current && wsRef.current.readyState !== WebSocket.OPEN) {
             wsRef.current.close();
         }
+
+        isConnectingRef.current = true;
 
         // Determinar URL do WebSocket
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -59,7 +68,8 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
             wsRef.current = ws;
 
             ws.onopen = () => {
-                console.log('[WebSocket] Conectado');
+                isConnectingRef.current = false;
+                if (!isMountedRef.current) return;
                 setIsConnected(true);
                 onConnected?.();
 
@@ -75,8 +85,6 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
                         // Verificar se e um numero (nao contem @ ou letras)
                         if (/^\d+$/.test(userInfo.id)) {
                             userId = parseInt(userInfo.id, 10);
-                        } else {
-                            console.warn('[WebSocket] userId invalido (email?). Faca logout e login novamente:', userInfo.id);
                         }
                     }
 
@@ -85,9 +93,6 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
                             type: 'register',
                             userId: userId
                         }));
-                        console.log('[WebSocket] Registrado com userId:', userId);
-                    } else {
-                        console.error('[WebSocket] Nao foi possivel registrar: userId invalido. Faca logout e login.');
                     }
                 }
 
@@ -102,7 +107,6 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
             ws.onmessage = (event) => {
                 try {
                     const message: WebSocketMessage = JSON.parse(event.data);
-                    console.log('[WebSocket] Mensagem recebida:', message);
                     setLastMessage(message);
 
                     // Tratar diferentes tipos de mensagens
@@ -122,13 +126,15 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
                             detail: message
                         }));
                     }
-                } catch (error) {
-                    console.error('[WebSocket] Erro ao processar mensagem:', error);
+                } catch {
+                    // Silenciosamente ignorar erros de parsing
                 }
             };
 
-            ws.onclose = (event) => {
-                console.log('[WebSocket] Desconectado:', event.code, event.reason);
+            ws.onclose = () => {
+                isConnectingRef.current = false;
+                if (!isMountedRef.current) return;
+
                 setIsConnected(false);
                 onDisconnected?.();
 
@@ -138,21 +144,24 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
                     pingIntervalRef.current = null;
                 }
 
-                // Reconectar automaticamente
-                if (autoReconnect && authService.isAuthenticated()) {
+                // Reconectar automaticamente (apenas se ainda estiver montado)
+                if (isMountedRef.current && autoReconnect && authService.isAuthenticated()) {
                     reconnectTimeoutRef.current = setTimeout(() => {
-                        console.log('[WebSocket] Tentando reconectar...');
-                        connect();
+                        if (isMountedRef.current) {
+                            connect();
+                        }
                     }, reconnectInterval);
                 }
             };
 
-            ws.onerror = (error) => {
-                console.error('[WebSocket] Erro:', error);
+            ws.onerror = () => {
+                isConnectingRef.current = false;
+                // Silenciosamente ignorar erros de WebSocket
             };
 
-        } catch (error) {
-            console.error('[WebSocket] Erro ao criar conexao:', error);
+        } catch {
+            isConnectingRef.current = false;
+            // Silenciosamente ignorar erros de conexao
         }
     }, [onPermissionsUpdated, onConnected, onDisconnected, autoReconnect, reconnectInterval]);
 
@@ -175,14 +184,24 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
             wsRef.current = null;
         }
 
+        isConnectingRef.current = false;
         setIsConnected(false);
     }, []);
 
     // Conectar ao montar o componente
     useEffect(() => {
-        connect();
+        isMountedRef.current = true;
+
+        // Pequeno delay para evitar conexoes duplicadas do StrictMode
+        const timer = setTimeout(() => {
+            if (isMountedRef.current) {
+                connect();
+            }
+        }, 100);
 
         return () => {
+            isMountedRef.current = false;
+            clearTimeout(timer);
             disconnect();
         };
     }, [connect, disconnect]);

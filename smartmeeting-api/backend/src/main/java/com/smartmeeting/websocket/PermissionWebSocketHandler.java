@@ -31,7 +31,7 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         allSessions.add(session);
-        log.info("[WebSocket] Nova conexao estabelecida: {}", session.getId());
+        log.debug("[WebSocket] Nova conexao estabelecida: {}", session.getId());
 
         // Envia confirmacao de conexao
         sendMessage(session, Map.of(
@@ -69,7 +69,7 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
                             userId = Long.valueOf(userIdStr);
                         }
                         registerUserSession(userId, session);
-                        log.info("[WebSocket] Usuario {} registrado na sessao {}", userId, session.getId());
+                        log.debug("[WebSocket] Usuario {} registrado na sessao {}", userId, session.getId());
                     } catch (NumberFormatException e) {
                         log.error("[WebSocket] Erro ao parsear userId: {}", userIdObj);
                         sendMessage(session, Map.of(
@@ -97,12 +97,12 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
         // Remove entradas vazias
         userSessions.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 
-        log.info("[WebSocket] Conexao fechada: {} - Status: {}", session.getId(), status);
+        log.debug("[WebSocket] Conexao fechada: {} - Status: {}", session.getId(), status);
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.error("[WebSocket] Erro de transporte na sessao {}: {}", session.getId(), exception.getMessage());
+        log.debug("[WebSocket] Erro de transporte na sessao {}: {}", session.getId(), exception.getMessage());
         allSessions.remove(session);
     }
 
@@ -133,7 +133,7 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
                     sendMessage(session, notification);
                 }
             });
-            log.info("[WebSocket] Notificacao enviada para usuario {}: {} = {}", userId, permissionType, granted);
+            log.debug("[WebSocket] Notificacao enviada para usuario {}: {} = {}", userId, permissionType, granted);
         }
     }
 
@@ -156,7 +156,7 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
                     sendMessage(session, notification);
                 }
             });
-            log.info("[WebSocket] Notificacao de atualizacao enviada para usuario {}", userId);
+            log.debug("[WebSocket] Notificacao de atualizacao enviada para usuario {}", userId);
         }
     }
 
@@ -177,7 +177,7 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
             }
         });
 
-        log.info("[WebSocket] Notificacao de projeto {} enviada para todas as sessoes", projectId);
+        log.debug("[WebSocket] Notificacao de projeto {} enviada para todas as sessoes", projectId);
     }
 
     /**
@@ -190,7 +190,9 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
                 session.sendMessage(new TextMessage(json));
             }
         } catch (IOException e) {
-            log.error("[WebSocket] Erro ao enviar mensagem: {}", e.getMessage());
+            // Ignorar erros de conexao fechada pelo cliente (comportamento esperado)
+            // Isso acontece quando o usuario fecha o navegador ou atualiza a pagina
+            allSessions.remove(session);
         }
     }
 

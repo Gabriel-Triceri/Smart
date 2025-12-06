@@ -98,8 +98,8 @@ export const CanDo: React.FC<CanDoProps> = ({
 
         if (!projectId) {
             // Sem projectId, não pode verificar permissão de projeto
-            // Retorna true para não bloquear (fallback seguro no backend)
-            return true;
+            // Retorna false por segurança (deny by default)
+            return false;
         }
 
         // Usar estado da verificação de projeto
@@ -150,7 +150,7 @@ export const useCanDo = (permission: PermissionType, projectId?: string, global 
     }, [global, projectId, permission]);
 
     return useMemo(() => {
-        // Admin global sempre tem permissão
+       
         if (authService.hasRole('ADMIN')) {
             return true;
         }
@@ -160,7 +160,8 @@ export const useCanDo = (permission: PermissionType, projectId?: string, global 
         }
 
         if (!projectId) {
-            return true;
+            // Sem projectId, retorna false por segurança (deny by default)
+            return false;
         }
 
         return hasProjectPermission;

@@ -148,16 +148,19 @@ public class ReuniaoController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<ReuniaoDTO> atualizar(@PathVariable("id") Long id, @Valid @RequestBody ReuniaoDTO dto) {
+        // Buscar reunião existente (lança exceção se não encontrar)
+        Reuniao existing = service.buscarPorId(id)
+                .orElseThrow(() -> new com.smartmeeting.exception.ResourceNotFoundException(
+                        "Reunião não encontrada: " + id));
+
         // Validação de permissão
-        service.buscarPorId(id).ifPresent(existing -> {
-            if (existing.getProject() != null) {
-                if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProject().getId(),
-                        com.smartmeeting.enums.PermissionType.MEETING_EDIT)) {
-                    throw new com.smartmeeting.exception.ForbiddenException(
-                            "Você não tem permissão para editar esta reunião.");
-                }
+        if (existing.getProject() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProject().getId(),
+                    com.smartmeeting.enums.PermissionType.MEETING_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para editar esta reunião.");
             }
-        });
+        }
 
         Reuniao reuniaoAtualizada = mapper.toEntity(dto);
         Reuniao reuniao = service.atualizar(id, reuniaoAtualizada);
@@ -169,16 +172,19 @@ public class ReuniaoController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable("id") Long id) {
+        // Buscar reunião existente (lança exceção se não encontrar)
+        Reuniao existing = service.buscarPorId(id)
+                .orElseThrow(() -> new com.smartmeeting.exception.ResourceNotFoundException(
+                        "Reunião não encontrada: " + id));
+
         // Validação de permissão
-        service.buscarPorId(id).ifPresent(existing -> {
-            if (existing.getProject() != null) {
-                if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProject().getId(),
-                        com.smartmeeting.enums.PermissionType.MEETING_DELETE)) {
-                    throw new com.smartmeeting.exception.ForbiddenException(
-                            "Você não tem permissão para excluir esta reunião.");
-                }
+        if (existing.getProject() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProject().getId(),
+                    com.smartmeeting.enums.PermissionType.MEETING_DELETE)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para excluir esta reunião.");
             }
-        });
+        }
 
         service.deletar(id);
         return ResponseEntity.noContent().build();
@@ -189,15 +195,35 @@ public class ReuniaoController {
      */
     @PostMapping("/{id}/encerrar")
     public ResponseEntity<ReuniaoDTO> encerrar(@PathVariable("id") Long id) {
+        // Buscar reunião existente (lança exceção se não encontrar)
+        Reuniao existing = service.buscarPorId(id)
+                .orElseThrow(() -> new com.smartmeeting.exception.ResourceNotFoundException(
+                        "Reunião não encontrada: " + id));
+
+        // Validação de permissão (encerrar requer permissão de edição)
+        if (existing.getProject() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProject().getId(),
+                    com.smartmeeting.enums.PermissionType.MEETING_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para encerrar esta reunião.");
+            }
+        }
+
         Reuniao reuniao = service.encerrarReuniao(id);
         return ResponseEntity.ok(mapper.toDTO(reuniao));
     }
 
     /**
-     * Testa envio de email
+     * Testa envio de email (apenas ADMIN)
      */
     @PostMapping("/testar-email")
     public ResponseEntity<String> testarEmail(@RequestParam(defaultValue = "teste@exemplo.com") String email) {
+        // Apenas admin pode testar email
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Apenas administradores podem testar envio de email.");
+        }
+
         boolean sucesso = emailService.enviarEmailTeste(email);
         String resultado = sucesso
                 ? "Email de teste enviado com sucesso para: " + StringEscapeUtils.escapeHtml4(email)

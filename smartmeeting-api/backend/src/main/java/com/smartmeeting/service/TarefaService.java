@@ -50,12 +50,12 @@ public class TarefaService {
     private final com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository;
 
     public TarefaService(TarefaRepository tarefaRepository,
-            PessoaRepository pessoaRepository,
-            ReuniaoRepository reuniaoRepository,
-            NotificacaoTarefaRepository notificacaoTarefaRepository,
-            TemplateTarefaRepository templateTarefaRepository,
-            com.smartmeeting.repository.ComentarioTarefaRepository comentarioTarefaRepository,
-            com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository) {
+                         PessoaRepository pessoaRepository,
+                         ReuniaoRepository reuniaoRepository,
+                         NotificacaoTarefaRepository notificacaoTarefaRepository,
+                         TemplateTarefaRepository templateTarefaRepository,
+                         com.smartmeeting.repository.ComentarioTarefaRepository comentarioTarefaRepository,
+                         com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository) {
         this.tarefaRepository = tarefaRepository;
         this.pessoaRepository = pessoaRepository;
         this.reuniaoRepository = reuniaoRepository;
@@ -67,7 +67,7 @@ public class TarefaService {
 
     /**
      * Converte uma entidade Tarefa para seu respectivo DTO
-     * 
+     *
      * @param tarefa Entidade a ser convertida
      * @return DTO correspondente ou null se a entidade for nula
      */
@@ -79,7 +79,7 @@ public class TarefaService {
         dto.setDescricao(tarefa.getDescricao());
         dto.setPrazo(tarefa.getPrazo());
         dto.setPrazo_tarefa(tarefa.getPrazo() != null ? tarefa.getPrazo().toString() : null); // Compatibilidade
-                                                                                              // frontend
+        // frontend
         dto.setConcluida(tarefa.isConcluida());
         // Garante que statusTarefa nunca seja nulo no DTO
         dto.setStatusTarefa(tarefa.getStatusTarefa() != null ? tarefa.getStatusTarefa() : StatusTarefa.TODO);
@@ -201,7 +201,7 @@ public class TarefaService {
 
     /**
      * Converte um DTO para a entidade Tarefa
-     * 
+     *
      * @param dto DTO contendo os dados da tarefa
      * @return Entidade Tarefa correspondente ou null se o DTO for nulo
      */
@@ -265,17 +265,39 @@ public class TarefaService {
     public TarefaDTO atualizar(Long id, TarefaDTO dtoAtualizada) {
         Tarefa tarefa = tarefaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + id));
-        tarefa.setDescricao(dtoAtualizada.getDescricao());
-        tarefa.setPrazo(dtoAtualizada.getPrazo());
+
+        // Atualiza apenas campos que foram fornecidos (não sobrescreve com null)
+        // Para descricao: se vier null, mantém o valor existente; se vier vazio, aceita string vazia
+        if (dtoAtualizada.getDescricao() != null) {
+            tarefa.setDescricao(dtoAtualizada.getDescricao());
+        } else if (tarefa.getDescricao() == null) {
+            // Se não foi fornecido e o valor atual é null, define como string vazia
+            tarefa.setDescricao("");
+        }
+
+        if (dtoAtualizada.getPrazo() != null) {
+            tarefa.setPrazo(dtoAtualizada.getPrazo());
+        }
+        // concluida é primitivo boolean, sempre tem valor
         tarefa.setConcluida(dtoAtualizada.isConcluida());
-        tarefa.setStatusTarefa(dtoAtualizada.getStatusTarefa());
+        if (dtoAtualizada.getStatusTarefa() != null) {
+            tarefa.setStatusTarefa(dtoAtualizada.getStatusTarefa());
+        }
         if (dtoAtualizada.getPrioridade() != null) {
             tarefa.setPrioridade(PrioridadeTarefa.valueOf(dtoAtualizada.getPrioridade()));
         }
-        tarefa.setDataInicio(dtoAtualizada.getDataInicio());
-        tarefa.setEstimadoHoras(dtoAtualizada.getEstimadoHoras());
-        tarefa.setTags(dtoAtualizada.getTags());
-        tarefa.setCor(dtoAtualizada.getCor());
+        if (dtoAtualizada.getDataInicio() != null) {
+            tarefa.setDataInicio(dtoAtualizada.getDataInicio());
+        }
+        if (dtoAtualizada.getEstimadoHoras() != null) {
+            tarefa.setEstimadoHoras(dtoAtualizada.getEstimadoHoras());
+        }
+        if (dtoAtualizada.getTags() != null) {
+            tarefa.setTags(dtoAtualizada.getTags());
+        }
+        if (dtoAtualizada.getCor() != null) {
+            tarefa.setCor(dtoAtualizada.getCor());
+        }
         if (dtoAtualizada.getProgresso() != null) {
             tarefa.setProgresso(dtoAtualizada.getProgresso());
         }
@@ -300,7 +322,7 @@ public class TarefaService {
 
     /**
      * Lista todas as tarefas de uma reunião específica
-     * 
+     *
      * @param reuniaoId ID da reunião para filtrar as tarefas
      * @return Lista de TarefaDTO pertencentes à reunião
      */
@@ -333,7 +355,7 @@ public class TarefaService {
 
     /**
      * Obtém a reunião associada a uma tarefa
-     * 
+     *
      * @param tarefaId ID da tarefa
      * @return A reunião associada
      * @throws ResourceNotFoundException se a tarefa ou a reunião não forem
@@ -352,7 +374,7 @@ public class TarefaService {
 
     /**
      * Atualiza a reunião associada a uma tarefa
-     * 
+     *
      * @param tarefaId  ID da tarefa
      * @param reuniaoId ID da reunião (pode ser null para desvincular)
      * @return A tarefa atualizada
@@ -541,7 +563,7 @@ public class TarefaService {
         } catch (Exception e) {
             logger.error("Error retrieving Kanban Board for reuniaoId {}: {}", reuniaoId, e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve Kanban Board", e); // Re-throw as a runtime exception or a
-                                                                              // custom exception
+            // custom exception
         }
     }
 
@@ -580,7 +602,7 @@ public class TarefaService {
 
     /**
      * Move uma tarefa para um novo status e, opcionalmente, uma nova posição.
-     * 
+     *
      * @param id          O ID da tarefa a ser movida.
      * @param newStatus   O novo status da tarefa.
      * @param newPosition A nova posição da tarefa dentro do status (opcional).
@@ -608,7 +630,7 @@ public class TarefaService {
      * Registra uma movimentação de tarefa.
      * Por enquanto, apenas loga a movimentação. Pode ser estendido para
      * persistência futura.
-     * 
+     *
      * @param dto DTO contendo os detalhes da movimentação.
      */
     public void registrarMovimentacao(MovimentacaoTarefaDTO dto) {
@@ -623,7 +645,7 @@ public class TarefaService {
 
     /**
      * Adiciona um comentário a uma tarefa
-     * 
+     *
      * @param tarefaId ID da tarefa
      * @param conteudo Conteúdo do comentário
      * @param mencoes  Lista de menções (usernames ou IDs de usuários)
@@ -674,7 +696,7 @@ public class TarefaService {
 
     /**
      * Anexa um arquivo a uma tarefa
-     * 
+     *
      * @param tarefaId ID da tarefa
      * @param arquivo  Arquivo a ser anexado
      * @return Map com informações do anexo
@@ -706,7 +728,7 @@ public class TarefaService {
 
     /**
      * Atribui uma tarefa a um responsável
-     * 
+     *
      * @param tarefaId      ID da tarefa
      * @param responsavelId ID do responsável
      * @param principal     Indica se é responsável principal
@@ -731,7 +753,7 @@ public class TarefaService {
 
     /**
      * Atualiza o progresso de uma tarefa
-     * 
+     *
      * @param tarefaId  ID da tarefa
      * @param progresso Novo progresso (0-100)
      * @return TarefaDTO atualizada
@@ -790,7 +812,7 @@ public class TarefaService {
 
     /**
      * Duplica uma tarefa
-     * 
+     *
      * @param tarefaId     ID da tarefa original
      * @param modificacoes Modificações opcionais para a nova tarefa
      * @return Nova tarefa criada
@@ -839,7 +861,7 @@ public class TarefaService {
 
     /**
      * Busca tarefas por texto
-     * 
+     *
      * @param termo   Termo de busca
      * @param filtros Filtros adicionais
      * @return Lista de tarefas encontradas
@@ -882,7 +904,7 @@ public class TarefaService {
 
     /**
      * Obtém tarefas que estão vencendo
-     * 
+     *
      * @param dias Número de dias para considerar como "vencendo"
      * @return Lista de tarefas vencendo
      */
@@ -909,7 +931,7 @@ public class TarefaService {
 
     /**
      * Obtém tarefas do usuário atual
-     * 
+     *
      * @return Lista de tarefas do usuário atual
      */
     public List<TarefaDTO> getTarefasDoUsuarioAtual() {
@@ -921,7 +943,7 @@ public class TarefaService {
 
     /**
      * Cria tarefas por template
-     * 
+     *
      * @param templateId      ID do template
      * @param responsaveisIds Lista de IDs dos responsáveis
      * @param datasVencimento Lista de datas de vencimento
@@ -930,7 +952,7 @@ public class TarefaService {
      */
     @Transactional
     public List<TarefaDTO> criarTarefasPorTemplate(Long templateId, List<Long> responsaveisIds,
-            List<String> datasVencimento, Long reuniaoId) {
+                                                   List<String> datasVencimento, Long reuniaoId) {
         TemplateTarefa template = templateTarefaRepository.findById(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Template não encontrado com ID: " + templateId));
 
@@ -970,7 +992,7 @@ public class TarefaService {
 
     /**
      * Marca uma notificação como lida
-     * 
+     *
      * @param notificacaoId ID da notificação
      */
     @Transactional

@@ -14,15 +14,29 @@ import {
     Edit3,
     Trash2,
     CheckSquare,
-    History
+    History,
+    Save,
+    Flag,
+    ChevronDown,
+    Check,
+    XCircle,
+    AlignLeft
 } from 'lucide-react';
-import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem, PermissionType } from '../../types/meetings';
+import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem, PermissionType, PrioridadeTarefa, Assignee, TarefaFormData } from '../../types/meetings';
 import { CanDo } from '../permissions/CanDo';
 import { formatDate } from '../../utils/dateHelpers';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
 import { ChecklistSection } from './ChecklistSection';
 import { HistorySection } from './HistorySection';
+
+const PRIORIDADE_OPTIONS = [
+    { value: PrioridadeTarefa.BAIXA, label: 'Baixa', color: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
+    { value: PrioridadeTarefa.MEDIA, label: 'Média', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+    { value: PrioridadeTarefa.ALTA, label: 'Alta', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' },
+    { value: PrioridadeTarefa.CRITICA, label: 'Crítica', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
+    { value: PrioridadeTarefa.URGENTE, label: 'Urgente', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' }
+];
 
 interface TaskDetailsProps {
     tarefa: Tarefa | null;
@@ -38,6 +52,8 @@ interface TaskDetailsProps {
     onChecklistChange?: (tarefaId: string, items: ChecklistItem[]) => void;
     tarefas?: Tarefa[];
     onOpenTask?: (tarefa: Tarefa) => void;
+    onUpdateTask?: (tarefaId: string, data: Partial<TarefaFormData>) => Promise<Tarefa>;
+    assignees?: Assignee[];
 }
 
 export function TaskDetails({
@@ -53,7 +69,9 @@ export function TaskDetails({
     onUpdateProgress,
     onChecklistChange,
     tarefas,
-    onOpenTask
+    onOpenTask,
+    onUpdateTask,
+    assignees = []
 }: TaskDetailsProps) {
 
     interface HistoryEntry {
@@ -73,6 +91,22 @@ export function TaskDetails({
     // Progress local state
     const [progressInput, setProgressInput] = useState<string>('0');
     const [columns, setColumns] = useState<{ status: StatusTarefa; title: string }[]>([]);
+
+    // Inline editing states
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editTitle, setEditTitle] = useState('');
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    const [editDescription, setEditDescription] = useState('');
+    const [isEditingDates, setIsEditingDates] = useState(false);
+    const [editDataInicio, setEditDataInicio] = useState('');
+    const [editPrazo, setEditPrazo] = useState('');
+    const [editEstimadoHoras, setEditEstimadoHoras] = useState('');
+    const [isEditingPriority, setIsEditingPriority] = useState(false);
+    const [editPrioridade, setEditPrioridade] = useState<PrioridadeTarefa>(PrioridadeTarefa.MEDIA);
+    const [isEditingResponsaveis, setIsEditingResponsaveis] = useState(false);
+    const [editResponsavelPrincipalId, setEditResponsavelPrincipalId] = useState('');
+    const [editResponsaveisIds, setEditResponsaveisIds] = useState<string[]>([]);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         const loadColumns = async () => {
@@ -128,12 +162,120 @@ export function TaskDetails({
         };
     }, []);
 
-    // Sync local progress when task changes
+    // Sync local progress and edit states when task changes
     useEffect(() => {
         if (tarefa) {
             setProgressInput(String(tarefa.progresso || 0));
+            setEditTitle(tarefa.titulo || '');
+            setEditDescription(tarefa.descricao || '');
+            setEditDataInicio(tarefa.dataInicio ? tarefa.dataInicio.split('T')[0] : '');
+            setEditPrazo(tarefa.prazo_tarefa ? tarefa.prazo_tarefa.split('T')[0] : '');
+            setEditEstimadoHoras(tarefa.estimadoHoras !== undefined && tarefa.estimadoHoras !== null ? String(tarefa.estimadoHoras) : '');
+            setEditPrioridade(tarefa.prioridade || PrioridadeTarefa.MEDIA);
+            setEditResponsavelPrincipalId(tarefa.responsavelPrincipalId || '');
+            setEditResponsaveisIds((tarefa.responsaveis ?? []).map(r => r.id));
         }
     }, [tarefa]);
+
+    // Inline save handlers
+    const handleSaveTitle = async () => {
+        if (!tarefa || !onUpdateTask || editTitle.trim() === tarefa.titulo) {
+            setIsEditingTitle(false);
+            return;
+        }
+        setIsSaving(true);
+        try {
+            await onUpdateTask(tarefa.id, { titulo: editTitle.trim() });
+            setIsEditingTitle(false);
+        } catch (err) {
+            console.error('Erro ao salvar título:', err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSaveDescription = async () => {
+        if (!tarefa || !onUpdateTask) {
+            setIsEditingDescription(false);
+            return;
+        }
+        setIsSaving(true);
+        try {
+            // Enviar string vazia em vez de undefined para evitar erro de NULL no banco
+            await onUpdateTask(tarefa.id, { descricao: editDescription || '' });
+            setIsEditingDescription(false);
+        } catch (err) {
+            console.error('Erro ao salvar descrição:', err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSaveDates = async () => {
+        if (!tarefa || !onUpdateTask) {
+            setIsEditingDates(false);
+            return;
+        }
+        setIsSaving(true);
+        try {
+            await onUpdateTask(tarefa.id, {
+                dataInicio: editDataInicio || undefined,
+                prazo_tarefa: editPrazo || undefined,
+                estimadoHoras: editEstimadoHoras ? Number(editEstimadoHoras) : undefined
+            });
+            setIsEditingDates(false);
+        } catch (err) {
+            console.error('Erro ao salvar datas:', err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSavePriority = async (newPriority: PrioridadeTarefa) => {
+        if (!tarefa || !onUpdateTask) return;
+        setIsSaving(true);
+        try {
+            await onUpdateTask(tarefa.id, { prioridade: newPriority });
+            setEditPrioridade(newPriority);
+            setIsEditingPriority(false);
+        } catch (err) {
+            console.error('Erro ao salvar prioridade:', err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSaveResponsaveis = async () => {
+        if (!tarefa || !onUpdateTask) {
+            setIsEditingResponsaveis(false);
+            return;
+        }
+        setIsSaving(true);
+        try {
+            await onUpdateTask(tarefa.id, {
+                responsavelPrincipalId: editResponsavelPrincipalId,
+                responsaveisIds: editResponsaveisIds
+            });
+            setIsEditingResponsaveis(false);
+        } catch (err) {
+            console.error('Erro ao salvar responsáveis:', err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleAssigneeToggle = (assigneeId: string) => {
+        const isSelected = editResponsaveisIds.includes(assigneeId);
+        if (isSelected) {
+            setEditResponsaveisIds(prev => prev.filter(id => id !== assigneeId));
+            if (editResponsavelPrincipalId === assigneeId) {
+                const remaining = editResponsaveisIds.filter(id => id !== assigneeId);
+                setEditResponsavelPrincipalId(remaining[0] || '');
+            }
+        } else {
+            setEditResponsaveisIds(prev => [...prev, assigneeId]);
+        }
+    };
 
     if (!tarefa) return null;
 
@@ -233,12 +375,55 @@ export function TaskDetails({
                             {tarefa.projectId && (
                                 <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                                     <Tag className="w-3 h-3" />
-                                    <span>Projeto: {tarefa.projectId}</span>
+                                    <span>Projeto: {tarefa.projectName || tarefa.projectId}</span>
                                 </div>
                             )}
-                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
-                                {tarefa.titulo}
-                            </h1>
+
+                            {/* Editable Title */}
+                            <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                                {isEditingTitle ? (
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleSaveTitle();
+                                                if (e.key === 'Escape') {
+                                                    setEditTitle(tarefa.titulo || '');
+                                                    setIsEditingTitle(false);
+                                                }
+                                            }}
+                                            autoFocus
+                                            className="flex-1 text-2xl md:text-3xl font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border border-blue-500 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                        />
+                                        <button
+                                            onClick={handleSaveTitle}
+                                            disabled={isSaving}
+                                            className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            <Check className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setEditTitle(tarefa.titulo || '');
+                                                setIsEditingTitle(false);
+                                            }}
+                                            className="p-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <h1
+                                        onClick={() => onUpdateTask && setIsEditingTitle(true)}
+                                        className={`text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight ${onUpdateTask ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg px-2 py-1 -mx-2 -my-1 transition-colors group' : ''}`}
+                                    >
+                                        {tarefa.titulo}
+                                        {onUpdateTask && <Edit3 className="inline-block w-5 h-5 ml-2 opacity-0 group-hover:opacity-50 transition-opacity" />}
+                                    </h1>
+                                )}
+                            </CanDo>
                             {/* Dependencies inside description for visibility */}
                             {(tarefa.dependencias && tarefa.dependencias.length > 0) && (
                                 <div className="mt-4 bg-slate-50/50 dark:bg-slate-800/20 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
@@ -262,6 +447,64 @@ export function TaskDetails({
                                     </div>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Editable Description Section */}
+                        <div className="bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800 p-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    <AlignLeft className="w-3.5 h-3.5" /> Descrição
+                                </label>
+                                <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                                    {!isEditingDescription && onUpdateTask && (
+                                        <button
+                                            onClick={() => setIsEditingDescription(true)}
+                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                        >
+                                            <Edit3 className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </CanDo>
+                            </div>
+                            <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                                {isEditingDescription ? (
+                                    <div className="space-y-3">
+                                        <textarea
+                                            value={editDescription}
+                                            onChange={(e) => setEditDescription(e.target.value)}
+                                            rows={6}
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-blue-500 rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none text-slate-900 dark:text-white placeholder-slate-400 resize-none"
+                                            placeholder="Adicione uma descrição para esta tarefa..."
+                                        />
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setEditDescription(tarefa.descricao || '');
+                                                    setIsEditingDescription(false);
+                                                }}
+                                                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                onClick={handleSaveDescription}
+                                                disabled={isSaving}
+                                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+                                            >
+                                                <Save className="w-4 h-4" />
+                                                Salvar
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onClick={() => onUpdateTask && setIsEditingDescription(true)}
+                                        className={`text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap ${onUpdateTask ? 'cursor-pointer hover:bg-white dark:hover:bg-slate-800 rounded-lg p-2 -m-2 transition-colors' : ''}`}
+                                    >
+                                        {tarefa.descricao || <span className="text-slate-400 italic">Sem descrição. Clique para adicionar.</span>}
+                                    </div>
+                                )}
+                            </CanDo>
                         </div>
 
                         {/* Activity / Chat Section with Tabs */}
@@ -525,55 +768,257 @@ export function TaskDetails({
 
                             {/* Priority Section REMOVED from UI */}
 
-                            {/* Dates */}
+                            {/* Editable Dates */}
                             <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    <Calendar className="w-3.5 h-3.5" /> Datas
-                                </label>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                        <span className="text-slate-500 dark:text-slate-400">Início</span>
-                                        <span className="font-medium text-slate-900 dark:text-white font-mono">
-                                            {tarefa.dataInicio ? formatDate(tarefa.dataInicio, "dd/MM/yyyy") : '-'}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                        <span className="text-slate-500 dark:text-slate-400">Prazo</span>
-                                        <span className={`font-medium font-mono ${tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded' : 'text-slate-900 dark:text-white'}`}>
-                                            {tarefa.prazo_tarefa ? formatDate(tarefa.prazo_tarefa, "dd/MM/yyyy") : '-'}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                        <span className="text-slate-500 dark:text-slate-400">Estimativa</span>
-                                        <span className="font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
-                                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                            {tarefa.estimadoHoras ? `${tarefa.estimadoHoras}h` : '-'}
-                                        </span>
-                                    </div>
+                                <div className="flex items-center justify-between">
+                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        <Calendar className="w-3.5 h-3.5" /> Datas
+                                    </label>
+                                    <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                                        {!isEditingDates && onUpdateTask && (
+                                            <button
+                                                onClick={() => setIsEditingDates(true)}
+                                                className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded transition-colors"
+                                            >
+                                                <Edit3 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </CanDo>
                                 </div>
-                            </div>
 
-                            {/* Assignees */}
-                            <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    <User className="w-3.5 h-3.5" /> Responsáveis
-                                </label>
-                                <div className="flex flex-col gap-2">
-                                    {(tarefa.responsaveis ?? []).map((responsavel) => (
-                                        <div key={responsavel.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                            <Avatar src={responsavel.avatar} name={responsavel.nome} className="w-8 h-8 text-xs ring-2 ring-white dark:ring-slate-900" />
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{responsavel.nome}</span>
-                                                {responsavel.id === tarefa.responsavelPrincipalId && (
-                                                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Principal</span>
-                                                )}
+                                <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                                    {isEditingDates ? (
+                                        <div className="space-y-3 bg-white dark:bg-slate-800 p-3 rounded-lg border border-blue-500">
+                                            <div>
+                                                <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Data de Início</label>
+                                                <input
+                                                    type="date"
+                                                    value={editDataInicio}
+                                                    onChange={(e) => setEditDataInicio(e.target.value)}
+                                                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Prazo</label>
+                                                <input
+                                                    type="date"
+                                                    value={editPrazo}
+                                                    onChange={(e) => setEditPrazo(e.target.value)}
+                                                    min={editDataInicio || undefined}
+                                                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Estimativa (horas)</label>
+                                                <input
+                                                    type="number"
+                                                    min="0.5"
+                                                    step="0.5"
+                                                    value={editEstimadoHoras}
+                                                    onChange={(e) => setEditEstimadoHoras(e.target.value)}
+                                                    placeholder="0"
+                                                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                                />
+                                            </div>
+                                            <div className="flex items-center justify-end gap-2 pt-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditDataInicio(tarefa.dataInicio ? tarefa.dataInicio.split('T')[0] : '');
+                                                        setEditPrazo(tarefa.prazo_tarefa ? tarefa.prazo_tarefa.split('T')[0] : '');
+                                                        setEditEstimadoHoras(tarefa.estimadoHoras !== undefined ? String(tarefa.estimadoHoras) : '');
+                                                        setIsEditingDates(false);
+                                                    }}
+                                                    className="px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                                <button
+                                                    onClick={handleSaveDates}
+                                                    disabled={isSaving}
+                                                    className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                                >
+                                                    <Save className="w-3.5 h-3.5" />
+                                                    Salvar
+                                                </button>
                                             </div>
                                         </div>
-                                    ))}
-                                    {(tarefa.responsaveis ?? []).length === 0 && (
-                                        <span className="text-sm text-slate-400 italic pl-2">Nenhum responsável</span>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" onClick={() => onUpdateTask && setIsEditingDates(true)}>
+                                                <span className="text-slate-500 dark:text-slate-400">Início</span>
+                                                <span className="font-medium text-slate-900 dark:text-white font-mono">
+                                                    {tarefa.dataInicio ? formatDate(tarefa.dataInicio, "dd/MM/yyyy") : '-'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" onClick={() => onUpdateTask && setIsEditingDates(true)}>
+                                                <span className="text-slate-500 dark:text-slate-400">Prazo</span>
+                                                <span className={`font-medium font-mono ${tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded' : 'text-slate-900 dark:text-white'}`}>
+                                                    {tarefa.prazo_tarefa ? formatDate(tarefa.prazo_tarefa, "dd/MM/yyyy") : '-'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" onClick={() => onUpdateTask && setIsEditingDates(true)}>
+                                                <span className="text-slate-500 dark:text-slate-400">Estimativa</span>
+                                                <span className="font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
+                                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                                    {tarefa.estimadoHoras ? `${tarefa.estimadoHoras}h` : '-'}
+                                                </span>
+                                            </div>
+                                        </div>
                                     )}
+                                </CanDo>
+                            </div>
+
+                            {/* Editable Priority */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        <Flag className="w-3.5 h-3.5" /> Prioridade
+                                    </label>
                                 </div>
+                                <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                                    {onUpdateTask ? (
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setIsEditingPriority(!isEditingPriority)}
+                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border transition-colors ${
+                                                    PRIORIDADE_OPTIONS.find(p => p.value === (tarefa.prioridade || editPrioridade))?.color || 'bg-slate-100'
+                                                } border-slate-200 dark:border-slate-700`}
+                                            >
+                                                <span className="text-sm font-medium">
+                                                    {PRIORIDADE_OPTIONS.find(p => p.value === (tarefa.prioridade || editPrioridade))?.label || 'Média'}
+                                                </span>
+                                                <ChevronDown className="w-4 h-4" />
+                                            </button>
+                                            {isEditingPriority && (
+                                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-20 overflow-hidden">
+                                                    {PRIORIDADE_OPTIONS.map((option) => (
+                                                        <button
+                                                            key={option.value}
+                                                            onClick={() => handleSavePriority(option.value)}
+                                                            disabled={isSaving}
+                                                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${option.color}`}
+                                                        >
+                                                            {option.label}
+                                                            {option.value === tarefa.prioridade && <Check className="w-4 h-4 ml-auto" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                                            PRIORIDADE_OPTIONS.find(p => p.value === tarefa.prioridade)?.color || 'bg-slate-100 text-slate-700'
+                                        }`}>
+                                            {PRIORIDADE_OPTIONS.find(p => p.value === tarefa.prioridade)?.label || 'Média'}
+                                        </div>
+                                    )}
+                                </CanDo>
+                            </div>
+
+                            {/* Editable Assignees */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        <User className="w-3.5 h-3.5" /> Responsáveis
+                                    </label>
+                                    <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                                        {!isEditingResponsaveis && onUpdateTask && assignees.length > 0 && (
+                                            <button
+                                                onClick={() => setIsEditingResponsaveis(true)}
+                                                className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded transition-colors"
+                                            >
+                                                <Edit3 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </CanDo>
+                                </div>
+
+                                <CanDo permission={PermissionType.TASK_EDIT} projectId={tarefa.projectId} global={!tarefa.projectId}>
+                                    {isEditingResponsaveis && assignees.length > 0 ? (
+                                        <div className="space-y-3 bg-white dark:bg-slate-800 p-3 rounded-lg border border-blue-500">
+                                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                                                Clique para definir como principal, use o checkbox para participantes
+                                            </div>
+                                            <div className="max-h-48 overflow-y-auto space-y-1">
+                                                {assignees.map((assignee) => (
+                                                    <div
+                                                        key={assignee.id}
+                                                        className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+                                                            editResponsavelPrincipalId === assignee.id
+                                                                ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800'
+                                                                : 'hover:bg-slate-50 dark:hover:bg-slate-700'
+                                                        }`}
+                                                    >
+                                                        <div
+                                                            className="flex items-center gap-2 flex-1 cursor-pointer"
+                                                            onClick={() => setEditResponsavelPrincipalId(assignee.id)}
+                                                        >
+                                                            <Avatar src={assignee.avatar} name={assignee.nome} className="w-7 h-7 text-xs" />
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{assignee.nome}</span>
+                                                                {editResponsavelPrincipalId === assignee.id && (
+                                                                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Principal</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={editResponsaveisIds.includes(assignee.id)}
+                                                            onChange={() => handleAssigneeToggle(assignee.id)}
+                                                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditResponsavelPrincipalId(tarefa.responsavelPrincipalId || '');
+                                                        setEditResponsaveisIds((tarefa.responsaveis ?? []).map(r => r.id));
+                                                        setIsEditingResponsaveis(false);
+                                                    }}
+                                                    className="px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                                <button
+                                                    onClick={handleSaveResponsaveis}
+                                                    disabled={isSaving || !editResponsavelPrincipalId}
+                                                    className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                                >
+                                                    <Save className="w-3.5 h-3.5" />
+                                                    Salvar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col gap-2">
+                                            {(tarefa.responsaveis ?? []).map((responsavel) => (
+                                                <div
+                                                    key={responsavel.id}
+                                                    className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${onUpdateTask && assignees.length > 0 ? 'hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer' : ''}`}
+                                                    onClick={() => onUpdateTask && assignees.length > 0 && setIsEditingResponsaveis(true)}
+                                                >
+                                                    <Avatar src={responsavel.avatar} name={responsavel.nome} className="w-8 h-8 text-xs ring-2 ring-white dark:ring-slate-900" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{responsavel.nome}</span>
+                                                        {responsavel.id === tarefa.responsavelPrincipalId && (
+                                                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Principal</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {(tarefa.responsaveis ?? []).length === 0 && (
+                                                <span
+                                                    className={`text-sm text-slate-400 italic pl-2 ${onUpdateTask && assignees.length > 0 ? 'cursor-pointer hover:text-blue-600' : ''}`}
+                                                    onClick={() => onUpdateTask && assignees.length > 0 && setIsEditingResponsaveis(true)}
+                                                >
+                                                    {onUpdateTask && assignees.length > 0 ? 'Clique para adicionar responsáveis' : 'Nenhum responsável'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </CanDo>
                             </div>
 
                             <div className="h-px bg-slate-200 dark:bg-slate-700 my-4"></div>

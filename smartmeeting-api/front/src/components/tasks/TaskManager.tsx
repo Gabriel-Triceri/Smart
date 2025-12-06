@@ -417,6 +417,14 @@ export function TaskManager() {
                     onAddComment={adicionarComentario}
                     onEditComment={atualizarComentario}
                     onDeleteComment={removerComentario}
+                    onUpdateTask={async (tarefaId, data) => {
+                        await handleUpdateTask(tarefaId, data);
+                        // Refresh the selected task with updated data
+                        const updated = tarefas.find(t => t.id === tarefaId);
+                        if (updated) setTarefaSelecionada({ ...updated, ...data });
+                        return updated as any;
+                    }}
+                    assignees={assigneesDisponiveis}
                 />
             )}
 
