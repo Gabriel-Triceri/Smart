@@ -903,7 +903,7 @@ export const meetingsApi = {
         if (!IdValidation.isValidId(projectId)) {
             throw new Error('ID do projeto inválido');
         }
-        const response = await api.get(`/kanban/columns/project/${projectId}`);
+        const response = await api.get(`/projects/${projectId}/kanban/columns`);
         return response.data ?? [];
     },
 

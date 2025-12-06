@@ -105,10 +105,10 @@ export function TaskCard({
                     {/* Deadline Badge */}
                     {tarefa.prazo_tarefa && (
                         <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${isOverdue
-                                ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10'
-                                : isDueSoon
-                                    ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10'
-                                    : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50'
+                            ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10'
+                            : isDueSoon
+                                ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/10'
+                                : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50'
                             }`}>
                             <Calendar className="w-3 h-3" />
                             <span>{formatDateFriendly(tarefa.prazo_tarefa)}</span>

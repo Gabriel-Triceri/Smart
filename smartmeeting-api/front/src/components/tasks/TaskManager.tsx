@@ -93,6 +93,7 @@ export function TaskManager() {
         setExibirDetalhes,
         setFiltros: _setFiltros,
         assigneesDisponiveis,
+
         atualizarProgresso
     } = useTarefas();
 
@@ -100,6 +101,13 @@ export function TaskManager() {
     const [viewMode, setViewMode] = useState<ViewMode>('kanban');
     const [searchTerm, setSearchTerm] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+
+    // Derived state for column management
+    const selectedProjectId = (filtros.projectName && filtros.projectName.length === 1)
+        ? tarefas.find(t => t.projectName === filtros.projectName?.[0])?.projectId
+        : undefined;
+
+
 
     const handleCreateTask = async (data: TarefaFormData) => { await criarTarefa(data); };
     const handleUpdateTask = async (id: string, data: Partial<TarefaFormData>) => { await atualizarTarefa(id, data); };
@@ -260,8 +268,8 @@ export function TaskManager() {
                                         <div className="px-4 py-4">
                                             {tarefa.prazo_tarefa ? (
                                                 <div className={`flex items-center gap-1.5 text-xs font-medium ${isDateBefore(tarefa.prazo_tarefa, new Date()) && tarefa.status !== StatusTarefa.DONE
-                                                        ? 'text-red-600 dark:text-red-400'
-                                                        : 'text-slate-500 dark:text-slate-400'
+                                                    ? 'text-red-600 dark:text-red-400'
+                                                    : 'text-slate-500 dark:text-slate-400'
                                                     }`}>
                                                     <Calendar className="w-3.5 h-3.5 opacity-70" />
                                                     <span>{formatDate(tarefa.prazo_tarefa, 'dd MMM')}</span>
@@ -436,6 +444,7 @@ export function TaskManager() {
                                 onViewTask={handleViewTask}
                                 loading={loading}
                                 assignees={assigneesDisponiveis}
+                                projectId={selectedProjectId}
                             />
                         </div>
                     ) : renderLista()}
