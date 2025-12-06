@@ -14,6 +14,7 @@ import {
     Assignee,
     PrioridadeTarefa,
 } from '../../types/meetings';
+import { isDateBefore } from '../../utils/dateHelpers';
 
 interface TaskFormProps {
     tarefa?: Tarefa | null;
@@ -92,7 +93,7 @@ export function TaskForm({
         if (!formData.titulo.trim()) newErrors.titulo = 'Título é obrigatório';
         if (!formData.responsavelPrincipalId) newErrors.responsavelPrincipalId = 'Responsável principal é obrigatório';
         if (!formData.prazo_tarefa) newErrors.prazo_tarefa = 'Data de término é obrigatória';
-        else if (formData.dataInicio && new Date(formData.dataInicio) >= new Date(formData.prazo_tarefa)) {
+        else if (formData.dataInicio && !isDateBefore(formData.dataInicio, formData.prazo_tarefa)) {
             newErrors.prazo_tarefa = 'Data de término deve ser posterior à data de início';
         }
         if (formData.estimadoHoras && Number(formData.estimadoHoras) <= 0) newErrors.estimadoHoras = 'Tempo estimado deve ser maior que zero';
@@ -298,9 +299,9 @@ export function TaskForm({
                             </div>
                         </div>
                         <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                    Data de Término <span className="text-red-500">*</span>
-                                </label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Data de Término <span className="text-red-500">*</span>
+                            </label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <input

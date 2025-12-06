@@ -17,7 +17,7 @@ import { TaskFilters } from './TaskFilters';
 import { StatusTarefa, TarefaFormData, PrioridadeTarefa, Tarefa, PermissionType } from '../../types/meetings';
 import { CanDo } from '../permissions/CanDo';
 import { useTheme } from '../../context/ThemeContext';
-import { formatDate } from '../../utils/dateHelpers';
+import { formatDate, isDateBefore } from '../../utils/dateHelpers';
 import { Avatar } from '../../components/common/Avatar';
 
 const Loader2 = ({ className }: { className?: string }) => (
@@ -200,11 +200,10 @@ export function TaskManager() {
                                     <div className="flex flex-col items-center w-full max-w-[60px]">
                                         <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{tarefa.progresso ?? 0}%</span>
                                         <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full rounded-full ${
-                                                    (tarefa.progresso ?? 0) === 100 ? 'bg-emerald-500' : 'bg-blue-500'
-                                                }`}
-                                                style={{ width: `${Math.min(100, Math.max(0, tarefa.progresso ?? 0))}%` }} 
+                                            <div
+                                                className={`h-full rounded-full ${(tarefa.progresso ?? 0) === 100 ? 'bg-emerald-500' : 'bg-blue-500'
+                                                    }`}
+                                                style={{ width: `${Math.min(100, Math.max(0, tarefa.progresso ?? 0))}%` }}
                                             />
                                         </div>
                                     </div>
@@ -244,11 +243,10 @@ export function TaskManager() {
                                 {/* Coluna 6: Data Término (1/8) - Centralizado */}
                                 <div className="col-span-1 md:col-span-1 flex items-center justify-center">
                                     {tarefa.prazo_tarefa ? (
-                                        <div className={`flex items-center gap-1.5 text-xs font-medium ${
-                                            new Date(tarefa.prazo_tarefa) < new Date() && tarefa.status !== StatusTarefa.DONE 
-                                            ? 'text-red-600 dark:text-red-400' 
-                                            : 'text-slate-700 dark:text-slate-300'
-                                        }`}>
+                                        <div className={`flex items-center gap-1.5 text-xs font-medium ${isDateBefore(tarefa.prazo_tarefa, new Date()) && tarefa.status !== StatusTarefa.DONE
+                                                ? 'text-red-600 dark:text-red-400'
+                                                : 'text-slate-700 dark:text-slate-300'
+                                            }`}>
                                             <Calendar className="w-3.5 h-3.5 opacity-70" />
                                             <span>{formatDate(tarefa.prazo_tarefa, 'dd/MM/yyyy')}</span>
                                         </div>

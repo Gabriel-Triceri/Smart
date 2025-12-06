@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem, PermissionType, PrioridadeTarefa, Assignee, TarefaFormData } from '../../types/meetings';
 import { CanDo } from '../permissions/CanDo';
-import { formatDate } from '../../utils/dateHelpers';
+import { formatDate, isDateBefore } from '../../utils/dateHelpers';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
 import { ChecklistSection } from './ChecklistSection';
@@ -252,10 +252,18 @@ export function TaskDetails({
         }
         setIsSaving(true);
         try {
-            await onUpdateTask(tarefa.id, {
+            // Garantir que o responsável principal esteja na lista de responsáveis
+            let responsaveisFinais = [...editResponsaveisIds];
+            if (editResponsavelPrincipalId && !responsaveisFinais.includes(editResponsavelPrincipalId)) {
+                responsaveisFinais = [editResponsavelPrincipalId, ...responsaveisFinais];
+            }
+
+            const updateData = {
                 responsavelPrincipalId: editResponsavelPrincipalId,
-                responsaveisIds: editResponsaveisIds
-            });
+                responsaveisIds: responsaveisFinais
+            };
+            console.log('📤 [TaskDetails] Salvando responsáveis:', updateData);
+            await onUpdateTask(tarefa.id, updateData);
             setIsEditingResponsaveis(false);
         } catch (err) {
             console.error('Erro ao salvar responsáveis:', err);
@@ -513,11 +521,10 @@ export function TaskDetails({
                             <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
                                 <button
                                     onClick={() => setActiveTab('comments')}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                                        activeTab === 'comments'
+                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'comments'
                                             ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                        }`}
                                 >
                                     <MessageSquare className="w-4 h-4" />
                                     <span>Comentários</span>
@@ -529,11 +536,10 @@ export function TaskDetails({
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('checklist')}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                                        activeTab === 'checklist'
+                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'checklist'
                                             ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                        }`}
                                 >
                                     <CheckSquare className="w-4 h-4" />
                                     <span>Checklist</span>
@@ -545,11 +551,10 @@ export function TaskDetails({
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('history')}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                                        activeTab === 'history'
+                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'history'
                                             ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                        }`}
                                 >
                                     <History className="w-4 h-4" />
                                     <span>Histórico</span>
@@ -564,123 +569,123 @@ export function TaskDetails({
                                         <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Comentários</h2>
                                     </div>
 
-                            <div className="bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col min-h-[300px] max-h-[500px]">
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                    {history.length === 0 ? (
-                                        <div className="h-full flex flex-col items-center justify-center text-slate-400 italic text-sm py-10">
-                                            <MessageSquare className="w-8 h-8 mb-2 opacity-20" />
-                                            <span>Sem histórico de atividades.</span>
-                                        </div>
-                                    ) : (
-                                        history.map((m) => {
-                                            const isOwner = !!(m.authorId && getLoggedUserId() && String(m.authorId) === String(getLoggedUserId()));
-                                            return (
-                                                <div key={m.id} className={`flex flex-col items-start`}>
-                                                    <div className="flex items-center gap-2 mb-1 px-1">
-                                                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                                            {m.author}
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-400">
-                                                            {new Date(m.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                        {isOwner && (
-                                                            <div className="ml-2 flex items-center gap-1">
-                                                                <button onClick={(e) => { e.stopPropagation(); setEditingId(m.id); setEditingText(m.text); }} title="Editar" className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                                                    <Edit3 className="w-3.5 h-3.5 text-slate-500" />
-                                                                </button>
-                                                                <button onClick={async (e) => { e.stopPropagation(); if (!confirm('Apagar esse comentário?')) return; try { if (onDeleteComment) { await onDeleteComment(tarefa.id, m.id); setHistory(prev => prev.filter(x => x.id !== m.id)); } } catch (err) { console.error('Erro ao deletar comentário', err); } }} title="Apagar" className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
-                                                                    <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {editingId === m.id ? (
-                                                        <div className="w-full max-w-[90%]">
-                                                            <textarea value={editingText} onChange={(e) => setEditingText(e.target.value)} className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white" />
-                                                            <div className="mt-2 flex gap-2">
-                                                                <button onClick={async (e) => { e.stopPropagation(); try { if (onEditComment) { const saved = await onEditComment(tarefa.id, m.id, editingText); const updatedText = saved?.conteudo ?? editingText; setHistory(prev => prev.map(x => x.id === m.id ? { ...x, text: updatedText } : x)); } else { setHistory(prev => prev.map(x => x.id === m.id ? { ...x, text: editingText } : x)); } setEditingId(null); setEditingText(''); } catch (err) { console.error('Erro ao editar comentário', err); } }} className="px-3 py-1 rounded bg-blue-600 text-white">Salvar</button>
-                                                                <button onClick={(e) => { e.stopPropagation(); setEditingId(null); setEditingText(''); }} className="px-3 py-1 rounded bg-slate-200 dark:bg-slate-700">Cancelar</button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className={`px-4 py-2.5 rounded-2xl max-w-[90%] text-sm leading-relaxed shadow-sm bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-none`}>
-                                                            {m.text}
-                                                        </div>
-                                                    )}
+                                    <div className="bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col min-h-[300px] max-h-[500px]">
+                                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                            {history.length === 0 ? (
+                                                <div className="h-full flex flex-col items-center justify-center text-slate-400 italic text-sm py-10">
+                                                    <MessageSquare className="w-8 h-8 mb-2 opacity-20" />
+                                                    <span>Sem histórico de atividades.</span>
                                                 </div>
-                                            );
-                                        })
-                                    )}
-                                    <div ref={scrollRef} />
-                                </div>
+                                            ) : (
+                                                history.map((m) => {
+                                                    const isOwner = !!(m.authorId && getLoggedUserId() && String(m.authorId) === String(getLoggedUserId()));
+                                                    return (
+                                                        <div key={m.id} className={`flex flex-col items-start`}>
+                                                            <div className="flex items-center gap-2 mb-1 px-1">
+                                                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                                                    {m.author}
+                                                                </span>
+                                                                <span className="text-[10px] text-slate-400">
+                                                                    {new Date(m.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                                </span>
+                                                                {isOwner && (
+                                                                    <div className="ml-2 flex items-center gap-1">
+                                                                        <button onClick={(e) => { e.stopPropagation(); setEditingId(m.id); setEditingText(m.text); }} title="Editar" className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+                                                                            <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                                                                        </button>
+                                                                        <button onClick={async (e) => { e.stopPropagation(); if (!confirm('Apagar esse comentário?')) return; try { if (onDeleteComment) { await onDeleteComment(tarefa.id, m.id); setHistory(prev => prev.filter(x => x.id !== m.id)); } } catch (err) { console.error('Erro ao deletar comentário', err); } }} title="Apagar" className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+                                                                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
 
-                                {/* Input Area */}
-                                <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                                    <div className="relative">
-                                        <input
-                                            value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
-                                            onKeyDown={async (e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    if (!newMessage.trim()) return;
-                                                    const text = newMessage.trim();
-                                                    setNewMessage('');
-                                                    // Prefer server-returned author name when possible
-                                                    if (onAddComment) {
-                                                        try {
-                                                            const saved = await onAddComment(tarefa.id, text);
-                                                            const authorName = saved?.autorNome || getLoggedUserFullName();
-                                                            const msg = { id: `local-${Date.now()}`, author: authorName, text, createdAt: new Date().toISOString() };
-                                                            setHistory(prev => [...prev, msg]);
-                                                        } catch (err) {
-                                                            console.error('Erro ao enviar comentário:', err);
+                                                            {editingId === m.id ? (
+                                                                <div className="w-full max-w-[90%]">
+                                                                    <textarea value={editingText} onChange={(e) => setEditingText(e.target.value)} className="w-full p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white" />
+                                                                    <div className="mt-2 flex gap-2">
+                                                                        <button onClick={async (e) => { e.stopPropagation(); try { if (onEditComment) { const saved = await onEditComment(tarefa.id, m.id, editingText); const updatedText = saved?.conteudo ?? editingText; setHistory(prev => prev.map(x => x.id === m.id ? { ...x, text: updatedText } : x)); } else { setHistory(prev => prev.map(x => x.id === m.id ? { ...x, text: editingText } : x)); } setEditingId(null); setEditingText(''); } catch (err) { console.error('Erro ao editar comentário', err); } }} className="px-3 py-1 rounded bg-blue-600 text-white">Salvar</button>
+                                                                        <button onClick={(e) => { e.stopPropagation(); setEditingId(null); setEditingText(''); }} className="px-3 py-1 rounded bg-slate-200 dark:bg-slate-700">Cancelar</button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className={`px-4 py-2.5 rounded-2xl max-w-[90%] text-sm leading-relaxed shadow-sm bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-none`}>
+                                                                    {m.text}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                            <div ref={scrollRef} />
+                                        </div>
+
+                                        {/* Input Area */}
+                                        <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                                            <div className="relative">
+                                                <input
+                                                    value={newMessage}
+                                                    onChange={(e) => setNewMessage(e.target.value)}
+                                                    onKeyDown={async (e) => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            if (!newMessage.trim()) return;
+                                                            const text = newMessage.trim();
+                                                            setNewMessage('');
+                                                            // Prefer server-returned author name when possible
+                                                            if (onAddComment) {
+                                                                try {
+                                                                    const saved = await onAddComment(tarefa.id, text);
+                                                                    const authorName = saved?.autorNome || getLoggedUserFullName();
+                                                                    const msg = { id: `local-${Date.now()}`, author: authorName, text, createdAt: new Date().toISOString() };
+                                                                    setHistory(prev => [...prev, msg]);
+                                                                } catch (err) {
+                                                                    console.error('Erro ao enviar comentário:', err);
+                                                                    const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
+                                                                    setHistory(prev => [...prev, msg]);
+                                                                }
+                                                            } else {
+                                                                const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
+                                                                setHistory(prev => [...prev, msg]);
+                                                            }
+                                                            setTimeout(() => scrollToBottom(), 50);
+                                                        }
+                                                    }}
+                                                    placeholder="Adicione um comentário ou atualização..."
+                                                    className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border-0 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-shadow"
+                                                />
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!newMessage.trim()) return;
+                                                        const text = newMessage.trim();
+                                                        setNewMessage('');
+                                                        if (onAddComment) {
+                                                            try {
+                                                                const saved = await onAddComment(tarefa.id, text);
+                                                                const authorName = saved?.autorNome || getLoggedUserFullName();
+                                                                const msg = { id: `local-${Date.now()}`, author: authorName, text, createdAt: new Date().toISOString() };
+                                                                setHistory(prev => [...prev, msg]);
+                                                            } catch (err) {
+                                                                console.error('Erro ao enviar comentário:', err);
+                                                                const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
+                                                                setHistory(prev => [...prev, msg]);
+                                                            }
+                                                        } else {
                                                             const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
                                                             setHistory(prev => [...prev, msg]);
                                                         }
-                                                    } else {
-                                                        const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
-                                                        setHistory(prev => [...prev, msg]);
-                                                    }
-                                                    setTimeout(() => scrollToBottom(), 50);
-                                                }
-                                            }}
-                                            placeholder="Adicione um comentário ou atualização..."
-                                            className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border-0 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-shadow"
-                                        />
-                                        <button
-                                            onClick={async () => {
-                                                if (!newMessage.trim()) return;
-                                                const text = newMessage.trim();
-                                                setNewMessage('');
-                                                if (onAddComment) {
-                                                    try {
-                                                        const saved = await onAddComment(tarefa.id, text);
-                                                        const authorName = saved?.autorNome || getLoggedUserFullName();
-                                                        const msg = { id: `local-${Date.now()}`, author: authorName, text, createdAt: new Date().toISOString() };
-                                                        setHistory(prev => [...prev, msg]);
-                                                    } catch (err) {
-                                                        console.error('Erro ao enviar comentário:', err);
-                                                        const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
-                                                        setHistory(prev => [...prev, msg]);
-                                                    }
-                                                } else {
-                                                    const msg = { id: `local-${Date.now()}`, author: getLoggedUserFullName(), text, createdAt: new Date().toISOString() };
-                                                    setHistory(prev => [...prev, msg]);
-                                                }
-                                                setTimeout(() => scrollToBottom(), 50);
-                                            }}
-                                            type="button"
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                            disabled={!newMessage.trim()}
-                                        >
-                                            <CornerDownRight className="w-4 h-4" />
-                                        </button>
+                                                        setTimeout(() => scrollToBottom(), 50);
+                                                    }}
+                                                    type="button"
+                                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    disabled={!newMessage.trim()}
+                                                >
+                                                    <CornerDownRight className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
                                 </div>
                             )}
 
@@ -852,7 +857,7 @@ export function TaskDetails({
                                             </div>
                                             <div className="flex justify-between items-center text-sm p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" onClick={() => onUpdateTask && setIsEditingDates(true)}>
                                                 <span className="text-slate-500 dark:text-slate-400">Prazo</span>
-                                                <span className={`font-medium font-mono ${tarefa.prazo_tarefa && new Date(tarefa.prazo_tarefa) < new Date() ? 'text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded' : 'text-slate-900 dark:text-white'}`}>
+                                                <span className={`font-medium font-mono ${tarefa.prazo_tarefa && isDateBefore(tarefa.prazo_tarefa, new Date()) ? 'text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded' : 'text-slate-900 dark:text-white'}`}>
                                                     {tarefa.prazo_tarefa ? formatDate(tarefa.prazo_tarefa, "dd/MM/yyyy") : '-'}
                                                 </span>
                                             </div>
@@ -880,9 +885,8 @@ export function TaskDetails({
                                         <div className="relative">
                                             <button
                                                 onClick={() => setIsEditingPriority(!isEditingPriority)}
-                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border transition-colors ${
-                                                    PRIORIDADE_OPTIONS.find(p => p.value === (tarefa.prioridade || editPrioridade))?.color || 'bg-slate-100'
-                                                } border-slate-200 dark:border-slate-700`}
+                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border transition-colors ${PRIORIDADE_OPTIONS.find(p => p.value === (tarefa.prioridade || editPrioridade))?.color || 'bg-slate-100'
+                                                    } border-slate-200 dark:border-slate-700`}
                                             >
                                                 <span className="text-sm font-medium">
                                                     {PRIORIDADE_OPTIONS.find(p => p.value === (tarefa.prioridade || editPrioridade))?.label || 'Média'}
@@ -906,9 +910,8 @@ export function TaskDetails({
                                             )}
                                         </div>
                                     ) : (
-                                        <div className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                                            PRIORIDADE_OPTIONS.find(p => p.value === tarefa.prioridade)?.color || 'bg-slate-100 text-slate-700'
-                                        }`}>
+                                        <div className={`px-3 py-2 rounded-lg text-sm font-medium ${PRIORIDADE_OPTIONS.find(p => p.value === tarefa.prioridade)?.color || 'bg-slate-100 text-slate-700'
+                                            }`}>
                                             {PRIORIDADE_OPTIONS.find(p => p.value === tarefa.prioridade)?.label || 'Média'}
                                         </div>
                                     )}
@@ -943,15 +946,20 @@ export function TaskDetails({
                                                 {assignees.map((assignee) => (
                                                     <div
                                                         key={assignee.id}
-                                                        className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-                                                            editResponsavelPrincipalId === assignee.id
+                                                        className={`flex items-center justify-between p-2 rounded-lg transition-colors ${editResponsavelPrincipalId === assignee.id
                                                                 ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800'
                                                                 : 'hover:bg-slate-50 dark:hover:bg-slate-700'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <div
                                                             className="flex items-center gap-2 flex-1 cursor-pointer"
-                                                            onClick={() => setEditResponsavelPrincipalId(assignee.id)}
+                                                            onClick={() => {
+                                                                setEditResponsavelPrincipalId(assignee.id);
+                                                                // Ao definir como principal, adiciona automaticamente à lista se não estiver
+                                                                if (!editResponsaveisIds.includes(assignee.id)) {
+                                                                    setEditResponsaveisIds(prev => [...prev, assignee.id]);
+                                                                }
+                                                            }}
                                                         >
                                                             <Avatar src={assignee.avatar} name={assignee.nome} className="w-7 h-7 text-xs" />
                                                             <div className="flex flex-col">

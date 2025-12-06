@@ -272,8 +272,13 @@ public class TarefaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + id));
 
         // Atualiza apenas campos que foram fornecidos (não sobrescreve com null)
-        // Para descricao: se vier null, mantém o valor existente; se vier vazio, aceita
-        // string vazia
+
+        // Título: atualiza se fornecido
+        if (dtoAtualizada.getTitulo() != null) {
+            tarefa.setTitulo(dtoAtualizada.getTitulo());
+        }
+
+        // Para descricao: aceita string vazia (usuário pode querer limpar a descrição)
         if (dtoAtualizada.getDescricao() != null) {
             tarefa.setDescricao(dtoAtualizada.getDescricao());
         } else if (tarefa.getDescricao() == null) {

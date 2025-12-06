@@ -177,9 +177,9 @@ const mapTarefaFormToBackend = (
         payload.titulo = titulo;
     }
 
-    const descricao = data.descricao?.trim();
-    if (descricao !== undefined) {
-        payload.descricao = descricao;
+    // Descrição: aceita string vazia (usuário pode querer limpar a descrição)
+    if (data.descricao !== undefined) {
+        payload.descricao = data.descricao.trim();
     } else if (includeDefaults) {
         payload.descricao = '';
     }
@@ -197,8 +197,42 @@ const mapTarefaFormToBackend = (
         payload.prioridade = PrioridadeTarefa.MEDIA.toUpperCase();
     }
 
+    // Status da tarefa
+    if ((data as any).status) {
+        payload.statusTarefa = (data as any).status;
+    }
+
+    // Data de início
+    if (data.dataInicio) {
+        payload.dataInicio = data.dataInicio;
+    }
+
+    // Estimativa de horas
+    if (data.estimadoHoras !== undefined && data.estimadoHoras !== null) {
+        payload.estimadoHoras = data.estimadoHoras;
+    }
+
+    // Progresso
+    if ((data as any).progresso !== undefined && (data as any).progresso !== null) {
+        payload.progresso = (data as any).progresso;
+    }
+
+    // Responsável principal - converte para Number e valida
     if (data.responsavelPrincipalId) {
-        payload.responsavelId = Number(data.responsavelPrincipalId);
+        const responsavelId = Number(data.responsavelPrincipalId);
+        if (!Number.isNaN(responsavelId)) {
+            payload.responsavelId = responsavelId;
+        }
+    }
+
+    // Lista de responsáveis (IDs) - fallback para o primeiro se principal não definido
+    if (Array.isArray((data as any).responsaveisIds) && (data as any).responsaveisIds.length > 0) {
+        if (!payload.responsavelId) {
+            const firstId = Number((data as any).responsaveisIds[0]);
+            if (!Number.isNaN(firstId)) {
+                payload.responsavelId = firstId;
+            }
+        }
     }
 
     if (data.reuniaoId) {
@@ -583,14 +617,25 @@ export const meetingsApi = {
         }
 
         const backendPayload = mapTarefaFormToBackend(data);
+        // Limpar valores undefined/null/NaN, mas MANTER strings vazias (ex: descrição vazia é válida)
         const cleanedData = Object.entries(backendPayload).reduce((acc, [key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                acc[key] = value;
+            // Remove undefined, null
+            if (value === undefined || value === null) {
+                return acc;
             }
+            // Remove NaN para valores numéricos
+            if (typeof value === 'number' && Number.isNaN(value)) {
+                return acc;
+            }
+            acc[key] = value;
             return acc;
         }, {} as Record<string, unknown>);
 
+        console.log('📤 [meetingsApi] updateTarefa - Input:', data);
+        console.log('📤 [meetingsApi] updateTarefa - Payload enviado:', cleanedData);
+
         const response = await api.put(`/tarefas/${id}`, cleanedData);
+        console.log('📥 [meetingsApi] updateTarefa - Response:', response.data);
         return mapBackendTask(response.data, data as TarefaFormData);
     },
 

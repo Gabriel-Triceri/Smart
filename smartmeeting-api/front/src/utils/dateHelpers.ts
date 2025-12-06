@@ -2,12 +2,29 @@ import { format, formatDistanceToNow, differenceInMinutes, isValid, isToday, isT
 import { ptBR } from 'date-fns/locale';
 
 /**
+ * Converte uma string de data para Date, tratando timezone corretamente.
+ * Datas sem horário (ex: "2025-06-07") são interpretadas como meia-noite LOCAL.
+ */
+function parseDate(date: string | Date): Date {
+    if (date instanceof Date) return date;
+
+    // Se a string é apenas data (YYYY-MM-DD), adiciona horário local para evitar bug de timezone
+    // Sem isso, "2025-06-07" seria interpretado como meia-noite UTC, resultando em 1 dia a menos no Brasil
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        const [year, month, day] = date.split('-').map(Number);
+        return new Date(year, month - 1, day); // Mês é 0-indexed
+    }
+
+    return new Date(date);
+}
+
+/**
  * Formata uma data para exibição.
  * Padrão: "dd 'de' MMMM 'às' HH:mm" (ex: 26 de Novembro às 22:00)
  */
 export function formatDate(date: string | Date | undefined | null, formatStr: string = "dd 'de' MMMM 'às' HH:mm"): string {
     if (!date) return '';
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const d = parseDate(date);
 
     if (!isValid(d)) {
         console.warn('Invalid date passed to formatDate:', date);
@@ -35,7 +52,7 @@ export function formatDateTime(date: string | Date): string {
  * Retorna o tempo relativo (ex: "há 5 minutos")
  */
 export function getRelativeTime(date: string | Date): string {
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const d = parseDate(date);
     if (!isValid(d)) return '';
 
     return formatDistanceToNow(d, { addSuffix: true, locale: ptBR });
@@ -45,7 +62,7 @@ export function getRelativeTime(date: string | Date): string {
  * Verifica se uma data está no futuro
  */
 export function isFutureDate(date: string | Date): boolean {
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const d = parseDate(date);
     return isValid(d) && d > new Date();
 }
 
@@ -69,29 +86,29 @@ export function formatDuration(minutes: number): string {
 }
 
 export function isDateToday(date: string | Date): boolean {
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const d = parseDate(date);
     return isValid(d) && isToday(d);
 }
 
 export function isDateTomorrow(date: string | Date): boolean {
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const d = parseDate(date);
     return isValid(d) && isTomorrow(d);
 }
 
 export function isDateBefore(date: string | Date, compareTo: string | Date): boolean {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    const c = typeof compareTo === 'string' ? new Date(compareTo) : compareTo;
+    const d = parseDate(date);
+    const c = parseDate(compareTo);
     return isValid(d) && isValid(c) && isBefore(d, c);
 }
 
 export function isDateAfter(date: string | Date, compareTo: string | Date): boolean {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    const c = typeof compareTo === 'string' ? new Date(compareTo) : compareTo;
+    const d = parseDate(date);
+    const c = parseDate(compareTo);
     return isValid(d) && isValid(c) && isAfter(d, c);
 }
 
 export function formatDateFriendly(date: string | Date): string {
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const d = parseDate(date);
     if (!isValid(d)) return '';
 
     if (isToday(d)) return 'Hoje';
