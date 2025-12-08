@@ -188,6 +188,35 @@ export enum StatusReuniao {
     CANCELADA = 'CANCELADA'
 }
 
+/**
+ * Função helper para normalizar status de reunião
+ * Garante compatibilidade entre maiúsculas e minúsculas
+ */
+export function normalizeStatusReuniao(status: string | StatusReuniao): StatusReuniao {
+    const statusStr = status.toString().toUpperCase();
+    
+    switch (statusStr) {
+        case 'AGENDADA':
+        case 'agendada':
+            return StatusReuniao.AGENDADA;
+        case 'EM_ANDAMENTO':
+        case 'em_andamento':
+        case 'EMPROGRESSO':
+        case 'emprogresso':
+            return StatusReuniao.EM_ANDAMENTO;
+        case 'FINALIZADA':
+        case 'finalizada':
+        case 'CONCLUIDA':
+        case 'concluida':
+            return StatusReuniao.FINALIZADA;
+        case 'CANCELADA':
+        case 'cancelada':
+            return StatusReuniao.CANCELADA;
+        default:
+            return StatusReuniao.AGENDADA; // Status padrão
+    }
+}
+
 export enum SalaStatus {
     LIVRE = 'LIVRE',
     OCUPADA = 'OCUPADA',
@@ -434,12 +463,14 @@ export interface TarefaHistory {
 export interface KanbanColumnDynamic {
     id: string;
     projectId: string;
+    columnKey: string; // Add this
     title: string;
     description?: string;
     color: string;
     ordem: number;
     wipLimit?: number;
     isDoneColumn: boolean;
+    isDefault: boolean; // Add this
     isActive: boolean;
     createdAt: string;
     updatedAt: string;

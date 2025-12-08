@@ -103,9 +103,18 @@ export function TaskManager() {
     const [showFilters, setShowFilters] = useState(false);
 
     // Derived state for column management
-    const selectedProjectId = (filtros.projectName && filtros.projectName.length === 1)
-        ? tarefas.find(t => t.projectName === filtros.projectName?.[0])?.projectId
-        : undefined;
+    // Derived state for column management
+    const selectedProjectId = (() => {
+        console.log('DEBUG TaskManager - Filters:', filtros);
+        console.log('DEBUG TaskManager - All tasks projectIds:', tarefas.map(t => ({ id: t.id, projectId: t.projectId, type: typeof t.projectId })));
+        if (filtros.projectName && filtros.projectName.length === 1) {
+            const nomeProjeto = filtros.projectName[0];
+            const tarefa = tarefas.find(t => t.projectName === nomeProjeto);
+            console.log('DEBUG TaskManager - Found Task:', tarefa?.projectName, tarefa?.projectId, 'type:', typeof tarefa?.projectId);
+            return tarefa?.projectId;
+        }
+        return undefined;
+    })();
 
 
 

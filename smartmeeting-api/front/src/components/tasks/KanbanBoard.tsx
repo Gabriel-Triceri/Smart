@@ -63,6 +63,14 @@ const TrashIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+const EllipsisIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
+        <circle cx="12" cy="5" r="2" fill="currentColor" />
+        <circle cx="12" cy="12" r="2" fill="currentColor" />
+        <circle cx="12" cy="19" r="2" fill="currentColor" />
+    </svg>
+);
+
 const SettingsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
         <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
@@ -126,12 +134,14 @@ export function KanbanBoard({
     onViewTask,
     loading = false,
 }: KanbanBoardProps) {
+    console.log('DEBUG KanbanBoard - Received projectId:', projectId);
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
-    const [columns, setColumns] = useState<KanbanColumnConfig[]>([]);
+    const [columns, setColumns] = useState<(KanbanColumnConfig & { id?: string; isDefault?: boolean })[]>([]);
     const [dynamicColumns, setDynamicColumns] = useState<KanbanColumnDynamic[]>([]);
     const [editingColumn, setEditingColumn] = useState<StatusTarefa | null>(null);
     const [tempTitle, setTempTitle] = useState('');
+    const [openDropdownForColumn, setOpenDropdownForColumn] = useState<StatusTarefa | null>(null);
 
     // States for dynamic column management
     const [showAddColumnModal, setShowAddColumnModal] = useState(false);
@@ -143,8 +153,10 @@ export function KanbanBoard({
     const [showPermissionsModal, setShowPermissionsModal] = useState(false);
 
     useEffect(() => {
-        loadColumns();
-    }, []);
+        if (!projectId) {
+            loadColumns();
+        }
+    }, [projectId]);
 
     const loadColumns = async () => {
         try {
@@ -166,6 +178,7 @@ export function KanbanBoard({
     const handleStartEditColumn = (col: KanbanColumnConfig) => {
         setEditingColumn(col.status);
         setTempTitle(col.title);
+        setOpenDropdownForColumn(null); // Close dropdown when starting edit
     };
 
     const handleCancelEditColumn = () => {
@@ -175,14 +188,70 @@ export function KanbanBoard({
 
     const handleSaveColumn = async (status: StatusTarefa) => {
         if (!tempTitle.trim()) return;
+        const trimmedTitle = tempTitle.trim();
+        
         try {
-            const updated = await meetingsApi.updateKanbanColumn(status, tempTitle);
-            setColumns(prev => prev.map(c => c.status === status ? updated : c));
+            if (projectId) {
+                const col = columns.find(c => c.status === status);
+                if (col && col.id) {
+                    const updated = await meetingsApi.updateKanbanColumnDynamic(projectId, col.id, { title: trimmedTitle });
+                    setDynamicColumns(prev => prev.map(c => c.id === col.id ? updated : c));
+                }
+            } else {
+                const updated = await meetingsApi.updateKanbanColumn(status, trimmedTitle);
+                setColumns(prev => prev.map(c => c.status === status ? { ...c, title: updated.title } : c));
+            }
+            
+            // Update title everywhere immediately for better UX
+            updateColumnTitleEverywhere(status, trimmedTitle);
+            
             setEditingColumn(null);
+            setOpenDropdownForColumn(null);
         } catch (error) {
             console.error('Failed to update column title', error);
+            // Revert to original title on error
+            setEditingColumn(null);
+            setOpenDropdownForColumn(null);
         }
     };
+
+    const handleDropdownToggle = (status: StatusTarefa) => {
+        setOpenDropdownForColumn(openDropdownForColumn === status ? null : status);
+    };
+
+    const handleEditColumn = (column: KanbanColumnConfig) => {
+        handleStartEditColumn(column);
+        setOpenDropdownForColumn(null);
+    };
+
+    const handleDeleteColumn = (column: KanbanColumnConfig) => {
+        if (column.id && !column.isDefault) {
+            handleDeleteDynamicColumn(column.id);
+        }
+        setOpenDropdownForColumn(null);
+    };
+
+    const handleAddColumnFromDropdown = () => {
+        console.log('DEBUG: handleAddColumnFromDropdown called');
+        console.log('DEBUG: projectId available:', !!projectId);
+        setShowAddColumnModal(true);
+        setOpenDropdownForColumn(null);
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest('[data-dropdown]')) {
+                setOpenDropdownForColumn(null);
+            }
+        };
+
+        if (openDropdownForColumn) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [openDropdownForColumn]);
 
     // Load dynamic columns for project
     const loadDynamicColumns = async () => {
@@ -201,23 +270,109 @@ export function KanbanBoard({
         }
     }, [projectId]);
 
+    // Sync dynamic columns to display columns
+    useEffect(() => {
+        if (projectId && dynamicColumns.length > 0) {
+            const mappedCols = dynamicColumns
+                .sort((a, b) => a.ordem - b.ordem)
+                .map(col => ({
+                    status: col.columnKey as StatusTarefa,
+                    title: col.title,
+                    id: col.id, // Keep the UUID for updates
+                    isDefault: col.isDefault // Keep track of default columns
+                }));
+            setColumns(mappedCols);
+        }
+    }, [dynamicColumns, projectId]);
+
+    // Sync dynamic columns to display columns
+    useEffect(() => {
+        if (projectId && dynamicColumns.length > 0) {
+            const mappedCols = dynamicColumns
+                .sort((a, b) => a.ordem - b.ordem)
+                .map(col => ({
+                    status: col.columnKey as StatusTarefa,
+                    title: col.title,
+                    id: col.id, // Keep the UUID for updates
+                    isDefault: col.isDefault // Keep track of default columns
+                }));
+            setColumns(mappedCols);
+        }
+    }, [dynamicColumns, projectId]);
+
+    // Update column title in all relevant places when edited
+    const updateColumnTitleEverywhere = (status: StatusTarefa, newTitle: string) => {
+        if (projectId) {
+            // For project-specific columns, update dynamic columns
+            const col = columns.find(c => c.status === status);
+            if (col && col.id) {
+                setDynamicColumns(prev => prev.map(c => 
+                    c.id === col.id ? { ...c, title: newTitle } : c
+                ));
+            }
+        } else {
+            // For global columns, update regular columns
+            setColumns(prev => prev.map(c => 
+                c.status === status ? { ...c, title: newTitle } : c
+            ));
+        }
+    };
+
     // Add new dynamic column
     const handleAddDynamicColumn = async () => {
-        if (!projectId || !newColumnTitle.trim()) return;
+        console.log('DEBUG: handleAddDynamicColumn called');
+        console.log('DEBUG: projectId:', projectId);
+        console.log('DEBUG: projectId type:', typeof projectId);
+        console.log('DEBUG: projectId length:', projectId?.toString().length);
+        console.log('DEBUG: newColumnTitle:', newColumnTitle);
+        console.log('DEBUG: newColumnTitle.trim():', newColumnTitle.trim());
+        
+        if (!projectId) {
+            console.error('DEBUG: projectId is missing');
+            alert('ID do projeto não encontrado. Verifique se você está em um projeto.');
+            return;
+        }
+        
+        if (!newColumnTitle.trim()) {
+            console.error('DEBUG: newColumnTitle is empty');
+            alert('Título da coluna é obrigatório.');
+            return;
+        }
+        
         try {
             setAddingColumn(true);
-            const newColumn = await meetingsApi.createKanbanColumnDynamic({
+            console.log('DEBUG: Creating column with data:', {
                 projectId,
                 title: newColumnTitle.trim(),
                 color: newColumnColor,
-                ordem: dynamicColumns.length,
+                ordem: dynamicColumns.length + 1,
                 isDoneColumn: false
             });
+            
+            // Converte projectId para number se for string numérica
+            const projectIdNumber = typeof projectId === 'string' && /^\d+$/.test(projectId) 
+                ? parseInt(projectId, 10) 
+                : projectId;
+            
+            console.log('DEBUG: Converted projectId to:', projectIdNumber, 'type:', typeof projectIdNumber);
+            
+            const newColumn = await meetingsApi.createKanbanColumnDynamic({
+                projectId: projectIdNumber,
+                title: newColumnTitle.trim(),
+                color: newColumnColor,
+                ordem: dynamicColumns.length + 1,
+                isDoneColumn: false
+            });
+            
+            console.log('DEBUG: Column created successfully:', newColumn);
             setDynamicColumns(prev => [...prev, newColumn]);
             setNewColumnTitle('');
             setShowAddColumnModal(false);
+            alert('Coluna adicionada com sucesso!');
         } catch (error) {
-            console.error('Failed to add column', error);
+            console.error('DEBUG: Failed to add column', error);
+            console.error('DEBUG: Error details:', error.response?.data || error.message);
+            alert('Erro ao adicionar coluna: ' + (error.response?.data?.message || error.message));
         } finally {
             setAddingColumn(false);
         }
@@ -225,22 +380,13 @@ export function KanbanBoard({
 
     // Delete dynamic column
     const handleDeleteDynamicColumn = async (columnId: string) => {
-        if (!confirm('Tem certeza que deseja excluir esta coluna?')) return;
+        if (!projectId) return;
+        if (!confirm('Tem certeza que deseja excluir esta coluna? Tarefas nela poderão ficar inacessíveis.')) return;
         try {
-            await meetingsApi.deleteKanbanColumnDynamic(columnId);
+            await meetingsApi.deleteKanbanColumnDynamic(projectId, columnId);
             setDynamicColumns(prev => prev.filter(c => c.id !== columnId));
         } catch (error) {
             console.error('Failed to delete column', error);
-        }
-    };
-
-    // Update dynamic column title
-    const handleUpdateDynamicColumn = async (columnId: string, newTitle: string) => {
-        try {
-            const updated = await meetingsApi.updateKanbanColumnDynamic(columnId, { title: newTitle });
-            setDynamicColumns(prev => prev.map(c => c.id === columnId ? updated : c));
-        } catch (error) {
-            console.error('Failed to update column', error);
         }
     };
 
@@ -322,22 +468,65 @@ export function KanbanBoard({
                                                     ) : (
                                                         <>
                                                             <h3
-                                                                className="font-semibold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                                                className="font-semibold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1"
                                                                 onDoubleClick={() => handleStartEditColumn(column)}
                                                                 title="Clique duplo para editar"
                                                             >
                                                                 {column.title}
+                                                                <EditIcon className="w-3 h-3 opacity-0 group-hover/header:opacity-50 transition-opacity" />
                                                             </h3>
                                                             <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
                                                                 {columnTasks.length}
                                                             </span>
-                                                            <button
-                                                                onClick={() => handleStartEditColumn(column)}
-                                                                className="opacity-0 group-hover/header:opacity-100 ml-2 p-1 text-slate-400 hover:text-blue-500 transition-all"
-                                                                title="Editar nome da coluna"
-                                                            >
-                                                                <EditIcon />
-                                                            </button>
+
+                                                            {/* Dropdown Menu */}
+                                                            <div className="relative" data-dropdown>
+                                                                <button
+                                                                    onClick={() => handleDropdownToggle(column.status)}
+                                                                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all opacity-0 group-hover/header:opacity-100"
+                                                                    title="Opções da coluna"
+                                                                >
+                                                                    <EllipsisIcon />
+                                                                </button>
+
+                                                                {/* Dropdown Menu */}
+                                                                {openDropdownForColumn === column.status && (
+                                                                    <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-[9999] py-1">
+                                                                        <button
+                                                                            onClick={() => handleEditColumn(column)}
+                                                                            className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                                                                        >
+                                                                            <EditIcon />
+                                                                            Editar Nome
+                                                                        </button>
+
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                console.log('DEBUG: Add Column button clicked');
+                                                                                handleAddColumnFromDropdown();
+                                                                            }}
+                                                                            className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                                                                        >
+                                                                            <PlusIcon />
+                                                                            Adicionar Coluna
+                                                                        </button>
+
+                                                                        {/* Only show delete for dynamic columns that are not default */}
+                                                                        {column.id && !column.isDefault && (
+                                                                            <>
+                                                                                <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+                                                                                <button
+                                                                                    onClick={() => handleDeleteColumn(column)}
+                                                                                    className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
+                                                                                >
+                                                                                    <TrashIcon />
+                                                                                    Deletar Coluna
+                                                                                </button>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </>
                                                     )}
                                                 </div>
@@ -408,30 +597,27 @@ export function KanbanBoard({
                         {/* Add Column Button & Permissions Button (only visible when projectId is provided and user has permission) */}
                         {projectId && (
                             <div className="flex-shrink-0 w-72 min-w-[18rem] space-y-3">
-                                {/* Adicionar Coluna - requer permissão de gerenciar colunas do Kanban */}
-                                <CanDo permission={PermissionType.KANBAN_MANAGE_COLUMNS} projectId={projectId}>
-                                    <button
-                                        onClick={() => setShowAddColumnModal(true)}
-                                        className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
-                                    >
-                                        <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                                        <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
-                                            Adicionar Coluna
-                                        </span>
-                                    </button>
-                                </CanDo>
-                                {/* Permissões - requer permissão de gerenciar membros */}
-                                <CanDo permission={PermissionType.PROJECT_MANAGE_MEMBERS} projectId={projectId}>
-                                    <button
-                                        onClick={() => setShowPermissionsModal(true)}
-                                        className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
-                                    >
-                                        <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
-                                        <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
-                                            Permissões
-                                        </span>
-                                    </button>
-                                </CanDo>
+                                {/* Adicionar Coluna - DEBUG: Removido CanDo temporariamente */}
+                                <button
+                                    onClick={() => setShowAddColumnModal(true)}
+                                    className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
+                                >
+                                    <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                    <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
+                                        Adicionar Coluna
+                                    </span>
+                                </button>
+
+                                {/* Permissões - DEBUG: Removido CanDo temporariamente */}
+                                <button
+                                    onClick={() => setShowPermissionsModal(true)}
+                                    className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
+                                >
+                                    <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
+                                    <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
+                                        Permissões
+                                    </span>
+                                </button>
                             </div>
                         )}
                     </div>
@@ -477,11 +663,10 @@ export function KanbanBoard({
                                         <button
                                             key={color}
                                             onClick={() => setNewColumnColor(color)}
-                                            className={`w-8 h-8 rounded-full transition-all ${
-                                                newColumnColor === color
-                                                    ? 'ring-2 ring-offset-2 ring-blue-500 scale-110'
-                                                    : 'hover:scale-105'
-                                            }`}
+                                            className={`w-8 h-8 rounded-full transition-all ${newColumnColor === color
+                                                ? 'ring-2 ring-offset-2 ring-blue-500 scale-110'
+                                                : 'hover:scale-105'
+                                                }`}
                                             style={{ backgroundColor: color }}
                                         />
                                     ))}

@@ -1,10 +1,23 @@
 -- =====================================================
 -- SEED DATA - SmartMeeting
--- Script completo com todas as tabelas e colunas
+-- Script completo com todas as tabelas e colunas - VERSÃO AJUSTADA
 -- =====================================================
 
 -- =====================================================
--- 1. PESSOA (IDs 1..10)
+-- 1. Primeiro criar as sequences (se não existirem)
+-- =====================================================
+CREATE SEQUENCE IF NOT EXISTS SQ_PESSOA START WITH 100;
+CREATE SEQUENCE IF NOT EXISTS SQ_SALA START WITH 100;
+CREATE SEQUENCE IF NOT EXISTS SQ_REUNIAO START WITH 100;
+CREATE SEQUENCE IF NOT EXISTS SQ_PRESENCA START WITH 100;
+CREATE SEQUENCE IF NOT EXISTS SQ_TAREFA START WITH 100;
+CREATE SEQUENCE IF NOT EXISTS SQ_NOTIFICACAO START WITH 100;
+CREATE SEQUENCE IF NOT EXISTS SQ_PERMISSION START WITH 100;
+CREATE SEQUENCE IF NOT EXISTS SQ_ROLE START WITH 100;
+CREATE SEQUENCE IF NOT EXISTS HIBERNATE_SEQUENCE START WITH 1000;
+
+-- =====================================================
+-- 2. PESSOA (IDs 1..10)
 -- =====================================================
 MERGE INTO PESSOA (ID_PESSOA, NOME_PESSOA, EMAIL_PESSOA, SENHA_PESSOA, CRACHEID_PESSOA, TIPO_USUARIO)
 KEY(ID_PESSOA) VALUES
@@ -20,7 +33,7 @@ KEY(ID_PESSOA) VALUES
 (10, 'Igor Infra', 'igor.infra@smart.com', '{noop}infra123', 'CR010', 'PARTICIPANTE');
 
 -- =====================================================
--- 2. SALA (IDs 1..10)
+-- 3. SALA (IDs 1..10)
 -- =====================================================
 MERGE INTO SALA (ID_SALA, NOME_SALA, CAPACIDADE_SALA, LOCALIZACAO_SALA, STATUS_SALA)
 KEY(ID_SALA) VALUES
@@ -36,7 +49,7 @@ KEY(ID_SALA) VALUES
 (10, 'Sala de Treinamento', 15, 'Bloco B - 1o andar', 'LIVRE');
 
 -- =====================================================
--- 3. PERMISSION (Permissões do Sistema)
+-- 4. PERMISSION (Permissões do Sistema)
 -- =====================================================
 MERGE INTO PERMISSION (ID_PERMISSION, NOME_PERMISSION)
 KEY(ID_PERMISSION) VALUES
@@ -65,7 +78,7 @@ KEY(ID_PERMISSION) VALUES
 (23, 'ADMIN_SYSTEM_SETTINGS');
 
 -- =====================================================
--- 4. ROLE (Perfis de Acesso)
+-- 5. ROLE (Perfis de Acesso)
 -- =====================================================
 MERGE INTO ROLE (ID_ROLE, NOME_ROLE)
 KEY(ID_ROLE) VALUES
@@ -76,7 +89,7 @@ KEY(ID_ROLE) VALUES
 (5, 'Organizador de Reuniões');
 
 -- =====================================================
--- 5. ROLE_PERMISSION (Associação Perfil-Permissão)
+-- 6. ROLE_PERMISSION (Associação Perfil-Permissão)
 -- =====================================================
 MERGE INTO ROLE_PERMISSION (ID_ROLE, ID_PERMISSION)
 KEY(ID_ROLE, ID_PERMISSION) VALUES
@@ -95,7 +108,7 @@ KEY(ID_ROLE, ID_PERMISSION) VALUES
 (5, 1), (5, 6), (5, 13), (5, 15), (5, 16), (5, 17), (5, 18), (5, 19);
 
 -- =====================================================
--- 6. PROJECT (Projetos - IDs 1..10)
+-- 7. PROJECT (Projetos - IDs 1..10)
 -- =====================================================
 MERGE INTO PROJECT (ID, NAME, DESCRIPTION, START_DATE, END_DATE, STATUS, ID_OWNER)
 KEY(ID) VALUES
@@ -111,7 +124,7 @@ KEY(ID) VALUES
 (10, 'Novo Site Institucional', 'Redesign do site', DATE '2026-01-01', DATE '2026-03-31', 'PLANNING', 9);
 
 -- =====================================================
--- 7. PROJECT_MEMBER (Membros dos Projetos)
+-- 8. PROJECT_MEMBER (Membros dos Projetos)
 -- =====================================================
 MERGE INTO PROJECT_MEMBER (ID, ID_PROJECT, ID_PERSON, ROLE, JOINED_AT)
 KEY(ID) VALUES
@@ -141,7 +154,7 @@ KEY(ID) VALUES
 (18, 7, 9, 'MEMBER_EDITOR', TIMESTAMP '2025-11-01 10:00:00');
 
 -- =====================================================
--- 8. PROJECT_PERMISSION (Permissões por Membro do Projeto)
+-- 9. PROJECT_PERMISSION (Permissões por Membro do Projeto)
 -- =====================================================
 MERGE INTO PROJECT_PERMISSION (ID, ID_PROJECT_MEMBER, PERMISSION_TYPE, GRANTED)
 KEY(ID) VALUES
@@ -180,7 +193,7 @@ KEY(ID) VALUES
 (29, 4, 'TASK_COMMENT', TRUE);
 
 -- =====================================================
--- 9. REUNIAO (Reuniões - IDs 1..10)
+-- 10. REUNIAO (Reuniões - IDs 1..10)
 -- =====================================================
 MERGE INTO REUNIAO (
   ID_REUNIAO, TITULO_REUNIAO, DATAHORAINICIO_REUNIAO, DURACAOMINUTOS_REUNIAO, PAUTA_REUNIAO, ATA_REUNIAO, STATUS_REUNIAO,
@@ -199,7 +212,7 @@ KEY(ID_REUNIAO) VALUES
 (10, 'Fechamento Mensal', TIMESTAMP '2025-11-30 17:00:00', 60, 'Fechamento contábil', 'Relatório final', 'AGENDADA', 7, 10, 1, 0);
 
 -- =====================================================
--- 10. REUNIAO_PARTICIPANTES (Join Table)
+-- 11. REUNIAO_PARTICIPANTES (Join Table)
 -- =====================================================
 MERGE INTO REUNIAO_PARTICIPANTES (REUNIAO_ID, PESSOA_ID)
 KEY(REUNIAO_ID, PESSOA_ID) VALUES
@@ -215,7 +228,7 @@ KEY(REUNIAO_ID, PESSOA_ID) VALUES
 (10, 7), (10, 8);
 
 -- =====================================================
--- 11. PRESENCA (IDs 1..10)
+-- 12. PRESENCA (IDs 1..10)
 -- =====================================================
 MERGE INTO PRESENCA (ID_PRESENCA, HORA_ENTRADA, VALIDOPORCRACHA_PRESENCA, PARTICIPANTE_ID, REUNIAO)
 KEY(ID_PRESENCA) VALUES
@@ -231,7 +244,7 @@ KEY(ID_PRESENCA) VALUES
 (10, TIMESTAMP '2025-11-30 17:00:00', TRUE, 7, 10);
 
 -- =====================================================
--- 12. KANBAN_COLUMNS (Colunas Padrão)
+-- 13. KANBAN_COLUMNS (Colunas Padrão)
 -- =====================================================
 MERGE INTO KANBAN_COLUMNS (STATUS, TITLE)
 KEY(STATUS) VALUES
@@ -241,25 +254,25 @@ KEY(STATUS) VALUES
 ('DONE', 'Concluído');
 
 -- =====================================================
--- 13. KANBAN_COLUMN_DYNAMIC (Colunas Dinâmicas por Projeto)
+-- 14. KANBAN_COLUMN_DYNAMIC (Colunas Dinâmicas por Projeto)
 -- =====================================================
 MERGE INTO KANBAN_COLUMN_DYNAMIC (ID, ID_PROJECT, COLUMN_KEY, TITLE, DESCRIPTION, COLOR, ORDEM, WIP_LIMIT, IS_DEFAULT, IS_DONE_COLUMN, IS_ACTIVE, CREATED_AT, UPDATED_AT)
 KEY(ID) VALUES
--- Projeto 1: Sistema de Gestão
+-- Projeto 1: Sistema de Gestão (IDs 1-6)
 (1, 1, 'backlog', 'Backlog', 'Itens aguardando priorização', '#64748b', 0, NULL, TRUE, FALSE, TRUE, TIMESTAMP '2025-10-01 09:00:00', NULL),
 (2, 1, 'todo', 'A Fazer', 'Tarefas prontas para iniciar', '#3b82f6', 1, 10, TRUE, FALSE, TRUE, TIMESTAMP '2025-10-01 09:00:00', NULL),
 (3, 1, 'in_progress', 'Em Progresso', 'Tarefas em desenvolvimento', '#8b5cf6', 2, 5, TRUE, FALSE, TRUE, TIMESTAMP '2025-10-01 09:00:00', NULL),
 (4, 1, 'code_review', 'Code Review', 'Aguardando revisão de código', '#f59e0b', 3, 3, FALSE, FALSE, TRUE, TIMESTAMP '2025-10-01 09:00:00', NULL),
 (5, 1, 'testing', 'Em Testes', 'Em fase de testes', '#10b981', 4, 5, FALSE, FALSE, TRUE, TIMESTAMP '2025-10-01 09:00:00', NULL),
 (6, 1, 'done', 'Concluído', 'Tarefas finalizadas', '#22c55e', 5, NULL, TRUE, TRUE, TRUE, TIMESTAMP '2025-10-01 09:00:00', NULL),
--- Projeto 4: Migração Cloud
+-- Projeto 4: Migração Cloud (IDs 7-10)
 (7, 4, 'planning', 'Planejamento', 'Fase de planejamento', '#64748b', 0, NULL, FALSE, FALSE, TRUE, TIMESTAMP '2025-09-01 09:00:00', NULL),
 (8, 4, 'in_progress', 'Executando', 'Em execução', '#3b82f6', 1, NULL, TRUE, FALSE, TRUE, TIMESTAMP '2025-09-01 09:00:00', NULL),
 (9, 4, 'validation', 'Validação', 'Aguardando validação', '#f59e0b', 2, NULL, FALSE, FALSE, TRUE, TIMESTAMP '2025-09-01 09:00:00', NULL),
 (10, 4, 'deployed', 'Deployed', 'Implantado em produção', '#22c55e', 3, NULL, TRUE, TRUE, TRUE, TIMESTAMP '2025-09-01 09:00:00', NULL);
 
 -- =====================================================
--- 14. TAREFA (Tarefas - IDs 1..10)
+-- 15. TAREFA (Tarefas - IDs 1..10)
 -- =====================================================
 MERGE INTO TAREFA (ID_TAREFA, DESCRICAO_TAREFA, PRAZO_TAREFA, CONCLUIDA_TAREFA, STATUS_TAREFA, PRIORIDADE_TAREFA, DATA_INICIO_TAREFA, ESTIMADO_HORAS_TAREFA, ID_RESPONSAVEL, ID_REUNIAO, ID_PROJECT, PROGRESSO_TAREFA)
 KEY(ID_TAREFA) VALUES
@@ -275,7 +288,7 @@ KEY(ID_TAREFA) VALUES
 (10, 'Atualizar planilha financeira', DATE '2025-11-30', FALSE, 'TODO', 'MEDIA', DATE '2025-11-20', 4.5, 7, 10, 1, 0);
 
 -- =====================================================
--- 15. CHECKLIST_ITEM (Itens de Checklist das Tarefas)
+-- 16. CHECKLIST_ITEM (Itens de Checklist das Tarefas)
 -- =====================================================
 MERGE INTO CHECKLIST_ITEM (ID, ID_TAREFA, DESCRICAO, CONCLUIDO, ORDEM, ID_RESPONSAVEL, DATA_CONCLUSAO, ID_CONCLUIDO_POR, CREATED_AT, UPDATED_AT)
 KEY(ID) VALUES
@@ -298,7 +311,7 @@ KEY(ID) VALUES
 (14, 6, 'Configurar SSL', FALSE, 3, 10, NULL, NULL, TIMESTAMP '2025-11-12 09:00:00', NULL);
 
 -- =====================================================
--- 16. TAREFA_COMENTARIO (Comentários nas Tarefas)
+-- 17. TAREFA_COMENTARIO (Comentários nas Tarefas)
 -- =====================================================
 MERGE INTO TAREFA_COMENTARIO (ID_COMENTARIO, TEXTO_COMENTARIO, DATA_CRIACAO, ID_TAREFA, ID_AUTOR)
 KEY(ID_COMENTARIO) VALUES
@@ -314,7 +327,7 @@ KEY(ID_COMENTARIO) VALUES
 (10, 'Vamos usar us-east-1 conforme política de custos.', TIMESTAMP '2025-11-12 10:30:00', 6, 10);
 
 -- =====================================================
--- 17. TAREFA_ANEXO (Anexos das Tarefas)
+-- 18. TAREFA_ANEXO (Anexos das Tarefas)
 -- =====================================================
 MERGE INTO TAREFA_ANEXO (ID_ANEXO, NOME_ARQUIVO, TIPO_ARQUIVO, TAMANHO_ARQUIVO, URL_ARQUIVO, DATA_UPLOAD, ID_TAREFA, ID_AUTOR)
 KEY(ID_ANEXO) VALUES
@@ -328,7 +341,7 @@ KEY(ID_ANEXO) VALUES
 (8, 'wireframe_home.fig', 'application/octet-stream', 512000, '/uploads/tarefa/7/wireframe_home.fig', TIMESTAMP '2025-11-20 15:00:00', 7, 5);
 
 -- =====================================================
--- 18. TAREFA_HISTORY (Histórico de Alterações das Tarefas)
+-- 19. TAREFA_HISTORY (Histórico de Alterações das Tarefas)
 -- =====================================================
 MERGE INTO TAREFA_HISTORY (ID, ID_TAREFA, ID_USUARIO, ACTION_TYPE, FIELD_NAME, OLD_VALUE, NEW_VALUE, DESCRIPTION, CREATED_AT)
 KEY(ID) VALUES
@@ -357,7 +370,7 @@ KEY(ID) VALUES
 (18, 5, 2, 'PROGRESS_UPDATED', 'progresso', '0', '100', 'Progresso atualizado para 100%', TIMESTAMP '2025-11-09 10:00:00');
 
 -- =====================================================
--- 19. NOTIFICACAO (Notificações Gerais - IDs 1..10)
+-- 20. NOTIFICACAO (Notificações Gerais - IDs 1..10)
 -- =====================================================
 MERGE INTO NOTIFICACAO (ID_NOTIFICACAO, MENSAGEM_NOTIFICACAO, TIPO_NOTIFICACAO, ID_DESTINATARIO)
 KEY(ID_NOTIFICACAO) VALUES
@@ -373,7 +386,7 @@ KEY(ID_NOTIFICACAO) VALUES
 (10, 'Relatório mensal gerado', 'EMAIL', 8);
 
 -- =====================================================
--- 20. NOTIFICACOES_TAREFA (Notificações de Tarefas)
+-- 21. NOTIFICACOES_TAREFA (Notificações de Tarefas)
 -- =====================================================
 MERGE INTO notificacoes_tarefa (id, tarefa_id, usuario_id, tipo, titulo, mensagem, lida, created_at, agendada_para)
 KEY(id) VALUES
@@ -387,7 +400,7 @@ KEY(id) VALUES
 (8, 4, 6, 'COMENTARIO', 'Você foi mencionado', 'Daniel Desenvolvedor mencionou você em um comentário', FALSE, TIMESTAMP '2025-11-11 12:00:00', NULL);
 
 -- =====================================================
--- 21. TEMPLATE_TAREFAS (Templates de Tarefas)
+-- 22. TEMPLATE_TAREFAS (Templates de Tarefas)
 -- =====================================================
 MERGE INTO TEMPLATE_TAREFAS (ID, TITULO, DESCRICAO, PRIORIDADE, ESTIMADA_HORAS)
 KEY(ID) VALUES
@@ -401,7 +414,7 @@ KEY(ID) VALUES
 (8, 'Testes', 'Template para criação de testes automatizados', 'MEDIA', 6);
 
 -- =====================================================
--- 22. TEMPLATE_TAREFA_TAGS (Tags dos Templates)
+-- 23. TEMPLATE_TAREFA_TAGS (Tags dos Templates)
 -- =====================================================
 MERGE INTO TEMPLATE_TAREFA_TAGS (TEMPLATE_TAREFA_ID, TAG)
 KEY(TEMPLATE_TAREFA_ID, TAG) VALUES
@@ -415,7 +428,7 @@ KEY(TEMPLATE_TAREFA_ID, TAG) VALUES
 (8, 'tests'), (8, 'qa'), (8, 'automation');
 
 -- =====================================================
--- 23. TEMPLATE_TAREFA_DEPENDENCIAS (Dependências dos Templates)
+-- 24. TEMPLATE_TAREFA_DEPENDENCIAS (Dependências dos Templates)
 -- =====================================================
 MERGE INTO TEMPLATE_TAREFA_DEPENDENCIAS (TEMPLATE_TAREFA_ID, DEPENDENCIA)
 KEY(TEMPLATE_TAREFA_ID, DEPENDENCIA) VALUES
@@ -425,17 +438,8 @@ KEY(TEMPLATE_TAREFA_ID, DEPENDENCIA) VALUES
 (8, 'Implementação');
 
 -- =====================================================
--- SEQUENCES - Reiniciar com valores altos
+-- 25. REINICIAR SEQUENCES para valores altos
 -- =====================================================
-CREATE SEQUENCE IF NOT EXISTS SQ_PESSOA START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_SALA START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_REUNIAO START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_PRESENCA START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_TAREFA START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_NOTIFICACAO START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_PERMISSION START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_ROLE START WITH 100;
-
 ALTER SEQUENCE SQ_PESSOA RESTART WITH 100;
 ALTER SEQUENCE SQ_SALA RESTART WITH 100;
 ALTER SEQUENCE SQ_REUNIAO RESTART WITH 100;
@@ -444,3 +448,4 @@ ALTER SEQUENCE SQ_TAREFA RESTART WITH 100;
 ALTER SEQUENCE SQ_NOTIFICACAO RESTART WITH 100;
 ALTER SEQUENCE SQ_PERMISSION RESTART WITH 100;
 ALTER SEQUENCE SQ_ROLE RESTART WITH 100;
+ALTER SEQUENCE HIBERNATE_SEQUENCE RESTART WITH 1000;

@@ -1,4 +1,4 @@
-import { Reuniao, ReuniaoFormData, ReuniaoCreateDTO, StatusReuniao, SalaStatus } from '../types/meetings';
+import { Reuniao, ReuniaoFormData, ReuniaoCreateDTO, StatusReuniao, SalaStatus, normalizeStatusReuniao } from '../types/meetings';
 import { formatDate, formatTime, getTimeDifference } from './dateHelpers';
 
 /**
@@ -76,14 +76,7 @@ export class DateTimeUtils {
      * Converte StatusReuniao do backend para frontend
      */
     static convertStatusFromBackend(backendStatus: string): StatusReuniao {
-        const statusMap: Record<string, StatusReuniao> = {
-            'AGENDADA': StatusReuniao.AGENDADA,
-            'EM_ANDAMENTO': StatusReuniao.EM_ANDAMENTO,
-            'FINALIZADA': StatusReuniao.FINALIZADA,
-            'CANCELADA': StatusReuniao.CANCELADA
-        };
-
-        return statusMap[backendStatus] || StatusReuniao.AGENDADA;
+        return normalizeStatusReuniao(backendStatus);
     }
 
     /**

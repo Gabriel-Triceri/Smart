@@ -75,7 +75,7 @@ const normalizeStatus = (value?: string): StatusTarefa => {
         case StatusTarefa.DONE:
             return StatusTarefa.DONE;
         default:
-            return StatusTarefa.TODO;
+            return value as StatusTarefa;
     }
 };
 
@@ -900,38 +900,69 @@ export const meetingsApi = {
     // ===========================================
 
     async getKanbanColumnsByProject(projectId: string): Promise<KanbanColumnDynamic[]> {
-        if (!IdValidation.isValidId(projectId)) {
-            throw new Error('ID do projeto inválido');
+        if (!projectId || (typeof projectId === 'string' && projectId.trim() === '')) {
+            throw new Error('ID do projeto é obrigatório');
         }
         const response = await api.get(`/projects/${projectId}/kanban/columns`);
         return response.data ?? [];
     },
 
     async createKanbanColumnDynamic(data: CreateKanbanColumnRequest): Promise<KanbanColumnDynamic> {
-        const response = await api.post('/kanban/columns', data);
+        console.log('DEBUG: createKanbanColumnDynamic called with data:', data);
+        console.log('DEBUG: data.projectId:', data.projectId, 'type:', typeof data.projectId);
+        
+        // Aceita tanto números quanto strings (UUIDs) para projectId
+        if (!data.projectId || (typeof data.projectId === 'string' && data.projectId.trim() === '')) {
+            console.error('DEBUG: projectId is empty or null:', data.projectId);
+            throw new Error('ID do projeto é obrigatório');
+        }
+        
+        // Verifica se é um número válido ou uma string não vazia
+        const isValidId = (() => {
+            if (typeof data.projectId === 'number') {
+                return data.projectId > 0;
+            }
+            if (typeof data.projectId === 'string') {
+                // Aceita UUIDs ou números em string
+                return data.projectId.trim().length > 0 && (
+                    /^\d+$/.test(data.projectId.trim()) || 
+                    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.projectId.trim())
+                );
+            }
+            return false;
+        })();
+        
+        if (!isValidId) {
+            console.error('DEBUG: Invalid projectId:', data.projectId);
+            throw new Error('ID do projeto inválido');
+        }
+        
+        console.log('DEBUG: Making API call to:', `/projects/${data.projectId}/kanban/columns`);
+        const response = await api.post(`/projects/${data.projectId}/kanban/columns`, data);
+        console.log('DEBUG: API response:', response.data);
         return response.data;
     },
 
-    async updateKanbanColumnDynamic(columnId: string, data: UpdateKanbanColumnRequest): Promise<KanbanColumnDynamic> {
-        if (!IdValidation.isValidId(columnId)) {
-            throw new Error('ID da coluna inválido');
+    async updateKanbanColumnDynamic(projectId: string, columnId: string, data: UpdateKanbanColumnRequest): Promise<KanbanColumnDynamic> {
+        if (!projectId || !columnId) {
+            throw new Error('IDs são obrigatórios');
         }
-        const response = await api.put(`/kanban/columns/${columnId}`, data);
+        const response = await api.put(`/projects/${projectId}/kanban/columns/${columnId}`, data);
         return response.data;
     },
 
-    async deleteKanbanColumnDynamic(columnId: string): Promise<void> {
-        if (!IdValidation.isValidId(columnId)) {
-            throw new Error('ID da coluna inválido');
+    async deleteKanbanColumnDynamic(projectId: string, columnId: string): Promise<void> {
+        if (!projectId || !columnId) {
+            throw new Error('IDs são obrigatórios');
         }
-        await api.delete(`/kanban/columns/${columnId}`);
+        await api.delete(`/projects/${projectId}/kanban/columns/${columnId}`);
     },
 
     async reorderKanbanColumns(projectId: string, columnIds: string[]): Promise<KanbanColumnDynamic[]> {
-        if (!IdValidation.isValidId(projectId)) {
-            throw new Error('ID do projeto inválido');
+        if (!projectId) {
+            throw new Error('ID do projeto é obrigatório');
         }
-        const response = await api.patch(`/kanban/columns/project/${projectId}/reorder`, { columnIds });
+        const response = await api.post(`/projects/${projectId}/kanban/columns/reorder`, columnIds);
         return response.data ?? [];
     },
 

@@ -108,24 +108,39 @@ export const authService = {
     getUserInfo: (): UserInfo => {
         try {
             const token = localStorage.getItem('authToken');
-            if (!token) {
+            if (!token || typeof token !== 'string') {
                 return { id: null, name: null, email: null, roles: [] };
             }
 
             const parts = token.split('.');
-            if (parts.length < 2) {
+            if (parts.length < 2 || !parts[1]) {
                 return { id: null, name: null, email: null, roles: [] };
             }
 
-            // Decodificar payload do JWT (base64)
-            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            try {
+                // Decodificar payload do JWT (base64)
+                const base64Payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                const paddedPayload = base64Payload + '='.repeat((4 - base64Payload.length % 4) % 4);
+                const payload = JSON.parse(atob(paddedPayload));
 
-            return {
-                id: payload.userId || payload.sub || payload.usuarioId || payload.id || null,
-                name: payload.nome || payload.name || payload.usuarioNome || payload.fullName || null,
-                email: payload.sub || payload.email || payload.preferred_username || null,
-                roles: authService.getRoles()
-            };
+                // Extrair ID do usuário de forma segura
+                let userId = payload.userId || payload.sub || payload.usuarioId || payload.id;
+                if (typeof userId === 'string' && /\d+/.test(userId)) {
+                    userId = parseInt(userId, 10);
+                } else if (typeof userId !== 'number') {
+                    userId = null;
+                }
+
+                return {
+                    id: userId,
+                    name: payload.nome || payload.name || payload.usuarioNome || payload.fullName || null,
+                    email: payload.sub || payload.email || payload.preferred_username || null,
+                    roles: authService.getRoles()
+                };
+            } catch (decodeError) {
+                console.error('Erro ao decodificar token JWT:', decodeError);
+                return { id: null, name: null, email: null, roles: [] };
+            }
         } catch (error) {
             console.error('Erro ao extrair informações do usuário do token:', error);
             return { id: null, name: null, email: null, roles: [] };

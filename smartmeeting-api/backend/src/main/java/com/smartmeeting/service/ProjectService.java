@@ -6,6 +6,7 @@ import com.smartmeeting.dto.ProjectDTO;
 import com.smartmeeting.dto.ProjectMemberDTO;
 import com.smartmeeting.enums.ProjectRole;
 import com.smartmeeting.enums.ProjectStatus;
+import com.smartmeeting.evento.ProjectCreatedEvent;
 import com.smartmeeting.exception.BadRequestException;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Pessoa;
@@ -14,6 +15,7 @@ import com.smartmeeting.model.ProjectMember;
 import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.ProjectMemberRepository;
 import com.smartmeeting.repository.ProjectRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,13 +32,16 @@ public class ProjectService {
     private final ProjectMemberRepository projectMemberRepository;
     private final PessoaRepository pessoaRepository;
     private final PessoaService pessoaService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public ProjectService(ProjectRepository projectRepository, ProjectMemberRepository projectMemberRepository,
-                          PessoaRepository pessoaRepository, PessoaService pessoaService) {
+                          PessoaRepository pessoaRepository, PessoaService pessoaService,
+                          ApplicationEventPublisher applicationEventPublisher) {
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.pessoaRepository = pessoaRepository;
         this.pessoaService = pessoaService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Transactional
@@ -70,6 +75,9 @@ public class ProjectService {
         ownerMember.setRole(ProjectRole.OWNER);
         ownerMember.setJoinedAt(LocalDateTime.now());
         projectMemberRepository.save(ownerMember);
+
+        // Disparar evento para criar colunas padrão do kanban automaticamente
+        applicationEventPublisher.publishEvent(new ProjectCreatedEvent(this, savedProject));
 
         return convertToDto(savedProject);
     }

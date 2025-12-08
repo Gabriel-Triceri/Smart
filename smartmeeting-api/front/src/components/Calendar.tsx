@@ -105,7 +105,14 @@ export const Calendar: React.FC<CalendarProps> = ({
 
     const reuniaoStartDate = (r: Reuniao) => {
         try {
-            return new Date(r.dataHoraInicio);
+            if (!r?.dataHoraInicio) {
+                return new Date();
+            }
+            const date = new Date(r.dataHoraInicio);
+            if (isNaN(date.getTime())) {
+                return new Date();
+            }
+            return date;
         } catch {
             return new Date();
         }

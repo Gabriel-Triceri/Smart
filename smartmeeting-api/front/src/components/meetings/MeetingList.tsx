@@ -39,9 +39,9 @@ export const MeetingList: React.FC<MeetingListProps> = ({
             resultado = resultado.filter(r =>
                 r.titulo.toLowerCase().includes(termo) ||
                 r.pauta?.toLowerCase().includes(termo) ||
-                r.organizador.nome.toLowerCase().includes(termo) ||
-                r.participantes.some(p => p.nome.toLowerCase().includes(termo)) ||
-                r.sala.nome.toLowerCase().includes(termo)
+                (r.organizador?.nome?.toLowerCase().includes(termo) ?? false) ||
+                (Array.isArray(r.participantes) && r.participantes.some(p => p?.nome?.toLowerCase().includes(termo))) ||
+                (r.sala?.nome?.toLowerCase().includes(termo) ?? false)
             );
         }
 

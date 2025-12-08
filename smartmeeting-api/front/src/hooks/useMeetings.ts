@@ -32,17 +32,26 @@ function normalizeReuniao(raw: any): Reuniao {
     // Tentativas de extrair participantesIds:
     let participantesIds: number[] | undefined = undefined;
 
-    if (Array.isArray(raw.participantesIds)) {
-        participantesIds = raw.participantesIds.map((p: any) => Number(p));
-    } else if (Array.isArray(raw.participantes)) {
+    if (Array.isArray(raw.participantesIds) && raw.participantesIds.length > 0) {
+        participantesIds = raw.participantesIds
+            .filter((p: any) => p !== null && p !== undefined)
+            .map((p: any) => Number(p))
+            .filter((n: number) => !isNaN(n));
+    } else if (Array.isArray(raw.participantes) && raw.participantes.length > 0) {
         // se a API retornou objetos participantes, extrai id
-        participantesIds = raw.participantes.map((p: any) => {
-            if (typeof p === 'object' && p !== null && ('id' in p)) return Number(p.id);
-            return Number(p);
-        });
-    } else if (Array.isArray(raw.participantesIdsString)) {
+        participantesIds = raw.participantes
+            .filter((p: any) => p !== null && p !== undefined)
+            .map((p: any) => {
+                if (typeof p === 'object' && p !== null && ('id' in p)) return Number(p.id);
+                return Number(p);
+            })
+            .filter((n: number) => !isNaN(n));
+    } else if (Array.isArray(raw.participantesIdsString) && raw.participantesIdsString.length > 0) {
         // fallback: nomes diferentes
-        participantesIds = raw.participantesIdsString.map((p: any) => Number(p));
+        participantesIds = raw.participantesIdsString
+            .filter((p: any) => p !== null && p !== undefined)
+            .map((p: any) => Number(p))
+            .filter((n: number) => !isNaN(n));
     } else {
         participantesIds = [];
     }
@@ -341,8 +350,13 @@ export const useMeetings = () => {
 
             return {
                 ...r,
-                // 🔥 Garantia: participantesIds SEMPRE será number[]
-                participantesIds: (r.participantesIds || []).map(p => Number(p)),
+                // 🔥 Garantia: participantesIds SEMPRE será number[] com validação defensiva
+                participantesIds: Array.isArray(r.participantesIds) 
+                    ? r.participantesIds
+                        .filter((p: any) => p !== null && p !== undefined)
+                        .map((p: any) => Number(p))
+                        .filter((n: number) => !isNaN(n))
+                    : [],
 
                 data: (r.dataHoraInicio || '').split("T")[0],
                 horaInicio: (r.dataHoraInicio || '').split("T")[1]?.substring(0, 5) ?? '',
