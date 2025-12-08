@@ -164,33 +164,59 @@ export function HistorySection({
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(true);
     const [showAll, setShowAll] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // se já veio initialHistory, usa ele; caso contrário tenta carregar
         if (initialHistory.length === 0) {
             loadHistory();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tarefaId]);
 
     useEffect(() => {
         if (initialHistory.length > 0) {
             setHistory(initialHistory);
+            setError(null);
         }
     }, [initialHistory]);
 
     const loadHistory = async () => {
+        if (!tarefaId) {
+            // se não tiver tarefaId válido, limpa o estado e não tenta chamada
+            setHistory([]);
+            setError(null);
+            return;
+        }
+
         try {
             setLoading(true);
-            const data = await meetingsApi.getTarefaHistory(tarefaId);
-            setHistory(data);
-        } catch (error) {
-            console.error('Erro ao carregar histórico:', error);
+            setError(null);
+
+            // meetingsApi.getTarefaHistory pode devolver diretamente o array ou um AxiosResponse
+            const res = await meetingsApi.getTarefaHistory(tarefaId);
+            const data = (res && (res as any).data) ? (res as any).data : res;
+            setHistory(Array.isArray(data) ? data : []);
+        } catch (err: any) {
+            // tratamento amigável do erro para não só logar no console
+            console.error('Erro ao carregar histórico:', err);
+            let message = 'Erro ao carregar histórico';
+            if (err?.response?.data?.message) {
+                message = String(err.response.data.message);
+            } else if (err?.message) {
+                message = String(err.message);
+            }
+            setError(message);
+            setHistory([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const formatDate = (dateString: string) => {
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return '-';
         const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return '-';
         const now = new Date();
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -247,7 +273,7 @@ export function HistorySection({
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                         Histórico de Atividades
                     </h3>
-                    {history.length > 0 && (
+                    {(history.length > 0 && !error) && (
                         <span className="text-xs text-slate-500 dark:text-slate-400">
                             ({history.length})
                         </span>
@@ -262,91 +288,114 @@ export function HistorySection({
 
             {expanded && (
                 <>
-                    {/* Timeline */}
-                    {displayedHistory.length > 0 ? (
-                        <div className="relative">
-                            {/* Linha vertical do timeline */}
-                            <div className="absolute left-4 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
-
-                            <div className="space-y-4">
-                                {displayedHistory.map((entry, index) => {
-                                    const config = getActionConfig(entry.actionType);
-                                    const IconComponent = config.icon;
-
-                                    return (
-                                        <div key={entry.id} className="relative flex gap-4 pl-2">
-                                            {/* Ícone do evento */}
-                                            <div className={`relative z-10 flex-shrink-0 w-6 h-6 rounded-full ${config.bgColor} flex items-center justify-center ring-4 ring-white dark:ring-slate-900`}>
-                                                <IconComponent className={`w-3 h-3 ${config.color}`} />
-                                            </div>
-
-                                            {/* Conteúdo */}
-                                            <div className="flex-1 min-w-0 pb-4">
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        {entry.userAvatar ? (
-                                                            <Avatar
-                                                                src={entry.userAvatar}
-                                                                name={entry.userNome}
-                                                                className="w-5 h-5 text-[8px]"
-                                                            />
-                                                        ) : null}
-                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                                                            {entry.userNome}
-                                                        </span>
-                                                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                                                            {entry.actionDescription || config.label}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-xs text-slate-400 whitespace-nowrap">
-                                                        {formatDate(entry.createdAt)}
-                                                    </span>
-                                                </div>
-
-                                                {/* Valores antigo/novo */}
-                                                {(entry.oldValue || entry.newValue) && (
-                                                    <div className="mt-2 flex items-center gap-2 text-xs">
-                                                        {entry.oldValue && (
-                                                            <span className="px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded line-through">
-                                                                {entry.oldValue}
-                                                            </span>
-                                                        )}
-                                                        {entry.oldValue && entry.newValue && (
-                                                            <ArrowRight className="w-3 h-3 text-slate-400" />
-                                                        )}
-                                                        {entry.newValue && (
-                                                            <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded">
-                                                                {entry.newValue}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                    {/* Se houve erro ao carregar */}
+                    {error ? (
+                        <div className="p-4 rounded bg-red-50 dark:bg-red-900/20 text-sm text-red-700">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <strong>Erro ao carregar histórico:</strong>
+                                    <div className="mt-1 text-xs text-red-600">{error}</div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={loadHistory}
+                                        disabled={loading}
+                                        className="px-3 py-1 text-sm bg-white dark:bg-slate-800 border rounded hover:bg-slate-50"
+                                    >
+                                        Tentar novamente
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="text-center py-6">
-                            <History className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                            <p className="text-sm text-slate-400 dark:text-slate-500">
-                                Nenhuma atividade registrada
-                            </p>
-                        </div>
-                    )}
+                        <>
+                            {/* Timeline */}
+                            {displayedHistory.length > 0 ? (
+                                <div className="relative">
+                                    {/* Linha vertical do timeline */}
+                                    <div className="absolute left-4 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
 
-                    {/* Ver mais/menos */}
-                    {history.length > 5 && (
-                        <button
-                            onClick={() => setShowAll(!showAll)}
-                            className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                        >
-                            {showAll
-                                ? `Mostrar menos`
-                                : `Ver mais ${history.length - 5} atividades`
-                            }
-                        </button>
+                                    <div className="space-y-4">
+                                        {displayedHistory.map((entry) => {
+                                            const config = getActionConfig(entry.actionType);
+                                            const IconComponent = config.icon;
+
+                                            return (
+                                                <div key={entry.id} className="relative flex gap-4 pl-2">
+                                                    {/* Ícone do evento */}
+                                                    <div className={`relative z-10 flex-shrink-0 w-6 h-6 rounded-full ${config.bgColor} flex items-center justify-center ring-4 ring-white dark:ring-slate-900`}>
+                                                        <IconComponent className={`w-3 h-3 ${config.color}`} />
+                                                    </div>
+
+                                                    {/* Conteúdo */}
+                                                    <div className="flex-1 min-w-0 pb-4">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                {entry.userAvatar ? (
+                                                                    <Avatar
+                                                                        src={entry.userAvatar}
+                                                                        name={entry.userNome}
+                                                                        className="w-5 h-5 text-[8px]"
+                                                                    />
+                                                                ) : null}
+                                                                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                                                                    {entry.userNome}
+                                                                </span>
+                                                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                                                    {entry.actionDescription || config.label}
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-xs text-slate-400 whitespace-nowrap">
+                                                                {formatDate(entry.createdAt)}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Valores antigo/novo */}
+                                                        {(entry.oldValue || entry.newValue) && (
+                                                            <div className="mt-2 flex items-center gap-2 text-xs">
+                                                                {entry.oldValue && (
+                                                                    <span className="px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded line-through">
+                                                                        {entry.oldValue}
+                                                                    </span>
+                                                                )}
+                                                                {entry.oldValue && entry.newValue && (
+                                                                    <ArrowRight className="w-3 h-3 text-slate-400" />
+                                                                )}
+                                                                {entry.newValue && (
+                                                                    <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded">
+                                                                        {entry.newValue}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-6">
+                                    <History className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                                    <p className="text-sm text-slate-400 dark:text-slate-500">
+                                        Nenhuma atividade registrada
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Ver mais/menos */}
+                            {history.length > 5 && (
+                                <button
+                                    onClick={() => setShowAll(!showAll)}
+                                    className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                >
+                                    {showAll
+                                        ? `Mostrar menos`
+                                        : `Ver mais ${history.length - 5} atividades`
+                                    }
+                                </button>
+                            )}
+                        </>
                     )}
                 </>
             )}

@@ -86,7 +86,6 @@ function App() {
 
     // Callback quando permissoes sao atualizadas via WebSocket
     const handlePermissionsUpdated = useCallback((projectId: number) => {
-        console.log('[App] Permissoes atualizadas para projeto:', projectId);
         // Incrementa a key para forcar re-render dos componentes filhos
         setRefreshKey(prev => prev + 1);
     }, []);
@@ -94,8 +93,6 @@ function App() {
     // Conectar ao WebSocket de permissoes
     const { isConnected } = usePermissionWebSocket({
         onPermissionsUpdated: handlePermissionsUpdated,
-        onConnected: () => console.log('[App] WebSocket conectado'),
-        onDisconnected: () => console.log('[App] WebSocket desconectado')
     });
 
     useEffect(() => {
@@ -202,7 +199,7 @@ function App() {
             </div>
         </ErrorBoundary>
     );
-    
+
 }
 
 export default App;

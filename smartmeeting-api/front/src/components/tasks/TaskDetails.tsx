@@ -1011,7 +1011,6 @@ export function TaskDetails({
                                         </div>
                                     ) : (
                                         <div className="flex flex-col gap-2">
-                                            {console.log('👥 [TaskDetails] Responsáveis da tarefa:', tarefa.responsaveis, 'Principal ID:', tarefa.responsavelPrincipalId)}
                                             {(tarefa.responsaveis ?? []).map((responsavel) => (
                                                 <div
                                                     key={responsavel.id}

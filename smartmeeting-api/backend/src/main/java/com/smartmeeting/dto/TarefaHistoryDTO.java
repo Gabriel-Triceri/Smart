@@ -13,8 +13,11 @@ import java.time.LocalDateTime;
 public class TarefaHistoryDTO {
     private Long id;
     private Long tarefaId;
+    @com.fasterxml.jackson.annotation.JsonProperty("userId")
     private Long usuarioId;
+    @com.fasterxml.jackson.annotation.JsonProperty("userNome")
     private String usuarioNome;
+    private String userAvatar;
     private HistoryActionType actionType;
     private String actionDescription;
     private String fieldName;

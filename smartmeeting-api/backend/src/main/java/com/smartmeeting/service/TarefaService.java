@@ -48,6 +48,7 @@ public class TarefaService {
     private final TemplateTarefaRepository templateTarefaRepository;
     private final com.smartmeeting.repository.ComentarioTarefaRepository comentarioTarefaRepository;
     private final com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository;
+    private final TarefaHistoryService historyService;
 
     public TarefaService(TarefaRepository tarefaRepository,
             PessoaRepository pessoaRepository,
@@ -55,7 +56,8 @@ public class TarefaService {
             NotificacaoTarefaRepository notificacaoTarefaRepository,
             TemplateTarefaRepository templateTarefaRepository,
             com.smartmeeting.repository.ComentarioTarefaRepository comentarioTarefaRepository,
-            com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository) {
+            com.smartmeeting.repository.AnexoTarefaRepository anexoTarefaRepository,
+            TarefaHistoryService historyService) {
         this.tarefaRepository = tarefaRepository;
         this.pessoaRepository = pessoaRepository;
         this.reuniaoRepository = reuniaoRepository;
@@ -63,6 +65,7 @@ public class TarefaService {
         this.templateTarefaRepository = templateTarefaRepository;
         this.comentarioTarefaRepository = comentarioTarefaRepository;
         this.anexoTarefaRepository = anexoTarefaRepository;
+        this.historyService = historyService;
     }
 
     /**
@@ -284,6 +287,16 @@ public class TarefaService {
         Tarefa tarefa = tarefaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + id));
 
+        // Capturar estado anterior para histórico
+        String tituloAntigo = tarefa.getTitulo();
+        String descricaoAntiga = tarefa.getDescricao();
+        StatusTarefa statusAntigo = tarefa.getStatusTarefa();
+        PrioridadeTarefa prioridadeAntiga = tarefa.getPrioridade();
+        LocalDate prazoAntigo = tarefa.getPrazo();
+        Integer progressoAntigo = tarefa.getProgresso();
+        Pessoa responsavelAntigo = tarefa.getResponsavel();
+        String nomeResponsavelAntigo = responsavelAntigo != null ? responsavelAntigo.getNome() : null;
+
         // Atualiza apenas campos que foram fornecidos (não sobrescreve com null)
 
         // Título: atualiza se fornecido
@@ -339,7 +352,8 @@ public class TarefaService {
             tarefa.setResponsavel(responsavel);
         }
 
-        // Atualizar participantes (responsaveisIds contém todos os IDs, incluindo o principal)
+        // Atualizar participantes (responsaveisIds contém todos os IDs, incluindo o
+        // principal)
         if (dtoAtualizada.getResponsaveisIds() != null) {
             java.util.Set<Pessoa> participantes = new java.util.HashSet<>();
             Long principalId = tarefa.getResponsavel() != null ? tarefa.getResponsavel().getId() : null;
@@ -347,7 +361,8 @@ public class TarefaService {
             for (String idStr : dtoAtualizada.getResponsaveisIds()) {
                 try {
                     Long pessoaId = Long.parseLong(idStr);
-                    // Não adicionar o principal na lista de participantes (ele já está em responsavel)
+                    // Não adicionar o principal na lista de participantes (ele já está em
+                    // responsavel)
                     if (principalId != null && pessoaId.equals(principalId)) {
                         continue;
                     }
@@ -371,6 +386,42 @@ public class TarefaService {
         }
 
         Tarefa atualizado = tarefaRepository.save(tarefa);
+
+        // Registrar alterações no histórico
+        try {
+            // 1. Título
+            historyService.registrarMudancaTitulo(tarefa, tituloAntigo, atualizado.getTitulo());
+
+            // 2. Descrição
+            historyService.registrarMudancaDescricao(tarefa, descricaoAntiga, atualizado.getDescricao());
+
+            // 3. Status
+            String sAntigo = statusAntigo != null ? statusAntigo.getDescricao() : null;
+            String sNovo = atualizado.getStatusTarefa() != null ? atualizado.getStatusTarefa().getDescricao() : null;
+            historyService.registrarMudancaStatus(tarefa, sAntigo, sNovo);
+
+            // 4. Prioridade
+            String pAntiga = prioridadeAntiga != null ? prioridadeAntiga.getDescricao() : null;
+            String pNova = atualizado.getPrioridade() != null ? atualizado.getPrioridade().getDescricao() : null;
+            historyService.registrarMudancaPrioridade(tarefa, pAntiga, pNova);
+
+            // 5. Prazo
+            String prazoAntisoStr = prazoAntigo != null ? prazoAntigo.toString() : null;
+            String prazoNovoStr = atualizado.getPrazo() != null ? atualizado.getPrazo().toString() : null;
+            historyService.registrarMudancaPrazo(tarefa, prazoAntisoStr, prazoNovoStr);
+
+            // 6. Progresso
+            historyService.registrarMudancaProgresso(tarefa, progressoAntigo, atualizado.getProgresso());
+
+            // 7. Responsável
+            Pessoa respNovo = atualizado.getResponsavel();
+            String nomeRespNovo = respNovo != null ? respNovo.getNome() : null;
+            historyService.registrarMudancaResponsavel(tarefa, nomeResponsavelAntigo, nomeRespNovo);
+
+        } catch (Exception e) {
+            logger.error("Erro ao registrar histórico para tarefa {}: {}", id, e.getMessage());
+        }
+
         return toDTO(atualizado);
     }
 
@@ -669,6 +720,8 @@ public class TarefaService {
 
         logger.info("Movendo tarefa ID {} de status {} para {}", id, tarefa.getStatusTarefa(), newStatus);
 
+        StatusTarefa statusAntigo = tarefa.getStatusTarefa();
+
         tarefa.setStatusTarefa(newStatus);
         // Se houver necessidade de reordenar tarefas dentro de um status, a lógica
         // seria implementada aqui.
@@ -677,6 +730,17 @@ public class TarefaService {
         // 'position'
 
         Tarefa updatedTarefa = tarefaRepository.save(tarefa);
+
+        // Registrar histórico de mudança de status
+        try {
+            historyService.registrarMudancaStatus(
+                    tarefa,
+                    statusAntigo != null ? statusAntigo.getDescricao() : null,
+                    newStatus != null ? newStatus.getDescricao() : null);
+        } catch (Exception e) {
+            logger.error("Erro ao registrar histórico de movimentação para tarefa {}: {}", id, e.getMessage());
+        }
+
         return toDTO(updatedTarefa);
     }
 

@@ -97,12 +97,10 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
         // Remove entradas vazias
         userSessions.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 
-        log.debug("[WebSocket] Conexao fechada: {} - Status: {}", session.getId(), status);
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.debug("[WebSocket] Erro de transporte na sessao {}: {}", session.getId(), exception.getMessage());
         allSessions.remove(session);
     }
 
@@ -133,7 +131,6 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
                     sendMessage(session, notification);
                 }
             });
-            log.debug("[WebSocket] Notificacao enviada para usuario {}: {} = {}", userId, permissionType, granted);
         }
     }
 
@@ -156,7 +153,6 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
                     sendMessage(session, notification);
                 }
             });
-            log.debug("[WebSocket] Notificacao de atualizacao enviada para usuario {}", userId);
         }
     }
 
@@ -176,8 +172,6 @@ public class PermissionWebSocketHandler extends TextWebSocketHandler {
                 sendMessage(session, notification);
             }
         });
-
-        log.debug("[WebSocket] Notificacao de projeto {} enviada para todas as sessoes", projectId);
     }
 
     /**

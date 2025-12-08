@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,12 +38,26 @@ public class TarefaHistoryService {
      */
     @Transactional
     public TarefaHistory registrarHistorico(Long tarefaId, HistoryActionType actionType,
-                                            String fieldName, String oldValue, String newValue,
-                                            String description) {
+            String fieldName, String oldValue, String newValue,
+            String description) {
         Tarefa tarefa = tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada: " + tarefaId));
 
         Pessoa usuario = getUsuarioAtual();
+
+        // Verificação de duplicação mais robusta: busca por combinação única de campos
+        boolean jaExiste = historyRepository
+                .existsByTarefaIdAndActionTypeAndFieldNameAndOldValueAndNewValueAndDescription(
+                        tarefaId, actionType, fieldName, oldValue, newValue, description);
+
+        if (jaExiste) {
+            log.info("Histórico já existe para tarefa {}: {} - {}", tarefaId, actionType, description);
+            // Retornamos o registro já existente ao invés de null (mudança mínima)
+            Optional<TarefaHistory> existente = historyRepository
+                    .findTopByTarefaIdAndActionTypeAndFieldNameAndOldValueAndNewValueAndDescriptionOrderByCreatedAtDesc(
+                            tarefaId, actionType, fieldName, oldValue, newValue, description);
+            return existente.orElse(null);
+        }
 
         TarefaHistory history = new TarefaHistory(
                 tarefa, usuario, actionType, fieldName, oldValue, newValue, description);
@@ -62,8 +77,7 @@ public class TarefaHistoryService {
                 getUsuarioAtual(),
                 HistoryActionType.CREATED,
                 null, null, null,
-                "Tarefa criada: " + tarefa.getDescricao()
-        );
+                "Tarefa criada: " + tarefa.getDescricao());
         historyRepository.save(history);
     }
 
@@ -79,8 +93,7 @@ public class TarefaHistoryService {
                     "statusTarefa",
                     statusAntigo,
                     statusNovo,
-                    String.format("Status alterado de '%s' para '%s'", statusAntigo, statusNovo)
-            );
+                    String.format("Status alterado de '%s' para '%s'", statusAntigo, statusNovo));
         }
     }
 
@@ -98,8 +111,7 @@ public class TarefaHistoryService {
                     responsavelNovo,
                     String.format("Responsável alterado de '%s' para '%s'",
                             responsavelAntigo != null ? responsavelAntigo : "Nenhum",
-                            responsavelNovo != null ? responsavelNovo : "Nenhum")
-            );
+                            responsavelNovo != null ? responsavelNovo : "Nenhum"));
         }
     }
 
@@ -115,8 +127,7 @@ public class TarefaHistoryService {
                     "prazo",
                     prazoAntigo,
                     prazoNovo,
-                    String.format("Prazo alterado de '%s' para '%s'", prazoAntigo, prazoNovo)
-            );
+                    String.format("Prazo alterado de '%s' para '%s'", prazoAntigo, prazoNovo));
         }
     }
 
@@ -132,27 +143,60 @@ public class TarefaHistoryService {
                     "prioridade",
                     prioridadeAntiga,
                     prioridadeNova,
-                    String.format("Prioridade alterada de '%s' para '%s'", prioridadeAntiga, prioridadeNova)
-            );
+                    String.format("Prioridade alterada de '%s' para '%s'", prioridadeAntiga, prioridadeNova));
         }
     }
 
     /**
      * Registra atualização de progresso
      */
-    @Transactional
     public void registrarMudancaProgresso(Tarefa tarefa, Integer progressoAntigo, Integer progressoNovo) {
         if (!Objects.equals(progressoAntigo, progressoNovo)) {
             registrarHistorico(
                     tarefa.getId(),
                     HistoryActionType.PROGRESS_UPDATED,
                     "progresso",
-                    String.valueOf(progressoAntigo),
-                    String.valueOf(progressoNovo),
+                    progressoAntigo != null ? String.valueOf(progressoAntigo) : null,
+                    progressoNovo != null ? String.valueOf(progressoNovo) : null,
                     String.format("Progresso atualizado de %d%% para %d%%",
                             progressoAntigo != null ? progressoAntigo : 0,
-                            progressoNovo != null ? progressoNovo : 0)
-            );
+                            progressoNovo != null ? progressoNovo : 0));
+        }
+    }
+
+    /**
+     * Registra mudança de título
+     */
+    @Transactional
+    public void registrarMudancaTitulo(Tarefa tarefa, String tituloAntigo, String tituloNovo) {
+        if (!Objects.equals(tituloAntigo, tituloNovo)) {
+            registrarHistorico(
+                    tarefa.getId(),
+                    HistoryActionType.TITLE_CHANGED,
+                    "titulo",
+                    tituloAntigo,
+                    tituloNovo,
+                    "Título alterado");
+        }
+    }
+
+    /**
+     * Registra mudança de descrição
+     */
+    @Transactional
+    public void registrarMudancaDescricao(Tarefa tarefa, String descricaoAntiga, String descricaoNova) {
+        // Normalizar strings para evitar falso positivo com null vs ""
+        String msgAntiga = descricaoAntiga == null ? "" : descricaoAntiga;
+        String msgNova = descricaoNova == null ? "" : descricaoNova;
+
+        if (!msgAntiga.equals(msgNova)) {
+            registrarHistorico(
+                    tarefa.getId(),
+                    HistoryActionType.DESCRIPTION_CHANGED,
+                    "descricao",
+                    descricaoAntiga, // Mantém original (pode ser null) para histórico fiel
+                    descricaoNova,
+                    "Descrição alterada");
         }
     }
 
@@ -161,14 +205,14 @@ public class TarefaHistoryService {
      */
     @Transactional
     public void registrarComentario(Tarefa tarefa, String comentario) {
+        String safeComentario = comentario == null ? "" : comentario;
         registrarHistorico(
                 tarefa.getId(),
                 HistoryActionType.COMMENT_ADDED,
                 "comentario",
                 null,
-                comentario.length() > 100 ? comentario.substring(0, 100) + "..." : comentario,
-                "Comentário adicionado"
-        );
+                safeComentario.length() > 100 ? safeComentario.substring(0, 100) + "..." : safeComentario,
+                "Comentário adicionado");
     }
 
     /**
@@ -182,8 +226,7 @@ public class TarefaHistoryService {
                 "anexo",
                 null,
                 nomeArquivo,
-                "Anexo adicionado: " + nomeArquivo
-        );
+                "Anexo adicionado: " + nomeArquivo);
     }
 
     /**
@@ -191,14 +234,27 @@ public class TarefaHistoryService {
      */
     @Transactional
     public void registrarChecklistItem(Tarefa tarefa, HistoryActionType actionType, String itemDescricao) {
-        registrarHistorico(
+        // Verifica se já existe um registro similar para evitar duplicação
+        String descricaoHistorico = actionType.getDescricao() + ": " + itemDescricao;
+
+        // Verificação mais robusta: busca por tarefa + actionType + descrição do item
+        // (NEW_VALUE)
+        boolean jaExiste = historyRepository.existsByTarefaIdAndActionTypeAndNewValue(
                 tarefa.getId(),
                 actionType,
-                "checklist",
-                null,
-                itemDescricao,
-                actionType.getDescricao() + ": " + itemDescricao
-        );
+                itemDescricao);
+
+        if (!jaExiste) {
+            registrarHistorico(
+                    tarefa.getId(),
+                    actionType,
+                    "checklist",
+                    null,
+                    itemDescricao,
+                    descricaoHistorico);
+        } else {
+            log.info("Histórico já existe para tarefa {} - item: {}", tarefa.getId(), itemDescricao);
+        }
     }
 
     /**
@@ -212,8 +268,7 @@ public class TarefaHistoryService {
                 "coluna",
                 colunaOrigem,
                 colunaDestino,
-                String.format("Tarefa movida de '%s' para '%s'", colunaOrigem, colunaDestino)
-        );
+                String.format("Tarefa movida de '%s' para '%s'", colunaOrigem, colunaDestino));
     }
 
     /**
@@ -248,8 +303,8 @@ public class TarefaHistoryService {
      * Obtém histórico por período
      */
     public List<TarefaHistoryDTO> getHistoricoPorPeriodo(Long tarefaId,
-                                                         LocalDateTime inicio,
-                                                         LocalDateTime fim) {
+            LocalDateTime inicio,
+            LocalDateTime fim) {
         return historyRepository.findByTarefaIdAndDateRange(tarefaId, inicio, fim)
                 .stream()
                 .map(this::toDTO)

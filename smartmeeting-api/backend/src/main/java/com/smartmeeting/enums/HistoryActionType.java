@@ -10,6 +10,7 @@ public enum HistoryActionType {
     ASSIGNEE_CHANGED("Responsável alterado"),
     PRIORITY_CHANGED("Prioridade alterada"),
     DUE_DATE_CHANGED("Prazo alterado"),
+    TITLE_CHANGED("Título alterado"),
     DESCRIPTION_CHANGED("Descrição alterada"),
     COMMENT_ADDED("Comentário adicionado"),
     COMMENT_DELETED("Comentário removido"),

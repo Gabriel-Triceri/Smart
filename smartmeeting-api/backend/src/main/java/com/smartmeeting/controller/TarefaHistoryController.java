@@ -17,7 +17,7 @@ import java.util.Map;
  * Controller para histórico de tarefas (estilo Pipefy)
  */
 @RestController
-@RequestMapping("/tarefas/{tarefaId}/historico")
+@RequestMapping("/tarefas/{tarefaId}/history")
 @RequiredArgsConstructor
 public class TarefaHistoryController {
 

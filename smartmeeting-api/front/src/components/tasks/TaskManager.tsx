@@ -21,7 +21,7 @@ import { StatusTarefa, TarefaFormData, PrioridadeTarefa, Tarefa, PermissionType 
 import { CanDo } from '../permissions/CanDo';
 import { useTheme } from '../../context/ThemeContext';
 import { formatDate, isDateBefore } from '../../utils/dateHelpers';
-import { Avatar } from '../../components/common/Avatar';
+
 
 const Loader2 = ({ className }: { className?: string }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -105,12 +105,9 @@ export function TaskManager() {
     // Derived state for column management
     // Derived state for column management
     const selectedProjectId = (() => {
-        console.log('DEBUG TaskManager - Filters:', filtros);
-        console.log('DEBUG TaskManager - All tasks projectIds:', tarefas.map(t => ({ id: t.id, projectId: t.projectId, type: typeof t.projectId })));
         if (filtros.projectName && filtros.projectName.length === 1) {
             const nomeProjeto = filtros.projectName[0];
             const tarefa = tarefas.find(t => t.projectName === nomeProjeto);
-            console.log('DEBUG TaskManager - Found Task:', tarefa?.projectName, tarefa?.projectId, 'type:', typeof tarefa?.projectId);
             return tarefa?.projectId;
         }
         return undefined;
@@ -234,11 +231,7 @@ export function TaskManager() {
                                         <div className="px-4 py-4">
                                             {responsaveis.length > 0 ? (
                                                 <div className="flex items-center gap-2">
-                                                    <Avatar
-                                                        src={responsaveis[0].avatar}
-                                                        name={responsaveis[0].nome}
-                                                        className="w-6 h-6 ring-1 ring-slate-200 dark:ring-slate-700"
-                                                    />
+
                                                     <span className="truncate text-slate-700 dark:text-slate-300" title={responsaveis.map(r => r.nome).join(', ')}>
                                                         {responsaveis[0].nome}
                                                     </span>

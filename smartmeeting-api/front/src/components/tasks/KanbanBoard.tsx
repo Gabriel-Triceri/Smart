@@ -134,7 +134,6 @@ export function KanbanBoard({
     onViewTask,
     loading = false,
 }: KanbanBoardProps) {
-    console.log('DEBUG KanbanBoard - Received projectId:', projectId);
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
     const [columns, setColumns] = useState<(KanbanColumnConfig & { id?: string; isDefault?: boolean })[]>([]);
@@ -169,7 +168,7 @@ export function KanbanBoard({
             });
             setColumns(orderedColumns);
         } catch (error) {
-            console.error('Failed to load kanban columns', error);
+
             // Fallback to defaults
             setColumns(DEFAULT_COLUMNS.map(c => ({ status: c.id, title: c.title })));
         }
@@ -189,7 +188,7 @@ export function KanbanBoard({
     const handleSaveColumn = async (status: StatusTarefa) => {
         if (!tempTitle.trim()) return;
         const trimmedTitle = tempTitle.trim();
-        
+
         try {
             if (projectId) {
                 const col = columns.find(c => c.status === status);
@@ -201,14 +200,14 @@ export function KanbanBoard({
                 const updated = await meetingsApi.updateKanbanColumn(status, trimmedTitle);
                 setColumns(prev => prev.map(c => c.status === status ? { ...c, title: updated.title } : c));
             }
-            
+
             // Update title everywhere immediately for better UX
             updateColumnTitleEverywhere(status, trimmedTitle);
-            
+
             setEditingColumn(null);
             setOpenDropdownForColumn(null);
         } catch (error) {
-            console.error('Failed to update column title', error);
+
             // Revert to original title on error
             setEditingColumn(null);
             setOpenDropdownForColumn(null);
@@ -232,8 +231,6 @@ export function KanbanBoard({
     };
 
     const handleAddColumnFromDropdown = () => {
-        console.log('DEBUG: handleAddColumnFromDropdown called');
-        console.log('DEBUG: projectId available:', !!projectId);
         setShowAddColumnModal(true);
         setOpenDropdownForColumn(null);
     };
@@ -260,7 +257,7 @@ export function KanbanBoard({
             const cols = await meetingsApi.getKanbanColumnsByProject(projectId);
             setDynamicColumns(cols.filter(c => c.isActive));
         } catch (error) {
-            console.error('Failed to load dynamic columns', error);
+
         }
     };
 
@@ -306,13 +303,13 @@ export function KanbanBoard({
             // For project-specific columns, update dynamic columns
             const col = columns.find(c => c.status === status);
             if (col && col.id) {
-                setDynamicColumns(prev => prev.map(c => 
+                setDynamicColumns(prev => prev.map(c =>
                     c.id === col.id ? { ...c, title: newTitle } : c
                 ));
             }
         } else {
             // For global columns, update regular columns
-            setColumns(prev => prev.map(c => 
+            setColumns(prev => prev.map(c =>
                 c.status === status ? { ...c, title: newTitle } : c
             ));
         }
@@ -320,25 +317,17 @@ export function KanbanBoard({
 
     // Add new dynamic column
     const handleAddDynamicColumn = async () => {
-        console.log('DEBUG: handleAddDynamicColumn called');
-        console.log('DEBUG: projectId:', projectId);
-        console.log('DEBUG: projectId type:', typeof projectId);
-        console.log('DEBUG: projectId length:', projectId?.toString().length);
-        console.log('DEBUG: newColumnTitle:', newColumnTitle);
-        console.log('DEBUG: newColumnTitle.trim():', newColumnTitle.trim());
-        
+
         if (!projectId) {
-            console.error('DEBUG: projectId is missing');
             alert('ID do projeto não encontrado. Verifique se você está em um projeto.');
             return;
         }
-        
+
         if (!newColumnTitle.trim()) {
-            console.error('DEBUG: newColumnTitle is empty');
             alert('Título da coluna é obrigatório.');
             return;
         }
-        
+
         try {
             setAddingColumn(true);
             console.log('DEBUG: Creating column with data:', {
@@ -348,14 +337,13 @@ export function KanbanBoard({
                 ordem: dynamicColumns.length + 1,
                 isDoneColumn: false
             });
-            
+
             // Converte projectId para number se for string numérica
-            const projectIdNumber = typeof projectId === 'string' && /^\d+$/.test(projectId) 
-                ? parseInt(projectId, 10) 
+            const projectIdNumber = typeof projectId === 'string' && /^\d+$/.test(projectId)
+                ? parseInt(projectId, 10)
                 : projectId;
-            
-            console.log('DEBUG: Converted projectId to:', projectIdNumber, 'type:', typeof projectIdNumber);
-            
+
+
             const newColumn = await meetingsApi.createKanbanColumnDynamic({
                 projectId: projectIdNumber,
                 title: newColumnTitle.trim(),
@@ -363,15 +351,13 @@ export function KanbanBoard({
                 ordem: dynamicColumns.length + 1,
                 isDoneColumn: false
             });
-            
-            console.log('DEBUG: Column created successfully:', newColumn);
+
+
             setDynamicColumns(prev => [...prev, newColumn]);
             setNewColumnTitle('');
             setShowAddColumnModal(false);
             alert('Coluna adicionada com sucesso!');
         } catch (error) {
-            console.error('DEBUG: Failed to add column', error);
-            console.error('DEBUG: Error details:', error.response?.data || error.message);
             alert('Erro ao adicionar coluna: ' + (error.response?.data?.message || error.message));
         } finally {
             setAddingColumn(false);
@@ -386,7 +372,7 @@ export function KanbanBoard({
             await meetingsApi.deleteKanbanColumnDynamic(projectId, columnId);
             setDynamicColumns(prev => prev.filter(c => c.id !== columnId));
         } catch (error) {
-            console.error('Failed to delete column', error);
+
         }
     };
 
@@ -502,7 +488,7 @@ export function KanbanBoard({
 
                                                                         <button
                                                                             onClick={() => {
-                                                                                console.log('DEBUG: Add Column button clicked');
+
                                                                                 handleAddColumnFromDropdown();
                                                                             }}
                                                                             className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"

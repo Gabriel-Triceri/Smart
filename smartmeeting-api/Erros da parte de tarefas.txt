@@ -1,0 +1,25 @@
+Descrição Tarefa:
+- Corrigir erro de adicionar comentario (Esta adicionando mas dando erro de primary key)
+- Corrigir erro de historico
+	- Adicionar historico quando a tarefa muda de status (QUEM MUDOU, QUANDO MUDOU)
+	- Historico quando mude algum dado da terfa
+	- Historico quando muda o particpante da tarefa
+	- Historico quando muda o responsavel
+
+Checklist:
+	Adicionar titulo do checklist
+	Conseguir adicionar comentarios no checklist
+
+Na parte de projeto:
+	- Criar pagina de projeto com os seus respectivos kambuns 
+	- Na parte do kambum cada tarefa pode ter suas respectivas colunas diferentes das outras
+
+
+Na lista de tarefa:
+	- Retirar simbolo do organizador com a inicial
+	- Centralizar a porcentagem na barra de progressão
+
+Conexão de fluxos Kambum:
+	- Da para concectar o final de um fluxo com o incio de outro ou seja quando uma determinada tarefa chegar a um lugar de um fluxo enviar essa tarefa para outro fluxo na coluna que o usuario escolher
+
+

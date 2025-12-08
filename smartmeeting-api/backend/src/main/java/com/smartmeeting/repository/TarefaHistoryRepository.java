@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TarefaHistoryRepository extends JpaRepository<TarefaHistory, Long> {
@@ -41,5 +42,40 @@ public interface TarefaHistoryRepository extends JpaRepository<TarefaHistory, Lo
     @Query("SELECT COUNT(th) FROM TarefaHistory th WHERE th.tarefa.id = :tarefaId")
     long countByTarefaId(@Param("tarefaId") Long tarefaId);
 
+    @Query("SELECT COUNT(th) > 0 FROM TarefaHistory th WHERE th.tarefa.id = :tarefaId " +
+            "AND th.actionType = :actionType AND th.newValue = :newValue")
+    boolean existsByTarefaIdAndActionTypeAndNewValue(
+            @Param("tarefaId") Long tarefaId,
+            @Param("actionType") HistoryActionType actionType,
+            @Param("newValue") String newValue);
+
+    @Query("SELECT COUNT(th) > 0 FROM TarefaHistory th WHERE th.tarefa.id = :tarefaId " +
+            "AND th.actionType = :actionType AND th.description = :description")
+    boolean existsByTarefaIdAndActionTypeAndDescription(
+            @Param("tarefaId") Long tarefaId,
+            @Param("actionType") HistoryActionType actionType,
+            @Param("description") String description);
+
+    @Query("SELECT COUNT(th) > 0 FROM TarefaHistory th WHERE th.tarefa.id = :tarefaId " +
+            "AND th.actionType = :actionType AND th.fieldName = :fieldName " +
+            "AND th.oldValue = :oldValue AND th.newValue = :newValue " +
+            "AND th.description = :description")
+    boolean existsByTarefaIdAndActionTypeAndFieldNameAndOldValueAndNewValueAndDescription(
+            @Param("tarefaId") Long tarefaId,
+            @Param("actionType") HistoryActionType actionType,
+            @Param("fieldName") String fieldName,
+            @Param("oldValue") String oldValue,
+            @Param("newValue") String newValue,
+            @Param("description") String description);
+
     void deleteByTarefaId(Long tarefaId);
+
+    // --- ADICIONADO: busca do registro existente (top 1 ordenado por createdAt desc)
+    Optional<TarefaHistory> findTopByTarefaIdAndActionTypeAndFieldNameAndOldValueAndNewValueAndDescriptionOrderByCreatedAtDesc(
+            Long tarefaId,
+            HistoryActionType actionType,
+            String fieldName,
+            String oldValue,
+            String newValue,
+            String description);
 }
