@@ -1,0 +1,102 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< com.smartmeeting:smartmeeting-api >------------------
+[INFO] Building smartmeeting-api 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.3.2:clean (default-clean) @ smartmeeting-api ---
+[INFO] Deleting C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ smartmeeting-api ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ smartmeeting-api ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 198 source files with javac [debug release 17] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[116,23] cannot find symbol
+  symbol:   method registrarAlteracao(com.smartmeeting.model.Tarefa,java.lang.String,java.lang.String,java.lang.String,com.smartmeeting.model.Pessoa)
+  location: variable historyService of type com.smartmeeting.service.tarefa.TarefaHistoryService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[120,30] cannot find symbol
+  symbol:   method buscarHistoricoPorTarefa(java.lang.Long)
+  location: variable historyService of type com.smartmeeting.service.tarefa.TarefaHistoryService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[129,33] cannot find symbol
+  symbol:   method countByStatus(com.smartmeeting.enums.StatusTarefa)
+  location: variable statisticsService of type com.smartmeeting.service.tarefa.TarefaStatisticsService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[133,33] cannot find symbol
+  symbol:   method countByProjeto(java.lang.Long)
+  location: variable statisticsService of type com.smartmeeting.service.tarefa.TarefaStatisticsService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[168,32] cannot find symbol
+  symbol:   method adicionarChecklistItem(java.lang.Long,com.smartmeeting.dto.ChecklistItemDTO)
+  location: variable checklistService of type com.smartmeeting.service.tarefa.TarefaChecklistService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[172,32] cannot find symbol
+  symbol:   method atualizarChecklistItem(java.lang.Long,com.smartmeeting.dto.ChecklistItemDTO)
+  location: variable checklistService of type com.smartmeeting.service.tarefa.TarefaChecklistService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[176,25] cannot find symbol
+  symbol:   method deletarChecklistItem(java.lang.Long)
+  location: variable checklistService of type com.smartmeeting.service.tarefa.TarefaChecklistService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[180,32] cannot find symbol
+  symbol:   method listarChecklistItems(java.lang.Long)
+  location: variable checklistService of type com.smartmeeting.service.tarefa.TarefaChecklistService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[220,27] cannot find symbol
+  symbol:   method enviarNotificacaoNovaTarefa(com.smartmeeting.model.Tarefa)
+  location: variable notificacaoService of type com.smartmeeting.service.tarefa.TarefaNotificacaoService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[224,27] cannot find symbol
+  symbol:   method enviarNotificacaoTarefaAtualizada(com.smartmeeting.model.Tarefa,java.lang.String)
+  location: variable notificacaoService of type com.smartmeeting.service.tarefa.TarefaNotificacaoService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[228,27] cannot find symbol
+  symbol:   method enviarNotificacaoTarefaConcluida(com.smartmeeting.model.Tarefa)
+  location: variable notificacaoService of type com.smartmeeting.service.tarefa.TarefaNotificacaoService
+[INFO] 11 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  24.423 s
+[INFO] Finished at: 2025-12-13T16:11:04-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project smartmeeting-api: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[116,23] cannot find symbol
+[ERROR]   symbol:   method registrarAlteracao(com.smartmeeting.model.Tarefa,java.lang.String,java.lang.String,java.lang.String,com.smartmeeting.model.Pessoa)
+[ERROR]   location: variable historyService of type com.smartmeeting.service.tarefa.TarefaHistoryService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[120,30] cannot find symbol
+[ERROR]   symbol:   method buscarHistoricoPorTarefa(java.lang.Long)
+[ERROR]   location: variable historyService of type com.smartmeeting.service.tarefa.TarefaHistoryService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[129,33] cannot find symbol
+[ERROR]   symbol:   method countByStatus(com.smartmeeting.enums.StatusTarefa)
+[ERROR]   location: variable statisticsService of type com.smartmeeting.service.tarefa.TarefaStatisticsService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[133,33] cannot find symbol
+[ERROR]   symbol:   method countByProjeto(java.lang.Long)
+[ERROR]   location: variable statisticsService of type com.smartmeeting.service.tarefa.TarefaStatisticsService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[168,32] cannot find symbol
+[ERROR]   symbol:   method adicionarChecklistItem(java.lang.Long,com.smartmeeting.dto.ChecklistItemDTO)
+[ERROR]   location: variable checklistService of type com.smartmeeting.service.tarefa.TarefaChecklistService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[172,32] cannot find symbol
+[ERROR]   symbol:   method atualizarChecklistItem(java.lang.Long,com.smartmeeting.dto.ChecklistItemDTO)
+[ERROR]   location: variable checklistService of type com.smartmeeting.service.tarefa.TarefaChecklistService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[176,25] cannot find symbol
+[ERROR]   symbol:   method deletarChecklistItem(java.lang.Long)
+[ERROR]   location: variable checklistService of type com.smartmeeting.service.tarefa.TarefaChecklistService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[180,32] cannot find symbol
+[ERROR]   symbol:   method listarChecklistItems(java.lang.Long)
+[ERROR]   location: variable checklistService of type com.smartmeeting.service.tarefa.TarefaChecklistService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[220,27] cannot find symbol
+[ERROR]   symbol:   method enviarNotificacaoNovaTarefa(com.smartmeeting.model.Tarefa)
+[ERROR]   location: variable notificacaoService of type com.smartmeeting.service.tarefa.TarefaNotificacaoService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[224,27] cannot find symbol
+[ERROR]   symbol:   method enviarNotificacaoTarefaAtualizada(com.smartmeeting.model.Tarefa,java.lang.String)
+[ERROR]   location: variable notificacaoService of type com.smartmeeting.service.tarefa.TarefaNotificacaoService
+[ERROR] /C:/Users/mniac/Desktop/Smart/smartmeeting-api/backend/src/main/java/com/smartmeeting/service/tarefa/TarefaService.java:[228,27] cannot find symbol
+[ERROR]   symbol:   method enviarNotificacaoTarefaConcluida(com.smartmeeting.model.Tarefa)
+[ERROR]   location: variable notificacaoService of type com.smartmeeting.service.tarefa.TarefaNotificacaoService
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

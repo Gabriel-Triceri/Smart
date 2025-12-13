@@ -3,11 +3,13 @@ package com.smartmeeting.controller;
 import com.smartmeeting.dto.*;
 import com.smartmeeting.mapper.ReuniaoMapper;
 import com.smartmeeting.model.Reuniao;
-import com.smartmeeting.service.ReuniaoService;
-import com.smartmeeting.service.SalaService;
-import com.smartmeeting.service.PessoaService;
-import com.smartmeeting.service.TarefaService;
+import com.smartmeeting.service.reuniao.ReuniaoService;
+import com.smartmeeting.service.sala.SalaService;
+import com.smartmeeting.service.pessoa.PessoaService;
+import com.smartmeeting.service.project.ProjectPermissionService;
+import com.smartmeeting.service.tarefa.TarefaService;
 import com.smartmeeting.service.email.EmailService;
+
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,11 +30,11 @@ public class ReuniaoController {
     private final PessoaService pessoaService;
     private final TarefaService tarefaService;
 
-    private final com.smartmeeting.service.ProjectPermissionService projectPermissionService;
+    private final ProjectPermissionService projectPermissionService;
 
     public ReuniaoController(ReuniaoService service, ReuniaoMapper mapper, EmailService emailService,
-                             SalaService salaService, PessoaService pessoaService, TarefaService tarefaService,
-                             com.smartmeeting.service.ProjectPermissionService projectPermissionService) {
+            SalaService salaService, PessoaService pessoaService, TarefaService tarefaService,
+            ProjectPermissionService projectPermissionService) {
         this.service = service;
         this.mapper = mapper;
         this.emailService = emailService;

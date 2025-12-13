@@ -2,7 +2,7 @@ package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.PessoaCreateDTO;
 import com.smartmeeting.dto.PessoaDTO;
-import com.smartmeeting.service.PessoaService;
+import com.smartmeeting.service.pessoa.PessoaService;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;

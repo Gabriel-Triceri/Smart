@@ -9,7 +9,7 @@ import com.smartmeeting.model.Tarefa;
 import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.SalaRepository;
 import com.smartmeeting.exception.ResourceNotFoundException;
-import com.smartmeeting.service.SalaService;
+import com.smartmeeting.service.sala.SalaService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.stereotype.Component;
 

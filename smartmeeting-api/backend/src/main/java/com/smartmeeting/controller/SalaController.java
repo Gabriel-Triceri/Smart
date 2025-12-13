@@ -2,7 +2,7 @@ package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.SalaDTO;
 import com.smartmeeting.dto.SalaStatisticsDTO;
-import com.smartmeeting.service.SalaService;
+import com.smartmeeting.service.sala.SalaService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

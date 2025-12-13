@@ -3,7 +3,7 @@ package com.smartmeeting.controller;
 import com.smartmeeting.dto.RoleDTO;
 import com.smartmeeting.model.Permission;
 import com.smartmeeting.model.Role;
-import com.smartmeeting.service.RoleService;
+import com.smartmeeting.service.permission.RoleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +25,8 @@ public class RoleController {
         RoleDTO dto = new RoleDTO();
         dto.setId(role.getId());
         dto.setNome(role.getNome());
-        List<String> names = role.getPermissions() == null ? List.of() : role.getPermissions().stream().map(Permission::getNome).collect(Collectors.toList());
+        List<String> names = role.getPermissions() == null ? List.of()
+                : role.getPermissions().stream().map(Permission::getNome).collect(Collectors.toList());
         dto.setPermissions(names);
         return dto;
     }
@@ -66,12 +67,12 @@ public class RoleController {
         return ResponseEntity.ok(toDTO(updated));
     }
 
-//    @DeleteMapping("/{id}")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<Void> delete(@PathVariable Long id) {
-//        roleService.delete(id);
-//        return ResponseEntity.noContent().build();
-//    }
+    // @DeleteMapping("/{id}")
+    // @PreAuthorize("hasRole('ADMIN')")
+    // public ResponseEntity<Void> delete(@PathVariable Long id) {
+    // roleService.delete(id);
+    // return ResponseEntity.noContent().build();
+    // }
 
     @PostMapping("/{id}/permissions/{permissionId}")
     @PreAuthorize("hasRole('ADMIN')")

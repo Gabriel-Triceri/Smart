@@ -10,8 +10,8 @@ import com.smartmeeting.dto.MovimentacaoTarefaRequest;
 import com.smartmeeting.dto.MovimentacaoTarefaDTO;
 import com.smartmeeting.dto.ChecklistItemDTO;
 import com.smartmeeting.dto.CreateChecklistItemRequest;
-import com.smartmeeting.service.TarefaService;
-import com.smartmeeting.service.ChecklistService;
+import com.smartmeeting.service.tarefa.TarefaService;
+import com.smartmeeting.service.tarefa.TarefaChecklistService;
 import com.smartmeeting.mapper.ReuniaoMapper;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.dto.ReuniaoDTO;
@@ -21,6 +21,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
+import com.smartmeeting.service.project.ProjectPermissionService;
 
 @RestController
 @RequestMapping("/tarefas")
@@ -28,12 +29,12 @@ public class TarefaController {
 
     private final TarefaService tarefaService;
     private final ReuniaoMapper reuniaoMapper;
-    private final ChecklistService checklistService;
-    private final com.smartmeeting.service.ProjectPermissionService projectPermissionService;
+    private final TarefaChecklistService checklistService;
+    private final ProjectPermissionService projectPermissionService;
 
     public TarefaController(TarefaService tarefaService, ReuniaoMapper reuniaoMapper,
-                            ChecklistService checklistService,
-                            com.smartmeeting.service.ProjectPermissionService projectPermissionService) {
+            TarefaChecklistService checklistService,
+            ProjectPermissionService projectPermissionService) {
         this.tarefaService = tarefaService;
         this.reuniaoMapper = reuniaoMapper;
         this.checklistService = checklistService;
@@ -335,7 +336,7 @@ public class TarefaController {
      */
     @PostMapping("/{id:\\d+}/mover")
     public ResponseEntity<TarefaDTO> moverTarefa(@PathVariable(name = "id") Long id,
-                                                 @Valid @RequestBody MovimentacaoTarefaRequest request) {
+            @Valid @RequestBody MovimentacaoTarefaRequest request) {
         // Validação de permissão
         TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
         if (existing.getProjectId() != null) {

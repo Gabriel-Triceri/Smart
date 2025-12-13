@@ -4,10 +4,10 @@ import com.smartmeeting.api.SmartmeetingApiApplication;
 import com.smartmeeting.dto.ReuniaoDTO;
 import com.smartmeeting.mapper.ReuniaoMapper;
 import com.smartmeeting.model.Reuniao;
-import com.smartmeeting.service.PessoaService;
-import com.smartmeeting.service.ReuniaoService;
-import com.smartmeeting.service.SalaService;
-import com.smartmeeting.service.TarefaService;
+import com.smartmeeting.service.pessoa.PessoaService;
+import com.smartmeeting.service.reuniao.ReuniaoService;
+import com.smartmeeting.service.sala.SalaService; // Assuming SalaService moved to sala package? Check.
+import com.smartmeeting.service.tarefa.TarefaService;
 import com.smartmeeting.service.email.EmailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +22,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@SuppressWarnings("null")
 
 @SpringBootTest(classes = SmartmeetingApiApplication.class)
 @AutoConfigureMockMvc

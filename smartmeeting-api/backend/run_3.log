@@ -1,0 +1,178 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< com.smartmeeting:smartmeeting-api >------------------
+[INFO] Building smartmeeting-api 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.2.0:run (default-cli) > test-compile @ smartmeeting-api >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ smartmeeting-api ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ smartmeeting-api ---
+[INFO] Changes detected - recompiling the module! :input tree
+[INFO] Compiling 197 source files with javac [debug release 17] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ smartmeeting-api ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ smartmeeting-api ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 4 source files with javac [debug release 17] to target\test-classes
+[INFO] 
+[INFO] <<< spring-boot:3.2.0:run (default-cli) < test-compile @ smartmeeting-api <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.2.0:run (default-cli) @ smartmeeting-api ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2025-12-13T16:19:00.368-03:00  INFO 10300 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Starting SmartmeetingApiApplication using Java 17.0.10 with PID 10300 (C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\target\classes started by mniac in C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend)
+2025-12-13T16:19:00.376-03:00  INFO 10300 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : No active profile set, falling back to 1 default profile: "default"
+2025-12-13T16:19:00.578-03:00  INFO 10300 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-12-13T16:19:00.578-03:00  INFO 10300 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-12-13T16:19:02.409-03:00  INFO 10300 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-13T16:19:02.640-03:00  INFO 10300 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 202 ms. Found 20 JPA repository interfaces.
+2025-12-13T16:19:04.802-03:00  INFO 10300 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-12-13T16:19:04.823-03:00  INFO 10300 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-13T16:19:04.823-03:00  INFO 10300 --- [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-12-13T16:19:04.929-03:00  INFO 10300 --- [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-13T16:19:04.931-03:00  INFO 10300 --- [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4350 ms
+2025-12-13T16:19:04.987-03:00  INFO 10300 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-13T16:19:05.809-03:00  INFO 10300 --- [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn1: url=jdbc:h2:file:./data/smartmeeting user=SA
+2025-12-13T16:19:05.812-03:00  INFO 10300 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-12-13T16:19:05.830-03:00  INFO 10300 --- [  restartedMain] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:h2:file:./data/smartmeeting'
+2025-12-13T16:19:05.871-03:00  INFO 10300 --- [  restartedMain] c.s.security.JwtTokenProvider            : [INFO] SigningKey JWT inicializada (536 bits)
+2025-12-13T16:19:06.020-03:00  INFO 10300 --- [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-13T16:19:06.141-03:00  INFO 10300 --- [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.3.1.Final
+2025-12-13T16:19:06.218-03:00  INFO 10300 --- [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-13T16:19:06.648-03:00  INFO 10300 --- [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-13T16:19:06.727-03:00  WARN 10300 --- [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-13T16:19:09.497-03:00  INFO 10300 --- [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table if exists kanban_column_dynamic 
+       drop constraint if exists UKh1pspf85sy9ukwtienj4x8205
+Hibernate: 
+    alter table if exists kanban_column_dynamic 
+       add constraint UKh1pspf85sy9ukwtienj4x8205 unique (id_project, column_key)
+Hibernate: 
+    alter table if exists project_permission 
+       drop constraint if exists UKe72imppeig4njd9gtrt2p4qbk
+Hibernate: 
+    alter table if exists project_permission 
+       add constraint UKe72imppeig4njd9gtrt2p4qbk unique (id_project_member, permission_type)
+Hibernate: 
+    alter table if exists project_member 
+       drop constraint if exists UKt1b0je0wsjwsjpy2axdmu69o
+Hibernate: 
+    alter table if exists project_member 
+       add constraint UKt1b0je0wsjwsjpy2axdmu69o unique (id_project, id_person)
+Hibernate: 
+    alter table if exists role_permission_template 
+       drop constraint if exists UKtmtj9c5ajx5ynypp0kw6pm47c
+Hibernate: 
+    alter table if exists role_permission_template 
+       add constraint UKtmtj9c5ajx5ynypp0kw6pm47c unique (project_role, permission_type)
+2025-12-13T16:19:09.713-03:00  INFO 10300 --- [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-13T16:19:10.994-03:00  INFO 10300 --- [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+Hibernate: 
+    select
+        count(*) 
+    from
+        kanban_columns kc1_0
+Hibernate: 
+    select
+        count(*) 
+    from
+        role_permission_template rpt1_0
+2025-12-13T16:19:14.612-03:00  WARN 10300 --- [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-13T16:19:15.257-03:00  INFO 10300 --- [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@511efd5, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@61b1e5e0, org.springframework.security.web.context.SecurityContextHolderFilter@5db40e63, org.springframework.security.web.header.HeaderWriterFilter@5565ed51, org.springframework.web.filter.CorsFilter@3ab4d93c, org.springframework.security.web.authentication.logout.LogoutFilter@3415033d, com.smartmeeting.security.JwtAuthenticationFilter@442f9e5c, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@3cab9a92, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@4f5dd9b3, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@4a733148, org.springframework.security.web.session.SessionManagementFilter@6de7535, org.springframework.security.web.access.ExceptionTranslationFilter@5328f3c8, org.springframework.security.web.access.intercept.AuthorizationFilter@74f216c9]
+2025-12-13T16:19:15.267-03:00  WARN 10300 --- [  restartedMain] o.s.s.c.a.web.builders.WebSecurity       : You are asking Spring Security to ignore DispatcherServletDelegating [ant = Ant [pattern='/ws/**'], mvc = Mvc [pattern='/ws/**']]. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.
+2025-12-13T16:19:15.267-03:00  INFO 10300 --- [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure DispatcherServletDelegating [ant = Ant [pattern='/ws/**'], mvc = Mvc [pattern='/ws/**']]
+2025-12-13T16:19:16.032-03:00  INFO 10300 --- [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-12-13T16:19:16.138-03:00  INFO 10300 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2025-12-13T16:19:16.157-03:00  INFO 10300 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Started SmartmeetingApiApplication in 16.841 seconds (process running for 18.039)
+2025-12-13T16:19:57.020-03:00  INFO 10300 --- [   File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2025-12-13T16:19:57.113-03:00  INFO 10300 --- [       Thread-7] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-13T16:19:57.124-03:00  INFO 10300 --- [       Thread-7] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-12-13T16:19:57.129-03:00  INFO 10300 --- [       Thread-7] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2025-12-13T16:19:57.314-03:00  INFO 10300 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Starting SmartmeetingApiApplication using Java 17.0.10 with PID 10300 (C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\target\classes started by mniac in C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend)
+2025-12-13T16:19:57.316-03:00  INFO 10300 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : No active profile set, falling back to 1 default profile: "default"
+2025-12-13T16:19:57.942-03:00  INFO 10300 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-13T16:19:58.087-03:00  INFO 10300 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 144 ms. Found 20 JPA repository interfaces.
+2025-12-13T16:19:58.693-03:00  INFO 10300 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-12-13T16:19:58.695-03:00  INFO 10300 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-13T16:19:58.696-03:00  INFO 10300 --- [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-12-13T16:19:58.755-03:00  INFO 10300 --- [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-13T16:19:58.755-03:00  INFO 10300 --- [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1433 ms
+2025-12-13T16:19:58.789-03:00  INFO 10300 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2025-12-13T16:19:58.793-03:00  INFO 10300 --- [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn11: url=jdbc:h2:file:./data/smartmeeting user=SA
+2025-12-13T16:19:58.794-03:00  INFO 10300 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2025-12-13T16:19:58.794-03:00  INFO 10300 --- [  restartedMain] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:h2:file:./data/smartmeeting'
+2025-12-13T16:19:58.812-03:00  INFO 10300 --- [  restartedMain] c.s.security.JwtTokenProvider            : [INFO] SigningKey JWT inicializada (536 bits)
+2025-12-13T16:19:58.862-03:00  INFO 10300 --- [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-13T16:19:58.868-03:00  INFO 10300 --- [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-13T16:19:58.878-03:00  INFO 10300 --- [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-13T16:19:58.880-03:00  WARN 10300 --- [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-13T16:19:59.514-03:00  INFO 10300 --- [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table if exists kanban_column_dynamic 
+       drop constraint if exists UKh1pspf85sy9ukwtienj4x8205
+Hibernate: 
+    alter table if exists kanban_column_dynamic 
+       add constraint UKh1pspf85sy9ukwtienj4x8205 unique (id_project, column_key)
+Hibernate: 
+    alter table if exists project_permission 
+       drop constraint if exists UKe72imppeig4njd9gtrt2p4qbk
+Hibernate: 
+    alter table if exists project_permission 
+       add constraint UKe72imppeig4njd9gtrt2p4qbk unique (id_project_member, permission_type)
+Hibernate: 
+    alter table if exists project_member 
+       drop constraint if exists UKt1b0je0wsjwsjpy2axdmu69o
+Hibernate: 
+    alter table if exists project_member 
+       add constraint UKt1b0je0wsjwsjpy2axdmu69o unique (id_project, id_person)
+Hibernate: 
+    alter table if exists role_permission_template 
+       drop constraint if exists UKtmtj9c5ajx5ynypp0kw6pm47c
+Hibernate: 
+    alter table if exists role_permission_template 
+       add constraint UKtmtj9c5ajx5ynypp0kw6pm47c unique (project_role, permission_type)
+2025-12-13T16:19:59.540-03:00  INFO 10300 --- [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+Hibernate: 
+    select
+        count(*) 
+    from
+        kanban_columns kc1_0
+Hibernate: 
+    select
+        count(*) 
+    from
+        role_permission_template rpt1_0
+2025-12-13T16:20:02.913-03:00  WARN 10300 --- [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-13T16:20:03.299-03:00  INFO 10300 --- [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@12a6545a, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@23d028e, org.springframework.security.web.context.SecurityContextHolderFilter@48e16647, org.springframework.security.web.header.HeaderWriterFilter@7715d518, org.springframework.web.filter.CorsFilter@22c12c59, org.springframework.security.web.authentication.logout.LogoutFilter@39b537cf, com.smartmeeting.security.JwtAuthenticationFilter@99a9e01, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@152e6655, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@4c4accfd, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@20b9a2b3, org.springframework.security.web.session.SessionManagementFilter@2cd3415f, org.springframework.security.web.access.ExceptionTranslationFilter@2c0e3395, org.springframework.security.web.access.intercept.AuthorizationFilter@4578e042]
+2025-12-13T16:20:03.306-03:00  WARN 10300 --- [  restartedMain] o.s.s.c.a.web.builders.WebSecurity       : You are asking Spring Security to ignore DispatcherServletDelegating [ant = Ant [pattern='/ws/**'], mvc = Mvc [pattern='/ws/**']]. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.
+2025-12-13T16:20:03.306-03:00  INFO 10300 --- [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will not secure DispatcherServletDelegating [ant = Ant [pattern='/ws/**'], mvc = Mvc [pattern='/ws/**']]
+2025-12-13T16:20:03.586-03:00  INFO 10300 --- [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-12-13T16:20:03.607-03:00  INFO 10300 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2025-12-13T16:20:03.613-03:00  INFO 10300 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Started SmartmeetingApiApplication in 6.36 seconds (process running for 65.496)
+2025-12-13T16:20:03.618-03:00  INFO 10300 --- [  restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged

@@ -1,11 +1,11 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.*;
-import com.smartmeeting.service.KanbanColumnDynamicService;
+import com.smartmeeting.service.kambun.KanbanColumnDynamicService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 /**

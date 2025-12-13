@@ -1,7 +1,8 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.PresencaDTO;
-import com.smartmeeting.service.PresencaService;
+import com.smartmeeting.service.reuniao.PresencaService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +18,11 @@ public class PresencaController {
 
     /**
      * Registra a presença de um participante em uma reunião
+     * 
      * @param reuniaoId Identificador da reunião
-     * @param dto Dados da presença a ser registrada
-     * @return ResponseEntity contendo os dados da presença registrada ou status 400 em caso de erro
+     * @param dto       Dados da presença a ser registrada
+     * @return ResponseEntity contendo os dados da presença registrada ou status 400
+     *         em caso de erro
      */
     @PostMapping("/{id}/presenca")
     public ResponseEntity<PresencaDTO> registrarPresenca(

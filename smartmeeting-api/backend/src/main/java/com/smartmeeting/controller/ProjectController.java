@@ -3,12 +3,13 @@ package com.smartmeeting.controller;
 import com.smartmeeting.dto.AddProjectMemberDTO;
 import com.smartmeeting.dto.CreateProjectDTO;
 import com.smartmeeting.dto.ProjectDTO;
+import com.smartmeeting.dto.ProjectMemberDTO;
 import com.smartmeeting.enums.PermissionType;
 import com.smartmeeting.exception.ForbiddenException;
 import com.smartmeeting.model.Pessoa;
-import com.smartmeeting.model.ProjectMember;
-import com.smartmeeting.service.ProjectService;
-import com.smartmeeting.service.ProjectPermissionService;
+
+import com.smartmeeting.service.project.ProjectService;
+import com.smartmeeting.service.project.ProjectPermissionService;
 import com.smartmeeting.util.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class ProjectController {
 
     @PostMapping
     public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody CreateProjectDTO createProjectDTO,
-                                                    @AuthenticationPrincipal Pessoa currentUser) {
+            @AuthenticationPrincipal Pessoa currentUser) {
         ProjectDTO project = projectService.createProject(createProjectDTO, currentUser);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -65,7 +66,8 @@ public class ProjectController {
      * Busca um projeto por ID (com verificação de permissão)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ProjectDTO> getProjectById(@PathVariable Long id, @AuthenticationPrincipal Pessoa currentUser) {
+    public ResponseEntity<ProjectDTO> getProjectById(@PathVariable Long id,
+            @AuthenticationPrincipal Pessoa currentUser) {
         // Admin global pode ver qualquer projeto
         if (SecurityUtils.isAdmin()) {
             ProjectDTO project = projectService.findProjectById(id);
@@ -103,16 +105,16 @@ public class ProjectController {
     }
 
     @PostMapping("/{projectId}/members")
-    public ResponseEntity<ProjectMember> addMember(@PathVariable Long projectId,
-                                                   @Valid @RequestBody AddProjectMemberDTO addProjectMemberDTO,
-                                                   @AuthenticationPrincipal Pessoa currentUser) {
-        ProjectMember newMember = projectService.addMember(projectId, addProjectMemberDTO, currentUser);
+    public ResponseEntity<ProjectMemberDTO> addMember(@PathVariable Long projectId,
+            @Valid @RequestBody AddProjectMemberDTO addProjectMemberDTO,
+            @AuthenticationPrincipal Pessoa currentUser) {
+        ProjectMemberDTO newMember = projectService.addMember(projectId, addProjectMemberDTO, currentUser);
         return new ResponseEntity<>(newMember, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{projectId}/members/{memberId}")
     public ResponseEntity<Void> removeMember(@PathVariable Long projectId, @PathVariable Long memberId,
-                                             @AuthenticationPrincipal Pessoa currentUser) {
+            @AuthenticationPrincipal Pessoa currentUser) {
         projectService.removeMember(projectId, memberId, currentUser);
         return ResponseEntity.noContent().build();
     }

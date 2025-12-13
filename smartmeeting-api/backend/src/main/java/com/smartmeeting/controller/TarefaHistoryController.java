@@ -1,7 +1,8 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.TarefaHistoryDTO;
-import com.smartmeeting.service.TarefaHistoryService;
+import com.smartmeeting.service.tarefa.TarefaHistoryService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

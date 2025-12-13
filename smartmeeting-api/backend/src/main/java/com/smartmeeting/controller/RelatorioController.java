@@ -1,7 +1,7 @@
 package com.smartmeeting.controller;
 
-import com.smartmeeting.service.CsvExportService;
-import com.smartmeeting.service.RelatorioService;
+import com.smartmeeting.service.relatorio.CsvExportService;
+import com.smartmeeting.service.relatorio.RelatorioService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -25,8 +25,9 @@ public class RelatorioController {
 
     /**
      * Gera relatório de reuniões agrupadas por sala
+     * 
      * @param dataInicio Data de início do período (formato YYYY-MM-DD)
-     * @param dataFim Data de fim do período (formato YYYY-MM-DD)
+     * @param dataFim    Data de fim do período (formato YYYY-MM-DD)
      * @return ResponseEntity contendo mapa com dados do relatório
      */
     @GetMapping("/reunioes-por-sala")
@@ -39,8 +40,9 @@ public class RelatorioController {
 
     /**
      * Exporta relatório de reuniões agrupadas por sala para CSV
+     * 
      * @param dataInicio Data de início do período (formato YYYY-MM-DD)
-     * @param dataFim Data de fim do período (formato YYYY-MM-DD)
+     * @param dataFim    Data de fim do período (formato YYYY-MM-DD)
      * @return ResponseEntity contendo o arquivo CSV
      */
     @GetMapping("/reunioes-por-sala/csv")
@@ -59,8 +61,9 @@ public class RelatorioController {
 
     /**
      * Gera relatório de tarefas concluídas
+     * 
      * @param dataInicio Data de início do período (formato YYYY-MM-DD)
-     * @param dataFim Data de fim do período (formato YYYY-MM-DD)
+     * @param dataFim    Data de fim do período (formato YYYY-MM-DD)
      * @return ResponseEntity contendo mapa com dados do relatório
      */
     @GetMapping("/tarefas-concluidas")
@@ -73,8 +76,9 @@ public class RelatorioController {
 
     /**
      * Exporta relatório de tarefas concluídas para CSV
+     * 
      * @param dataInicio Data de início do período (formato YYYY-MM-DD)
-     * @param dataFim Data de fim do período (formato YYYY-MM-DD)
+     * @param dataFim    Data de fim do período (formato YYYY-MM-DD)
      * @return ResponseEntity contendo o arquivo CSV
      */
     @GetMapping("/tarefas-concluidas/csv")
@@ -93,6 +97,7 @@ public class RelatorioController {
 
     /**
      * Gera relatório de presenças por pessoa
+     * 
      * @param pessoaId Identificador opcional da pessoa para filtrar o relatório
      * @return ResponseEntity contendo mapa com dados do relatório
      */
@@ -104,8 +109,9 @@ public class RelatorioController {
 
     /**
      * Gera relatório sobre a duração das reuniões
+     * 
      * @param dataInicio Data de início do período (formato YYYY-MM-DD)
-     * @param dataFim Data de fim do período (formato YYYY-MM-DD)
+     * @param dataFim    Data de fim do período (formato YYYY-MM-DD)
      * @return ResponseEntity contendo mapa com dados do relatório
      */
     @GetMapping("/duracao-reunioes")
@@ -118,8 +124,9 @@ public class RelatorioController {
 
     /**
      * Exporta relatório sobre a duração das reuniões para CSV
+     * 
      * @param dataInicio Data de início do período (formato YYYY-MM-DD)
-     * @param dataFim Data de fim do período (formato YYYY-MM-DD)
+     * @param dataFim    Data de fim do período (formato YYYY-MM-DD)
      * @return ResponseEntity contendo o arquivo CSV
      */
     @GetMapping("/duracao-reunioes/csv")
@@ -138,8 +145,9 @@ public class RelatorioController {
 
     /**
      * Gera relatório de produtividade por participante
+     * 
      * @param dataInicio Data de início do período (formato YYYY-MM-DD)
-     * @param dataFim Data de fim do período (formato YYYY-MM-DD)
+     * @param dataFim    Data de fim do período (formato YYYY-MM-DD)
      * @return ResponseEntity contendo mapa com dados do relatório
      */
     @GetMapping("/produtividade-participante")
@@ -152,8 +160,9 @@ public class RelatorioController {
 
     /**
      * Exporta relatório de produtividade por participante para CSV
+     * 
      * @param dataInicio Data de início do período (formato YYYY-MM-DD)
-     * @param dataFim Data de fim do período (formato YYYY-MM-DD)
+     * @param dataFim    Data de fim do período (formato YYYY-MM-DD)
      * @return ResponseEntity contendo o arquivo CSV
      */
     @GetMapping("/produtividade-participante/csv")

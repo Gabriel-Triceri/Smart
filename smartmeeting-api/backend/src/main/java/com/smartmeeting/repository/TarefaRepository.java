@@ -46,4 +46,8 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
      * @return Lista de tarefas do projeto
      */
     List<Tarefa> findByProjectId(Long projectId);
+
+    long countByStatusTarefa(StatusTarefa status);
+
+    long countByProjectId(Long projectId);
 }

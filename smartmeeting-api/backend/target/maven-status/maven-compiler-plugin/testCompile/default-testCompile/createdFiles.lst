@@ -1,0 +1,3 @@
+com\smartmeeting\ContextLoadTest.class
+com\smartmeeting\api\SmartmeetingApiApplicationTests.class
+com\smartmeeting\security\JwtTokenProviderTest.class

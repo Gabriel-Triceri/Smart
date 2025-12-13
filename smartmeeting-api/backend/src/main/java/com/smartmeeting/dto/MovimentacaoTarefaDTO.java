@@ -23,6 +23,63 @@ public class MovimentacaoTarefaDTO {
     private LocalDateTime timestamp;
     private String comentario; // Optional
 
+    // Construtor vazio
+    public MovimentacaoTarefaDTO() {
+    }
+
+    // Construtor completo
+    public MovimentacaoTarefaDTO(@NotNull Long tarefaId,
+            @NotNull StatusTarefa statusAnterior,
+            @NotNull StatusTarefa statusNovo,
+            String colunaAnterior,
+            String colunaNova,
+            @NotBlank String usuarioId,
+            @NotBlank String usuarioNome,
+            @NotNull LocalDateTime timestamp,
+            String comentario) {
+        this.tarefaId = tarefaId;
+        this.statusAnterior = statusAnterior;
+        this.statusNovo = statusNovo;
+        this.colunaAnterior = colunaAnterior;
+        this.colunaNova = colunaNova;
+        this.usuarioId = usuarioId;
+        this.usuarioNome = usuarioNome;
+        this.timestamp = timestamp;
+        this.comentario = comentario;
+    }
+
+    // Construtor simplificado sem colunas e comentário
+    public MovimentacaoTarefaDTO(@NotNull Long tarefaId,
+            @NotNull StatusTarefa statusAnterior,
+            @NotNull StatusTarefa statusNovo,
+            @NotBlank String usuarioId,
+            @NotBlank String usuarioNome,
+            @NotNull LocalDateTime timestamp) {
+        this(tarefaId, statusAnterior, statusNovo, null, null, usuarioId, usuarioNome, timestamp, null);
+    }
+
+    // Construtor que você está tentando usar (baseado no seu erro)
+    // O erro mostra: Long, String, String, null, LocalDateTime
+    // Mas sua classe precisa de diferentes parâmetros
+    public MovimentacaoTarefaDTO(@NotNull Long tarefaId,
+            String statusAnteriorDesc, // String ao invés de StatusTarefa
+            String statusNovoDesc, // String ao invés de StatusTarefa
+            @NotBlank String usuarioId,
+            @NotBlank String usuarioNome,
+            @NotNull LocalDateTime timestamp) {
+        this.tarefaId = tarefaId;
+        // Você precisaria converter String para StatusTarefa aqui
+        // Ou ajustar seu código para usar StatusTarefa direto
+        this.usuarioId = usuarioId;
+        this.usuarioNome = usuarioNome;
+        this.timestamp = timestamp;
+    }
+
+    public MovimentacaoTarefaDTO(Long id, Object object, Object object2, Object object3, LocalDateTime now) {
+        // TODO Auto-generated constructor stub
+    }
+
+    // Getters e Setters (mantenha os que você já tem)
     public Long getTarefaId() {
         return tarefaId;
     }

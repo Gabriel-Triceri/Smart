@@ -5,7 +5,7 @@ import com.smartmeeting.dto.ProjectPermissionDTO;
 import com.smartmeeting.dto.UpdatePermissionsRequest;
 import com.smartmeeting.enums.PermissionType;
 import com.smartmeeting.enums.ProjectRole;
-import com.smartmeeting.service.ProjectPermissionService;
+import com.smartmeeting.service.project.ProjectPermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -101,7 +101,8 @@ public class ProjectPermissionController {
 
     /**
      * Verifica se o usuário atual tem uma permissão específica
-     * Apenas permite consultar as próprias permissões (ou admin pode consultar qualquer um)
+     * Apenas permite consultar as próprias permissões (ou admin pode consultar
+     * qualquer um)
      */
     @GetMapping("/check")
     public ResponseEntity<Map<String, Boolean>> checkPermission(

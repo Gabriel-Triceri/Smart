@@ -62,14 +62,12 @@ export const SalaForm: React.FC<SalaFormProps> = ({
 
     useEffect(() => {
         if (sala) {
-            console.log('📥 Sala recebida para edição:', sala);
             setFormData({
                 ...sala,
                 categoria: sala.categoria || 'reuniao',
                 recursos: sala.recursos || []
             });
         } else {
-            console.log('✨ Criando nova sala (resetando form)');
             setFormData({
                 nome: '',
                 capacidade: 4,
@@ -104,11 +102,9 @@ export const SalaForm: React.FC<SalaFormProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('🚀 handleSubmit acionado');
-        console.log('📦 Dados do formulário (formData):', formData);
 
         const isValid = validateForm();
-        console.log('📝 Resultado da validação:', isValid);
+        
 
         if (!isValid) {
             console.warn('⚠️ Formulário inválido. Erros:', errors);
