@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User, ChevronDown, Shield } from 'lucide-react';
 import { authService } from '../../services/authService';
@@ -90,13 +90,12 @@ export function UserMenu({ className = '' }: UserMenuProps) {
                                 {userInfo.roles.map((role) => (
                                     <span
                                         key={role}
-                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                            role === 'ADMIN'
+                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${role === 'ADMIN'
                                                 ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
                                                 : role === 'ORGANIZADOR'
-                                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                                                : 'bg-mono-100 text-mono-600 dark:bg-mono-700 dark:text-mono-300'
-                                        }`}
+                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                                    : 'bg-mono-100 text-mono-600 dark:bg-mono-700 dark:text-mono-300'
+                                            }`}
                                     >
                                         {role === 'ADMIN' && <Shield className="w-3 h-3" />}
                                         {role}

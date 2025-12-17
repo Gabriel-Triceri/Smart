@@ -13,6 +13,13 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedEntityGraph(
+        name = "TemplateTarefa.comTagsEDependencias",
+        attributeNodes = {
+                @NamedAttributeNode("tags"),
+                @NamedAttributeNode("dependencias")
+        }
+)
 public class TemplateTarefa {
 
     @Id

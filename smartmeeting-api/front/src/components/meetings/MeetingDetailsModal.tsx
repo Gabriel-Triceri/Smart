@@ -4,10 +4,11 @@ import {
     FileText, CheckCircle,
     Edit, Trash2, Bell, BellOff, Link as LinkIcon, Search
 } from 'lucide-react';
+import { reuniaoService } from '../../services/reuniaoService';
+import { taskLinkingService } from '../../services/taskLinkingService';
 import { Reuniao, StatusReuniao } from '../../types/meetings';
 import { formatDate } from '../../utils/dateHelpers';
 import { useTarefas } from '../../hooks/useTarefas';
-import { meetingsApi } from '../../services/meetingsApi';
 import { getReuniaoHoraFim, getReuniaoHoraInicio } from '../../utils/reuniaoHelpers';
 
 interface MeetingDetailsModalProps {
@@ -64,7 +65,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
         useEffect(() => {
             const fetchTarefasVinculadas = async () => {
                 try {
-                    const tarefasDaReuniao = await meetingsApi.getTarefasPorReuniao(String(reuniao.id));
+                    const tarefasDaReuniao = await taskLinkingService.getTarefasPorReuniao(String(reuniao.id));
                     setTarefasVinculadas(tarefasDaReuniao.map(t => t.id));
                 } catch (err) {
                     console.error("Erro ao buscar tarefas:", err);
@@ -77,10 +78,10 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
             const isVinculada = tarefasVinculadas.includes(tarefaId);
             try {
                 if (isVinculada) {
-                    await meetingsApi.desvincularTarefaDeReuniao(tarefaId, String(reuniao.id));
+                    await taskLinkingService.desvincularTarefaDeReuniao(tarefaId, String(reuniao.id));
                     setTarefasVinculadas(prev => prev.filter(id => id !== tarefaId));
                 } else {
-                    await meetingsApi.vincularTarefaAReuniao(tarefaId, String(reuniao.id));
+                    await taskLinkingService.vincularTarefaAReuniao(tarefaId, String(reuniao.id));
                     setTarefasVinculadas(prev => [...prev, tarefaId]);
                 }
             } catch (err) {
@@ -156,7 +157,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
         setRemovingParticipantId(participanteId);
         try {
             const updatedParticipantes = reuniao.participantes.filter(p => p.id !== participanteId).map(p => p.id);
-            await meetingsApi.updateReuniao(String(reuniao.id), { participantes: updatedParticipantes });
+            await reuniaoService.updateReuniao(String(reuniao.id), { participantes: updatedParticipantes });
             window.location.reload();
         } catch (error) {
             console.error(error);

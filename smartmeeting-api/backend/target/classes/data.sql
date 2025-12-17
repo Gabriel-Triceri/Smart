@@ -273,19 +273,32 @@ KEY(ID) VALUES
 
 -- =====================================================
 -- 15. TAREFA (Tarefas - IDs 1..10)
+-- STATUS_TAREFA REMOVIDO
 -- =====================================================
-MERGE INTO TAREFA (ID_TAREFA, DESCRICAO_TAREFA, PRAZO_TAREFA, CONCLUIDA_TAREFA, STATUS_TAREFA, PRIORIDADE_TAREFA, DATA_INICIO_TAREFA, ESTIMADO_HORAS_TAREFA, ID_RESPONSAVEL, ID_REUNIAO, ID_PROJECT, PROGRESSO_TAREFA)
+MERGE INTO TAREFA (
+  ID_TAREFA,
+  DESCRICAO_TAREFA,
+  PRAZO_TAREFA,
+  CONCLUIDA_TAREFA,
+  PRIORIDADE_TAREFA,
+  DATA_INICIO_TAREFA,
+  ESTIMADO_HORAS_TAREFA,
+  ID_RESPONSAVEL,
+  ID_REUNIAO,
+  ID_PROJECT,
+  PROGRESSO_TAREFA
+)
 KEY(ID_TAREFA) VALUES
-(1, 'Preparar apresentação', DATE '2025-11-10', FALSE, 'TODO', 'ALTA', DATE '2025-11-05', 4.0, 1, 1, 1, 0),
-(2, 'Coletar métricas', DATE '2025-11-12', FALSE, 'IN_PROGRESS', 'MEDIA', DATE '2025-11-06', 2.5, 3, 2, 1, 30),
-(3, 'Revisar documentação', DATE '2025-11-15', FALSE, 'REVIEW', 'ALTA', DATE '2025-11-08', 6.0, 2, 1, 1, 80),
-(4, 'Implementar nova funcionalidade', DATE '2025-11-20', FALSE, 'IN_PROGRESS', 'CRITICA', DATE '2025-11-10', 16.0, 5, 2, 1, 45),
-(5, 'Fechar ata e enviar', DATE '2025-11-09', TRUE, 'DONE', 'BAIXA', DATE '2025-11-08', 1.0, 2, 3, 3, 100),
-(6, 'Configurar servidor', DATE '2025-11-18', FALSE, 'TODO', 'ALTA', DATE '2025-11-12', 8.0, 10, 5, 4, 0),
-(7, 'Criar wireframes', DATE '2025-12-05', FALSE, 'TODO', 'MEDIA', DATE '2025-11-20', 12.0, 5, 4, 5, 0),
-(8, 'Aprovar orçamento', DATE '2025-11-25', FALSE, 'TODO', 'CRITICA', DATE '2025-11-15', 3.0, 8, 3, 3, 0),
-(9, 'Contratar buffet', DATE '2025-12-10', FALSE, 'TODO', 'BAIXA', DATE '2025-11-25', 2.0, 9, 6, 7, 0),
-(10, 'Atualizar planilha financeira', DATE '2025-11-30', FALSE, 'TODO', 'MEDIA', DATE '2025-11-20', 4.5, 7, 10, 1, 0);
+(1, 'Preparar apresentação', DATE '2025-11-10', FALSE, 'ALTA', DATE '2025-11-05', 4.0, 1, 1, 1, 0),
+(2, 'Coletar métricas', DATE '2025-11-12', FALSE, 'MEDIA', DATE '2025-11-06', 2.5, 3, 2, 1, 30),
+(3, 'Revisar documentação', DATE '2025-11-15', FALSE, 'ALTA', DATE '2025-11-08', 6.0, 2, 1, 1, 80),
+(4, 'Implementar nova funcionalidade', DATE '2025-11-20', FALSE, 'CRITICA', DATE '2025-11-10', 16.0, 5, 2, 1, 45),
+(5, 'Fechar ata e enviar', DATE '2025-11-09', TRUE, 'BAIXA', DATE '2025-11-08', 1.0, 2, 3, 3, 100),
+(6, 'Configurar servidor', DATE '2025-11-18', FALSE, 'ALTA', DATE '2025-11-12', 8.0, 10, 5, 4, 0),
+(7, 'Criar wireframes', DATE '2025-12-05', FALSE, 'MEDIA', DATE '2025-11-20', 12.0, 5, 4, 5, 0),
+(8, 'Aprovar orçamento', DATE '2025-11-25', FALSE, 'CRITICA', DATE '2025-11-15', 3.0, 8, 3, 3, 0),
+(9, 'Contratar buffet', DATE '2025-12-10', FALSE, 'BAIXA', DATE '2025-11-25', 2.0, 9, 6, 7, 0),
+(10, 'Atualizar planilha financeira', DATE '2025-11-30', FALSE, 'MEDIA', DATE '2025-11-20', 4.5, 7, 10, 1, 0);
 
 -- =====================================================
 -- 16. CHECKLIST_ITEM (Itens de Checklist das Tarefas)

@@ -8,9 +8,7 @@ import {
     CheckSquare,
     Search,
     Filter,
-    MoreHorizontal,
-    ChevronDown,
-    AlignLeft
+    ChevronDown
 } from 'lucide-react';
 import { useTarefas } from '../../hooks/useTarefas';
 import { KanbanBoard } from './KanbanBoard';
@@ -103,7 +101,6 @@ export function TaskManager() {
     const [showFilters, setShowFilters] = useState(false);
 
     // Derived state for column management
-    // Derived state for column management
     const selectedProjectId = (() => {
         if (filtros.projectName && filtros.projectName.length === 1) {
             const nomeProjeto = filtros.projectName[0];
@@ -184,7 +181,6 @@ export function TaskManager() {
                         ) : (
                             tarefas.map((tarefa) => {
                                 const responsaveis = tarefa.responsaveis || [];
-                                const outrosResponsaveis = responsaveis.length > 1 ? responsaveis.length - 1 : 0;
                                 const priorityColorClass = getPrioridadeColorClass(tarefa.prioridade);
 
                                 return (

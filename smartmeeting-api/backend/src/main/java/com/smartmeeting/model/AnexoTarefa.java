@@ -12,6 +12,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@NamedEntityGraph(
+        name = "AnexoTarefa.comTarefaEAutor",
+        attributeNodes = {
+                @NamedAttributeNode("tarefa"),
+                @NamedAttributeNode("autor")
+        }
+)
 public class AnexoTarefa {
 
     @Id

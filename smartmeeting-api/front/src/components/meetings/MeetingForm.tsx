@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, AlertCircle, Clock, MapPin, Loader2, Link as LinkIcon } from 'lucide-react';
-import { meetingsApi } from '../../services/meetingsApi';
+import { salaService } from '../../services/salaService';
+import { participanteService } from '../../services/participanteService';
 import { ReuniaoFormData, Participante, Sala } from '../../types/meetings';
 import { ReuniaoValidation } from '../../utils/validation';
 import { DateTimeUtils } from '../../utils/dateTimeUtils';
@@ -18,7 +19,6 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     initialData,
     onSubmit,
     onCancel,
-    isLoading = false,
     isEditing = false
 }) => {
     const [formData, setFormData] = useState<ReuniaoFormData>(
@@ -48,7 +48,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
     useEffect(() => {
         const loadSalas = async () => {
             try {
-                const salasData = await meetingsApi.getAllSalas();
+                const salasData = await salaService.getAllSalas();
                 setSalas(salasData);
             } catch (error) {
                 console.error('Erro ao carregar salas:', error);
@@ -64,7 +64,7 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({
                 setFormData((prev: ReuniaoFormData) => ({ ...prev, ...(initialData as any) }));
                 if (initialData.participantes && initialData.participantes.length > 0) {
                     try {
-                        const todosParticipantes = await meetingsApi.searchParticipantes('');
+                        const todosParticipantes = await participanteService.searchParticipantes('');
                         const idsStr = (initialData.participantes as any[]).map(String);
                         const participantesAtuais = todosParticipantes.filter((p: Participante) =>
                             idsStr.includes(String(p.id))

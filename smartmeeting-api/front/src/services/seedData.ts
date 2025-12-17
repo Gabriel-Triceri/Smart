@@ -1,4 +1,6 @@
-import { meetingsApi } from './meetingsApi';
+import { reuniaoService } from './reuniaoService';
+import { salaService } from './salaService';
+import { tarefaService } from './tarefaService';
 import type {
     ReuniaoFormData,
     Sala,
@@ -210,7 +212,7 @@ export async function importarDadosIniciais(): Promise<boolean> {
         const salasImportadas = [];
         for (const sala of salasParaImportar) {
             try {
-                const salaImportada = await meetingsApi.createSala(sala);
+                const salaImportada = await salaService.createSala(sala);
                 salasImportadas.push(salaImportada);
                 console.log(`✅ Sala "${sala.nome}" importada com sucesso`);
             } catch (error) {
@@ -231,7 +233,7 @@ export async function importarDadosIniciais(): Promise<boolean> {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // 3. Buscar IDs das salas criadas
-        const salas = await meetingsApi.getAllSalas();
+        const salas = await salaService.getAllSalas();
 
         if (salas.length === 0) {
             console.warn('⚠️ Não há salas suficientes para criar reuniões');
@@ -251,7 +253,7 @@ export async function importarDadosIniciais(): Promise<boolean> {
 
         for (const reuniao of reunioesParaImportar) {
             try {
-                const reuniaoImportada = await meetingsApi.createReuniao(reuniao);
+                const reuniaoImportada = await reuniaoService.createReuniao(reuniao);
                 reunioesImportadas.push(reuniaoImportada);
                 console.log(`✅ Reunião "${reuniao.titulo}" importada com sucesso`);
             } catch (error) {
@@ -266,7 +268,7 @@ export async function importarDadosIniciais(): Promise<boolean> {
 
         for (const tarefa of tarefasParaImportar) {
             try {
-                await meetingsApi.createTarefa(tarefa);
+                await tarefaService.createTarefa(tarefa);
                 tarefasImportadas++;
                 console.log(`✅ Tarefa "${tarefa.titulo}" importada com sucesso`);
             } catch (error) {
@@ -290,9 +292,9 @@ export async function importarDadosIniciais(): Promise<boolean> {
 export async function verificarDadosExistentes(): Promise<boolean> {
     try {
         const [salas, reunioes, tarefas] = await Promise.all([
-            meetingsApi.getAllSalas(),
-            meetingsApi.getAllReunioes(),
-            meetingsApi.getAllTarefas()
+            salaService.getAllSalas(),
+            reuniaoService.getAllReunioes(),
+            tarefaService.getAllTarefas()
         ]);
 
         const totalRegistros = salas.length + reunioes.length + tarefas.length;

@@ -12,7 +12,7 @@ import java.util.List;
  * Controller para colunas dinâmicas do Kanban
  */
 @RestController
-@RequestMapping("/projects/{projectId}/kanban/columns")
+@RequestMapping("/projects/{projectId}/kanban/KanbanController columns")
 @RequiredArgsConstructor
 public class KanbanColumnDynamicController {
 

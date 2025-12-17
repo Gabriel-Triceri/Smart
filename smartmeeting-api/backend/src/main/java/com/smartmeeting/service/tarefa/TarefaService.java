@@ -1,8 +1,6 @@
 package com.smartmeeting.service.tarefa;
 
 import com.smartmeeting.dto.*;
-import com.smartmeeting.enums.StatusTarefa;
-
 import com.smartmeeting.model.*;
 import com.smartmeeting.service.kambun.KanbanService;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +18,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TarefaService {
 
-    // Serviços especializados
     private final TarefaCrudService crudService;
     private final TarefaSearchService searchService;
     private final TarefaProgressService progressService;
 
-    // Serviços movidos (renomeados)
     private final TarefaHistoryService historyService;
     private final TarefaStatisticsService statisticsService;
     private final TarefaComentarioService comentarioService;
@@ -36,10 +32,9 @@ public class TarefaService {
     private final TarefaNotificacaoService notificacaoService;
     private final TarefaAssigneeService assigneeService;
 
-    // Outros serviços
     private final KanbanService kanbanService;
 
-    // Métodos de compatibilidade (CRUD)
+    // CRUD
     public TarefaDTO toDTO(Tarefa tarefa) {
         return crudService.toDTO(tarefa);
     }
@@ -69,7 +64,8 @@ public class TarefaService {
     }
 
     public TarefaDTO atualizarReuniaoDaTarefa(Long tarefaId, Long reuniaoId) {
-        return crudService.atualizarReuniaoDaTarefa(tarefaId, reuniaoId);
+        Tarefa tarefa = crudService.atualizarReuniaoDaTarefa(tarefaId, reuniaoId);
+        return crudService.toDTO(tarefa);
     }
 
     public Reuniao getReuniaoDaTarefa(Long tarefaId) {
@@ -81,7 +77,7 @@ public class TarefaService {
     }
 
     public List<TarefaDTO> criarTarefasPorTemplate(Long templateId, List<Long> responsaveisIds,
-            List<String> datasVencimento, Long reuniaoId) {
+                                                   List<String> datasVencimento, Long reuniaoId) {
         return crudService.criarTarefasPorTemplate(templateId, responsaveisIds, datasVencimento, reuniaoId);
     }
 
@@ -112,10 +108,15 @@ public class TarefaService {
     }
 
     // History
-    public com.smartmeeting.model.TarefaHistory registrarAlteracao(Tarefa tarefa, String campo, String valorAntigo,
-            String valorNovo, Pessoa autor) {
-        return historyService.registrarHistorico(tarefa.getId(), com.smartmeeting.enums.HistoryActionType.UPDATED,
-                campo, valorAntigo, valorNovo, "Alteração em " + campo);
+    public TarefaHistory registrarAlteracao(Tarefa tarefa, String campo, String valorAntigo,
+                                            String valorNovo, Pessoa autor) {
+        return historyService.registrarHistorico(
+                tarefa.getId(),
+                com.smartmeeting.enums.HistoryActionType.UPDATED,
+                campo,
+                valorAntigo,
+                valorNovo,
+                "Alteração em " + campo);
     }
 
     public List<TarefaHistoryDTO> buscarHistoricoPorTarefa(Long tarefaId) {
@@ -127,15 +128,11 @@ public class TarefaService {
         return statisticsService.getTarefaStatistics();
     }
 
-    public long countByStatus(StatusTarefa status) {
-        return statisticsService.countByStatus(status);
-    }
-
     public long countByProjeto(Long projetoId) {
         return statisticsService.countByProjeto(projetoId);
     }
 
-    // Comentarios
+    // Comentários
     public Map<String, Object> adicionarComentario(Long tarefaId, String conteudo, List<String> mencoes) {
         return comentarioService.adicionarComentario(tarefaId, conteudo, mencoes);
     }
@@ -166,13 +163,11 @@ public class TarefaService {
     }
 
     // Checklist
-    public ChecklistItemDTO adicionarChecklistItem(Long tarefaId,
-            com.smartmeeting.dto.CreateChecklistItemRequest request) {
+    public ChecklistItemDTO adicionarChecklistItem(Long tarefaId, CreateChecklistItemRequest request) {
         return checklistService.adicionarItem(tarefaId, request);
     }
 
-    public ChecklistItemDTO atualizarChecklistItem(Long itemId,
-            com.smartmeeting.dto.CreateChecklistItemRequest request) {
+    public ChecklistItemDTO atualizarChecklistItem(Long itemId, CreateChecklistItemRequest request) {
         return checklistService.atualizarItem(itemId, request);
     }
 
@@ -184,19 +179,16 @@ public class TarefaService {
         return checklistService.getChecklistDaTarefa(tarefaId);
     }
 
-    // Movimentacao
-    // Methods removed as MovimentacaoTarefa entity does not exist. Use
-    // KanbanService for movement.
-
-    // Kanban Delegates
+    // Kanban
     public KanbanBoardDTO getKanbanBoard(Long reuniaoId) {
         return kanbanService.getKanbanBoard(reuniaoId);
     }
 
-    public TarefaDTO moverTarefa(Long id, StatusTarefa newStatus, Integer newPosition) {
-        return kanbanService.moverTarefa(id, newStatus, newPosition);
+    public List<KanbanColumnConfig> getKanbanColumns(Long projectId) {
+        return kanbanService.getKanbanColumns(projectId);
     }
 
+    // Movimentação
     public void registrarMovimentacao(MovimentacaoTarefaDTO dto) {
         movimentacaoService.registrarMovimentacao(dto);
     }
@@ -206,12 +198,7 @@ public class TarefaService {
         return templateService.getTemplates();
     }
 
-    public List<TemplateTarefa> listarTemplates() {
-        // Fallback or rename if needed
-        return null; // ou templateService.listarTemplates() se existir
-    }
-
-    // Notificacao
+    // Notificação
     public List<NotificacaoTarefaDTO> getNotificacoesTarefas() {
         return notificacaoService.getNotificacoes();
     }

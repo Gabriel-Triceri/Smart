@@ -17,6 +17,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedEntityGraph(
+        name = "ProjectPermission.comProjectMember",
+        attributeNodes = @NamedAttributeNode("projectMember")
+)
 public class ProjectPermission {
 
     @Id

@@ -18,6 +18,10 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedEntityGraph(
+        name = "KanbanColumnDynamic.comProjeto",
+        attributeNodes = @NamedAttributeNode("project")
+)
 public class KanbanColumnDynamic {
 
     @Id

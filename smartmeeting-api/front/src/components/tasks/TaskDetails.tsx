@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     X,
     Calendar,
@@ -19,7 +19,6 @@ import {
     Flag,
     ChevronDown,
     Check,
-    XCircle,
     AlignLeft
 } from 'lucide-react';
 import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem, PermissionType, PrioridadeTarefa, Assignee, TarefaFormData } from '../../types/meetings';
@@ -60,7 +59,6 @@ export function TaskDetails({
     tarefa,
     onClose,
     onEdit,
-    onDelete,
     onAddComment,
     onEditComment,
     onDeleteComment,

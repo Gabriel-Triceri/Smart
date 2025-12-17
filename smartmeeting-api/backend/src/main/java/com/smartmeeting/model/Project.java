@@ -13,6 +13,19 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedEntityGraphs({
+        @NamedEntityGraph(
+                name = "Project.comOwner",
+                attributeNodes = @NamedAttributeNode("owner")
+        ),
+        @NamedEntityGraph(
+                name = "Project.comOwnerEMembers",
+                attributeNodes = {
+                        @NamedAttributeNode("owner"),
+                        @NamedAttributeNode("members")
+                }
+        )
+})
 public class Project {
 
     @Id

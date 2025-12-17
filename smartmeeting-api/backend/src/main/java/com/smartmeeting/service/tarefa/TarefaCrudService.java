@@ -2,7 +2,6 @@ package com.smartmeeting.service.tarefa;
 
 import com.smartmeeting.dto.TarefaDTO;
 import com.smartmeeting.enums.PrioridadeTarefa;
-import com.smartmeeting.enums.StatusTarefa;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.mapper.TarefaMapperService;
 import com.smartmeeting.model.Pessoa;
@@ -20,11 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,30 +40,41 @@ public class TarefaCrudService {
     }
 
     public List<TarefaDTO> listarTodas() {
-        return tarefaRepository.findAll().stream()
+        return tarefaRepository.findAll()
+                .stream()
                 .map(tarefaMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     public TarefaDTO buscarPorIdDTO(Long id) {
-        Tarefa t = tarefaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + id));
-        return tarefaMapper.toDTO(t);
+        Tarefa tarefa = tarefaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Tarefa não encontrada com ID: " + id));
+        return tarefaMapper.toDTO(tarefa);
     }
 
     public Tarefa buscarPorId(Long id) {
         return tarefaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Tarefa não encontrada com ID: " + id));
     }
 
+    @Transactional
     public TarefaDTO criar(TarefaDTO dto) {
         Tarefa tarefa = tarefaMapper.toEntity(dto);
 
         if (dto.getResponsavelId() != null) {
-            pessoaRepository.findById(dto.getResponsavelId()).ifPresent(tarefa::setResponsavel);
+            Pessoa responsavel = pessoaRepository.findById(dto.getResponsavelId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Responsável não encontrado com ID: " + dto.getResponsavelId()));
+            tarefa.setResponsavel(responsavel);
         }
+
         if (dto.getReuniaoId() != null) {
-            reuniaoRepository.findById(dto.getReuniaoId()).ifPresent(tarefa::setReuniao);
+            Reuniao reuniao = reuniaoRepository.findById(dto.getReuniaoId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Reunião não encontrada com ID: " + dto.getReuniaoId()));
+            tarefa.setReuniao(reuniao);
         }
 
         Tarefa salvo = tarefaRepository.save(tarefa);
@@ -77,21 +83,37 @@ public class TarefaCrudService {
     }
 
     @Transactional
+    public Tarefa atualizarReuniaoDaTarefa(Long tarefaId, Long reuniaoId) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Tarefa não encontrada com ID: " + tarefaId));
+
+        Reuniao reuniao = reuniaoRepository.findById(reuniaoId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Reunião não encontrada com ID: " + reuniaoId));
+
+        tarefa.setReuniao(reuniao);
+        return tarefaRepository.save(tarefa);
+    }
+
+    @Transactional
     public TarefaDTO atualizar(Long id, TarefaDTO dtoAtualizada) {
         Tarefa tarefa = tarefaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Tarefa não encontrada com ID: " + id));
 
-        // Capturar estado anterior para histórico
+        final Tarefa tarefaOriginal = tarefa;
+
         String tituloAntigo = tarefa.getTitulo();
         String descricaoAntiga = tarefa.getDescricao();
-        StatusTarefa statusAntigo = tarefa.getStatusTarefa();
+        String colunaAntiga = tarefa.getColumn() != null ? tarefa.getColumn().getTitle() : null;
         PrioridadeTarefa prioridadeAntiga = tarefa.getPrioridade();
-        var prazoAntigo = tarefa.getPrazo();
+        LocalDate prazoAntigo = tarefa.getPrazo();
         Integer progressoAntigo = tarefa.getProgresso();
         Pessoa responsavelAntigo = tarefa.getResponsavel();
-        String nomeResponsavelAntigo = responsavelAntigo != null ? responsavelAntigo.getNome() : null;
+        String nomeResponsavelAntigo =
+                responsavelAntigo != null ? responsavelAntigo.getNome() : null;
 
-        // Atualizações
         if (dtoAtualizada.getTitulo() != null)
             tarefa.setTitulo(dtoAtualizada.getTitulo());
 
@@ -105,45 +127,52 @@ public class TarefaCrudService {
 
         tarefa.setConcluida(dtoAtualizada.isConcluida());
 
-        if (dtoAtualizada.getStatusTarefa() != null)
-            tarefa.setStatusTarefa(dtoAtualizada.getStatusTarefa());
         if (dtoAtualizada.getPrioridade() != null)
-            tarefa.setPrioridade(PrioridadeTarefa.valueOf(dtoAtualizada.getPrioridade()));
+            tarefa.setPrioridade(
+                    PrioridadeTarefa.valueOf(dtoAtualizada.getPrioridade()));
 
         if (dtoAtualizada.getDataInicio() != null)
             tarefa.setDataInicio(dtoAtualizada.getDataInicio());
+
         if (dtoAtualizada.getEstimadoHoras() != null)
             tarefa.setEstimadoHoras(dtoAtualizada.getEstimadoHoras());
+
         if (dtoAtualizada.getTags() != null)
             tarefa.setTags(dtoAtualizada.getTags());
+
         if (dtoAtualizada.getCor() != null)
             tarefa.setCor(dtoAtualizada.getCor());
+
         if (dtoAtualizada.getProgresso() != null)
             tarefa.setProgresso(dtoAtualizada.getProgresso());
 
-        // Responsável
         if (dtoAtualizada.getResponsavelPrincipalId() != null) {
-            Pessoa responsavel = pessoaRepository.findById(dtoAtualizada.getResponsavelPrincipalId())
+            Pessoa responsavel = pessoaRepository
+                    .findById(dtoAtualizada.getResponsavelPrincipalId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Responsável não encontrado com ID: " + dtoAtualizada.getResponsavelPrincipalId()));
+                            "Responsável não encontrado com ID: "
+                                    + dtoAtualizada.getResponsavelPrincipalId()));
             tarefa.setResponsavel(responsavel);
         } else if (dtoAtualizada.getResponsavelId() != null) {
-            Pessoa responsavel = pessoaRepository.findById(dtoAtualizada.getResponsavelId())
+            Pessoa responsavel = pessoaRepository
+                    .findById(dtoAtualizada.getResponsavelId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Responsável não encontrado com ID: " + dtoAtualizada.getResponsavelId()));
+                            "Responsável não encontrado com ID: "
+                                    + dtoAtualizada.getResponsavelId()));
             tarefa.setResponsavel(responsavel);
         }
 
-        // Participantes
         if (dtoAtualizada.getResponsaveisIds() != null) {
             Set<Pessoa> participantes = new HashSet<>();
-            Long principalId = tarefa.getResponsavel() != null ? tarefa.getResponsavel().getId() : null;
+            Long principalId =
+                    tarefa.getResponsavel() != null ? tarefa.getResponsavel().getId() : null;
 
             for (String idStr : dtoAtualizada.getResponsaveisIds()) {
                 try {
                     Long pessoaId = Long.parseLong(idStr);
                     if (principalId != null && pessoaId.equals(principalId))
                         continue;
+
                     Pessoa participante = pessoaRepository.findById(pessoaId)
                             .orElseThrow(() -> new ResourceNotFoundException(
                                     "Participante não encontrado com ID: " + pessoaId));
@@ -164,31 +193,47 @@ public class TarefaCrudService {
 
         Tarefa atualizado = tarefaRepository.save(tarefa);
 
-        // Histórico
         try {
-            historyService.registrarMudancaTitulo(tarefa, tituloAntigo, atualizado.getTitulo());
-            historyService.registrarMudancaDescricao(tarefa, descricaoAntiga, atualizado.getDescricao());
+            historyService.registrarMudancaTitulo(
+                    tarefaOriginal, tituloAntigo, atualizado.getTitulo());
+            historyService.registrarMudancaDescricao(
+                    tarefaOriginal, descricaoAntiga, atualizado.getDescricao());
 
-            String sAntigo = statusAntigo != null ? statusAntigo.getDescricao() : null;
-            String sNovo = atualizado.getStatusTarefa() != null ? atualizado.getStatusTarefa().getDescricao() : null;
-            historyService.registrarMudancaStatus(tarefa, sAntigo, sNovo);
+            String colunaNova =
+                    atualizado.getColumn() != null ? atualizado.getColumn().getTitle() : null;
+            historyService.registrarMudancaStatus(
+                    tarefaOriginal, colunaAntiga, colunaNova);
 
-            String pAntiga = prioridadeAntiga != null ? prioridadeAntiga.getDescricao() : null;
-            String pNova = atualizado.getPrioridade() != null ? atualizado.getPrioridade().getDescricao() : null;
-            historyService.registrarMudancaPrioridade(tarefa, pAntiga, pNova);
+            String pAntiga =
+                    prioridadeAntiga != null ? prioridadeAntiga.getDescricao() : null;
+            String pNova =
+                    atualizado.getPrioridade() != null
+                            ? atualizado.getPrioridade().getDescricao()
+                            : null;
+            historyService.registrarMudancaPrioridade(
+                    tarefaOriginal, pAntiga, pNova);
 
-            String prazoAntisoStr = prazoAntigo != null ? prazoAntigo.toString() : null;
-            String prazoNovoStr = atualizado.getPrazo() != null ? atualizado.getPrazo().toString() : null;
-            historyService.registrarMudancaPrazo(tarefa, prazoAntisoStr, prazoNovoStr);
+            historyService.registrarMudancaPrazo(
+                    tarefaOriginal,
+                    prazoAntigo != null ? prazoAntigo.toString() : null,
+                    atualizado.getPrazo() != null
+                            ? atualizado.getPrazo().toString()
+                            : null);
 
-            historyService.registrarMudancaProgresso(tarefa, progressoAntigo, atualizado.getProgresso());
+            historyService.registrarMudancaProgresso(
+                    tarefaOriginal, progressoAntigo, atualizado.getProgresso());
 
             Pessoa respNovo = atualizado.getResponsavel();
-            String nomeRespNovo = respNovo != null ? respNovo.getNome() : null;
-            historyService.registrarMudancaResponsavel(tarefa, nomeResponsavelAntigo, nomeRespNovo);
+            historyService.registrarMudancaResponsavel(
+                    tarefaOriginal,
+                    nomeResponsavelAntigo,
+                    respNovo != null ? respNovo.getNome() : null);
 
         } catch (Exception e) {
-            logger.error("Erro ao registrar histórico para tarefa {}: {}", id, e.getMessage());
+            logger.error(
+                    "Erro ao registrar histórico para tarefa {}: {}",
+                    id,
+                    e.getMessage());
         }
 
         return tarefaMapper.toDTO(atualizado);
@@ -196,109 +241,85 @@ public class TarefaCrudService {
 
     public void deletar(Long id) {
         if (!tarefaRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Tarefa não encontrada com ID: " + id);
+            throw new ResourceNotFoundException(
+                    "Tarefa não encontrada com ID: " + id);
         }
         tarefaRepository.deleteById(id);
     }
 
-    public Reuniao getReuniaoDaTarefa(Long tarefaId) {
-        Tarefa tarefa = tarefaRepository.findById(tarefaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
-        if (tarefa.getReuniao() == null) {
-            throw new ResourceNotFoundException("A tarefa não está associada a nenhuma reunião.");
-        }
-        return tarefa.getReuniao();
-    }
-
-    @Transactional
-    public TarefaDTO atualizarReuniaoDaTarefa(Long tarefaId, Long reuniaoId) {
-        Tarefa tarefa = tarefaRepository.findById(tarefaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
-
-        if (reuniaoId != null) {
-            Reuniao reuniao = reuniaoRepository.findById(reuniaoId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + reuniaoId));
-            tarefa.setReuniao(reuniao);
-        } else {
-            tarefa.setReuniao(null);
-        }
-
-        Tarefa salva = tarefaRepository.save(tarefa);
-        return tarefaMapper.toDTO(salva);
-    }
-
     @Transactional
     public TarefaDTO duplicarTarefa(Long tarefaId, Map<String, Object> modificacoes) {
-        Tarefa tarefaOriginal = tarefaRepository.findById(tarefaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+        Tarefa original = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Tarefa não encontrada com ID: " + tarefaId));
 
-        Tarefa novaTarefa = new Tarefa();
-        novaTarefa.setDescricao(tarefaOriginal.getDescricao() + " (Cópia)");
-        novaTarefa.setPrazo(tarefaOriginal.getPrazo());
-        novaTarefa.setStatusTarefa(StatusTarefa.TODO);
-        novaTarefa.setConcluida(false);
-        novaTarefa.setPrioridade(tarefaOriginal.getPrioridade());
-        novaTarefa.setProgresso(0);
-
-        if (tarefaOriginal.getResponsavel() != null) {
-            novaTarefa.setResponsavel(tarefaOriginal.getResponsavel());
-        }
+        Tarefa nova = new Tarefa();
+        nova.setDescricao(original.getDescricao() + " (Cópia)");
+        nova.setPrazo(original.getPrazo());
+        nova.setConcluida(false);
+        nova.setPrioridade(original.getPrioridade());
+        nova.setProgresso(0);
+        nova.setResponsavel(original.getResponsavel());
+        nova.setColumn(original.getColumn());
 
         if (modificacoes != null) {
-            if (modificacoes.containsKey("descricao")) {
-                novaTarefa.setDescricao((String) modificacoes.get("descricao"));
-            }
-            if (modificacoes.containsKey("prazo")) {
-                novaTarefa.setPrazo((LocalDate) modificacoes.get("prazo"));
-            }
-            if (modificacoes.containsKey("responsavelId")) {
-                Long responsavelId = Long.valueOf(modificacoes.get("responsavelId").toString());
-                Pessoa responsavel = pessoaRepository.findById(responsavelId)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Responsável não encontrado com ID: " + responsavelId));
-                novaTarefa.setResponsavel(responsavel);
-            }
+            if (modificacoes.containsKey("descricao"))
+                nova.setDescricao((String) modificacoes.get("descricao"));
+            if (modificacoes.containsKey("prazo"))
+                nova.setPrazo((LocalDate) modificacoes.get("prazo"));
         }
 
-        Tarefa salva = tarefaRepository.save(novaTarefa);
-        return tarefaMapper.toDTO(salva);
+        return tarefaMapper.toDTO(tarefaRepository.save(nova));
     }
 
     @Transactional
-    public List<TarefaDTO> criarTarefasPorTemplate(Long templateId, List<Long> responsaveisIds,
-            List<String> datasVencimento, Long reuniaoId) {
-        TemplateTarefa template = templateTarefaRepository.findById(templateId)
-                .orElseThrow(() -> new ResourceNotFoundException("Template não encontrado com ID: " + templateId));
+    public List<TarefaDTO> criarTarefasPorTemplate(
+            Long templateId,
+            List<Long> responsaveisIds,
+            List<String> datasVencimento,
+            Long reuniaoId) {
 
-        List<TarefaDTO> tarefasCriadas = new ArrayList<>();
+        TemplateTarefa template = templateTarefaRepository.findById(templateId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Template não encontrado com ID: " + templateId));
+
+        List<TarefaDTO> criadas = new ArrayList<>();
 
         for (int i = 0; i < responsaveisIds.size(); i++) {
-            Long responsavelId = responsaveisIds.get(i);
+            final Long responsavelId = responsaveisIds.get(i); // tornamos final/effectively final
             Pessoa responsavel = pessoaRepository.findById(responsavelId)
-                    .orElseThrow(
-                            () -> new ResourceNotFoundException("Responsável não encontrado com ID: " + responsavelId));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Responsável não encontrado com ID: " + responsavelId));
 
             Tarefa tarefa = new Tarefa();
             tarefa.setDescricao(template.getTitulo());
-            tarefa.setPrazo(datasVencimento != null && i < datasVencimento.size()
-                    ? LocalDate.parse(datasVencimento.get(i))
-                    : LocalDate.now().plusDays(7));
-            tarefa.setStatusTarefa(StatusTarefa.TODO);
+            tarefa.setPrazo(
+                    datasVencimento != null && i < datasVencimento.size()
+                            ? LocalDate.parse(datasVencimento.get(i))
+                            : LocalDate.now().plusDays(7));
             tarefa.setConcluida(false);
             tarefa.setPrioridade(template.getPrioridade());
             tarefa.setResponsavel(responsavel);
 
             if (reuniaoId != null) {
-                Reuniao reuniao = reuniaoRepository.findById(reuniaoId)
-                        .orElseThrow(
-                                () -> new ResourceNotFoundException("Reunião não encontrada com ID: " + reuniaoId));
-                tarefa.setReuniao(reuniao);
+                final Long rid = reuniaoId; // safe to capture
+                tarefa.setReuniao(
+                        reuniaoRepository.findById(rid)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                        "Reunião não encontrada com ID: " + rid)));
             }
 
-            Tarefa salva = tarefaRepository.save(tarefa);
-            tarefasCriadas.add(tarefaMapper.toDTO(salva));
+            criadas.add(tarefaMapper.toDTO(tarefaRepository.save(tarefa)));
         }
 
-        return tarefasCriadas;
+        return criadas;
+    }
+
+    @Transactional(readOnly = true)
+    public Reuniao getReuniaoDaTarefa(Long tarefaId) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Tarefa não encontrada com ID: " + tarefaId));
+        return tarefa.getReuniao();
     }
 }

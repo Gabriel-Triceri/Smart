@@ -16,6 +16,13 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedEntityGraph(
+        name = "ChecklistItem.comResponsavelEConcluidoPor",
+        attributeNodes = {
+                @NamedAttributeNode("responsavel"),
+                @NamedAttributeNode("concluidoPor")
+        }
+)
 public class ChecklistItem {
 
     @Id

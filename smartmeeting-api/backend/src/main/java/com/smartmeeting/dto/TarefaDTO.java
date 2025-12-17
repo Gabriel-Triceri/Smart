@@ -1,6 +1,5 @@
 package com.smartmeeting.dto;
 
-import com.smartmeeting.enums.StatusTarefa;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,7 +23,8 @@ public class TarefaDTO {
     private LocalDate prazo;
     private String prazo_tarefa;
     private boolean concluida;
-    private StatusTarefa statusTarefa;
+    private Long columnId;
+    private String columnName;
     private String prioridade;
     private LocalDate dataInicio;
     private Double estimadoHoras;

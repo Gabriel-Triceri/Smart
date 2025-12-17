@@ -8,7 +8,7 @@ import ptBR from 'date-fns/locale/pt-BR';
 import { Sala, Reuniao, StatusReuniao, SalaStatus } from '../../types/meetings';
 import { MeetingForm } from '../meetings/MeetingForm';
 import { MeetingDetailsModal } from '../meetings/MeetingDetailsModal';
-import { meetingsApi } from '../../services/meetingsApi';
+import { reuniaoService } from '../../services/reuniaoService';
 
 interface RoomTimelineProps {
     salas: Sala[];
@@ -52,7 +52,7 @@ export const RoomTimeline: React.FC<RoomTimelineProps> = ({
 
     const fetchMeetings = async () => {
         try {
-            const allMeetings = await meetingsApi.getAllReunioes();
+            const allMeetings = await reuniaoService.getAllReunioes();
             const daysMeetings = allMeetings.filter(m => isSameDay(new Date(m.dataHoraInicio), currentDate));
             setMeetings(daysMeetings);
         } catch (error) {
@@ -293,7 +293,7 @@ export const RoomTimeline: React.FC<RoomTimelineProps> = ({
                                 isEditing={false}
                                 onSubmit={async (data) => {
                                     try {
-                                        await meetingsApi.createReuniao(data);
+                                        await reuniaoService.createReuniao(data);
                                         await fetchMeetings();
                                         handleCloseModal();
                                     } catch (error) {

@@ -16,6 +16,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false, exclude = { "participante", "reuniao" })
+@NamedEntityGraph(
+        name = "Presenca.comParticipanteEReuniao",
+        attributeNodes = {
+                @NamedAttributeNode("participante"),
+                @NamedAttributeNode("reuniao")
+        }
+)
 public class Presenca extends Auditable {
 
         @Id
@@ -41,11 +48,11 @@ public class Presenca extends Auditable {
         @Override
         public String toString() {
                 return "Presenca{" +
-                                "id=" + id +
-                                ", horaEntrada=" + horaEntrada +
-                                ", validadoPorCracha=" + validadoPorCracha +
-                                ", participanteId=" + (participante != null ? participante.getId() : null) +
-                                ", reuniaoId=" + (reuniao != null ? reuniao.getId() : null) +
-                                '}';
+                        "id=" + id +
+                        ", horaEntrada=" + horaEntrada +
+                        ", validadoPorCracha=" + validadoPorCracha +
+                        ", participanteId=" + (participante != null ? participante.getId() : null) +
+                        ", reuniaoId=" + (reuniao != null ? reuniao.getId() : null) +
+                        '}';
         }
 }

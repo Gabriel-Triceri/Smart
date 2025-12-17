@@ -14,6 +14,10 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
+@NamedEntityGraph(
+        name = "Permission.semRelacoes",
+        attributeNodes = {}
+)
 public class Permission extends Auditable {
 
     @Id

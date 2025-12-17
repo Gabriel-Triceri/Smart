@@ -26,6 +26,7 @@ export function TaskCard({
     compact = false,
     children
 }: TaskCardProps) {
+    console.log('DEBUG TaskCard - tarefa recebida:', tarefa);
     const getDateStatus = (dateStr: string) => {
         const date = new Date(dateStr);
         const now = new Date();
@@ -90,7 +91,11 @@ export function TaskCard({
                         <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                             {tarefa.projectName}
                         </span>
-                    ) : <span />}
+                    ) : (
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                            Sem Projeto
+                        </span>
+                    )}
                 </div>
 
                 {/* Dates Section */}

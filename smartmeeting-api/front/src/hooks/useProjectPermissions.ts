@@ -5,7 +5,7 @@ import {
     ProjectRole,
     ProjectPermissionDTO
 } from '../types/meetings';
-import { meetingsApi } from '../services/meetingsApi';
+import { projectService } from '../services/projectService';
 
 interface UseProjectPermissionsReturn {
     members: MemberPermissions[];
@@ -44,7 +44,7 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
         try {
             setLoading(true);
             setError(null);
-            const data = await meetingsApi.getAllMemberPermissions(projectId);
+            const data = await projectService.getAllMemberPermissions(projectId);
             setMembers(data);
         } catch (err) {
             console.error('Erro ao carregar permissões:', err);
@@ -59,7 +59,7 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
         if (!projectId) return;
 
         try {
-            const types = await meetingsApi.getAvailablePermissionTypes(projectId);
+            const types = await projectService.getAvailablePermissionTypes(projectId);
             setAvailablePermissionTypes(types);
         } catch (err) {
             console.error('Erro ao carregar tipos de permissão:', err);
@@ -83,7 +83,7 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
 
         try {
             setError(null);
-            const updated = await meetingsApi.updateMemberPermissions(projectId, memberId, permissions);
+            const updated = await projectService.updateMemberPermissions(projectId, memberId, permissions);
 
             // Update local state
             setMembers(prev => prev.map(m =>
@@ -107,7 +107,7 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
 
         try {
             setError(null);
-            const updated = await meetingsApi.updateMemberRole(projectId, memberId, role);
+            const updated = await projectService.updateMemberRole(projectId, memberId, role);
 
             // Update local state
             setMembers(prev => prev.map(m =>
@@ -130,7 +130,7 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
 
         try {
             setError(null);
-            const updated = await meetingsApi.resetMemberPermissions(projectId, memberId);
+            const updated = await projectService.resetMemberPermissions(projectId, memberId);
 
             // Update local state
             setMembers(prev => prev.map(m =>
@@ -154,7 +154,7 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
         if (!projectId) return false;
 
         try {
-            return await meetingsApi.checkPermission(projectId, personId, permissionType);
+            return await projectService.checkPermission(projectId, personId, permissionType);
         } catch (err) {
             console.error('Erro ao verificar permissão:', err);
             return false;
@@ -168,7 +168,7 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
         if (!projectId) return {} as Record<PermissionType, boolean>;
 
         try {
-            return await meetingsApi.getRolePermissionTemplate(projectId, role);
+            return await projectService.getRolePermissionTemplate(projectId, role);
         } catch (err) {
             console.error('Erro ao buscar template de role:', err);
             return PREDEFINED_ROLE_PERMISSIONS[role] || {};

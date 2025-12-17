@@ -13,6 +13,13 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedEntityGraph(
+        name = "NotificacaoTarefa.comTarefaEUsuario",
+        attributeNodes = {
+                @NamedAttributeNode("tarefa"),
+                @NamedAttributeNode("usuario")
+        }
+)
 public class NotificacaoTarefa {
 
     @Id

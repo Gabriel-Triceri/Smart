@@ -1,3 +1,4 @@
+// src/components/tasks/ChecklistSection.tsx
 import { useState, useEffect, useRef } from 'react';
 import {
     CheckSquare,
@@ -9,7 +10,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { ChecklistItem } from '../../types/meetings';
-import { meetingsApi } from '../../services/meetingsApi';
+import { checklistService } from '../../services/checklistService';
 
 interface ChecklistSectionProps {
     tarefaId: string;
@@ -37,7 +38,7 @@ export function ChecklistSection({
         if (initialItems.length === 0) {
             loadChecklist();
         }
-    }, [tarefaId]);
+    }, [tarefaId]); // mantém comportamento anterior (dispara quando muda tarefaId)
 
     useEffect(() => {
         if (initialItems.length > 0) {
@@ -48,7 +49,7 @@ export function ChecklistSection({
     const loadChecklist = async () => {
         try {
             setLoading(true);
-            const data = await meetingsApi.getChecklistItems(tarefaId);
+            const data = await checklistService.getChecklistItems(tarefaId);
             setItems(data);
             onItemsChange?.(data);
         } catch (error) {
@@ -63,7 +64,7 @@ export function ChecklistSection({
 
         try {
             setAddingItem(true);
-            const newItem = await meetingsApi.createChecklistItem(tarefaId, {
+            const newItem = await checklistService.createChecklistItem(tarefaId, {
                 descricao: newItemText.trim(),
                 ordem: items.length
             });
@@ -81,7 +82,7 @@ export function ChecklistSection({
 
     const handleToggleItem = async (itemId: string) => {
         try {
-            const updatedItem = await meetingsApi.toggleChecklistItem(tarefaId, itemId);
+            const updatedItem = await checklistService.toggleChecklistItem(tarefaId, itemId);
             const updatedItems = items.map(item =>
                 item.id === itemId ? updatedItem : item
             );
@@ -94,7 +95,7 @@ export function ChecklistSection({
 
     const handleDeleteItem = async (itemId: string) => {
         try {
-            await meetingsApi.deleteChecklistItem(tarefaId, itemId);
+            await checklistService.deleteChecklistItem(tarefaId, itemId);
             const updatedItems = items.filter(item => item.id !== itemId);
             setItems(updatedItems);
             onItemsChange?.(updatedItems);
@@ -105,7 +106,8 @@ export function ChecklistSection({
 
     const handleStartEdit = (item: ChecklistItem) => {
         setEditingId(item.id);
-        setEditingText(item.descricao);
+        // item.descricao pode ser undefined no tipo — evita erro de tipo usando fallback
+        setEditingText(item.descricao ?? '');
     };
 
     const handleSaveEdit = async (itemId: string) => {
@@ -115,7 +117,7 @@ export function ChecklistSection({
         }
 
         try {
-            const updatedItem = await meetingsApi.updateChecklistItem(tarefaId, itemId, {
+            const updatedItem = await checklistService.updateChecklistItem(tarefaId, itemId, {
                 descricao: editingText.trim()
             });
             const updatedItems = items.map(item =>
@@ -187,7 +189,8 @@ export function ChecklistSection({
             {/* Lista de itens */}
             <div className="space-y-1">
                 {items
-                    .sort((a, b) => a.ordem - b.ordem)
+                    .slice() // evita mutação do array original
+                    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
                     .map((item) => (
                         <div
                             key={item.id}
@@ -264,9 +267,9 @@ export function ChecklistSection({
                             )}
 
                             {/* Info de conclusão */}
-                            {item.concluido && item.concluidoPorNome && (
+                            {item.concluido && (item as any).concluidoPorNome && (
                                 <span className="text-[10px] text-slate-400 hidden group-hover:inline">
-                                    por {item.concluidoPorNome}
+                                    por {(item as any).concluidoPorNome}
                                 </span>
                             )}
                         </div>

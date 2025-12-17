@@ -4,6 +4,7 @@ import com.smartmeeting.enums.HistoryActionType;
 import com.smartmeeting.model.TarefaHistory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,14 +17,19 @@ import java.util.Optional;
 @Repository
 public interface TarefaHistoryRepository extends JpaRepository<TarefaHistory, Long> {
 
+    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
     List<TarefaHistory> findByTarefaIdOrderByCreatedAtDesc(Long tarefaId);
 
+    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
     Page<TarefaHistory> findByTarefaIdOrderByCreatedAtDesc(Long tarefaId, Pageable pageable);
 
+    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
     List<TarefaHistory> findByTarefaIdAndActionType(Long tarefaId, HistoryActionType actionType);
 
+    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
     List<TarefaHistory> findByUsuarioId(Long usuarioId);
 
+    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
     @Query("SELECT th FROM TarefaHistory th WHERE th.tarefa.id = :tarefaId " +
             "AND th.createdAt BETWEEN :startDate AND :endDate ORDER BY th.createdAt DESC")
     List<TarefaHistory> findByTarefaIdAndDateRange(
@@ -31,10 +37,12 @@ public interface TarefaHistoryRepository extends JpaRepository<TarefaHistory, Lo
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
+    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
     @Query("SELECT th FROM TarefaHistory th WHERE th.tarefa.project.id = :projectId " +
             "ORDER BY th.createdAt DESC")
     List<TarefaHistory> findByProjectId(@Param("projectId") Long projectId);
 
+    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
     @Query("SELECT th FROM TarefaHistory th WHERE th.tarefa.project.id = :projectId " +
             "ORDER BY th.createdAt DESC")
     Page<TarefaHistory> findByProjectId(@Param("projectId") Long projectId, Pageable pageable);
@@ -70,7 +78,7 @@ public interface TarefaHistoryRepository extends JpaRepository<TarefaHistory, Lo
 
     void deleteByTarefaId(Long tarefaId);
 
-    // --- ADICIONADO: busca do registro existente (top 1 ordenado por createdAt desc)
+    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
     Optional<TarefaHistory> findTopByTarefaIdAndActionTypeAndFieldNameAndOldValueAndNewValueAndDescriptionOrderByCreatedAtDesc(
             Long tarefaId,
             HistoryActionType actionType,

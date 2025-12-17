@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    ChevronLeft, ChevronRight, Calendar as CalendarIcon,
+    ChevronLeft, ChevronRight,
     Clock, MapPin, Users, Video, GripVertical
 } from 'lucide-react';
 import { Reuniao, CalendarioView } from '../types/meetings';
@@ -86,7 +86,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     const handleDragStart = (e: React.DragEvent, reuniao: Reuniao) => {
         setDraggedReuniao(reuniao);
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', reuniao.id);
+        e.dataTransfer.setData('text/plain', String(reuniao.id));
         // Add a ghost image styling if needed
     };
 

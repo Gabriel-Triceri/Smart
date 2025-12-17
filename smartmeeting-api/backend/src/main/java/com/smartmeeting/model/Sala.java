@@ -17,6 +17,13 @@ import java.util.List;
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false, exclude = { "reunioes" })
 @ToString(exclude = { "reunioes" })
+@NamedEntityGraph(
+        name = "Sala.comEquipamentosEReunioes",
+        attributeNodes = {
+                @NamedAttributeNode("equipamentos"),
+                @NamedAttributeNode("reunioes")
+        }
+)
 public class Sala extends Auditable {
 
     @Id
@@ -51,5 +58,4 @@ public class Sala extends Auditable {
     @OneToMany(mappedBy = "sala", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Reuniao> reunioes;
-
 }

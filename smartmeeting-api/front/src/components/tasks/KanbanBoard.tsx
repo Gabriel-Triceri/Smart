@@ -2,719 +2,631 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult, DroppableProps } from 'react-beautiful-dnd';
 import TaskCard from './TaskCard';
 import TaskForm from './TaskForm';
-import { Tarefa, Assignee, TarefaFormData, StatusTarefa, KanbanColumnConfig, KanbanColumnDynamic, CreateKanbanColumnRequest, PermissionType } from '../../types/meetings';
-import { meetingsApi } from '../../services/meetingsApi';
+import {
+  Tarefa,
+  Assignee,
+  TarefaFormData,
+  StatusTarefa,
+  KanbanColumnConfig,
+  KanbanColumnDynamic,
+  PermissionType
+} from '../../types/meetings';
+import { kanbanService } from '../../services/kanbanService';
+import { projectService } from '../../services/projectService';
 import { ProjectPermissionsModal } from '../permissions/ProjectPermissionsModal';
 import { CanDo } from '../permissions/CanDo';
 
 /* --- CORREÇÃO PARA REACT 18 (STRICT MODE) --- */
 export const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
-    const [enabled, setEnabled] = useState(false);
-    useEffect(() => {
-        const animation = requestAnimationFrame(() => setEnabled(true));
-        return () => {
-            cancelAnimationFrame(animation);
-            setEnabled(false);
-        };
-    }, []);
-    if (!enabled) {
-        return null;
-    }
-    return <Droppable {...props}>{children}</Droppable>;
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setEnabled(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  if (!enabled) return null;
+  return <Droppable {...props}>{children}</Droppable>;
 };
 
-/* Ícones simples */
+/* Ícones (pequenos componentes SVG) - OMITIDOS PARA BREVIDADE */
 const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
-        <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
+    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
-
 const RefreshCwIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
-        <path d="M21 12a9 9 0 10-3.2 6.6L21 21v-4.4A9 9 0 0021 12z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M21 3v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
+    <path d="M21 12a9 9 0 10-3.2 6.6L21 21v-4.4A9 9 0 0021 12z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M21 3v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
-
 const EditIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
-
 const CheckIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
-        <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
+    <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
-
 const XIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
-        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
+    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
-
 const TrashIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
-        <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
+    <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
-
 const EllipsisIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
-        <circle cx="12" cy="5" r="2" fill="currentColor" />
-        <circle cx="12" cy="12" r="2" fill="currentColor" />
-        <circle cx="12" cy="19" r="2" fill="currentColor" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
+    <circle cx="12" cy="5" r="2" fill="currentColor" />
+    <circle cx="12" cy="12" r="2" fill="currentColor" />
+    <circle cx="12" cy="19" r="2" fill="currentColor" />
+  </svg>
 );
-
-const SettingsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" {...props}>
-        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
 const ShieldIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
 
-// Dynamic Column Colors
-const COLUMN_COLORS = [
-    '#64748b', // slate
-    '#3b82f6', // blue
-    '#8b5cf6', // purple
-    '#10b981', // emerald
-    '#f59e0b', // amber
-    '#ef4444', // red
-    '#ec4899', // pink
-    '#06b6d4', // cyan
+
+// Palette
+const COLUMN_COLORS = ['#64748b', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
+
+// Accent classes for status dots (tailwind-ish)
+const COLUMN_ACCENTS: Record<StatusTarefa, string> = {
+  [StatusTarefa.TODO]: 'bg-slate-400',
+  [StatusTarefa.IN_PROGRESS]: 'bg-blue-500',
+  [StatusTarefa.REVIEW]: 'bg-purple-500',
+  [StatusTarefa.DONE]: 'bg-emerald-500',
+};
+
+// As colunas padrão ainda usam o Enum para STATUS e ID (para fins de compatibilidade global)
+const DEFAULT_COLUMNS_VISUAL = [
+  { id: StatusTarefa.TODO, title: 'Não Iniciado', backendId: '1' }, // ID Fixo
+  { id: StatusTarefa.IN_PROGRESS, title: 'Em Andamento', backendId: '2' },
+  { id: StatusTarefa.REVIEW, title: 'Em Revisão', backendId: '3' },
+  { id: StatusTarefa.DONE, title: 'Concluído', backendId: '4' },
 ];
+
+// O tipo KanbanDroppableId define o que é usado como ID de coluna para Drag & Drop e no estado
+type KanbanDroppableId = string;
+
+// ATUALIZAÇÃO CRÍTICA: O ID para Drag & Drop agora é uma string (que pode ser o StatusTarefa para defaults
+// ou o ID da coluna dinâmica).
+type KanbanBoardColumn = {
+  status: StatusTarefa; // Mantido para lógica de cor/acento (não é o ID para o Backend)
+  title: string;
+  id: KanbanDroppableId; // O ID usado para D&D e enviado ao Backend no caso dinâmico
+  isDefault?: boolean;
+  // Adicionamos o ID da coluna Kanban (o Long/string do Backend) para o payload de movimento
+  kanbanColumnId: string;
+};
 
 interface KanbanBoardProps {
-    tarefas: Tarefa[];
-    assignees: Assignee[];
-    loading?: boolean;
-    projectId?: string; // For dynamic columns
-    onMoveTask: (tarefaId: string, novoStatus: StatusTarefa) => void;
-    onDeleteTask: (tarefaId: string) => void;
-    onDuplicateTask: (tarefaId: string) => void;
-    onCreateOrUpdateTask: (data: TarefaFormData) => Promise<void>;
-    onViewTask: (tarefa: Tarefa) => void;
+  tarefas: Tarefa[];
+  assignees: Assignee[];
+  loading?: boolean;
+  projectId?: string | null;
+  // CORREÇÃO CRÍTICA: onMoveTask agora espera o ID da coluna (string) e a nova posição (number)
+  onMoveTask: (tarefaId: string, novoIdColuna: string, novaPosicao: number) => void;
+  onDeleteTask: (tarefaId: string) => void;
+  onDuplicateTask: (tarefaId: string) => void;
+  onCreateOrUpdateTask: (data: TarefaFormData) => Promise<void>;
+  onViewTask: (tarefa: Tarefa) => void;
 }
 
-// Colors for the small status dot/accent
-const COLUMN_ACCENTS: Record<string, string> = {
-    [StatusTarefa.TODO]: 'bg-slate-400',
-    [StatusTarefa.IN_PROGRESS]: 'bg-blue-500',
-    [StatusTarefa.REVIEW]: 'bg-purple-500',
-    [StatusTarefa.DONE]: 'bg-emerald-500',
-};
-
-const DEFAULT_COLUMNS = [
-    { id: StatusTarefa.TODO, title: 'Não Iniciado' },
-    { id: StatusTarefa.IN_PROGRESS, title: 'Em Andamento' },
-    { id: StatusTarefa.REVIEW, title: 'Em Revisão' },
-    { id: StatusTarefa.DONE, title: 'Concluído' },
-];
-
 export function KanbanBoard({
-    tarefas,
-    assignees,
-    projectId,
-    onMoveTask,
-    onDeleteTask,
-    onDuplicateTask,
-    onCreateOrUpdateTask,
-    onViewTask,
-    loading = false,
+  tarefas,
+  assignees,
+  projectId,
+  onMoveTask,
+  onDeleteTask,
+  onDuplicateTask,
+  onCreateOrUpdateTask,
+  onViewTask,
+  loading = false,
 }: KanbanBoardProps) {
-    const [showTaskForm, setShowTaskForm] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
-    const [columns, setColumns] = useState<(KanbanColumnConfig & { id?: string; isDefault?: boolean })[]>([]);
-    const [dynamicColumns, setDynamicColumns] = useState<KanbanColumnDynamic[]>([]);
-    const [editingColumn, setEditingColumn] = useState<StatusTarefa | null>(null);
-    const [tempTitle, setTempTitle] = useState('');
-    const [openDropdownForColumn, setOpenDropdownForColumn] = useState<StatusTarefa | null>(null);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
+  const [columns, setColumns] = useState<KanbanBoardColumn[]>([]);
+  const [dynamicColumns, setDynamicColumns] = useState<KanbanColumnDynamic[]>([]);
+  const [editingColumn, setEditingColumn] = useState<KanbanDroppableId | null>(null); // Atualizado para usar KanbanDroppableId
+  const [tempTitle, setTempTitle] = useState('');
+  const [openDropdownForColumn, setOpenDropdownForColumn] = useState<KanbanDroppableId | null>(null); // Atualizado para usar KanbanDroppableId
 
-    // States for dynamic column management
-    const [showAddColumnModal, setShowAddColumnModal] = useState(false);
-    const [newColumnTitle, setNewColumnTitle] = useState('');
-    const [newColumnColor, setNewColumnColor] = useState(COLUMN_COLORS[0]);
-    const [addingColumn, setAddingColumn] = useState(false);
+  // Add column modal state
+  const [showAddColumnModal, setShowAddColumnModal] = useState(false);
+  const [newColumnTitle, setNewColumnTitle] = useState('');
+  const [newColumnColor, setNewColumnColor] = useState(COLUMN_COLORS[0]);
+  const [addingColumn, setAddingColumn] = useState(false);
 
-    // State for permissions modal
-    const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
 
-    useEffect(() => {
-        if (!projectId) {
-            loadColumns();
-        }
-    }, [projectId]);
+  // Load static/global columns when not in a project
+  useEffect(() => {
+    if (!projectId) loadGlobalColumns();
+  }, [projectId]);
 
-    const loadColumns = async () => {
-        try {
-            const cols = await meetingsApi.getKanbanColumns();
-            // Sort columns to match the enum order if needed, or rely on backend order
-            // Here we map backend columns to ensure we have all statuses
-            const orderedColumns = DEFAULT_COLUMNS.map(defaultCol => {
-                const found = cols.find(c => c.status === defaultCol.id);
-                return found ? { status: defaultCol.id, title: found.title } : { status: defaultCol.id, title: defaultCol.title };
-            });
-            setColumns(orderedColumns);
-        } catch (error) {
+  const loadGlobalColumns = async () => {
+    try {
+      // Mapeia colunas padrão. O ID do Kanban é o próprio Status (string)
+      setColumns(DEFAULT_COLUMNS_VISUAL.map(c => ({
+        status: c.id,
+        title: c.title,
+        id: c.id, // O StatusTarefa é o ID para D&D (ex: 'in_progress')
+        kanbanColumnId: c.id, // O ID que é enviado ao Backend (o Backend deve traduzir a string do Enum para Long ou aceitar o Enum)
+      })));
+    } catch (err) {
+      console.error('Erro ao carregar colunas globais:', err);
+      setColumns(DEFAULT_COLUMNS_VISUAL.map(c => ({ status: c.id, title: c.title, id: c.backendId, kanbanColumnId: c.backendId })));
+    }
+  };
 
-            // Fallback to defaults
-            setColumns(DEFAULT_COLUMNS.map(c => ({ status: c.id, title: c.title })));
-        }
-    };
+  // Load dynamic columns for project (if projectId provided)
+  useEffect(() => {
+    if (projectId) loadDynamicColumns();
+  }, [projectId]);
 
-    const handleStartEditColumn = (col: KanbanColumnConfig) => {
-        setEditingColumn(col.status);
-        setTempTitle(col.title);
-        setOpenDropdownForColumn(null); // Close dropdown when starting edit
-    };
+  const loadDynamicColumns = async () => {
+    if (!projectId) return;
+    try {
+      // Usa o ID da coluna dinâmica (que corresponde ao Long no Java) como ID principal
+      const cols = await projectService.getKanbanColumnsByProject(String(projectId));
+      setDynamicColumns(cols.filter(c => c.isActive));
+    } catch (err) {
+      console.error('Erro ao carregar colunas dinâmicas:', err);
+      setDynamicColumns([]);
+    }
+  };
 
-    const handleCancelEditColumn = () => {
-        setEditingColumn(null);
-        setTempTitle('');
-    };
+  // When dynamic columns change, map them to display columns
+  useEffect(() => {
+    if (projectId && dynamicColumns.length > 0) {
+      try {
+        const mapped = dynamicColumns
+          .slice()
+          .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
+          .map(col => ({
+            // Manter status para a cor/acento (se for um dos 4 padrões, caso contrário, use TO_DO como fallback)
+            status: (col.columnKey as StatusTarefa) || StatusTarefa.TODO,
+            title: col.title,
+            id: String(col.id),
+            isDefault: !!col.isDefault,
+            kanbanColumnId: String(col.id), // O ID numérico/string que o Backend espera
+          }));
 
-    const handleSaveColumn = async (status: StatusTarefa) => {
-        if (!tempTitle.trim()) return;
-        const trimmedTitle = tempTitle.trim();
+        setColumns(mapped);
+      } catch (err) {
+        console.error('Erro ao mapear colunas dinâmicas:', err);
+        loadGlobalColumns();
+      }
+    }
 
-        try {
-            if (projectId) {
-                const col = columns.find(c => c.status === status);
-                if (col && col.id) {
-                    const updated = await meetingsApi.updateKanbanColumnDynamic(projectId, col.id, { title: trimmedTitle });
-                    setDynamicColumns(prev => prev.map(c => c.id === col.id ? updated : c));
-                }
-            } else {
-                const updated = await meetingsApi.updateKanbanColumn(status, trimmedTitle);
-                setColumns(prev => prev.map(c => c.status === status ? { ...c, title: updated.title } : c));
-            }
+    // if projectId but no dynamic columns, fall back to defaults
+    if (projectId && dynamicColumns.length === 0) {
+      loadGlobalColumns(); // Recarrega as globais se as dinâmicas falharem
+    }
+  }, [dynamicColumns, projectId]);
 
-            // Update title everywhere immediately for better UX
-            updateColumnTitleEverywhere(status, trimmedTitle);
+  // Group tarefas by status
+  const tarefasPorStatus: Record<KanbanDroppableId, Tarefa[]> = columns.reduce((acc, col) => {
+    // CORREÇÃO: Usar o Status da Tarefa, que ainda deve ser um Enum, para agrupar.
+    // Se a Tarefa for de uma coluna dinâmica, a tarefa deve ter o StatusTarefa mapeado no backend.
+    // Se houver falha na visualização de tarefas dinâmicas, o campo `t.status` deve ser revisado.
+    acc[col.status] = tarefas.filter(t => t.status === col.status).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+    return acc;
+  }, {} as Record<KanbanDroppableId, Tarefa[]>);
 
-            setEditingColumn(null);
-            setOpenDropdownForColumn(null);
-        } catch (error) {
+  // --- Funções de Coluna (handleStartEditColumn, etc. usam o ID da coluna como referência) ---
+  const handleStartEditColumn = (col: KanbanBoardColumn) => {
+    setEditingColumn(col.id);
+    setTempTitle(col.title);
+    setOpenDropdownForColumn(null);
+  };
+  const handleAddColumnFromDropdown = () => {
+    setShowAddColumnModal(true);
+    setOpenDropdownForColumn(null);
+  };
+  const handleCancelEditColumn = () => {
+    setEditingColumn(null);
+    setTempTitle('');
+  };
+  const handleSaveColumn = async (columnId: string) => {
+    if (!tempTitle.trim()) return;
+    try {
+      // update via kanbanService — use o ID da coluna dinâmica
+      // O serviço `kanbanService.updateKanbanColumn` precisa ser corrigido para aceitar ID numérico/string
+      const updated = await kanbanService.updateKanbanColumn(columnId, tempTitle.trim());
+      setColumns(prev => prev.map(c => (c.id === columnId ? { ...c, title: updated.title } : c)));
+      setEditingColumn(null);
+      setTempTitle('');
+    } catch (err) {
+      console.error('Erro ao salvar coluna:', err);
+    }
+  };
 
-            // Revert to original title on error
-            setEditingColumn(null);
-            setOpenDropdownForColumn(null);
-        }
-    };
+  const handleDropdownToggle = (columnId: string) => {
+    setOpenDropdownForColumn(openDropdownForColumn === columnId ? null : columnId);
+  };
 
-    const handleDropdownToggle = (status: StatusTarefa) => {
-        setOpenDropdownForColumn(openDropdownForColumn === status ? null : status);
-    };
+  const handleEditColumn = (column: KanbanBoardColumn) => {
+    handleStartEditColumn(column);
+    setOpenDropdownForColumn(null);
+  };
 
-    const handleEditColumn = (column: KanbanColumnConfig) => {
-        handleStartEditColumn(column);
-        setOpenDropdownForColumn(null);
-    };
+  const handleDeleteDynamicColumn = async (columnId: string) => {
+    if (!projectId) return;
+    if (!confirm('Tem certeza que deseja excluir esta coluna? Tarefas nela poderão ficar inacessíveis.')) return;
+    try {
+      await projectService.deleteKanbanColumnDynamic(String(projectId), columnId);
+      setDynamicColumns(prev => prev.filter(c => c.id !== columnId));
+    } catch (err) {
+      console.error('Erro ao deletar coluna dinâmica:', err);
+    }
+  };
 
-    const handleDeleteColumn = (column: KanbanColumnConfig) => {
-        if (column.id && !column.isDefault) {
-            handleDeleteDynamicColumn(column.id);
-        }
-        setOpenDropdownForColumn(null);
-    };
+  const handleDeleteColumn = (column: KanbanBoardColumn) => {
+    if (column.id && !column.isDefault) handleDeleteDynamicColumn(column.id);
+    setOpenDropdownForColumn(null);
+  };
+  // ---------------------------------------------------------------------------------------------
 
-    const handleAddColumnFromDropdown = () => {
-        setShowAddColumnModal(true);
-        setOpenDropdownForColumn(null);
-    };
+  // Add new dynamic column
+  const handleAddDynamicColumn = async () => {
+    if (!projectId) return alert('ID do projeto não encontrado. Verifique se você está em um projeto.');
+    if (!newColumnTitle.trim()) return alert('Título da coluna é obrigatório.');
+    try {
+      setAddingColumn(true);
+      const payload = {
+        projectId: String(projectId),
+        title: newColumnTitle.trim(),
+        color: newColumnColor,
+        ordem: (dynamicColumns.length ?? 0) + 1,
+        isDoneColumn: false,
+      };
+      const created: KanbanColumnDynamic = await projectService.createKanbanColumnDynamic(payload);
+      setDynamicColumns(prev => [...prev, created]);
+      setNewColumnTitle('');
+      setNewColumnColor(COLUMN_COLORS[0]);
+      setShowAddColumnModal(false);
+      alert('Coluna adicionada com sucesso!');
+    } catch (err: any) {
+      alert('Erro ao adicionar coluna: ' + (err?.response?.data?.message || err?.message || String(err)));
+    } finally {
+      setAddingColumn(false);
+    }
+  };
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as Element;
-            if (!target.closest('[data-dropdown]')) {
-                setOpenDropdownForColumn(null);
-            }
-        };
+  // Task handlers
+  const handleAddTask = () => {
+    setSelectedTask(null);
+    setShowTaskForm(true);
+  };
+  const handleEditTask = (tarefa: Tarefa) => {
+    setSelectedTask(tarefa);
+    setShowTaskForm(true);
+  };
+  const handleFormSubmit = async (data: TarefaFormData) => {
+    await onCreateOrUpdateTask(data);
+    setShowTaskForm(false);
+    setSelectedTask(null);
+  };
 
-        if (openDropdownForColumn) {
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
-        }
-    }, [openDropdownForColumn]);
+  // Drag & Drop handler delegates movement to parent via onMoveTask
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    // Load dynamic columns for project
-    const loadDynamicColumns = async () => {
-        if (!projectId) return;
-        try {
-            const cols = await meetingsApi.getKanbanColumnsByProject(projectId);
-            setDynamicColumns(cols.filter(c => c.isActive));
-        } catch (error) {
+    // 1. Encontra a coluna de destino (usa o droppableId - que agora é o ID da coluna)
+    const targetColumn = columns.find(c => c.id === destination.droppableId);
+    if (!targetColumn) {
+      console.error(`Coluna de destino não encontrada: ${destination.droppableId}`);
+      return;
+    }
 
-        }
-    };
+    // 2. O ID da coluna a ser enviado ao Backend (colunaId/newStatus no Java)
+    console.log('destination.droppableId (ID para busca):', destination.droppableId);
+    const targetColumnId: string = targetColumn.kanbanColumnId; // Este ID deve ser o Long/String que o Backend espera
 
-    useEffect(() => {
-        if (projectId) {
-            loadDynamicColumns();
-        }
-    }, [projectId]);
+    // 3. A posição na nova coluna
+    const newPosition: number = destination.index;
 
-    // Sync dynamic columns to display columns
-    useEffect(() => {
-        if (projectId && dynamicColumns.length > 0) {
-            const mappedCols = dynamicColumns
-                .sort((a, b) => a.ordem - b.ordem)
-                .map(col => ({
-                    status: col.columnKey as StatusTarefa,
-                    title: col.title,
-                    id: col.id, // Keep the UUID for updates
-                    isDefault: col.isDefault // Keep track of default columns
-                }));
-            setColumns(mappedCols);
-        }
-    }, [dynamicColumns, projectId]);
+    // Chama a função passada via props, usando o ID numérico/string da coluna
+    onMoveTask(draggableId, targetColumnId, newPosition);
+  };
 
-    // Sync dynamic columns to display columns
-    useEffect(() => {
-        if (projectId && dynamicColumns.length > 0) {
-            const mappedCols = dynamicColumns
-                .sort((a, b) => a.ordem - b.ordem)
-                .map(col => ({
-                    status: col.columnKey as StatusTarefa,
-                    title: col.title,
-                    id: col.id, // Keep the UUID for updates
-                    isDefault: col.isDefault // Keep track of default columns
-                }));
-            setColumns(mappedCols);
-        }
-    }, [dynamicColumns, projectId]);
+  return (
+    <div className="h-full flex flex-col relative">
+      <div className="flex-1">
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="flex h-full gap-6 pb-2">
+            {columns.map(column => {
+              // Usar o StatusTarefa para encontrar as tarefas (se o backend mantiver o Enum no objeto Tarefa)
+              const columnTasks = tarefasPorStatus[column.status] ?? [];
+              const accentColor = COLUMN_ACCENTS[column.status] || 'bg-gray-400';
+              const isEditing = editingColumn === column.id; // Usa o ID da coluna
 
-    // Update column title in all relevant places when edited
-    const updateColumnTitleEverywhere = (status: StatusTarefa, newTitle: string) => {
-        if (projectId) {
-            // For project-specific columns, update dynamic columns
-            const col = columns.find(c => c.status === status);
-            if (col && col.id) {
-                setDynamicColumns(prev => prev.map(c =>
-                    c.id === col.id ? { ...c, title: newTitle } : c
-                ));
-            }
-        } else {
-            // For global columns, update regular columns
-            setColumns(prev => prev.map(c =>
-                c.status === status ? { ...c, title: newTitle } : c
-            ));
-        }
-    };
+              return (
+                // CRÍTICO: Usar o ID da Coluna como droppableId
+                <StrictModeDroppable droppableId={column.id} key={column.id}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="flex-shrink-0 w-[320px] flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-slate-800/20 border border-slate-200/50 dark:border-slate-700/50"
+                    >
+                      {/* Header */}
+                      <div className="px-4 py-3 flex items-center justify-between flex-shrink-0 group/header">
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className={`w-2 h-2 rounded-full ${accentColor}`} />
 
-    // Add new dynamic column
-    const handleAddDynamicColumn = async () => {
-
-        if (!projectId) {
-            alert('ID do projeto não encontrado. Verifique se você está em um projeto.');
-            return;
-        }
-
-        if (!newColumnTitle.trim()) {
-            alert('Título da coluna é obrigatório.');
-            return;
-        }
-
-        try {
-            setAddingColumn(true);
-            console.log('DEBUG: Creating column with data:', {
-                projectId,
-                title: newColumnTitle.trim(),
-                color: newColumnColor,
-                ordem: dynamicColumns.length + 1,
-                isDoneColumn: false
-            });
-
-            // Converte projectId para number se for string numérica
-            const projectIdNumber = typeof projectId === 'string' && /^\d+$/.test(projectId)
-                ? parseInt(projectId, 10)
-                : projectId;
-
-
-            const newColumn = await meetingsApi.createKanbanColumnDynamic({
-                projectId: projectIdNumber,
-                title: newColumnTitle.trim(),
-                color: newColumnColor,
-                ordem: dynamicColumns.length + 1,
-                isDoneColumn: false
-            });
-
-
-            setDynamicColumns(prev => [...prev, newColumn]);
-            setNewColumnTitle('');
-            setShowAddColumnModal(false);
-            alert('Coluna adicionada com sucesso!');
-        } catch (error) {
-            alert('Erro ao adicionar coluna: ' + (error.response?.data?.message || error.message));
-        } finally {
-            setAddingColumn(false);
-        }
-    };
-
-    // Delete dynamic column
-    const handleDeleteDynamicColumn = async (columnId: string) => {
-        if (!projectId) return;
-        if (!confirm('Tem certeza que deseja excluir esta coluna? Tarefas nela poderão ficar inacessíveis.')) return;
-        try {
-            await meetingsApi.deleteKanbanColumnDynamic(projectId, columnId);
-            setDynamicColumns(prev => prev.filter(c => c.id !== columnId));
-        } catch (error) {
-
-        }
-    };
-
-    const tarefasPorStatus: Record<StatusTarefa, Tarefa[]> = columns.reduce((acc, col) => {
-        acc[col.status] = tarefas
-            .filter(t => t.status === col.status)
-            .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0));
-        return acc;
-    }, {} as Record<StatusTarefa, Tarefa[]>);
-
-    const handleAddTask = () => {
-        setSelectedTask(null);
-        setShowTaskForm(true);
-    };
-
-    const handleEditTask = (tarefa: Tarefa) => {
-        setSelectedTask(tarefa);
-        setShowTaskForm(true);
-    };
-
-    const handleFormSubmit = async (data: TarefaFormData) => {
-        await onCreateOrUpdateTask(data);
-        setShowTaskForm(false);
-        setSelectedTask(null);
-    };
-
-    const onDragEnd = (result: DropResult) => {
-        const { source, destination, draggableId } = result;
-        if (!destination) return;
-        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
-
-        const destStatus = destination.droppableId as StatusTarefa;
-        onMoveTask(draggableId, destStatus);
-    };
-
-    return (
-        <div className="h-full flex flex-col relative">
-            <div className="flex-1">
-                <DragDropContext onDragEnd={onDragEnd}>
-                    <div className="flex h-full gap-6 pb-2">
-                        {columns.map(column => {
-                            const columnTasks = tarefasPorStatus[column.status] ?? [];
-                            const accentColor = COLUMN_ACCENTS[column.status] || 'bg-gray-400';
-                            const isEditing = editingColumn === column.status;
-
-                            return (
-                                <StrictModeDroppable droppableId={column.status} key={String(column.status)}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            className="flex-shrink-0 w-[320px] flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-slate-800/20 border border-slate-200/50 dark:border-slate-700/50"
-                                        >
-                                            {/* Cabeçalho da Coluna */}
-                                            <div className="px-4 py-3 flex items-center justify-between flex-shrink-0 group/header">
-                                                <div className="flex items-center gap-2 flex-1">
-                                                    <div className={`w-2 h-2 rounded-full ${accentColor}`} />
-
-                                                    {isEditing ? (
-                                                        <div className="flex items-center gap-1 flex-1">
-                                                            <input
-                                                                type="text"
-                                                                value={tempTitle}
-                                                                onChange={e => setTempTitle(e.target.value)}
-                                                                className="flex-1 min-w-0 text-sm px-2 py-1 rounded border border-blue-400 outline-none bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"
-                                                                autoFocus
-                                                                onKeyDown={e => {
-                                                                    if (e.key === 'Enter') handleSaveColumn(column.status);
-                                                                    if (e.key === 'Escape') handleCancelEditColumn();
-                                                                }}
-                                                            />
-                                                            <button onClick={() => handleSaveColumn(column.status)} className="p-1 text-emerald-500 hover:bg-emerald-100 rounded">
-                                                                <CheckIcon />
-                                                            </button>
-                                                            <button onClick={handleCancelEditColumn} className="p-1 text-red-500 hover:bg-red-100 rounded">
-                                                                <XIcon />
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <h3
-                                                                className="font-semibold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1"
-                                                                onDoubleClick={() => handleStartEditColumn(column)}
-                                                                title="Clique duplo para editar"
-                                                            >
-                                                                {column.title}
-                                                                <EditIcon className="w-3 h-3 opacity-0 group-hover/header:opacity-50 transition-opacity" />
-                                                            </h3>
-                                                            <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
-                                                                {columnTasks.length}
-                                                            </span>
-
-                                                            {/* Dropdown Menu */}
-                                                            <div className="relative" data-dropdown>
-                                                                <button
-                                                                    onClick={() => handleDropdownToggle(column.status)}
-                                                                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all opacity-0 group-hover/header:opacity-100"
-                                                                    title="Opções da coluna"
-                                                                >
-                                                                    <EllipsisIcon />
-                                                                </button>
-
-                                                                {/* Dropdown Menu */}
-                                                                {openDropdownForColumn === column.status && (
-                                                                    <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-[9999] py-1">
-                                                                        <button
-                                                                            onClick={() => handleEditColumn(column)}
-                                                                            className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
-                                                                        >
-                                                                            <EditIcon />
-                                                                            Editar Nome
-                                                                        </button>
-
-                                                                        <button
-                                                                            onClick={() => {
-
-                                                                                handleAddColumnFromDropdown();
-                                                                            }}
-                                                                            className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
-                                                                        >
-                                                                            <PlusIcon />
-                                                                            Adicionar Coluna
-                                                                        </button>
-
-                                                                        {/* Only show delete for dynamic columns that are not default */}
-                                                                        {column.id && !column.isDefault && (
-                                                                            <>
-                                                                                <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
-                                                                                <button
-                                                                                    onClick={() => handleDeleteColumn(column)}
-                                                                                    className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
-                                                                                >
-                                                                                    <TrashIcon />
-                                                                                    Deletar Coluna
-                                                                                </button>
-                                                                            </>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center">
-                                                    {loading && <RefreshCwIcon className="w-3 h-3 animate-spin text-slate-400" />}
-                                                </div>
-                                            </div>
-
-                                            {/* Área de Drop (Corpo da Coluna) */}
-                                            <div
-                                                className={`
-                                                    flex-1 px-3 pb-3 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600
-                                                    transition-colors duration-200 rounded-b-xl
-                                                    ${snapshot.isDraggingOver ? 'bg-blue-50/50 dark:bg-blue-900/10 ring-2 ring-inset ring-blue-400/30' : ''}
-                                                `}
-                                                style={{ minHeight: '150px' }}
-                                            >
-                                                {columnTasks.map((tarefa, index) => (
-                                                    <Draggable
-                                                        draggableId={String(tarefa.id)}
-                                                        index={index}
-                                                        key={tarefa.id}
-                                                    >
-                                                        {(provided, snapshot) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                {...provided.dragHandleProps}
-                                                                style={{
-                                                                    ...provided.draggableProps.style,
-                                                                    opacity: snapshot.isDragging ? 0.9 : 1,
-                                                                    transform: snapshot.isDragging ? `${provided.draggableProps.style?.transform} scale(1.02)` : provided.draggableProps.style?.transform
-                                                                }}
-                                                                className="group outline-none"
-                                                            >
-                                                                <TaskCard
-                                                                    tarefa={tarefa}
-                                                                    isDragging={snapshot.isDragging}
-                                                                    onEdit={handleEditTask}
-                                                                    onDelete={id => onDeleteTask(id)}
-                                                                    onDuplicate={id => onDuplicateTask(id)}
-                                                                    onClick={(t) => onViewTask(t)}
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </Draggable>
-                                                ))}
-                                                {provided.placeholder}
-
-                                                {column.status === StatusTarefa.TODO && (
-                                                    <CanDo permission={PermissionType.TASK_CREATE} projectId={projectId} global={!projectId}>
-                                                        <button
-                                                            onClick={handleAddTask}
-                                                            className="w-full py-2 flex items-center justify-center text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-white dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-slate-700/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-300 transition-all group mt-2"
-                                                        >
-                                                            <PlusIcon className="w-4 h-4 mr-1.5 transition-transform group-hover:scale-110" />
-                                                            Nova Tarefa
-                                                        </button>
-                                                    </CanDo>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </StrictModeDroppable>
-                            );
-                        })}
-
-                        {/* Add Column Button & Permissions Button (only visible when projectId is provided and user has permission) */}
-                        {projectId && (
-                            <div className="flex-shrink-0 w-72 min-w-[18rem] space-y-3">
-                                {/* Adicionar Coluna - DEBUG: Removido CanDo temporariamente */}
-                                <button
-                                    onClick={() => setShowAddColumnModal(true)}
-                                    className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
-                                >
-                                    <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                                    <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
-                                        Adicionar Coluna
-                                    </span>
-                                </button>
-
-                                {/* Permissões - DEBUG: Removido CanDo temporariamente */}
-                                <button
-                                    onClick={() => setShowPermissionsModal(true)}
-                                    className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
-                                >
-                                    <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
-                                    <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
-                                        Permissões
-                                    </span>
-                                </button>
+                          {isEditing ? (
+                            <div className="flex items-center gap-1 flex-1">
+                              <input
+                                type="text"
+                                value={tempTitle}
+                                onChange={e => setTempTitle(e.target.value)}
+                                className="flex-1 min-w-0 text-sm px-2 py-1 rounded border border-blue-400 outline-none bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"
+                                autoFocus
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') handleSaveColumn(column.id); // Usa ID da coluna
+                                  if (e.key === 'Escape') handleCancelEditColumn();
+                                }}
+                              />
+                              <button onClick={() => handleSaveColumn(column.id)} className="p-1 text-emerald-500 hover:bg-emerald-100 rounded">
+                                <CheckIcon />
+                              </button>
+                              <button onClick={handleCancelEditColumn} className="p-1 text-red-500 hover:bg-red-100 rounded">
+                                <XIcon />
+                              </button>
                             </div>
+                          ) : (
+                            <>
+                              <h3
+                                className="font-semibold text-sm text-slate-700 dark:text-slate-200 uppercase tracking-wide cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1"
+                                onDoubleClick={() => handleStartEditColumn(column)}
+                                title="Clique duplo para editar"
+                              >
+                                {column.title}
+                                <EditIcon className="w-3 h-3 opacity-0 group-hover/header:opacity-50 transition-opacity" />
+                              </h3>
+                              <span className="ml-1 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                {columnTasks.length}
+                              </span>
+
+                              <div className="relative" data-dropdown>
+                                <button
+                                  onClick={() => handleDropdownToggle(column.id)} // Usa ID da coluna
+                                  className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all opacity-0 group-hover/header:opacity-100"
+                                  title="Opções da coluna"
+                                >
+                                  <EllipsisIcon />
+                                </button>
+
+                                {openDropdownForColumn === column.id && ( // Usa ID da coluna
+                                  <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-[9999] py-1">
+                                    <button
+                                      onClick={() => handleEditColumn(column)}
+                                      className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                                    >
+                                      <EditIcon />
+                                      Editar Nome
+                                    </button>
+
+                                    <button
+                                      onClick={handleAddColumnFromDropdown}
+                                      className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                                    >
+                                      <PlusIcon />
+                                      Adicionar Coluna
+                                    </button>
+
+                                    {column.id && !column.isDefault && (
+                                      <>
+                                        <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+                                        <button
+                                          onClick={() => handleDeleteColumn(column)}
+                                          className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
+                                        >
+                                          <TrashIcon />
+                                          Deletar Coluna
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="flex items-center">
+                          {loading && <RefreshCwIcon className="w-3 h-3 animate-spin text-slate-400" />}
+                        </div>
+                      </div>
+
+                      {/* Column body */}
+                      <div
+                        className={`flex-1 px-3 pb-3 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 transition-colors duration-200 rounded-b-xl ${snapshot.isDraggingOver ? 'bg-blue-50/50 dark:bg-blue-900/10 ring-2 ring-inset ring-blue-400/30' : ''}`}
+                        style={{ minHeight: '150px' }}
+                      >
+                        {columnTasks.map((tarefa, index) => (
+                          <Draggable draggableId={String(tarefa.id)} index={index} key={tarefa.id}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                style={{
+                                  ...provided.draggableProps.style,
+                                  opacity: snapshot.isDragging ? 0.9 : 1,
+                                  transform: snapshot.isDragging ? `${provided.draggableProps.style?.transform} scale(1.02)` : provided.draggableProps.style?.transform
+                                }}
+                                className="group outline-none"
+                              >
+                                <TaskCard
+                                  tarefa={tarefa}
+                                  isDragging={snapshot.isDragging}
+                                  onEdit={handleEditTask}
+                                  onDelete={id => onDeleteTask(id)}
+                                  onDuplicate={id => onDuplicateTask(id)}
+                                  onClick={(t) => onViewTask(t)}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+
+                        {provided.placeholder}
+
+                        {column.status === StatusTarefa.TODO && (
+                          <CanDo permission={PermissionType.TASK_CREATE} projectId={projectId ?? undefined} global={!projectId}>
+                            <button
+                              onClick={handleAddTask}
+                              className="w-full py-2 flex items-center justify-center text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-white dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-slate-700/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-300 transition-all group mt-2"
+                            >
+                              <PlusIcon className="w-4 h-4 mr-1.5 transition-transform group-hover:scale-110" />
+                              Nova Tarefa
+                            </button>
+                          </CanDo>
                         )}
+                      </div>
                     </div>
-                </DragDropContext>
+                  )}
+                </StrictModeDroppable>
+              );
+            })}
+
+            {/* Add Column + Permissions (only when in project) */}
+            {projectId && (
+              <div className="flex-shrink-0 w-72 min-w-[18rem] space-y-3">
+                <button
+                  onClick={() => setShowAddColumnModal(true)}
+                  className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
+                >
+                  <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                  <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
+                    Adicionar Coluna
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setShowPermissionsModal(true)}
+                  className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
+                >
+                  <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
+                  <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
+                    Permissões
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+        </DragDropContext>
+      </div>
+
+      {/* Modals */}
+      {/* Add Column Modal (Mantido) */}
+      {showAddColumnModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          {/* ... Código do Modal ... */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Adicionar Nova Coluna</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Crie uma nova coluna para organizar suas tarefas</p>
             </div>
 
-            {/* Add Column Modal */}
-            {showAddColumnModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                                Adicionar Nova Coluna
-                            </h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                Crie uma nova coluna para organizar suas tarefas
-                            </p>
-                        </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Título da Coluna</label>
+                <input
+                  type="text"
+                  value={newColumnTitle}
+                  onChange={(e) => setNewColumnTitle(e.target.value)}
+                  placeholder="Ex: Em Análise, Aguardando, etc."
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  autoFocus
+                />
+              </div>
 
-                        <div className="p-6 space-y-4">
-                            {/* Column Title */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Título da Coluna
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newColumnTitle}
-                                    onChange={(e) => setNewColumnTitle(e.target.value)}
-                                    placeholder="Ex: Em Análise, Aguardando, etc."
-                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                    autoFocus
-                                />
-                            </div>
-
-                            {/* Column Color */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Cor da Coluna
-                                </label>
-                                <div className="flex flex-wrap gap-2">
-                                    {COLUMN_COLORS.map((color) => (
-                                        <button
-                                            key={color}
-                                            onClick={() => setNewColumnColor(color)}
-                                            className={`w-8 h-8 rounded-full transition-all ${newColumnColor === color
-                                                ? 'ring-2 ring-offset-2 ring-blue-500 scale-110'
-                                                : 'hover:scale-105'
-                                                }`}
-                                            style={{ backgroundColor: color }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowAddColumnModal(false);
-                                    setNewColumnTitle('');
-                                }}
-                                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleAddDynamicColumn}
-                                disabled={!newColumnTitle.trim() || addingColumn}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                            >
-                                {addingColumn ? (
-                                    <>
-                                        <RefreshCwIcon className="w-4 h-4 animate-spin" />
-                                        Adicionando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <PlusIcon className="w-4 h-4" />
-                                        Adicionar Coluna
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Cor da Coluna</label>
+                <div className="flex flex-wrap gap-2">
+                  {COLUMN_COLORS.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setNewColumnColor(color)}
+                      className={`w-8 h-8 rounded-full transition-all ${newColumnColor === color ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' : 'hover:scale-105'}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
                 </div>
-            )}
+              </div>
+            </div>
 
-            {showTaskForm && (
-                <TaskForm
-                    tarefa={selectedTask}
-                    onClose={() => {
-                        setShowTaskForm(false);
-                        setSelectedTask(null);
-                    }}
-                    onSubmit={handleFormSubmit}
-                    assignees={assignees}
-                />
-            )}
-
-            {/* Project Permissions Modal */}
-            {projectId && (
-                <ProjectPermissionsModal
-                    projectId={projectId}
-                    projectName="Projeto"
-                    isOpen={showPermissionsModal}
-                    onClose={() => setShowPermissionsModal(false)}
-                />
-            )}
+            <div className="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowAddColumnModal(false);
+                  setNewColumnTitle('');
+                }}
+                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAddDynamicColumn}
+                disabled={!newColumnTitle.trim() || addingColumn}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {addingColumn ? (
+                  <>
+                    <RefreshCwIcon className="w-4 h-4 animate-spin" />
+                    Adicionando...
+                  </>
+                ) : (
+                  <>
+                    <PlusIcon className="w-4 h-4" />
+                    Adicionar Coluna
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-    );
+      )}
+
+      {/* Task form modal */}
+      {showTaskForm && (
+        <TaskForm
+          tarefa={selectedTask}
+          onClose={() => {
+            setShowTaskForm(false);
+            setSelectedTask(null);
+          }}
+          onSubmit={handleFormSubmit}
+          assignees={assignees}
+        />
+      )}
+
+      {/* Permissions modal */}
+      {projectId && (
+        <ProjectPermissionsModal
+          projectId={projectId}
+          projectName="Projeto"
+          isOpen={showPermissionsModal}
+          onClose={() => setShowPermissionsModal(false)}
+        />
+      )}
+    </div>
+  );
 }
 
 export default KanbanBoard;

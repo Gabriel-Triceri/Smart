@@ -20,7 +20,7 @@ import {
     ChevronUp
 } from 'lucide-react';
 import { TarefaHistory, HistoryActionType } from '../../types/meetings';
-import { meetingsApi } from '../../services/meetingsApi';
+import { historyService } from '../../services/historyService';
 import { Avatar } from '../common/Avatar';
 
 interface HistorySectionProps {
@@ -193,21 +193,13 @@ export function HistorySection({
             setLoading(true);
             setError(null);
 
-            // meetingsApi.getTarefaHistory pode devolver diretamente o array ou um AxiosResponse
-            const res = await meetingsApi.getTarefaHistory(tarefaId);
+            // historyService.getTarefaHistory pode devolver diretamente o array ou um AxiosResponse
+            const res = await historyService.getTarefaHistory(tarefaId);
             const data = (res && (res as any).data) ? (res as any).data : res;
             setHistory(Array.isArray(data) ? data : []);
         } catch (err: any) {
-            // tratamento amigável do erro para não só logar no console
             console.error('Erro ao carregar histórico:', err);
-            let message = 'Erro ao carregar histórico';
-            if (err?.response?.data?.message) {
-                message = String(err.response.data.message);
-            } else if (err?.message) {
-                message = String(err.message);
-            }
-            setError(message);
-            setHistory([]);
+            setError('Erro ao carregar histórico');
         } finally {
             setLoading(false);
         }

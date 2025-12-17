@@ -1,0 +1,7 @@
+src/components/permissions/PermissionMatrix.tsx(16,11): error TS6133: 'theme' is declared but its value is never read.
+src/components/permissions/UserRoleList.tsx(28,11): error TS6133: 'theme' is declared but its value is never read.
+src/components/salas/BookingSystem.tsx(3,38): error TS6133: 'CheckCircle2' is declared but its value is never read.
+src/components/salas/BookingSystem.tsx(51,11): error TS6133: 'horariosLivres' is declared but its value is never read.
+src/components/salas/RoomTimeline.tsx(46,5): error TS6133: 'isLoading' is declared but its value is never read.
+src/components/salas/RoomTimeline.tsx(229,39): error TS6133: 'isMaintenance' is declared but its value is never read.
+src/components/salas/SalasList.tsx(100,35): error TS6133: 'StatusIcon' is declared but its value is never read.

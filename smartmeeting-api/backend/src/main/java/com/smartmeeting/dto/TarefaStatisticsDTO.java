@@ -1,7 +1,6 @@
 package com.smartmeeting.dto;
 
 import com.smartmeeting.enums.PrioridadeTarefa;
-import com.smartmeeting.enums.StatusTarefa;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,8 +12,12 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TarefaStatisticsDTO {
+
     private long total;
-    private Map<StatusTarefa, Long> porStatus;
+
+    // Status dinâmico baseado na coluna Kanban
+    private Map<String, Long> porStatus;
+
     private Map<PrioridadeTarefa, Long> porPrioridade;
     private List<ResponsavelStatsDTO> porResponsavel;
     private double taxaConclusao;

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
     Search, Filter, Calendar, Clock, MapPin, Users,
     Video, MoreVertical, Eye, Edit, Trash2, PlayCircle,
-    CheckCircle, XCircle, AlertCircle, ChevronDown, Monitor
+    CheckCircle, XCircle, AlertCircle, ChevronDown
 } from 'lucide-react';
 import { Reuniao, FiltroReunioes, StatusReuniao } from '../../types/meetings';
 import { format } from 'date-fns';

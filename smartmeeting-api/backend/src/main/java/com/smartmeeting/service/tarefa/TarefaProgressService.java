@@ -1,7 +1,6 @@
 package com.smartmeeting.service.tarefa;
 
 import com.smartmeeting.dto.TarefaDTO;
-import com.smartmeeting.enums.StatusTarefa;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.mapper.TarefaMapperService;
 import com.smartmeeting.model.Tarefa;
@@ -26,6 +25,7 @@ public class TarefaProgressService {
         if (progresso == null || progresso < 0 || progresso > 100) {
             throw new IllegalArgumentException("Progresso deve estar entre 0 e 100");
         }
+
         Tarefa tarefa = tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
 
@@ -33,13 +33,9 @@ public class TarefaProgressService {
         tarefa.setProgresso(progresso);
 
         if (progresso == 100) {
-            tarefa.setStatusTarefa(StatusTarefa.DONE);
             tarefa.setConcluida(true);
-        } else if (tarefa.isConcluida() && progresso < 100) {
+        } else if (tarefa.isConcluida()) {
             tarefa.setConcluida(false);
-            if (tarefa.getStatusTarefa() == StatusTarefa.DONE) {
-                tarefa.setStatusTarefa(StatusTarefa.IN_PROGRESS);
-            }
         }
 
         Tarefa atualizada = tarefaRepository.save(tarefa);

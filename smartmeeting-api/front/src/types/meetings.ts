@@ -253,14 +253,14 @@ export interface ComentarioTarefa {
 }
 
 export interface AnexoTarefa {
-    id: string;
-    nome: string;
-    tipo: 'documento' | 'imagem' | 'video' | 'outro';
-    url: string;
-    tamanho: number;
-    uploadedBy: string;
-    uploadedByNome: string;
-    createdAt: string;
+    id?: string;
+    nome?: string;
+    tipo?: 'documento' | 'imagem' | 'video' | 'outro';
+    url?: string;
+    tamanho?: number;
+    uploadedBy?: string;
+    uploadedByNome?: string;
+    createdAt?: string;
 }
 
 export interface NotificacaoTarefa {
@@ -276,7 +276,7 @@ export interface NotificacaoTarefa {
 }
 
 export interface KanbanColumnConfig {
-    status: StatusTarefa;
+    status: StatusTarefa | undefined;
     title: string;
 }
 
@@ -311,6 +311,8 @@ export interface Tarefa {
     projectId?: string;
     projectName?: string;
     deletedAt?: string;
+    columnId: string; 
+    ordem?: number;
     // Campos de Checklist
     checklist?: ChecklistItem[];
     checklistProgresso?: number;
@@ -319,13 +321,18 @@ export interface Tarefa {
 }
 
 export interface KanbanColumn {
-    id: StatusTarefa;
+    id: number;
     titulo: string;
+    columnKey?: string;
     tarefas: Tarefa[];
     limiteMaximo?: number;
     cor: string;
     ordem: number;
+    wipLimit?: number;    // Adicionado para compatibilidade
+    isDefault?: boolean;  // Adicionado para compatibilidade
+    isDoneColumn?: boolean; // Adicionado para compatibilidade
 }
+
 
 export interface KanbanBoard {
     id: string;
@@ -409,17 +416,17 @@ export interface TemplateTarefa {
 // Checklist Item (Mini-tarefas dentro de uma tarefa)
 export interface ChecklistItem {
     id: string;
-    tarefaId: string;
-    descricao: string;
+    tarefaId?: string;
+    descricao?: string;
     concluido: boolean;
-    ordem: number;
+    ordem?: number;
     responsavelId?: string;
     responsavelNome?: string;
     concluidoPorId?: string;
     concluidoPorNome?: string;
     dataConclusao?: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 // Histórico de ações em uma tarefa

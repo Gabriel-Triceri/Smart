@@ -1,19 +1,20 @@
+// MovimentacaoTarefaRequest.java (SUGESTÃO DE CORREÇÃO NO BACKEND)
 package com.smartmeeting.dto;
 
-import com.smartmeeting.enums.StatusTarefa;
 import jakarta.validation.constraints.NotNull;
 
 public class MovimentacaoTarefaRequest {
     @NotNull
-    private StatusTarefa newStatus;
+    // Mude de StatusTarefa para Long, que é o ID da Coluna do Kanban
+    private String colunaId;
     private Integer newPosition;
 
-    public StatusTarefa getNewStatus() {
-        return newStatus;
+    public String getColunaId() { // Getter também deve mudar
+        return colunaId;
     }
 
-    public void setNewStatus(StatusTarefa newStatus) {
-        this.newStatus = newStatus;
+    public void setColunaId(String colunaId) { // Setter também deve mudar
+        this.colunaId = colunaId;
     }
 
     public Integer getNewPosition() {

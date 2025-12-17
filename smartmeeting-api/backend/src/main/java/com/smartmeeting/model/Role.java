@@ -16,6 +16,12 @@ import java.util.List;
 @AllArgsConstructor
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
+@NamedEntityGraph(
+        name = "Role.comPermissions",
+        attributeNodes = {
+                @NamedAttributeNode("permissions")
+        }
+)
 public class Role extends Auditable {
 
     @Id

@@ -9,6 +9,7 @@ import com.smartmeeting.service.pessoa.PessoaService;
 import com.smartmeeting.service.project.ProjectPermissionService;
 import com.smartmeeting.service.tarefa.TarefaService;
 import com.smartmeeting.service.email.EmailService;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.ResponseEntity;
@@ -126,12 +127,17 @@ public class ReuniaoController {
      */
 
     @PostMapping
+    @PreAuthorize("hasRole('ORGANIZADOR')")
     public ResponseEntity<ReuniaoDTO> criar(@Valid @RequestBody ReuniaoDTO dto) {
         // Validação de permissão (se o DTO tiver projectId, o que não parece ter
         // explícito, mas pode vir no contexto)
         // Assumindo que a criação de reunião pode estar ligada a um projeto
 
         Reuniao reuniao = mapper.toEntity(dto);
+
+        if (reuniao == null) {
+            throw new IllegalArgumentException("Reunião não pode ser nula. Verifique o DTO enviado.");
+        }
 
         if (reuniao.getProject() != null) {
             if (!projectPermissionService.hasPermissionForCurrentUser(reuniao.getProject().getId(),

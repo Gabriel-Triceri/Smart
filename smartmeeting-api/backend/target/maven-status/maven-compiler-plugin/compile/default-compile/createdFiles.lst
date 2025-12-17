@@ -8,7 +8,6 @@ com\smartmeeting\dto\ComentarioTarefaDTO$MencaoDTO.class
 com\smartmeeting\enums\TipoAcesso.class
 com\smartmeeting\enums\PrioridadeTarefaConverter.class
 com\smartmeeting\model\AnexoTarefa.class
-com\smartmeeting\service\kambun\KanbanService$1.class
 com\smartmeeting\repository\ProjectRepository.class
 com\smartmeeting\dto\ProjectPermissionDTO.class
 com\smartmeeting\dto\ErrorResponse.class
@@ -70,6 +69,7 @@ com\smartmeeting\controller\SalaController.class
 com\smartmeeting\dto\UsoSalaDTO.class
 com\smartmeeting\service\pessoa\PessoaService.class
 com\smartmeeting\repository\TemplateTarefaRepository.class
+com\smartmeeting\controller\KanbanController.class
 com\smartmeeting\service\pessoa\PessoaAuthService.class
 com\smartmeeting\service\relatorio\ICalExportService.class
 com\smartmeeting\service\kambun\KanbanColumnInitializationService.class
@@ -150,7 +150,6 @@ com\smartmeeting\model\TemplateTarefa.class
 com\smartmeeting\service\pessoa\PessoaRoleService.class
 com\smartmeeting\service\tarefa\TarefaService.class
 com\smartmeeting\config\AuditingConfig.class
-com\smartmeeting\service\kambun\KanbanBoardService$1.class
 com\smartmeeting\service\export\ICalExportService$1.class
 com\smartmeeting\enums\ProjectStatus.class
 com\smartmeeting\repository\KanbanColumnRepository.class
@@ -196,6 +195,7 @@ com\smartmeeting\service\tarefa\TarefaChecklistService.class
 com\smartmeeting\dto\TarefaHistoryDTO.class
 com\smartmeeting\repository\PresencaRepository.class
 com\smartmeeting\dto\MovimentacaoTarefaDTO.class
+com\smartmeeting\controller\KanbanController$MoverTarefaRequest.class
 com\smartmeeting\api\SmartmeetingApiApplication.class
 com\smartmeeting\dto\MemberPermissionsDTO.class
 com\smartmeeting\security\JwtAuthenticationEntryPoint.class

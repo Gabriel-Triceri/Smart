@@ -6,7 +6,9 @@ import {
     FiltroReunioes,
     StatisticsReunioes
 } from "../types/meetings";
-import { meetingsApi } from "../services/meetingsApi";
+import { reuniaoService } from "../services/reuniaoService";
+import { salaService } from "../services/salaService";
+import { participanteService } from "../services/participanteService";
 
 /**
  * Tipo local para as reuniões que a UI espera (Reuniao + campos "data", "horaInicio", "horaFim")
@@ -104,7 +106,7 @@ export const useMeetings = () => {
 
         try {
             const filtrosParaUsar = filtrosAtuais || filtros;
-            const data = await meetingsApi.getAllReunioes(filtrosParaUsar);
+            const data = await reuniaoService.getAllReunioes(filtrosParaUsar);
 
             // Normaliza cada reunião antes de colocar no estado
             const normalized = Array.isArray(data) ? data.map(normalizeReuniao) : [];
@@ -120,7 +122,7 @@ export const useMeetings = () => {
     /* -------------------- CARREGAR ESTATÍSTICAS -------------------- */
     const loadStatistics = useCallback(async () => {
         try {
-            const stats = await meetingsApi.getStatisticsReunioes();
+            const stats = await reuniaoService.getStatisticsReunioes();
             setStatistics(stats);
         } catch (err) {
             console.error("Erro ao carregar estatísticas:", err);
@@ -158,7 +160,7 @@ export const useMeetings = () => {
                 };
 
                 // cast to any se o meetingsApi estiver tipado estritamente
-                const novaReuniaoRaw = await meetingsApi.createReuniao(payloadForApi as any);
+                const novaReuniaoRaw = await reuniaoService.createReuniao(payloadForApi as any);
                 const novaReuniao = normalizeReuniao(novaReuniaoRaw);
 
                 // garante participantesIds como number[]
@@ -245,7 +247,7 @@ export const useMeetings = () => {
                     participantes: (formDataCompleto.participantes || []).map(p => Number(p))
                 };
 
-                const reuniaoAtualizadaRaw = await meetingsApi.updateReuniao(String(id), payloadForApi as any);
+                const reuniaoAtualizadaRaw = await reuniaoService.updateReuniao(String(id), payloadForApi as any);
                 const reuniaoAtualizada = normalizeReuniao(reuniaoAtualizadaRaw);
 
                 // garante participantesIds number[]
@@ -275,7 +277,7 @@ export const useMeetings = () => {
             setError(null);
 
             try {
-                await meetingsApi.deleteReuniao(String(id));
+                await reuniaoService.deleteReuniao(String(id));
 
                 setReunioes((prev) => prev.filter((r) => r.id !== id));
                 loadStatistics();
@@ -295,7 +297,7 @@ export const useMeetings = () => {
     /* -------------------- OBTER POR ID -------------------- */
     const getReuniaoById = useCallback(async (id: number) => {
         try {
-            const raw = await meetingsApi.getReuniaoById(String(id));
+            const raw = await reuniaoService.getReuniaoById(String(id));
             return normalizeReuniao(raw);
         } catch (err) {
             console.error("Erro ao carregar reunião:", err);
@@ -306,7 +308,7 @@ export const useMeetings = () => {
     /* -------------------- PARTICIPANTES -------------------- */
     const searchParticipantes = useCallback(async (query: string) => {
         try {
-            return await meetingsApi.searchParticipantes(query);
+            return await participanteService.searchParticipantes(query);
         } catch (err) {
             console.error("Erro ao buscar participantes:", err);
             return [];
@@ -317,7 +319,7 @@ export const useMeetings = () => {
     const getSalasDisponiveis = useCallback(
         async (data: string, horaInicio: string, horaFim: string) => {
             try {
-                return await meetingsApi.getSalasDisponiveis(data, horaInicio, horaFim);
+                return await salaService.getSalasDisponiveis(data, horaInicio, horaFim);
             } catch (err) {
                 console.error("Erro ao buscar salas:", err);
                 return [];
@@ -351,7 +353,7 @@ export const useMeetings = () => {
             return {
                 ...r,
                 // 🔥 Garantia: participantesIds SEMPRE será number[] com validação defensiva
-                participantesIds: Array.isArray(r.participantesIds) 
+                participantesIds: Array.isArray(r.participantesIds)
                     ? r.participantesIds
                         .filter((p: any) => p !== null && p !== undefined)
                         .map((p: any) => Number(p))

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
 import { Participante } from '../../types/meetings';
-import { meetingsApi } from '../../services/meetingsApi';
+import { participanteService } from '../../services/participanteService';
 
 interface ParticipanteAutocompleteProps {
     value: Participante[];
@@ -39,7 +39,7 @@ export const ParticipanteAutocomplete: React.FC<ParticipanteAutocompleteProps> =
         const searchParticipantes = async () => {
             setIsLoading(true);
             try {
-                const results = await meetingsApi.searchParticipantes(searchTerm);
+                const results = await participanteService.searchParticipantes(searchTerm);
 
                 // Client-side filtering as fallback (in case backend search is not active or returns all)
                 const filteredByTerm = results.filter(p =>

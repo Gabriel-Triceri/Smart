@@ -11,6 +11,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedEntityGraph(
+        name = "KanbanColumn.semRelacoes",
+        attributeNodes = {}
+)
 public class KanbanColumn {
 
     @Id

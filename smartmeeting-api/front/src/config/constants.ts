@@ -6,7 +6,7 @@ export const APP_CONSTANTS = {
     // Configurações gerais
     APP_NAME: 'SmartMeeting',
     APP_VERSION: '1.0.0',
-    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+    API_BASE_URL: 'http://localhost:8080', // Updated to ensure the correct backend URL is used
     API_TIMEOUT: 15000,
 
     // Endpoints da API

@@ -55,6 +55,7 @@ C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmee
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\controller\RoleController.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\evento\ProjectCreatedEvent.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\enums\PermissionType.java
+C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\controller\KanbanController.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\dto\NotificacaoTarefaDTO.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\repository\ComentarioTarefaRepository.java
 C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\src\main\java\com\smartmeeting\model\RolePermissionTemplate.java

@@ -15,6 +15,10 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
+@NamedEntityGraph(
+        name = "Notificacao.comDestinatario",
+        attributeNodes = @NamedAttributeNode("destinatario")
+)
 public class Notificacao extends Auditable {
 
     @Id

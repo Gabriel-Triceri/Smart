@@ -1,7 +1,6 @@
 package com.smartmeeting.service.notification;
 
 import com.smartmeeting.enums.StatusReuniao;
-import com.smartmeeting.enums.StatusTarefa;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Presenca;
 import com.smartmeeting.model.Reuniao;
@@ -97,8 +96,7 @@ public class NotificacaoAgendadaService {
     public void enviarLembretesTarefasPendentes() {
         log.info("Enviando lembretes de tarefas pendentes");
 
-        // Busca todas as tarefas que não estão com o status "Concluída"
-        List<Tarefa> tarefasPendentes = tarefaRepository.findByStatusTarefaNot(StatusTarefa.DONE);
+        List<Tarefa> tarefasPendentes = tarefaRepository.findAll();
 
         int emailsEnviados = 0;
         for (Tarefa tarefa : tarefasPendentes) {

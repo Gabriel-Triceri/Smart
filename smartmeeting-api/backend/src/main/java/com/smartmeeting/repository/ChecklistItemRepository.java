@@ -1,6 +1,7 @@
 package com.smartmeeting.repository;
 
 import com.smartmeeting.model.ChecklistItem;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,14 +13,19 @@ import java.util.List;
 @Repository
 public interface ChecklistItemRepository extends JpaRepository<ChecklistItem, Long> {
 
+    @EntityGraph(value = "ChecklistItem.comResponsavelEConcluidoPor")
     List<ChecklistItem> findByTarefaIdOrderByOrdemAsc(Long tarefaId);
 
+    @EntityGraph(value = "ChecklistItem.comResponsavelEConcluidoPor")
     List<ChecklistItem> findByTarefaId(Long tarefaId);
 
+    @EntityGraph(value = "ChecklistItem.comResponsavelEConcluidoPor")
     List<ChecklistItem> findByTarefaIdAndConcluidoTrue(Long tarefaId);
 
+    @EntityGraph(value = "ChecklistItem.comResponsavelEConcluidoPor")
     List<ChecklistItem> findByTarefaIdAndConcluidoFalse(Long tarefaId);
 
+    @EntityGraph(value = "ChecklistItem.comResponsavelEConcluidoPor")
     List<ChecklistItem> findByResponsavelId(Long responsavelId);
 
     @Query("SELECT COUNT(ci) FROM ChecklistItem ci WHERE ci.tarefa.id = :tarefaId")

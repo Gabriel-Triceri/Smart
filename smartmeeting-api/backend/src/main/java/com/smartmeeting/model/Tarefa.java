@@ -1,8 +1,7 @@
 package com.smartmeeting.model;
 
 import com.smartmeeting.enums.PrioridadeTarefa;
-import com.smartmeeting.enums.PrioridadeTarefaConverter; // Importar o novo converter
-import com.smartmeeting.enums.StatusTarefa;
+import com.smartmeeting.enums.PrioridadeTarefaConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +18,16 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false, exclude = { "responsavel", "reuniao", "project", "participantes" })
-
+@NamedEntityGraph(
+        name = "Tarefa.completa",
+        attributeNodes = {
+                @NamedAttributeNode("responsavel"),
+                @NamedAttributeNode("project"),
+                @NamedAttributeNode("reuniao"),
+                @NamedAttributeNode("participantes"),
+                @NamedAttributeNode("column")
+        }
+)
 public class Tarefa extends Auditable {
 
     @Id
@@ -40,11 +48,10 @@ public class Tarefa extends Auditable {
     @Column(name = "CONCLUIDA_TAREFA", nullable = false)
     private boolean concluida;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "STATUS_TAREFA", nullable = false)
-    private StatusTarefa statusTarefa;
+    @ManyToOne(fetch = FetchType.LAZY)  // ✅ MUDADO PARA LAZY
+    @JoinColumn(name = "ID_KANBAN_COLUMN")
+    private KanbanColumnDynamic column;
 
-    // Usar o converter customizado para PrioridadeTarefa
     @Convert(converter = PrioridadeTarefaConverter.class)
     @Column(name = "PRIORIDADE_TAREFA")
     private PrioridadeTarefa prioridade;
@@ -58,7 +65,7 @@ public class Tarefa extends Auditable {
     @Column(name = "PROGRESSO_TAREFA")
     private Integer progresso;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)  // ✅ MUDADO PARA LAZY
     @CollectionTable(name = "TAREFA_TAGS", joinColumns = @JoinColumn(name = "ID_TAREFA"))
     @Column(name = "TAG")
     private java.util.List<String> tags;
@@ -66,11 +73,11 @@ public class Tarefa extends Auditable {
     @Column(name = "COR_TAREFA")
     private String cor;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)  // ✅ MUDADO PARA LAZY
     @JoinColumn(name = "ID_RESPONSAVEL", foreignKey = @ForeignKey(name = "FK_TAREFA_PESSOA"))
     private Pessoa responsavel;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)  // ✅ MUDADO PARA LAZY
     @JoinTable(
             name = "TAREFA_PARTICIPANTES",
             joinColumns = @JoinColumn(name = "ID_TAREFA"),
@@ -78,11 +85,11 @@ public class Tarefa extends Auditable {
     )
     private java.util.Set<Pessoa> participantes = new java.util.HashSet<>();
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)  // ✅ M
     @JoinColumn(name = "ID_REUNIAO", foreignKey = @ForeignKey(name = "FK_TAREFA_REUNIAO"))
     private Reuniao reuniao;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)  
     @JoinColumn(name = "ID_PROJECT")
     private Project project;
 
@@ -93,11 +100,7 @@ public class Tarefa extends Auditable {
                 ", descricao='" + descricao + '\'' +
                 ", prazo=" + prazo +
                 ", concluida=" + concluida +
-                ", statusTarefa=" + statusTarefa +
                 ", prioridade=" + prioridade +
-                ", responsavelId=" + (responsavel != null ? responsavel.getId() : null) +
-                ", reuniaoId=" + (reuniao != null ? reuniao.getId() : null) +
-                ", projectId=" + (project != null ? project.getId() : null) +
                 '}';
     }
 }

@@ -18,6 +18,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@NamedEntityGraph(
+        name = "RolePermissionTemplate.default"
+)
 public class RolePermissionTemplate {
 
     @Id

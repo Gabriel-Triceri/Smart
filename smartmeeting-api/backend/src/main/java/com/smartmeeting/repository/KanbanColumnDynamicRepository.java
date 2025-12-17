@@ -1,6 +1,7 @@
 package com.smartmeeting.repository;
 
 import com.smartmeeting.model.KanbanColumnDynamic;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,14 +14,22 @@ import java.util.Optional;
 @Repository
 public interface KanbanColumnDynamicRepository extends JpaRepository<KanbanColumnDynamic, Long> {
 
+    @EntityGraph(value = "KanbanColumnDynamic.comProjeto")
     List<KanbanColumnDynamic> findByProjectIdAndIsActiveTrueOrderByOrdemAsc(Long projectId);
 
+    @EntityGraph(value = "KanbanColumnDynamic.comProjeto")
     List<KanbanColumnDynamic> findByProjectIdOrderByOrdemAsc(Long projectId);
 
+    @EntityGraph(value = "KanbanColumnDynamic.comProjeto")
     Optional<KanbanColumnDynamic> findByProjectIdAndColumnKey(Long projectId, String columnKey);
 
+    @EntityGraph(value = "KanbanColumnDynamic.comProjeto")
+    Optional<KanbanColumnDynamic> findByProjectIdAndColumnKeyAndIsActiveTrue(Long projectId, String columnKey);
+
+    @EntityGraph(value = "KanbanColumnDynamic.comProjeto")
     Optional<KanbanColumnDynamic> findByProjectIdAndIsDefaultTrue(Long projectId);
 
+    @EntityGraph(value = "KanbanColumnDynamic.comProjeto")
     Optional<KanbanColumnDynamic> findByProjectIdAndIsDoneColumnTrue(Long projectId);
 
     @Query("SELECT MAX(kc.ordem) FROM KanbanColumnDynamic kc WHERE kc.project.id = :projectId")

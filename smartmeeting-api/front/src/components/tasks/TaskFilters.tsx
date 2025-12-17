@@ -28,52 +28,59 @@ export function TaskFilters({
     const clearAllFilters = () => onFiltersChange({});
 
     const hasActiveFilters = Object.keys(filters).length > 0;
-    const uniqueProjects = [...new Set(tarefas.map(t => t.projectName).filter(Boolean) as string[])];
+
+    // Cria opções de projetos garantindo que value = projectId e label = projectName ou "Projeto sem nome"
+    const projectOptions = Array.isArray(tarefas)
+        ? [...new Map(
+            tarefas
+                .filter(t => t.projectId) // garante que só tarefas com projectId
+                .map(t => [t.projectId, { value: t.projectId, label: t.projectName || 'Projeto sem nome' }])
+        ).values()]
+        : [];
 
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm p-4">
-            
-            {/* Main Toolbar - Container Flex com espaçamento maior (gap-4) */}
             <div className="flex flex-wrap items-center gap-4">
                 
-                {/* Ícone de Filtro Decorativo */}
+                {/* Ícone decorativo */}
                 <div className="hidden md:flex items-center justify-center w-10 h-10 text-slate-400">
                     <Filter className="w-5 h-5" />
                 </div>
 
-                {/* Dropdowns - Altura aumentada para h-10 */}
+                {/* Dropdown de responsáveis */}
                 <CompactSelect 
                     icon={User} 
-                    value={filters.responsaveis?.[0] || ''} 
+                    value={String((filters.responsaveis && filters.responsaveis[0]) ?? '')} 
                     onChange={(val) => updateFilter('responsaveis', val ? [val] : undefined)} 
-                    options={assignees.map(a => ({ value: a.id, label: a.nome }))} 
+                    options={Array.isArray(assignees) ? assignees.map(a => ({ value: String(a.id), label: a.nome })) : []} 
                     placeholder="Responsável" 
                 />
                 
+                {/* Dropdown de status */}
                 <CompactSelect 
                     icon={ListChecks} 
-                    value={filters.status?.[0] || ''} 
+                    value={String((filters.status && filters.status[0]) ?? '')} 
                     onChange={(val) => updateFilter('status', val ? [val] : undefined)} 
                     options={STATUS_OPTIONS} 
                     placeholder="Status" 
                 />
                 
+                {/* Dropdown de projetos */}
                 <CompactSelect 
                     icon={Briefcase} 
-                    value={filters.projectName?.[0] || ''} 
+                    value={(filters.projectName && filters.projectName[0]) || ''} 
                     onChange={(val) => updateFilter('projectName', val ? [val] : undefined)} 
-                    options={uniqueProjects.map(p => ({ value: p, label: p }))} 
+                    options={projectOptions} 
                     placeholder="Projeto" 
                 />
 
-                {/* Separador Vertical */}
+                {/* Separador */}
                 <div className="hidden md:block w-px h-8 bg-slate-200 dark:bg-slate-700 mx-2"></div>
 
-                {/* Date Controls Unified - Altura h-10 e padding maior */}
+                {/* Controle de datas */}
                 <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-md h-10 px-3 transition-all hover:border-slate-300 dark:hover:border-slate-500">
                     <Calendar className="w-4 h-4 text-slate-400 mr-3" />
                     
-                    {/* Select de Período - Fonte text-sm */}
                     <select
                         value={filters.vencendo ? '3' : filters.atrasadas ? 'overdue' : ''}
                         onChange={(e) => {
@@ -91,7 +98,6 @@ export function TaskFilters({
 
                     <div className="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-3"></div>
 
-                    {/* Inputs de Data - Largura maior e fonte text-sm */}
                     <div className="flex items-center gap-2">
                         <input 
                             type="date" 
@@ -118,7 +124,7 @@ export function TaskFilters({
                     )}
                 </div>
 
-                {/* Chips de Filtros Ativos */}
+                {/* Chips de filtros ativos */}
                 {hasActiveFilters && (
                     <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700 ml-2">
                         {Object.entries(filters).map(([key, value]) => {
@@ -147,7 +153,7 @@ export function TaskFilters({
     );
 }
 
-// Componente Select - Altura h-10 e fonte text-sm
+// Componente Select reutilizável
 interface CompactSelectProps {
     icon: LucideIcon;
     value: string;

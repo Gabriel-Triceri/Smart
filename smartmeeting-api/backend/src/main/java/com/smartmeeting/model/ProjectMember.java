@@ -12,13 +12,20 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"ID_PROJECT", "ID_PERSON"})
+        @UniqueConstraint(columnNames = {"ID_PROJECT", "ID_PERSON"})
 })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"project", "person"})
 @EqualsAndHashCode(exclude = {"project", "person"})
+@NamedEntityGraph(
+        name = "ProjectMember.comProjectEPerson",
+        attributeNodes = {
+                @NamedAttributeNode("project"),
+                @NamedAttributeNode("person")
+        }
+)
 public class ProjectMember {
 
     @Id

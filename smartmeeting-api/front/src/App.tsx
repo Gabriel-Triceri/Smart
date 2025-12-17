@@ -85,13 +85,13 @@ function App() {
     const [refreshKey, setRefreshKey] = useState(0);
 
     // Callback quando permissoes sao atualizadas via WebSocket
-    const handlePermissionsUpdated = useCallback((projectId: number) => {
+    const handlePermissionsUpdated = useCallback((_projectId: number) => {
         // Incrementa a key para forcar re-render dos componentes filhos
         setRefreshKey(prev => prev + 1);
     }, []);
 
     // Conectar ao WebSocket de permissoes
-    const { isConnected } = usePermissionWebSocket({
+    usePermissionWebSocket({
         onPermissionsUpdated: handlePermissionsUpdated,
     });
 

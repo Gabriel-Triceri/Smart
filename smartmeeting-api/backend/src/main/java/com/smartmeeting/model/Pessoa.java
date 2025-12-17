@@ -1,3 +1,4 @@
+// src/main/java/com/smartmeeting/model/Pessoa.java
 package com.smartmeeting.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -23,6 +24,21 @@ import java.util.List;
         "presencas", "notificacoesRecebidas", "roles" }) // Excluir campos de relacionamento
 @ToString(exclude = { "reunioesOrganizadas", "reunioesParticipadas", "tarefasResponsavel", "presencas",
         "notificacoesRecebidas", "roles" }) // Excluir campos de relacionamento do toString
+@NamedEntityGraphs({
+        // adicionado: graph "default" — usado pelo repositório (carrega roles)
+        @NamedEntityGraph(
+                name = "Pessoa.default",
+                attributeNodes = @NamedAttributeNode("roles")
+        ),
+        @NamedEntityGraph(
+                name = "Pessoa.comRoles",
+                attributeNodes = @NamedAttributeNode("roles")
+        ),
+        @NamedEntityGraph(
+                name = "Pessoa.simplificada",
+                attributeNodes = {} // Sem relações para casos simples
+        )
+})
 public class Pessoa extends Auditable {
 
     @Id

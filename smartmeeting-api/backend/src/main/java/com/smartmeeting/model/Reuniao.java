@@ -18,7 +18,31 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false, exclude = { "organizador", "sala", "participantes", "presencas", "tarefas",
         "project" })
 @ToString(exclude = { "organizador", "sala", "participantes", "presencas", "tarefas", "project" })
-
+@NamedEntityGraphs({
+        @NamedEntityGraph(
+                name = "Reuniao.comOrganizadorESala",
+                attributeNodes = {
+                        @NamedAttributeNode("organizador"),
+                        @NamedAttributeNode("sala")
+                }
+        ),
+        @NamedEntityGraph(
+                name = "Reuniao.completa",
+                attributeNodes = {
+                        @NamedAttributeNode("organizador"),
+                        @NamedAttributeNode("sala"),
+                        @NamedAttributeNode("participantes"),
+                        @NamedAttributeNode("project")
+                }
+        ),
+        @NamedEntityGraph(
+                name = "Reuniao.paraListagem",
+                attributeNodes = {
+                        @NamedAttributeNode("organizador"),
+                        @NamedAttributeNode("project")
+                }
+        )
+})
 public class Reuniao extends Auditable {
 
     @Id

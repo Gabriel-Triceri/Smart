@@ -43,7 +43,10 @@ public class TarefaMapperService {
         dto.setPrazo(tarefa.getPrazo());
         dto.setPrazo_tarefa(tarefa.getPrazo() != null ? tarefa.getPrazo().toString() : null);
         dto.setConcluida(tarefa.isConcluida());
-        dto.setStatusTarefa(tarefa.getStatusTarefa());
+        if (tarefa.getColumn() != null) {
+            dto.setColumnId(tarefa.getColumn().getId());
+            dto.setColumnName(tarefa.getColumn().getTitle());
+        }
         dto.setPrioridade(tarefa.getPrioridade() != null ? tarefa.getPrioridade().name() : null);
         dto.setDataInicio(tarefa.getDataInicio());
         dto.setEstimadoHoras(tarefa.getEstimadoHoras());
@@ -141,7 +144,7 @@ public class TarefaMapperService {
         tarefa.setDescricao(dto.getDescricao());
         tarefa.setPrazo(dto.getPrazo());
         tarefa.setConcluida(dto.isConcluida());
-        tarefa.setStatusTarefa(dto.getStatusTarefa());
+        // Column must be set by the service using dto.getColumnId()
         if (dto.getPrioridade() != null) {
             tarefa.setPrioridade(PrioridadeTarefa.valueOf(dto.getPrioridade()));
         }

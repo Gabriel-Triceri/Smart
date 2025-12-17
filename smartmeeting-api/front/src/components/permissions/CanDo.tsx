@@ -1,7 +1,8 @@
 import React, { ReactNode, useMemo, useState, useEffect } from 'react';
 import { PermissionType } from '../../types/meetings';
 import { authService } from '../../services/authService';
-import { meetingsApi } from '../../services/meetingsApi';
+import { projectService } from '../../services/projectService';
+
 
 interface CanDoProps {
     /**
@@ -80,7 +81,7 @@ export const CanDo: React.FC<CanDoProps> = ({
             }
 
             // Verificar permissão via API (sem personId, usa usuário atual)
-            meetingsApi.checkPermission(projectId, undefined, permission)
+            projectService.checkPermission(projectId, undefined, permission)
                 .then(result => setHasProjectPermission(result))
                 .catch(() => setHasProjectPermission(false));
         }
@@ -122,35 +123,28 @@ export const CanDo: React.FC<CanDoProps> = ({
  */
 export const useCanDo = (permission: PermissionType, projectId?: string, global = false): boolean => {
     const [hasProjectPermission, setHasProjectPermission] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(true);
+
 
     useEffect(() => {
         if (!global && projectId) {
-            setLoading(true);
-
             // Admin global sempre tem permissão
             if (authService.hasRole('ADMIN')) {
                 setHasProjectPermission(true);
-                setLoading(false);
                 return;
             }
 
-            meetingsApi.checkPermission(projectId, undefined, permission)
+            projectService.checkPermission(projectId, undefined, permission)
                 .then(result => {
                     setHasProjectPermission(result);
-                    setLoading(false);
                 })
                 .catch(() => {
                     setHasProjectPermission(false);
-                    setLoading(false);
                 });
-        } else {
-            setLoading(false);
         }
     }, [global, projectId, permission]);
 
     return useMemo(() => {
-       
+
         if (authService.hasRole('ADMIN')) {
             return true;
         }

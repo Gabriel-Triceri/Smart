@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Sala, FiltroSalas, DisponibilidadeSala } from '../types/meetings';
-import { meetingsApi } from '../services/meetingsApi';
+import { salaService } from '../services/salaService';
 
 export function useSalas() {
     const [salas, setSalas] = useState<Sala[]>([]);
@@ -22,7 +22,7 @@ export function useSalas() {
             setLoading(true);
             setError(null);
 
-            const salasData = await meetingsApi.getAllSalas(filtrosAtuais || filtros);
+            const salasData = await salaService.getAllSalas(filtrosAtuais || filtros);
             setSalas(salasData);
             setSalasFiltradas(salasData);
         } catch (err) {
@@ -36,7 +36,7 @@ export function useSalas() {
     // Carregar estatísticas
     const loadEstatisticas = useCallback(async () => {
         try {
-            const stats = await meetingsApi.getStatisticsSalas();
+            const stats = await salaService.getStatisticsSalas();
             setEstatisticas(stats);
         } catch (err) {
             console.error('Erro ao carregar estatísticas:', err);
@@ -87,7 +87,7 @@ export function useSalas() {
     // Criar sala
     const criarSala = useCallback(async (data: Partial<Sala>) => {
         try {
-            const novaSala = await meetingsApi.createSala(data);
+            const novaSala = await salaService.createSala(data);
             setSalas(prev => [...prev, novaSala]);
             setSalasFiltradas(prev => [...prev, novaSala]);
             await loadEstatisticas();
@@ -101,7 +101,7 @@ export function useSalas() {
     // Atualizar sala
     const atualizarSala = useCallback(async (id: number, data: Partial<Sala>) => {
         try {
-            const salaAtualizada = await meetingsApi.updateSala(String(id), data);
+            const salaAtualizada = await salaService.updateSala(String(id), data);
             setSalas(prev => prev.map(sala =>
                 sala.id === id ? salaAtualizada : sala
             ));
@@ -119,7 +119,7 @@ export function useSalas() {
     // Deletar sala
     const deletarSala = useCallback(async (id: number) => {
         try {
-            await meetingsApi.deleteSala(String(id));
+            await salaService.deleteSala(String(id));
             setSalas(prev => prev.filter(sala => sala.id !== id));
             setSalasFiltradas(prev => prev.filter(sala => sala.id !== id));
             await loadEstatisticas();
@@ -132,7 +132,7 @@ export function useSalas() {
     // Atualizar status da sala
     const atualizarStatusSala = useCallback(async (id: number, status: Sala['status']) => {
         try {
-            const salaAtualizada = await meetingsApi.atualizarStatusSala(String(id), status);
+            const salaAtualizada = await salaService.atualizarStatusSala(String(id), status);
             setSalas(prev => prev.map(sala =>
                 sala.id === id ? { ...sala, status } : sala
             ));
@@ -150,7 +150,7 @@ export function useSalas() {
     // Buscar disponibilidade
     const buscarDisponibilidade = useCallback(async (salaId: number, data: string): Promise<DisponibilidadeSala | null> => {
         try {
-            return await meetingsApi.getDisponibilidadeSala(String(salaId), data);
+            return await salaService.getDisponibilidadeSala(String(salaId), data);
         } catch (err) {
             console.error('Erro ao buscar disponibilidade:', err);
             return null;
@@ -160,7 +160,7 @@ export function useSalas() {
     // Reservar sala
     const reservarSala = useCallback(async (salaId: number, inicio: string, fim: string, motivo?: string) => {
         try {
-            await meetingsApi.reservarSala(String(salaId), inicio, fim, motivo);
+            await salaService.reservarSala(String(salaId), inicio, fim, motivo);
             // Recarregar salas para atualizar status
             await loadSalas();
         } catch (err) {
@@ -172,7 +172,7 @@ export function useSalas() {
     // Cancelar reserva
     const cancelarReserva = useCallback(async (salaId: number, reservaId: string) => {
         try {
-            await meetingsApi.cancelarReservaSala(String(salaId), reservaId);
+            await salaService.cancelarReservaSala(String(salaId), reservaId);
             await loadSalas();
         } catch (err) {
             setError('Erro ao cancelar reserva');
@@ -183,7 +183,7 @@ export function useSalas() {
     // Buscar salas
     const buscarSalas = useCallback(async (query: string) => {
         try {
-            const resultados = await meetingsApi.buscarSalasPorTexto(query);
+            const resultados = await salaService.buscarSalasPorTexto(query);
             setSalasFiltradas(resultados);
             return resultados;
         } catch (err) {
@@ -195,7 +195,7 @@ export function useSalas() {
     // Atualizar recursos da sala
     const atualizarRecursos = useCallback(async (salaId: number, recursos: any[]) => {
         try {
-            const salaAtualizada = await meetingsApi.updateRecursosSala(String(salaId), recursos);
+            const salaAtualizada = await salaService.updateRecursosSala(String(salaId), recursos);
             setSalas(prev => prev.map(sala =>
                 sala.id === salaId ? salaAtualizada : sala
             ));
@@ -218,7 +218,7 @@ export function useSalas() {
     // Obter categorias disponíveis
     const getCategorias = useCallback(async () => {
         try {
-            return await meetingsApi.getCategoriasSalas();
+            return await salaService.getCategoriasSalas();
         } catch (err) {
             console.error('Erro ao buscar categorias:', err);
             return [];

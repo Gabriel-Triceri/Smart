@@ -1,6 +1,5 @@
 package com.smartmeeting.repository;
 
-import com.smartmeeting.enums.StatusTarefa;
 import com.smartmeeting.model.Tarefa;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -19,35 +18,18 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     List<Tarefa> findByReuniaoId(Long idReuniao);
 
     /*
-     * Busca tarefas por status
+     * Busca tarefas por ID da coluna
      * 
-     * @param status Status da tarefa (enum StatusTarefa)
+     * @param columnId ID da coluna
      * 
-     * @return Lista de tarefas com o status especificado
+     * @return Lista de tarefas da coluna
      */
-    List<Tarefa> findByStatusTarefa(StatusTarefa status);
+    List<Tarefa> findByColumnId(Long columnId);
 
-    /**
-     * Busca tarefas que não possuem um determinado status
-     * 
-     * @param status Status da tarefa a ser excluído da busca (enum StatusTarefa)
-     * @return Lista de tarefas com status diferente do especificado
-     */
-    List<Tarefa> findByStatusTarefaNot(StatusTarefa status);
+    long countByColumnId(Long columnId);
 
     List<Tarefa> findByPrazoBetween(LocalDate inicio, LocalDate fim);
 
-    long countByConcluida(boolean concluida);
-
-    /**
-     * Busca tarefas por ID do projeto
-     * 
-     * @param projectId ID do projeto
-     * @return Lista de tarefas do projeto
-     */
-    List<Tarefa> findByProjectId(Long projectId);
-
-    long countByStatusTarefa(StatusTarefa status);
-
     long countByProjectId(Long projectId);
+    List<Tarefa> findByProjectId(Long projectId);
 }
