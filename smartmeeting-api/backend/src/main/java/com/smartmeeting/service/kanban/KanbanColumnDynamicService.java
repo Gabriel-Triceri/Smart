@@ -1,4 +1,4 @@
-package com.smartmeeting.service.kambun;
+package com.smartmeeting.service.kanban;
 
 import com.smartmeeting.dto.*;
 import com.smartmeeting.mapper.KanbanColumnMapper;

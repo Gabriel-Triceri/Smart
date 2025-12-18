@@ -2,7 +2,7 @@ package com.smartmeeting.service.tarefa;
 
 import com.smartmeeting.dto.*;
 import com.smartmeeting.model.*;
-import com.smartmeeting.service.kambun.KanbanService;
+import com.smartmeeting.service.kanban.KanbanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

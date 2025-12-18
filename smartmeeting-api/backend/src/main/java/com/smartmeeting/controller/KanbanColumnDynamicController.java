@@ -1,7 +1,7 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.*;
-import com.smartmeeting.service.kambun.KanbanColumnDynamicService;
+import com.smartmeeting.service.kanban.KanbanColumnDynamicService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,7 @@ import java.util.List;
  * Controller para colunas dinâmicas do Kanban
  */
 @RestController
-@RequestMapping("/projects/{projectId}/kanban/KanbanController columns")
+@RequestMapping("/projects/{projectId}/kanban/columns")
 @RequiredArgsConstructor
 public class KanbanColumnDynamicController {
 

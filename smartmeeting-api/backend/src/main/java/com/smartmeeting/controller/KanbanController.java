@@ -2,7 +2,7 @@ package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.KanbanBoardDTO;
 import com.smartmeeting.dto.TarefaDTO;
-import com.smartmeeting.service.kambun.KanbanService;
+import com.smartmeeting.service.kanban.KanbanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -2,6 +2,9 @@ package com.smartmeeting.repository;
 
 import com.smartmeeting.model.Tarefa;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -11,7 +14,7 @@ import java.util.List;
 public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     /**
      * Busca tarefas por ID da reunião
-     * 
+     *
      * @param idReuniao ID da reunião
      * @return Lista de tarefas da reunião
      */
@@ -19,9 +22,9 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
     /*
      * Busca tarefas por ID da coluna
-     * 
+     *
      * @param columnId ID da coluna
-     * 
+     *
      * @return Lista de tarefas da coluna
      */
     List<Tarefa> findByColumnId(Long columnId);
@@ -32,4 +35,12 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
     long countByProjectId(Long projectId);
     List<Tarefa> findByProjectId(Long projectId);
+
+    @Modifying
+    @Query("UPDATE Tarefa t SET t.progresso = t.progresso - 1 WHERE t.column.id = :columnId AND t.progresso > :progresso")
+    void decrementarProgressoApos(@Param("columnId") Long columnId, @Param("progresso") Integer progresso);
+
+    @Modifying
+    @Query("UPDATE Tarefa t SET t.progresso = t.progresso + 1 WHERE t.column.id = :columnId AND t.progresso >= :progresso")
+    void incrementarProgressoApos(@Param("columnId") Long columnId, @Param("progresso") Integer progresso);
 }
