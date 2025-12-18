@@ -2,7 +2,7 @@ package com.smartmeeting.controller;
 
 import com.smartmeeting.enums.StatusTarefa;
 import com.smartmeeting.model.KanbanColumn;
-import com.smartmeeting.service.kambun.KanbanColumnService;
+import com.smartmeeting.service.kanban.KanbanColumnService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

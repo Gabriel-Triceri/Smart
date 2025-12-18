@@ -5,7 +5,7 @@ import com.smartmeeting.service.tarefa.TarefaService;
 import com.smartmeeting.service.tarefa.TarefaChecklistService;
 import com.smartmeeting.mapper.ReuniaoMapper;
 import com.smartmeeting.model.Reuniao;
-import com.smartmeeting.service.kambun.KanbanService;
+import com.smartmeeting.service.kanban.KanbanService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;

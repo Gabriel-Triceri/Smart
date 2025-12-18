@@ -1,7 +1,7 @@
 package com.smartmeeting.listener;
 
 import com.smartmeeting.evento.ProjectCreatedEvent;
-import com.smartmeeting.service.kambun.KanbanColumnDynamicService;
+import com.smartmeeting.service.kanban.KanbanColumnDynamicService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

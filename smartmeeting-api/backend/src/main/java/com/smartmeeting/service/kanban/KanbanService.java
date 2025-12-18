@@ -1,4 +1,4 @@
-package com.smartmeeting.service.kambun;
+package com.smartmeeting.service.kanban;
 
 import com.smartmeeting.dto.*;
 import com.smartmeeting.exception.ResourceNotFoundException;
@@ -105,6 +105,8 @@ public class KanbanService {
                     });
 
             String statusAntigo = tarefa.getColumn() != null ? tarefa.getColumn().getTitle() : "Sem Coluna";
+            Long oldColumnId = tarefa.getColumn() != null ? tarefa.getColumn().getId() : null;
+            Integer oldPosition = tarefa.getProgresso();
             logger.info("Status antigo da tarefa {}: {}", tarefaId, statusAntigo);
 
             if (newColumnId == null) {
@@ -137,7 +139,14 @@ public class KanbanService {
 
             logger.info("Coluna encontrada: {} - {}", newColumn.getId(), newColumn.getTitle());
 
+            if (oldColumnId != null) {
+                tarefaRepository.decrementarProgressoApos(oldColumnId, oldPosition);
+            }
+
+            tarefaRepository.incrementarProgressoApos(newColumnId, newPosition);
+
             tarefa.setColumn(newColumn);
+            tarefa.setProgresso(newPosition);
             Tarefa updated = tarefaRepository.save(tarefa);
             // Forçar refresh para garantir que os dados estão atualizados
             tarefaRepository.flush();
@@ -151,15 +160,14 @@ public class KanbanService {
                 logger.error("Erro ao registrar histórico de movimentação para tarefa {}: {}", tarefaId, e.getMessage());
             }
 
-            // Obter usuário atual (ajustar conforme sua lógica de autenticação)
-            String usuarioId = "1"; // TODO: implementar lógica para obter ID do usuário atual
-            String usuarioNome = "Sistema"; // TODO: implementar lógica para obter nome do usuário atual
+            Long usuarioId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+            String usuarioNome = com.smartmeeting.util.SecurityUtils.getCurrentUsername();
 
             movimentacaoService.registrarMovimentacao(new MovimentacaoTarefaDTO(
                     tarefaId,
                     statusAntigo,
                     newColumn.getTitle(),
-                    usuarioId,
+                    String.valueOf(usuarioId),
                     usuarioNome,
                     LocalDateTime.now()));
             logger.info("Movimentação registrada com sucesso");
@@ -189,6 +197,8 @@ public class KanbanService {
                     });
 
             String statusAntigo = tarefa.getColumn() != null ? tarefa.getColumn().getTitle() : "Sem Coluna";
+            Long oldColumnId = tarefa.getColumn() != null ? tarefa.getColumn().getId() : null;
+            Integer oldPosition = tarefa.getProgresso();
             logger.info("Status antigo da tarefa {}: {}", tarefaId, statusAntigo);
 
             if (columnKey == null || columnKey.trim().isEmpty()) {
@@ -222,7 +232,14 @@ public class KanbanService {
 
             logger.info("Coluna encontrada: ID={}, Título={}, columnKey={}", newColumn.getId(), newColumn.getTitle(), newColumn.getColumnKey());
 
+            if (oldColumnId != null) {
+                tarefaRepository.decrementarProgressoApos(oldColumnId, oldPosition);
+            }
+
+            tarefaRepository.incrementarProgressoApos(newColumn.getId(), newPosition);
+
             tarefa.setColumn(newColumn);
+            tarefa.setProgresso(newPosition);
             Tarefa updated = tarefaRepository.save(tarefa);
             // Forçar refresh para garantir que os dados estão atualizados
             tarefaRepository.flush();
@@ -236,15 +253,14 @@ public class KanbanService {
                 logger.error("Erro ao registrar histórico de movimentação para tarefa {}: {}", tarefaId, e.getMessage());
             }
 
-            // Obter usuário atual (ajustar conforme sua lógica de autenticação)
-            String usuarioId = "1"; // TODO: implementar lógica para obter ID do usuário atual
-            String usuarioNome = "Sistema"; // TODO: implementar lógica para obter nome do usuário atual
+            Long usuarioId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+            String usuarioNome = com.smartmeeting.util.SecurityUtils.getCurrentUsername();
 
             movimentacaoService.registrarMovimentacao(new MovimentacaoTarefaDTO(
                     tarefaId,
                     statusAntigo,
                     newColumn.getTitle(),
-                    usuarioId,
+                    String.valueOf(usuarioId),
                     usuarioNome,
                     LocalDateTime.now()));
             logger.info("Movimentação registrada com sucesso");
