@@ -185,19 +185,13 @@ export const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => 
     : typeof task.tags === 'string'
     ? task.tags.split(',').map(s => s.trim())
     : [];
-  const projeto = task.projeto
-    ? { id: String(task.projeto.id ?? task.projetoId ?? task.projectId), nome: task.projeto.nome ?? task.projetoNome ?? task.projectName }
-    : task.projectId
-    ? { id: String(task.projectId) }
-    : null;
 
   return {
     id: String(task.id ?? task._id ?? generateClientId()),
     titulo: task.titulo ?? task.title ?? fallback?.titulo ?? 'Nova tarefa',
     descricao: task.descricao ?? task.description ?? fallback?.descricao ?? '',
     status,
-    columnId,
-    inicio_tarefa: task.dataInicio ?? task.startDate ?? task.start ?? null,
+    columnId: String(columnId),
     dataInicio: task.dataInicio ?? task.startDate ?? task.start ?? null,
     prioridade: normalizePrioridade(task.prioridade ?? task.priority),
     responsaveis,
@@ -206,16 +200,16 @@ export const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => 
     progresso: Number(task.progresso ?? task.progress ?? 0),
     createdAt: task.createdAt ?? task.criadoEm ?? new Date().toISOString(),
     updatedAt: task.updatedAt ?? task.atualizadoEm ?? new Date().toISOString(),
-    subtarefas,
+    checklist: subtarefas,
     tags,
     comentarios,
     anexos,
     reuniaoId: task.reuniaoId ?? task.meetingId ?? null,
-    projeto,
-    estimativaHoras: task.estimadoHoras ?? task.estimatedHours ?? null,
-    tempoGastoHoras: task.tempoGastoHoras ?? task.spentHours ?? null,
+    projectId: task.projectId ?? null,
+    projectName: task.projectName ?? null,
+    estimadoHoras: task.estimadoHoras ?? task.estimatedHours ?? null,
+    horasTrabalhadas: task.horasTrabalhadas ?? task.spentHours ?? null,
     concluida: !!(task.concluida ?? (status === StatusTarefa.DONE)),
-    history: task.history ?? task.movimentacoes ?? [],
     ...((task.extra && typeof task.extra === 'object') ? task.extra : {})
   } as Tarefa;
 };
