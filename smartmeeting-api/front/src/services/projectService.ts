@@ -7,13 +7,28 @@ import {
     PermissionType,
     UpdatePermissionsRequest,
     ProjectPermissionDTO,
-    ProjectPermission
+    ProjectPermission,
+    ProjectDTO
 } from '../types/meetings';
 
 import api from './httpClient';
 import { IdValidation } from '../utils/validation';
 
 export const projectService = {
+
+    // ===========================================
+    // PROJETOS
+    // ===========================================
+
+    async getMyProjects(): Promise<ProjectDTO[]> {
+        const response = await api.get('/projects');
+        return response.data ?? [];
+    },
+
+    async getAllProjectsAdmin(): Promise<ProjectDTO[]> {
+        const response = await api.get('/projects/all');
+        return response.data ?? [];
+    },
 
     // ===========================================
     // COLUNAS KANBAN DINÂMICAS (por projeto)
