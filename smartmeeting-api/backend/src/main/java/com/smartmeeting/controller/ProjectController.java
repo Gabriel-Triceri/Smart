@@ -63,6 +63,15 @@ public class ProjectController {
     }
 
     /**
+     * Lista todos os projetos, independentemente de o usuário ser membro
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<ProjectDTO>> listAllProjects() {
+        List<ProjectDTO> projects = projectService.findAllProjects();
+        return ResponseEntity.ok(projects);
+    }
+
+    /**
      * Busca um projeto por ID (com verificação de permissão)
      */
     @GetMapping("/{id}")

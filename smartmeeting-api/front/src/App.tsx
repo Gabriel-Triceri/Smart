@@ -5,15 +5,16 @@ import { MeetingManager } from './components/meetings/MeetingManager';
 import { SalaManager } from './components/salas/SalaManager';
 import { TaskManager } from './components/tasks/TaskManager';
 import { PermissionManager } from './components/permissions/PermissionManager';
+import { ProjectManager } from './components/projects/ProjectManager';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
 import ThemeToggle from './components/common/ThemeToggle';
 import UserMenu from './components/common/UserMenu';
-import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X } from 'lucide-react';
+import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X, Briefcase } from 'lucide-react';
 import { inicializarDados } from './services/seedData';
 import { authService } from './services/authService';
 import { usePermissionWebSocket } from './hooks/usePermissionWebSocket';
 
-type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas' | 'permissions';
+type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas' | 'permissions' | 'projects';
 
 interface NavigationItem {
     id: ActiveView;
@@ -98,7 +99,7 @@ function App() {
     useEffect(() => {
         setMounted(true);
         const savedView = localStorage.getItem('smartmeeting-active-view') as ActiveView;
-        if (savedView && ['dashboard', 'meetings', 'salas', 'tarefas', 'permissions'].includes(savedView)) {
+        if (savedView && ['dashboard', 'meetings', 'salas', 'tarefas', 'permissions', 'projects'].includes(savedView)) {
             setActiveView(savedView);
         }
 
@@ -113,6 +114,7 @@ function App() {
         { id: 'meetings', label: 'Reunioes', description: 'Calendario e organizacao', icon: Calendar },
         { id: 'salas', label: 'Salas', description: 'Salas e recursos', icon: Building },
         { id: 'tarefas', label: 'Tarefas', description: 'Kanban e produtividade', icon: CheckSquare },
+        { id: 'projects', label: 'Projetos', description: 'Gerencie seus projetos', icon: Briefcase },
         // Gestao de Permissoes - apenas ADMIN pode acessar
         { id: 'permissions', label: 'Permissoes', description: 'Permissoes, roles e usuarios', icon: Shield, allowedRoles: ['ADMIN'] }
     ], []);
@@ -123,7 +125,8 @@ function App() {
         meetings: <MeetingManager key={`meetings-${refreshKey}`} />,
         salas: <SalaManager key={`salas-${refreshKey}`} />,
         tarefas: <TaskManager key={`tarefas-${refreshKey}`} />,
-        permissions: <PermissionManager key={`permissions-${refreshKey}`} />
+        permissions: <PermissionManager key={`permissions-${refreshKey}`} />,
+        projects: <ProjectManager key={`projects-${refreshKey}`} />
     };
 
     if (!mounted) return <LoadingSkeleton />;
@@ -203,4 +206,3 @@ function App() {
 }
 
 export default App;
-

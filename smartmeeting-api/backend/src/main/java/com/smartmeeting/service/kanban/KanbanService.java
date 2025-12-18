@@ -32,6 +32,7 @@ public class KanbanService {
     private final KanbanColumnDynamicRepository columnRepository;
     private final ReuniaoRepository reuniaoRepository;
     private final KanbanColumnInitializationService columnInitializationService;
+    private final ProjectStatusService projectStatusService;
 
     public KanbanService(TarefaRepository tarefaRepository,
                          TarefaMapperService mapper,
@@ -39,7 +40,8 @@ public class KanbanService {
                          TarefaMovimentacaoService movimentacaoService,
                          KanbanColumnDynamicRepository columnRepository,
                          ReuniaoRepository reuniaoRepository,
-                         KanbanColumnInitializationService columnInitializationService) {
+                         KanbanColumnInitializationService columnInitializationService,
+                         ProjectStatusService projectStatusService) {
         this.tarefaRepository = tarefaRepository;
         this.mapper = mapper;
         this.historyService = historyService;
@@ -47,6 +49,7 @@ public class KanbanService {
         this.columnRepository = columnRepository;
         this.reuniaoRepository = reuniaoRepository;
         this.columnInitializationService = columnInitializationService;
+        this.projectStatusService = projectStatusService;
     }
 
     @Transactional(readOnly = true)
@@ -172,6 +175,10 @@ public class KanbanService {
                     LocalDateTime.now()));
             logger.info("Movimentação registrada com sucesso");
 
+            if (tarefa.getProject() != null) {
+                projectStatusService.updateProjectStatus(tarefa.getProject().getId());
+            }
+
             TarefaDTO result = mapper.toDTO(updated);
             if (result == null) {
                 logger.error("Mapper retornou nulo para tarefa atualizada {}", tarefaId);
@@ -264,6 +271,10 @@ public class KanbanService {
                     usuarioNome,
                     LocalDateTime.now()));
             logger.info("Movimentação registrada com sucesso");
+
+            if (tarefa.getProject() != null) {
+                projectStatusService.updateProjectStatus(tarefa.getProject().getId());
+            }
 
             TarefaDTO result = mapper.toDTO(updated);
             if (result == null) {

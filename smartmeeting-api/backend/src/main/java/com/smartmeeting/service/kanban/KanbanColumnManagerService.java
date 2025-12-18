@@ -6,8 +6,10 @@ import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.mapper.KanbanColumnMapper;
 import com.smartmeeting.model.KanbanColumnDynamic;
 import com.smartmeeting.model.Project;
+import com.smartmeeting.model.Tarefa;
 import com.smartmeeting.repository.KanbanColumnDynamicRepository;
 import com.smartmeeting.repository.ProjectRepository;
+import com.smartmeeting.repository.TarefaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class KanbanColumnManagerService {
 
     private final KanbanColumnDynamicRepository columnRepository;
     private final ProjectRepository projectRepository;
+    private final TarefaRepository tarefaRepository;
     private final KanbanColumnInitializationService initializer;
     private final KanbanColumnMapper mapper;
 
@@ -114,6 +117,8 @@ public class KanbanColumnManagerService {
             throw new BadRequestException("Não é possível remover a coluna padrão");
         }
 
+        moveTasksToDefaultColumn(column);
+
         if (moveToColumnId != null) {
             if (!columnRepository.existsById(moveToColumnId)) {
                 throw new ResourceNotFoundException("Coluna destino não encontrada: " + moveToColumnId);
@@ -137,12 +142,29 @@ public class KanbanColumnManagerService {
             throw new BadRequestException("Não é possível remover a coluna padrão");
         }
 
+        moveTasksToDefaultColumn(column);
+
         Long projectId = column.getProject().getId();
         Integer ordem = column.getOrdem();
 
         columnRepository.delete(column);
         columnRepository.decrementOrdemAfter(projectId, ordem);
         log.info("Coluna {} removida permanentemente do projeto {}", columnId, projectId);
+    }
+
+    private void moveTasksToDefaultColumn(KanbanColumnDynamic column) {
+        List<Tarefa> tasks = tarefaRepository.findByColumnId(column.getId());
+        if (tasks.isEmpty()) {
+            return;
+        }
+        KanbanColumnDynamic defaultColumn = columnRepository.findByProjectIdAndIsDefaultTrue(column.getProject().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Coluna padrão não encontrada para o projeto: " + column.getProject().getId()));
+
+        for (Tarefa task : tasks) {
+            task.setColumn(defaultColumn);
+        }
+        tarefaRepository.saveAll(tasks);
+        log.info("{} tarefas movidas da coluna {} para a coluna padrão {}", tasks.size(), column.getId(), defaultColumn.getId());
     }
 
     @Transactional
