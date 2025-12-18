@@ -5,7 +5,7 @@ import {
     KanbanColumn,
     KanbanColumnConfig,
     StatusTarefa,
-    Tarefa  // Adicione esta importação
+    Tarefa
 } from '../types/meetings';
 import {
     normalizeTaskArray,
@@ -25,12 +25,12 @@ export const kanbanService = {
     },
 
     async getKanbanBoard(reuniaoId?: string, projectId?: string): Promise<KanbanBoard> {
-        const params: Record<string, string> = {}; // Corrigindo a tipagem
-        
+        const params: Record<string, string> = {};
+
         if (reuniaoId) params.reuniaoId = reuniaoId;
         if (projectId) params.projectId = projectId;
-        
-        const response = await api.get('/tarefas/kanban', { params }); // Usando o objeto params
+
+        const response = await api.get('/tarefas/kanban', { params });
 
         const board = response.data;
 
@@ -54,13 +54,16 @@ export const kanbanService = {
         };
     },
 
-    async moverTarefa(tarefaId: string, colunaId: string, posicao?: number): Promise<Tarefa> {
-        const response = await api.post(`/tarefas/${tarefaId}/mover`, {
-            colunaId, // String diretamente
-            newPosition: posicao ?? 0
+    async moveTask(tarefaId: string, newColumnId: string, newPosition: number): Promise<Tarefa> {
+        const response = await api.put(`/kanban/mover/${tarefaId}`, {
+            newColumnId,
+            newPosition
         });
-        // Aplica o mapper para garantir que o front entenda o retorno
         return mapBackendTask(response.data);
+    },
+
+    async moverTarefa(tarefaId: string, colunaId: string, posicao?: number): Promise<Tarefa> {
+        return this.moveTask(tarefaId, colunaId, posicao ?? 0);
     },
 
     async updateKanbanColumn(status: StatusTarefa, title: string): Promise<KanbanColumnConfig> {

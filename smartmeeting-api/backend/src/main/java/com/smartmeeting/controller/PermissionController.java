@@ -35,7 +35,6 @@ public class PermissionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<PermissionDTO>> findAll() {
         List<PermissionDTO> list = permissionService.findAll().stream()
                 .map(this::toDTO)
@@ -44,7 +43,6 @@ public class PermissionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PermissionDTO> findById(@PathVariable Long id) {
         Permission p = permissionService.findById(id);
         return ResponseEntity.ok(toDTO(p));
