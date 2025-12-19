@@ -12,6 +12,15 @@ import java.util.List;
 
 @Repository
 public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
+
+    @Query("SELECT t FROM Tarefa t " +
+           "LEFT JOIN FETCH t.comentarios " +
+           "LEFT JOIN FETCH t.anexos " +
+           "LEFT JOIN FETCH t.participantes " +
+           "LEFT JOIN FETCH t.reuniao " +
+           "LEFT JOIN FETCH t.project")
+    List<Tarefa> findAllWithDetails();
+
     /**
      * Busca tarefas por ID da reunião
      *

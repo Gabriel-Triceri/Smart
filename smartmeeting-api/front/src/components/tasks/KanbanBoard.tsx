@@ -214,12 +214,9 @@ export function KanbanBoard({
     }
   }, [dynamicColumns, projectId]);
 
-  // Group tarefas by status
-  const tarefasPorStatus: Record<KanbanDroppableId, Tarefa[]> = columns.reduce((acc, col) => {
-    // CORREÇÃO: Usar o Status da Tarefa, que ainda deve ser um Enum, para agrupar.
-    // Se a Tarefa for de uma coluna dinâmica, a tarefa deve ter o StatusTarefa mapeado no backend.
-    // Se houver falha na visualização de tarefas dinâmicas, o campo `t.status` deve ser revisado.
-    acc[col.status] = tarefas.filter(t => t.status === col.status).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+  // Group tarefas by columnId
+  const tarefasPorColuna: Record<KanbanDroppableId, Tarefa[]> = columns.reduce((acc, col) => {
+    acc[col.id] = tarefas.filter(t => String(t.columnId) === String(col.kanbanColumnId)).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
     return acc;
   }, {} as Record<KanbanDroppableId, Tarefa[]>);
 
@@ -348,8 +345,7 @@ export function KanbanBoard({
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex h-full gap-6 pb-2">
             {columns.map(column => {
-              // Usar o StatusTarefa para encontrar as tarefas (se o backend mantiver o Enum no objeto Tarefa)
-              const columnTasks = tarefasPorStatus[column.status] ?? [];
+              const columnTasks = tarefasPorColuna[column.id] ?? [];
               const accentColor = COLUMN_ACCENTS[column.status] || 'bg-gray-400';
               const isEditing = editingColumn === column.id; // Usa o ID da coluna
 

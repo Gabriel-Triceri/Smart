@@ -98,195 +98,65 @@ public class KanbanService {
 
     @Transactional
     public TarefaDTO moverTarefa(Long tarefaId, Long newColumnId, Integer newPosition) {
-        try {
-            logger.info("Iniciando movimentação da tarefa {} para coluna {}", tarefaId, newColumnId);
-
-            Tarefa tarefa = tarefaRepository.findById(tarefaId)
-                    .orElseThrow(() -> {
-                        logger.error("Tarefa não encontrada com ID: {}", tarefaId);
-                        return new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId);
-                    });
-
-            String statusAntigo = tarefa.getColumn() != null ? tarefa.getColumn().getTitle() : "Sem Coluna";
-            Long oldColumnId = tarefa.getColumn() != null ? tarefa.getColumn().getId() : null;
-            Integer oldPosition = tarefa.getProgresso();
-            logger.info("Status antigo da tarefa {}: {}", tarefaId, statusAntigo);
-
-            if (newColumnId == null) {
-                logger.error("ID da coluna não pode ser nulo para tarefa {}", tarefaId);
-                throw new IllegalArgumentException("ID da coluna não pode ser nulo");
-            }
-
-            logger.info("Buscando coluna com ID: {}", newColumnId);
-            KanbanColumnDynamic newColumn = columnRepository.findById(newColumnId)
-                    .orElseGet(() -> {
-                        // Se a coluna não existe, tentar obter o projectId da tarefa para inicializar colunas
-                        if (tarefa.getProject() != null) {
-                            logger.info("Tentando inicializar colunas padrão para o projeto {}", tarefa.getProject().getId());
-                            try {
-                                columnInitializationService.initializeDefaultColumns(tarefa.getProject().getId());
-                                logger.info("Colunas padrão inicializadas. Tentando buscar coluna novamente...");
-                                return columnRepository.findById(newColumnId).orElse(null);
-                            } catch (Exception e) {
-                                logger.error("Erro ao inicializar colunas padrão: {}", e.getMessage(), e);
-                            }
-                        }
-
-                        logger.error("Coluna não encontrada com ID: {}", newColumnId);
-                        return null;
-                    });
-
-            if (newColumn == null) {
-                throw new ResourceNotFoundException("Coluna não encontrada: " + newColumnId + ". Verifique se as colunas do Kanban estão configuradas corretamente.");
-            }
-
-            logger.info("Coluna encontrada: {} - {}", newColumn.getId(), newColumn.getTitle());
-
-            if (oldColumnId != null) {
-                tarefaRepository.decrementarProgressoApos(oldColumnId, oldPosition);
-            }
-
-            tarefaRepository.incrementarProgressoApos(newColumnId, newPosition);
-
-            tarefa.setColumn(newColumn);
-            tarefa.setProgresso(newPosition);
-            Tarefa updated = tarefaRepository.save(tarefa);
-            // Forçar refresh para garantir que os dados estão atualizados
-            tarefaRepository.flush();
-            updated = tarefaRepository.findById(tarefaId).orElse(updated);
-            logger.info("Tarefa {} movida para coluna {}", tarefaId, newColumn.getTitle());
-
-            try {
-                historyService.registrarMudancaStatus(tarefa, statusAntigo, newColumn.getTitle());
-                logger.info("Histórico registrado com sucesso");
-            } catch (Exception e) {
-                logger.error("Erro ao registrar histórico de movimentação para tarefa {}: {}", tarefaId, e.getMessage());
-            }
-
-            Long usuarioId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
-            String usuarioNome = com.smartmeeting.util.SecurityUtils.getCurrentUsername();
-
-            movimentacaoService.registrarMovimentacao(new MovimentacaoTarefaDTO(
-                    tarefaId,
-                    statusAntigo,
-                    newColumn.getTitle(),
-                    String.valueOf(usuarioId),
-                    usuarioNome,
-                    LocalDateTime.now()));
-            logger.info("Movimentação registrada com sucesso");
-
-            if (tarefa.getProject() != null) {
-                projectStatusService.updateProjectStatus(tarefa.getProject().getId());
-            }
-
-            TarefaDTO result = mapper.toDTO(updated);
-            if (result == null) {
-                logger.error("Mapper retornou nulo para tarefa atualizada {}", tarefaId);
-                throw new RuntimeException("Erro ao converter tarefa para DTO após movimentação");
-            }
-
-            return result;
-        } catch (Exception e) {
-            logger.error("Erro na movimentação da tarefa {} para coluna {}: {}", tarefaId, newColumnId, e.getMessage(), e);
-            throw e;
-        }
+        KanbanColumnDynamic newColumn = columnRepository.findById(newColumnId)
+                .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada: " + newColumnId));
+        return moveTask(tarefaId, newColumn, newPosition);
     }
 
     @Transactional
     public TarefaDTO moverTarefaPorColumnKey(Long tarefaId, String columnKey, Integer newPosition) {
-        try {
-            logger.info("Iniciando movimentação da tarefa {} para coluna com columnKey: {}", tarefaId, columnKey);
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
 
-            Tarefa tarefa = tarefaRepository.findById(tarefaId)
-                    .orElseThrow(() -> {
-                        logger.error("Tarefa não encontrada com ID: {}", tarefaId);
-                        return new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId);
-                    });
+        KanbanColumnDynamic newColumn = columnRepository.findByProjectIdAndColumnKeyAndIsActiveTrue(tarefa.getProject().getId(), columnKey)
+                .orElseThrow(() -> new ResourceNotFoundException("Coluna com columnKey '" + columnKey + "' não encontrada para o projeto da tarefa."));
 
-            String statusAntigo = tarefa.getColumn() != null ? tarefa.getColumn().getTitle() : "Sem Coluna";
-            Long oldColumnId = tarefa.getColumn() != null ? tarefa.getColumn().getId() : null;
-            Integer oldPosition = tarefa.getProgresso();
-            logger.info("Status antigo da tarefa {}: {}", tarefaId, statusAntigo);
+        return moveTask(tarefaId, newColumn, newPosition);
+    }
 
-            if (columnKey == null || columnKey.trim().isEmpty()) {
-                logger.error("columnKey não pode ser nulo ou vazio para tarefa {}", tarefaId);
-                throw new IllegalArgumentException("columnKey não pode ser nulo ou vazio");
-            }
+    private TarefaDTO moveTask(Long tarefaId, KanbanColumnDynamic newColumn, Integer newPosition) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
 
-            logger.info("Buscando coluna com columnKey: {} (projeto ID: {})", columnKey, tarefa.getProject() != null ? tarefa.getProject().getId() : "null");
+        String statusAntigo = tarefa.getColumn() != null ? tarefa.getColumn().getTitle() : "Sem Coluna";
+        Long oldColumnId = tarefa.getColumn() != null ? tarefa.getColumn().getId() : null;
+        Integer oldPosition = tarefa.getProgresso();
 
-            // Buscar a coluna pelo columnKey no projeto da tarefa
-            KanbanColumnDynamic newColumn = null;
-            if (tarefa.getProject() != null) {
-                newColumn = columnRepository.findByProjectIdAndColumnKeyAndIsActiveTrue(tarefa.getProject().getId(), columnKey)
-                        .orElseGet(() -> {
-                            // Se a coluna não existe, tentar inicializar colunas padrão
-                            logger.info("Tentando inicializar colunas padrão para o projeto {}", tarefa.getProject().getId());
-                            try {
-                                columnInitializationService.initializeDefaultColumns(tarefa.getProject().getId());
-                                logger.info("Colunas padrão inicializadas. Tentando buscar coluna novamente...");
-                                return columnRepository.findByProjectIdAndColumnKeyAndIsActiveTrue(tarefa.getProject().getId(), columnKey).orElse(null);
-                            } catch (Exception e) {
-                                logger.error("Erro ao inicializar colunas padrão: {}", e.getMessage(), e);
-                                return null;
-                            }
-                        });
-            }
-
-            if (newColumn == null) {
-                throw new ResourceNotFoundException("Coluna com columnKey '" + columnKey + "' não encontrada para o projeto da tarefa. Verifique se as colunas do Kanban estão configuradas corretamente.");
-            }
-
-            logger.info("Coluna encontrada: ID={}, Título={}, columnKey={}", newColumn.getId(), newColumn.getTitle(), newColumn.getColumnKey());
-
-            if (oldColumnId != null) {
-                tarefaRepository.decrementarProgressoApos(oldColumnId, oldPosition);
-            }
-
-            tarefaRepository.incrementarProgressoApos(newColumn.getId(), newPosition);
-
-            tarefa.setColumn(newColumn);
-            tarefa.setProgresso(newPosition);
-            Tarefa updated = tarefaRepository.save(tarefa);
-            // Forçar refresh para garantir que os dados estão atualizados
-            tarefaRepository.flush();
-            updated = tarefaRepository.findById(tarefaId).orElse(updated);
-            logger.info("Tarefa {} movida para coluna {}", tarefaId, newColumn.getTitle());
-
-            try {
-                historyService.registrarMudancaStatus(tarefa, statusAntigo, newColumn.getTitle());
-                logger.info("Histórico registrado com sucesso");
-            } catch (Exception e) {
-                logger.error("Erro ao registrar histórico de movimentação para tarefa {}: {}", tarefaId, e.getMessage());
-            }
-
-            Long usuarioId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
-            String usuarioNome = com.smartmeeting.util.SecurityUtils.getCurrentUsername();
-
-            movimentacaoService.registrarMovimentacao(new MovimentacaoTarefaDTO(
-                    tarefaId,
-                    statusAntigo,
-                    newColumn.getTitle(),
-                    String.valueOf(usuarioId),
-                    usuarioNome,
-                    LocalDateTime.now()));
-            logger.info("Movimentação registrada com sucesso");
-
-            if (tarefa.getProject() != null) {
-                projectStatusService.updateProjectStatus(tarefa.getProject().getId());
-            }
-
-            TarefaDTO result = mapper.toDTO(updated);
-            if (result == null) {
-                logger.error("Mapper retornou nulo para tarefa atualizada {}", tarefaId);
-                throw new RuntimeException("Erro ao converter tarefa para DTO após movimentação");
-            }
-
-            return result;
-        } catch (Exception e) {
-            logger.error("Erro na movimentação da tarefa {} para coluna columnKey {}: {}", tarefaId, columnKey, e.getMessage(), e);
-            throw e;
+        if (newColumn.getId().equals(oldColumnId)) {
+            logger.info("Tarefa {} já está na coluna {}", tarefaId, newColumn.getTitle());
+            return mapper.toDTO(tarefa);
         }
+
+        if (oldColumnId != null) {
+            tarefaRepository.decrementarProgressoApos(oldColumnId, oldPosition);
+        }
+
+        tarefaRepository.incrementarProgressoApos(newColumn.getId(), newPosition);
+
+        tarefa.setColumn(newColumn);
+        tarefa.setProgresso(newPosition);
+        Tarefa updated = tarefaRepository.save(tarefa);
+        tarefaRepository.flush();
+        updated = tarefaRepository.findById(tarefaId).orElse(updated);
+
+        historyService.registrarMudancaStatus(tarefa, statusAntigo, newColumn.getTitle());
+
+        Long usuarioId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        String usuarioNome = com.smartmeeting.util.SecurityUtils.getCurrentUsername();
+
+        movimentacaoService.registrarMovimentacao(new MovimentacaoTarefaDTO(
+                tarefaId,
+                statusAntigo,
+                newColumn.getTitle(),
+                String.valueOf(usuarioId),
+                usuarioNome,
+                LocalDateTime.now()));
+
+        if (tarefa.getProject() != null) {
+            projectStatusService.updateProjectStatus(tarefa.getProject().getId());
+        }
+
+        return mapper.toDTO(updated);
     }
 
     @Transactional(readOnly = true)

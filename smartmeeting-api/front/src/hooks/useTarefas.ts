@@ -49,22 +49,19 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
         try {
             const [
-                tarefasData,
                 kanbanData,
                 templatesData,
                 assigneesData,
                 statsData
             ] = await Promise.all([
-                reuniaoId
-                    ? tarefaService.getTarefasPorReuniao(reuniaoId)
-                    : tarefaService.getAllTarefas(),
                 kanbanService.getKanbanBoard(reuniaoId, projectId),
                 checklistService.getTemplatesTarefas(),
                 checklistService.getAssigneesDisponiveis(),
                 historyService.getStatisticsTarefas()
             ]);
 
-            setTarefas(tarefasData);
+            const allTarefas = kanbanData.colunas.flatMap(c => c.tarefas);
+            setTarefas(allTarefas);
             setKanbanBoard(kanbanData);
             setTemplates(templatesData);
             setAssigneesDisponiveis(assigneesData);
