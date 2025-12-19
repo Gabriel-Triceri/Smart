@@ -65,8 +65,8 @@ class ReuniaoAuthorizationTest {
         when(reuniaoMapper.toDTO(any())).thenReturn(new ReuniaoDTO());
 
         // Mock permission check for MEETING_CREATE
-        when(projectPermissionService.hasPermissionForCurrentUser(anyLong(), eq(PermissionType.MEETING_CREATE)))
-                .thenReturn(true);
+        // when(projectPermissionService.hasPermissionForCurrentUser(anyLong(), eq(PermissionType.MEETING_CREATE)))
+        //         .thenReturn(true);
 
         // Provide valid JSON content for the request
         String validContent = "{\"projectId\": 1, \"title\": \"Reunião Teste\"}";

@@ -42,9 +42,9 @@ public class ProjectStatusService {
             }
         } else {
             if (project.getStatus() == ProjectStatus.COMPLETED) {
-                project.setStatus(ProjectStatus.IN_PROGRESS);
+                project.setStatus(ProjectStatus.ACTIVE);
                 projectRepository.save(project);
-                log.info("Projeto {} movido para o status IN_PROGRESS", projectId);
+                log.info("Projeto {} movido para o status ACTIVE", projectId);
             }
         }
     }

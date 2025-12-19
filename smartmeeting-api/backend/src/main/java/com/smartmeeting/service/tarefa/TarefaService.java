@@ -2,6 +2,7 @@ package com.smartmeeting.service.tarefa;
 
 import com.smartmeeting.dto.*;
 import com.smartmeeting.model.*;
+import com.smartmeeting.repository.TarefaRepository;
 import com.smartmeeting.service.kanban.KanbanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Orquestrador público que expõe a API de TarefaService.
@@ -21,6 +23,7 @@ public class TarefaService {
     private final TarefaCrudService crudService;
     private final TarefaSearchService searchService;
     private final TarefaProgressService progressService;
+    private final TarefaRepository tarefaRepository;
 
     private final TarefaHistoryService historyService;
     private final TarefaStatisticsService statisticsService;
@@ -44,11 +47,11 @@ public class TarefaService {
     }
 
     public List<TarefaDTO> listarTodasDTO() {
-        return crudService.listarTodas();
+        return tarefaRepository.findAllWithDetails().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     public List<TarefaDTO> listarTodas() {
-        return crudService.listarTodas();
+        return tarefaRepository.findAllWithDetails().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     public TarefaDTO criar(TarefaDTO dto) {
