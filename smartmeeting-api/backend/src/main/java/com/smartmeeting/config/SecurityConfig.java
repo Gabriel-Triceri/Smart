@@ -17,7 +17,6 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,7 +46,8 @@ public class SecurityConfig {
                 // iframes do mesmo
                 // domínio
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())).authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/auth/**", "/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/h2-console/**", // ✅ permite acesso ao console do H2
-                                "/error" // ✅ permite acesso ao endpoint de erro do Spring Boot
+                                "/error", // ✅ permite acesso ao endpoint de erro do Spring Boot
+                                "/ws/**" // ✅ permite acesso ao WebSocket
                         ).permitAll().anyRequest().authenticated() // 🔒 Exige autenticação para todos os outros endpoints
                 ).exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint)).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
@@ -92,14 +92,5 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    /**
-     * Ignora completamente os endpoints WebSocket da filter chain de segurança.
-     * Isso é necessário porque o WebSocket handshake precisa passar sem autenticação.
-     */
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/ws/**");
     }
 }

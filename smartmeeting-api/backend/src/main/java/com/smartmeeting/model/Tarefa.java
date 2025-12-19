@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Table(name = "TAREFA")
 @Entity
@@ -17,7 +20,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(callSuper = false, exclude = { "responsavel", "reuniao", "project", "participantes" })
+@EqualsAndHashCode(callSuper = false, exclude = { "responsavel", "reuniao", "project", "participantes", "comentarios", "anexos" })
 @NamedEntityGraph(
         name = "Tarefa.completa",
         attributeNodes = {
@@ -25,7 +28,9 @@ import java.time.LocalDate;
                 @NamedAttributeNode("project"),
                 @NamedAttributeNode("reuniao"),
                 @NamedAttributeNode("participantes"),
-                @NamedAttributeNode("column")
+                @NamedAttributeNode("column"),
+                @NamedAttributeNode("comentarios"),
+                @NamedAttributeNode("anexos")
         }
 )
 public class Tarefa extends Auditable {
@@ -48,7 +53,7 @@ public class Tarefa extends Auditable {
     @Column(name = "CONCLUIDA_TAREFA", nullable = false)
     private boolean concluida;
 
-    @ManyToOne(fetch = FetchType.LAZY)  // ✅ MUDADO PARA LAZY
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_KANBAN_COLUMN")
     private KanbanColumnDynamic column;
 
@@ -65,34 +70,41 @@ public class Tarefa extends Auditable {
     @Column(name = "PROGRESSO_TAREFA")
     private Integer progresso;
 
-    @ElementCollection(fetch = FetchType.LAZY)  // ✅ MUDADO PARA LAZY
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "TAREFA_TAGS", joinColumns = @JoinColumn(name = "ID_TAREFA"))
     @Column(name = "TAG")
-    private java.util.List<String> tags;
+    private List<String> tags;
 
     @Column(name = "COR_TAREFA")
     private String cor;
 
-    @ManyToOne(fetch = FetchType.LAZY)  // ✅ MUDADO PARA LAZY
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_RESPONSAVEL", foreignKey = @ForeignKey(name = "FK_TAREFA_PESSOA"))
     private Pessoa responsavel;
 
-    @ManyToMany(fetch = FetchType.LAZY)  // ✅ MUDADO PARA LAZY
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "TAREFA_PARTICIPANTES",
             joinColumns = @JoinColumn(name = "ID_TAREFA"),
             inverseJoinColumns = @JoinColumn(name = "ID_PESSOA")
     )
-    private java.util.Set<Pessoa> participantes = new java.util.HashSet<>();
+    private Set<Pessoa> participantes = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)  // ✅ M
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_REUNIAO", foreignKey = @ForeignKey(name = "FK_TAREFA_REUNIAO"))
     private Reuniao reuniao;
 
-    @ManyToOne(fetch = FetchType.LAZY)  
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_PROJECT")
     private Project project;
 
+    @OneToMany(mappedBy = "tarefa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ComentarioTarefa> comentarios;
+
+    @OneToMany(mappedBy = "tarefa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<AnexoTarefa> anexos;
+
+    @Override
     public String toString() {
         return "Tarefa{" +
                 "id=" + id +
