@@ -57,7 +57,7 @@ class ReuniaoAuthorizationTest {
     }
 
     @Test
-    @WithMockUser(username = "organizador@teste.com", authorities = { "CRIAR_REUNIAO" })
+    @WithMockUser(username = "organizador@teste.com", roles = { "ORGANIZADOR" })
     void usuarioComPermissaoCriarReuniao_deveRetornar200() throws Exception {
         // Evita NullPointer do service quando o método é chamado após autorização
         when(reuniaoMapper.toEntity(any())).thenReturn(new Reuniao());
