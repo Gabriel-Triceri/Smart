@@ -46,8 +46,7 @@ public class SecurityConfig {
                 // iframes do mesmo
                 // domínio
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())).authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/auth/**", "/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/h2-console/**", // ✅ permite acesso ao console do H2
-                                "/error", // ✅ permite acesso ao endpoint de erro do Spring Boot
-                                "/ws/**" // ✅ permite acesso ao WebSocket
+                                "/error" // ✅ permite acesso ao endpoint de erro do Spring Boot
                         ).permitAll().anyRequest().authenticated() // 🔒 Exige autenticação para todos os outros endpoints
                 ).exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint)).sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
