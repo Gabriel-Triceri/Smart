@@ -10,8 +10,18 @@ import com.smartmeeting.repository.RoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import com.smartmeeting.exception.BadRequestException;
+import com.smartmeeting.exception.ResourceNotFoundException;
+import com.smartmeeting.model.Permission;
+import com.smartmeeting.model.Role;
+import com.smartmeeting.repository.PermissionRepository;
+import com.smartmeeting.repository.RoleRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -97,7 +107,7 @@ public class RoleService {
         Permission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Permissão não encontrada com ID: " + permissionId));
         if (role.getPermissions() == null) {
-            role.setPermissions(new ArrayList<>());
+            role.setPermissions(new HashSet<>());
         }
         boolean already = role.getPermissions().stream().anyMatch(p -> p.getId().equals(permissionId));
         if (!already) {
@@ -128,14 +138,14 @@ public class RoleService {
      * @return Uma lista de entidades Permission gerenciadas pelo JPA.
      * @throws ResourceNotFoundException se alguma permissão não for encontrada.
      */
-    private List<Permission> findAndValidatePermissions(List<Permission> permissions) {
+    private Set<Permission> findAndValidatePermissions(Set<Permission> permissions) {
         if (permissions == null || permissions.isEmpty()) {
-            return new ArrayList<>();
+            return new HashSet<>();
         }
         List<Long> ids = permissions.stream().map(Permission::getId).collect(Collectors.toList());
         List<Permission> managedPermissions = permissionRepository.findAllById(ids);
         if (managedPermissions.size() != ids.size())
             throw new ResourceNotFoundException("Uma ou mais permissões não foram encontradas.");
-        return managedPermissions;
+        return new HashSet<>(managedPermissions);
     }
 }

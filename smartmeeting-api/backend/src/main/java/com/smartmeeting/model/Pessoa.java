@@ -12,7 +12,20 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.smartmeeting.enums.TipoUsuario;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Table(name = "PESSOA")
 @Entity
@@ -85,13 +98,13 @@ public class Pessoa extends Auditable {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "PESSOA_ROLE", joinColumns = @JoinColumn(name = "ID_PESSOA"), inverseJoinColumns = @JoinColumn(name = "ID_ROLE"))
-    private List<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
-    public List<Role> getRoles() {
+    public Set<Role> getRoles() {
         return roles;
     }
 
-    public void setRoles(List<Role> roles) {
+    public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
 }

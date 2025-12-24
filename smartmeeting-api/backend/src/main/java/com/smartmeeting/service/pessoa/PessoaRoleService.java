@@ -10,10 +10,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartmeeting.exception.BadRequestException;
+import com.smartmeeting.exception.ResourceNotFoundException;
+import com.smartmeeting.model.Pessoa;
+import com.smartmeeting.model.Role;
+import com.smartmeeting.repository.PessoaRepository;
+import com.smartmeeting.repository.RoleRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Serviço responsável pela gestão de roles de Pessoa
@@ -34,7 +46,7 @@ public class PessoaRoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + pessoaId));
 
         return Optional.ofNullable(pessoa.getRoles())
-                .filter(list -> !list.isEmpty())
+                .map(ArrayList::new) // Converte Set para List
                 .orElseGet(ArrayList::new);
     }
 
@@ -53,9 +65,9 @@ public class PessoaRoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + roleId));
 
-        List<Role> roles = pessoa.getRoles();
+        Set<Role> roles = pessoa.getRoles();
         if (roles == null) {
-            roles = new ArrayList<>();
+            roles = new HashSet<>();
         }
 
         boolean exists = roles.stream()
@@ -84,7 +96,7 @@ public class PessoaRoleService {
         roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + roleId));
 
-        List<Role> roles = pessoa.getRoles();
+        Set<Role> roles = pessoa.getRoles();
         if (roles != null && !roles.isEmpty()) {
             boolean changed = roles.removeIf(r -> r != null && Objects.equals(r.getId(), roleId));
             if (changed) {
