@@ -108,20 +108,39 @@ KEY(ID_ROLE, ID_PERMISSION) VALUES
 (5, 1), (5, 6), (5, 13), (5, 15), (5, 16), (5, 17), (5, 18), (5, 19);
 
 -- =====================================================
+-- 6.1 PESSOA_ROLE (Associação Pessoa-Perfil)
+-- =====================================================
+MERGE INTO PESSOA_ROLE (ID_PESSOA, ID_ROLE)
+KEY(ID_PESSOA, ID_ROLE) VALUES
+(1, 1), -- Alice Admin -> Administrador
+(2, 2), -- Otavio Organizador -> Gerente de Projetos
+(2, 5), -- Otavio Organizador -> Organizador de Reuniões
+(3, 3), -- Paula Participante -> Membro
+(4, 3), -- Carlos Convidado -> Membro
+(5, 3), -- Daniel Desenvolvedor -> Membro
+(6, 3), -- Eduarda Engenheira -> Membro
+(7, 2), -- Fabio Financeiro -> Gerente de Projetos
+(7, 5), -- Fabio Financeiro -> Organizador de Reuniões
+(8, 1), -- Gabriela Gestora -> Administrador
+(9, 2), -- Hugo HR -> Gerente de Projetos
+(9, 5), -- Hugo HR -> Organizador de Reuniões
+(10, 3); -- Igor Infra -> Membro
+
+-- =====================================================
 -- 7. PROJECT (Projetos - IDs 1..10)
 -- =====================================================
-MERGE INTO PROJECT (ID, NAME, DESCRIPTION, START_DATE, END_DATE, STATUS, ID_OWNER)
-KEY(ID) VALUES
-(1, 'Sistema de Gestão', 'Desenvolvimento do sistema de gestão de reuniões', DATE '2025-10-01', DATE '2025-12-31', 'ACTIVE', 1),
-(2, 'Melhoria de Processos', 'Otimização dos processos internos', DATE '2025-11-01', DATE '2026-02-28', 'ACTIVE', 2),
-(3, 'Planejamento Estratégico', 'Definição de metas Q4', DATE '2025-11-08', DATE '2025-11-30', 'PLANNING', 8),
-(4, 'Migração Cloud', 'Migração para AWS', DATE '2025-09-01', DATE '2026-01-15', 'ACTIVE', 10),
-(5, 'App Mobile', 'Desenvolvimento do app Android/iOS', DATE '2025-12-01', DATE '2026-06-30', 'PLANNING', 5),
-(6, 'Refatoração Legacy', 'Refatoração do módulo financeiro', DATE '2025-10-15', DATE '2025-12-15', 'PAUSED', 5),
-(7, 'Campanha Marketing', 'Campanha de fim de ano', DATE '2025-11-01', DATE '2025-12-25', 'ACTIVE', 7),
-(8, 'Auditoria Interna', 'Auditoria de segurança', DATE '2025-11-10', DATE '2025-11-20', 'COMPLETED', 8),
-(9, 'Treinamento Equipe', 'Workshop de Agile', DATE '2025-11-05', DATE '2025-11-06', 'COMPLETED', 2),
-(10, 'Novo Site Institucional', 'Redesign do site', DATE '2026-01-01', DATE '2026-03-31', 'PLANNING', 9);
+MERGE INTO PROJECT (NAME, DESCRIPTION, START_DATE, END_DATE, STATUS, ID_OWNER)
+KEY(NAME) VALUES
+('Sistema de Gestão', 'Desenvolvimento do sistema de gestão de reuniões', DATE '2025-10-01', DATE '2025-12-31', 'ACTIVE', 1),
+('Melhoria de Processos', 'Otimização dos processos internos', DATE '2025-11-01', DATE '2026-02-28', 'ACTIVE', 2),
+('Planejamento Estratégico', 'Definição de metas Q4', DATE '2025-11-08', DATE '2025-11-30', 'PLANNING', 8),
+('Migração Cloud', 'Migração para AWS', DATE '2025-09-01', DATE '2026-01-15', 'ACTIVE', 10),
+('App Mobile', 'Desenvolvimento do app Android/iOS', DATE '2025-12-01', DATE '2026-06-30', 'PLANNING', 5),
+('Refatoração Legacy', 'Refatoração do módulo financeiro', DATE '2025-10-15', DATE '2025-12-15', 'PAUSED', 5),
+('Campanha Marketing', 'Campanha de fim de ano', DATE '2025-11-01', DATE '2025-12-25', 'ACTIVE', 7),
+('Auditoria Interna', 'Auditoria de segurança', DATE '2025-11-10', DATE '2025-11-20', 'COMPLETED', 8),
+('Treinamento Equipe', 'Workshop de Agile', DATE '2025-11-05', DATE '2025-11-06', 'COMPLETED', 2),
+('Novo Site Institucional', 'Redesign do site', DATE '2026-01-01', DATE '2026-03-31', 'PLANNING', 9);
 
 -- =====================================================
 -- 8. PROJECT_MEMBER (Membros dos Projetos)
@@ -277,6 +296,7 @@ KEY(ID) VALUES
 -- =====================================================
 MERGE INTO TAREFA (
   ID_TAREFA,
+  TITULO_TAREFA,
   DESCRICAO_TAREFA,
   PRAZO_TAREFA,
   CONCLUIDA_TAREFA,
@@ -290,16 +310,16 @@ MERGE INTO TAREFA (
   ID_KANBAN_COLUMN
 )
 KEY(ID_TAREFA) VALUES
-(1, 'Preparar apresentação', DATE '2025-11-10', FALSE, 'ALTA', DATE '2025-11-05', 4.0, 1, 1, 1, 0, 1),
-(2, 'Coletar métricas', DATE '2025-11-12', FALSE, 'MEDIA', DATE '2025-11-06', 2.5, 3, 2, 1, 30, 2),
-(3, 'Revisar documentação', DATE '2025-11-15', FALSE, 'ALTA', DATE '2025-11-08', 6.0, 2, 1, 1, 80, 3),
-(4, 'Implementar nova funcionalidade', DATE '2025-11-20', FALSE, 'CRITICA', DATE '2025-11-10', 16.0, 5, 2, 1, 45, 4),
-(5, 'Fechar ata e enviar', DATE '2025-11-09', TRUE, 'BAIXA', DATE '2025-11-08', 1.0, 2, 3, 3, 100, 6),
-(6, 'Configurar servidor', DATE '2025-11-18', FALSE, 'ALTA', DATE '2025-11-12', 8.0, 10, 5, 4, 0, 7),
-(7, 'Criar wireframes', DATE '2025-12-05', FALSE, 'MEDIA', DATE '2025-11-20', 12.0, 5, 4, 5, 0, 8),
-(8, 'Aprovar orçamento', DATE '2025-11-25', FALSE, 'CRITICA', DATE '2025-11-15', 3.0, 8, 3, 3, 0, 9),
-(9, 'Contratar buffet', DATE '2025-12-10', FALSE, 'BAIXA', DATE '2025-11-25', 2.0, 9, 6, 7, 0, 10),
-(10, 'Atualizar planilha financeira', DATE '2025-11-30', FALSE, 'MEDIA', DATE '2025-11-20', 4.5, 7, 10, 1, 0, 1);
+(1, 'Apresentação', 'Preparar apresentação', DATE '2025-11-10', FALSE, 'ALTA', DATE '2025-11-05', 4.0, 1, 1, 1, 0, 1),
+(2, 'Métricas', 'Coletar métricas', DATE '2025-11-12', FALSE, 'MEDIA', DATE '2025-11-06', 2.5, 3, 2, 1, 30, 2),
+(3, 'Documentação', 'Revisar documentação', DATE '2025-11-15', FALSE, 'ALTA', DATE '2025-11-08', 6.0, 2, 1, 1, 80, 3),
+(4, 'Funcionalidade', 'Implementar nova funcionalidade', DATE '2025-11-20', FALSE, 'CRITICA', DATE '2025-11-10', 16.0, 5, 2, 1, 45, 4),
+(5, 'Ata', 'Fechar ata e enviar', DATE '2025-11-09', TRUE, 'BAIXA', DATE '2025-11-08', 1.0, 2, 3, 3, 100, 6),
+(6, 'Servidor', 'Configurar servidor', DATE '2025-11-18', FALSE, 'ALTA', DATE '2025-11-12', 8.0, 10, 5, 4, 0, 7),
+(7, 'Wireframes', 'Criar wireframes', DATE '2025-12-05', FALSE, 'MEDIA', DATE '2025-11-20', 12.0, 5, 4, 5, 0, 8),
+(8, 'Orçamento', 'Aprovar orçamento', DATE '2025-11-25', FALSE, 'CRITICA', DATE '2025-11-15', 3.0, 8, 3, 3, 0, 9),
+(9, 'Buffet', 'Contratar buffet', DATE '2025-12-10', FALSE, 'BAIXA', DATE '2025-11-25', 2.0, 9, 6, 7, 0, 10),
+(10, 'Planilha', 'Atualizar planilha financeira', DATE '2025-11-30', FALSE, 'MEDIA', DATE '2025-11-20', 4.5, 7, 10, 1, 0, 1);
 
 -- =====================================================
 -- 16. CHECKLIST_ITEM (Itens de Checklist das Tarefas)
