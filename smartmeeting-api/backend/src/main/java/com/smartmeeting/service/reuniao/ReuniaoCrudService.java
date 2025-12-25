@@ -1,5 +1,6 @@
 package com.smartmeeting.service.reuniao;
 
+import com.smartmeeting.dto.ReuniaoListDTO;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.repository.ReuniaoRepository;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Serviço responsável pelas operações CRUD básicas de Reunião
@@ -18,8 +20,30 @@ public class ReuniaoCrudService {
 
     private final ReuniaoRepository repository;
 
-    public List<Reuniao> listarTodas() {
-        return repository.findAllWithDetails();
+    public List<ReuniaoListDTO> listarTodas(Long userId) {
+        List<Reuniao> reunioes;
+        if (userId != null) {
+            reunioes = repository.findAllWithDetailsByUserId(userId);
+        } else {
+            reunioes = repository.findAllWithDetails();
+        }
+        return reunioes.stream()
+                .map(this::toReuniaoListDTO)
+                .collect(Collectors.toList());
+    }
+
+    private ReuniaoListDTO toReuniaoListDTO(Reuniao reuniao) {
+        String organizadorNome = reuniao.getOrganizador() != null ? reuniao.getOrganizador().getNome() : null;
+        String projectName = reuniao.getProject() != null ? reuniao.getProject().getName() : null;
+        return new ReuniaoListDTO(
+                reuniao.getId(),
+                reuniao.getTitulo(),
+                reuniao.getDataHoraInicio(),
+                reuniao.getDuracaoMinutos(),
+                reuniao.getStatus(),
+                organizadorNome,
+                projectName
+        );
     }
 
     public Optional<Reuniao> buscarPorId(Long id) {

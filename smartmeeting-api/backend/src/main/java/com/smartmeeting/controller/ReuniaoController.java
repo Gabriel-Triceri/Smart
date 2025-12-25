@@ -52,52 +52,16 @@ public class ReuniaoController {
     @GetMapping
     public ResponseEntity<List<ReuniaoListDTO>> listar() {
         Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            return ResponseEntity.ok(List.of());
-        }
-
-        // Admin global pode ver todas as reuniões
         boolean isAdmin = com.smartmeeting.util.SecurityUtils.isAdmin();
 
-        List<ReuniaoListDTO> reunioesFiltradas = service.listarTodas().stream()
-                .filter(reuniao -> {
-                    // Admin global tem acesso a tudo
-                    if (isAdmin) {
-                        return true;
-                    }
+        List<ReuniaoListDTO> reunioes;
+        if (isAdmin) {
+            reunioes = service.listarTodas(null);
+        } else {
+            reunioes = service.listarTodas(currentUserId);
+        }
 
-                    // Se o usuário é organizador, pode ver
-                    if (reuniao.getOrganizador() != null &&
-                            reuniao.getOrganizador().getId().equals(currentUserId)) {
-                        return true;
-                    }
-
-                    // Se o usuário é participante, pode ver
-                    if (reuniao.getParticipantes() != null &&
-                            reuniao.getParticipantes().stream()
-                                    .anyMatch(p -> p.getId().equals(currentUserId))) {
-                        return true;
-                    }
-
-                    // Verificar permissão no projeto associado
-                    if (reuniao.getProject() != null) {
-                        return projectPermissionService.hasPermission(
-                                reuniao.getProject().getId(),
-                                currentUserId,
-                                com.smartmeeting.enums.PermissionType.MEETING_VIEW) ||
-                                projectPermissionService.hasPermission(
-                                        reuniao.getProject().getId(),
-                                        currentUserId,
-                                        com.smartmeeting.enums.PermissionType.PROJECT_VIEW);
-                    }
-
-                    // Reuniões sem projeto e sem ser organizador/participante: não visível
-                    return false;
-                })
-                .map(mapper::toReuniaoListDTO)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(reunioesFiltradas);
+        return ResponseEntity.ok(reunioes);
     }
 
     /**
