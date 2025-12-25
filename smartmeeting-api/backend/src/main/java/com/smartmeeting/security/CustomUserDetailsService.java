@@ -4,6 +4,7 @@ import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.repository.PessoaRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     @Override
+    @Cacheable("users")
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         System.out.println("DEBUG: CustomUserDetailsService - Tentando carregar usuário com email: " + email); // DEBUG PRINT
 

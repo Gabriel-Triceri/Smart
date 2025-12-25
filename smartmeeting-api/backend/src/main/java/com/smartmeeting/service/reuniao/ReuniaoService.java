@@ -1,8 +1,11 @@
 package com.smartmeeting.service.reuniao;
 
+import com.smartmeeting.dto.ReuniaoListDTO;
+import com.smartmeeting.dto.ReuniaoListDTO;
 import com.smartmeeting.dto.ReuniaoStatisticsDTO;
 import com.smartmeeting.model.Reuniao;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,8 +24,8 @@ public class ReuniaoService {
     private final ReuniaoStatisticsService statisticsService;
 
     // CRUD
-    public List<Reuniao> listarTodas() {
-        return crudService.listarTodas();
+    public List<ReuniaoListDTO> listarTodas(Long userId) {
+        return crudService.listarTodas(userId);
     }
 
     public Optional<Reuniao> buscarPorId(Long id) {
@@ -59,6 +62,7 @@ public class ReuniaoService {
         return statisticsService.getProximasReunioes();
     }
 
+    @Cacheable("statistics")
     public ReuniaoStatisticsDTO getReuniaoStatistics() {
         return statisticsService.getReuniaoStatistics();
     }

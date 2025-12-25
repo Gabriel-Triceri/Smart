@@ -17,6 +17,17 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
     @Query("SELECT r FROM Reuniao r LEFT JOIN FETCH r.organizador LEFT JOIN FETCH r.project")
     List<Reuniao> findAllWithDetails();
 
+    @Query("SELECT DISTINCT r FROM Reuniao r " +
+           "LEFT JOIN FETCH r.organizador " +
+           "LEFT JOIN FETCH r.project p " +
+           "LEFT JOIN r.participantes parts " +
+           "WHERE r.organizador.id = :userId OR parts.id = :userId OR " +
+           "(p.id IS NOT NULL AND EXISTS (" +
+           "  SELECT 1 FROM ProjectPermission pp " +
+           "  WHERE pp.project.id = p.id AND pp.pessoa.id = :userId AND pp.permission.nome IN ('MEETING_VIEW', 'PROJECT_VIEW')" +
+           "))")
+    List<Reuniao> findAllWithDetailsByUserId(@Param("userId") Long userId);
+
     @EntityGraph(value = "Reuniao.completa")
     Optional<Reuniao> findById(Long id);
 
