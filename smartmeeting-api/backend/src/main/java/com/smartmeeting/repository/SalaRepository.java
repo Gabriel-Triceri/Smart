@@ -15,6 +15,7 @@ public interface SalaRepository extends JpaRepository<Sala, Long> {
 
     @Override
     @Cacheable("salas")
+    @EntityGraph(value = "Sala.comEquipamentosEReunioes")
     List<Sala> findAll();
 
     @Override
