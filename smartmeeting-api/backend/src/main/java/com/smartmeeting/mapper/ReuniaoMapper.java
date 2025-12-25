@@ -13,6 +13,8 @@ import com.smartmeeting.service.sala.SalaService;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.stereotype.Component;
 
+import com.smartmeeting.dto.ReuniaoDetailsDTO;
+import com.smartmeeting.dto.ReuniaoListDTO;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -154,5 +156,46 @@ public class ReuniaoMapper {
             return null;
         }
         return StringEscapeUtils.escapeHtml4(valor);
+    }
+
+    public ReuniaoListDTO toReuniaoListDTO(Reuniao reuniao) {
+        if (reuniao == null) {
+            return null;
+        }
+
+        String organizadorNome = reuniao.getOrganizador() != null ? reuniao.getOrganizador().getNome() : null;
+        String projectName = reuniao.getProject() != null ? reuniao.getProject().getName() : null;
+
+        return new ReuniaoListDTO(
+                reuniao.getId(),
+                reuniao.getTitulo(),
+                reuniao.getDataHoraInicio(),
+                reuniao.getDuracaoMinutos(),
+                reuniao.getStatus(),
+                organizadorNome,
+                projectName
+        );
+    }
+
+    public ReuniaoDetailsDTO toReuniaoDetailsDTO(Reuniao reuniao) {
+        if (reuniao == null) {
+            return null;
+        }
+
+        String projectName = reuniao.getProject() != null ? reuniao.getProject().getName() : null;
+
+        return new ReuniaoDetailsDTO(
+                reuniao.getId(),
+                reuniao.getTitulo(),
+                reuniao.getDataHoraInicio(),
+                reuniao.getDuracaoMinutos(),
+                reuniao.getPauta(),
+                reuniao.getAta(),
+                reuniao.getStatus(),
+                reuniao.getOrganizador(),
+                reuniao.getSala(),
+                reuniao.getParticipantes(),
+                projectName
+        );
     }
 }

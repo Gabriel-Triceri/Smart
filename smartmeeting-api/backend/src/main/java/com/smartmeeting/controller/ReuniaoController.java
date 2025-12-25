@@ -46,10 +46,11 @@ public class ReuniaoController {
     }
 
     /**
+    /**
      * Lista todas as reuniões cadastradas (filtradas por permissão do usuário)
      */
     @GetMapping
-    public ResponseEntity<List<ReuniaoDTO>> listar() {
+    public ResponseEntity<List<ReuniaoListDTO>> listar() {
         Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
             return ResponseEntity.ok(List.of());
@@ -58,7 +59,7 @@ public class ReuniaoController {
         // Admin global pode ver todas as reuniões
         boolean isAdmin = com.smartmeeting.util.SecurityUtils.isAdmin();
 
-        List<ReuniaoDTO> reunioesFiltradas = service.listarTodas().stream()
+        List<ReuniaoListDTO> reunioesFiltradas = service.listarTodas().stream()
                 .filter(reuniao -> {
                     // Admin global tem acesso a tudo
                     if (isAdmin) {
@@ -93,7 +94,7 @@ public class ReuniaoController {
                     // Reuniões sem projeto e sem ser organizador/participante: não visível
                     return false;
                 })
-                .map(mapper::toDTO)
+                .map(mapper::toReuniaoListDTO)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(reunioesFiltradas);
@@ -103,7 +104,7 @@ public class ReuniaoController {
      * Busca por ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ReuniaoDTO> buscarPorId(@PathVariable("id") Long id) {
+    public ResponseEntity<ReuniaoDetailsDTO> buscarPorId(@PathVariable("id") Long id) {
         return service.buscarPorId(id)
                 .map(reuniao -> {
                     // Validação de permissão
@@ -116,7 +117,7 @@ public class ReuniaoController {
                                     "Você não tem permissão para visualizar esta reunião.");
                         }
                     }
-                    return mapper.toDTO(reuniao);
+                    return mapper.toReuniaoDetailsDTO(reuniao);
                 })
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

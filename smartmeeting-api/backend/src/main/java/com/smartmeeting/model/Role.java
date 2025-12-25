@@ -42,7 +42,7 @@ public class Role extends Auditable {
     @Column(name = "NOME_ROLE", nullable = false, unique = true)
     private String nome;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "ROLE_PERMISSION",
             joinColumns = @JoinColumn(name = "ID_ROLE"),

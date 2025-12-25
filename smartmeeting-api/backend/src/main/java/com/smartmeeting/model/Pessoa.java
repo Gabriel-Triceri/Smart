@@ -96,7 +96,7 @@ public class Pessoa extends Auditable {
     @JsonBackReference
     private List<Notificacao> notificacoesRecebidas;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "PESSOA_ROLE", joinColumns = @JoinColumn(name = "ID_PESSOA"), inverseJoinColumns = @JoinColumn(name = "ID_ROLE"))
     private Set<Role> roles = new HashSet<>();
 

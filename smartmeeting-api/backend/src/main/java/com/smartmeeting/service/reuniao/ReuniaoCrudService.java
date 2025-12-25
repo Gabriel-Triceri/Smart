@@ -19,7 +19,7 @@ public class ReuniaoCrudService {
     private final ReuniaoRepository repository;
 
     public List<Reuniao> listarTodas() {
-        return repository.findAll();
+        return repository.findAllWithDetails();
     }
 
     public Optional<Reuniao> buscarPorId(Long id) {
