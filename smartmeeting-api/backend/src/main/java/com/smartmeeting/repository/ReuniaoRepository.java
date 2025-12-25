@@ -23,8 +23,8 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
            "LEFT JOIN r.participantes parts " +
            "WHERE r.organizador.id = :userId OR parts.id = :userId OR " +
            "(p.id IS NOT NULL AND EXISTS (" +
-           "  SELECT 1 FROM ProjectPermission pp " +
-           "  WHERE pp.project.id = p.id AND pp.pessoa.id = :userId AND pp.permission.nome IN ('MEETING_VIEW', 'PROJECT_VIEW')" +
+           "  SELECT 1 FROM ProjectPermission pp JOIN pp.projectMember pm " +
+           "  WHERE pm.project.id = p.id AND pm.person.id = :userId AND pp.permissionType IN ('MEETING_VIEW', 'PROJECT_VIEW')" +
            "))")
     List<Reuniao> findAllWithDetailsByUserId(@Param("userId") Long userId);
 
