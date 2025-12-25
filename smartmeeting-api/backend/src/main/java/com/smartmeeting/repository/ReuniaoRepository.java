@@ -10,9 +10,15 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
+    @Query("SELECT r FROM Reuniao r LEFT JOIN FETCH r.organizador LEFT JOIN FETCH r.project")
+    List<Reuniao> findAllWithDetails();
+
+    @EntityGraph(value = "Reuniao.completa")
+    Optional<Reuniao> findById(Long id);
 
     @EntityGraph(value = "Reuniao.comSalaEParticipantes")
     List<Reuniao> findByDataHoraInicioBetweenAndStatus(

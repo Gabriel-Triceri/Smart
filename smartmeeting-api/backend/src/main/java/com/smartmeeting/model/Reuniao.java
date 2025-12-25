@@ -70,17 +70,17 @@ public class Reuniao extends Auditable {
     @Column(name = "STATUS_REUNIAO", nullable = false)
     private StatusReuniao status;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "ORGANIZADOR_ID", referencedColumnName = "ID_PESSOA", foreignKey = @ForeignKey(name = "FK_REUNIAO_ORGANIZADOR"))
     @JsonManagedReference
     private Pessoa organizador;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "SALA_ID", referencedColumnName = "ID_SALA", foreignKey = @ForeignKey(name = "FK_REUNIAO_SALA"))
     @JsonManagedReference
     private Sala sala;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "REUNIAO_PARTICIPANTES", joinColumns = @JoinColumn(name = "REUNIAO_ID", referencedColumnName = "ID_REUNIAO"), inverseJoinColumns = @JoinColumn(name = "PESSOA_ID", referencedColumnName = "ID_PESSOA"), foreignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_REUNIAO"), inverseForeignKey = @ForeignKey(name = "FK_REUNIAO_PARTICIPANTES_PESSOA"))
     private List<Pessoa> participantes;
 
