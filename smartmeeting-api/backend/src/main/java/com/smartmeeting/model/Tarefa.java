@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -88,6 +89,7 @@ public class Tarefa extends Auditable {
             joinColumns = @JoinColumn(name = "ID_TAREFA"),
             inverseJoinColumns = @JoinColumn(name = "ID_PESSOA")
     )
+    @BatchSize(size = 10)
     private Set<Pessoa> participantes = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -99,9 +101,11 @@ public class Tarefa extends Auditable {
     private Project project;
 
     @OneToMany(mappedBy = "tarefa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 10)
     private List<ComentarioTarefa> comentarios;
 
     @OneToMany(mappedBy = "tarefa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 10)
     private List<AnexoTarefa> anexos;
 
     @Override
