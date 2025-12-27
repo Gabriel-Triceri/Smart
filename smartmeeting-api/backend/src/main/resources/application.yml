@@ -1,7 +1,52 @@
 spring:
+  datasource:
+    url: jdbc:h2:file:./data/smartmeeting;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    defer-datasource-initialization: true
   sql:
     init:
       mode: always
       encoding: UTF-8
-  jpa:
-    defer-datasource-initialization: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: a1b2c3d4e5f6g7
+    password: a1b2c3d4e5f6g7
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  jwt:
+    secret: c2VjcmV0by1zdXBlci1zdXBlci1zZWd1cm8tcGFyYS1zbWFydG1lZXRpbmctYXBpLWp3dC1hdXRoZW50aWNhdGlvbg==
+    expiration-ms: 86400000
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.engine.jdbc.spi.SqlExceptionHelper: ERROR
+    com.smartmeeting: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: DEBUG
+    org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController: DEBUG
