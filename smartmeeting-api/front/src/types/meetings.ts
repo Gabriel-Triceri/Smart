@@ -386,6 +386,7 @@ export interface FiltroTarefas {
     semResponsavel?: boolean;
     proximas?: number;
     projectName?: string[];
+    projectId?: string[];
 }
 
 export interface StatisticsTarefas {
