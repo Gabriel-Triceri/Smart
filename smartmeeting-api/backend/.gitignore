@@ -1,1 +1,3 @@
 target/
+data/*.mv.db
+data/*.lock.db

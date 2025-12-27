@@ -1,6 +1,6 @@
 #FileLock
-#Sat Dec 27 20:12:20 BRT 2025
-server=192.168.15.7\:60047
-hostName=LAPTOP-EBDCJ9SK
+#Sat Dec 27 23:41:43 UTC 2025
+hostName=devbox
+id=19b622d3c4bce5ac1b3eac6f472dfd2099cd6e7be24
 method=file
-id=19b6215930930cb46338a94f02781ebe2173dc39e49
+server=192.168.0.2\:35235

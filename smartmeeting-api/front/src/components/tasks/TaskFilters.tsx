@@ -18,50 +18,49 @@ export function TaskFilters({
     projetos = []
 }: TaskFiltersProps) {
 
-    console.log('[TaskFilters] render');
-    console.log('[TaskFilters] filtros recebidos:', filters);
-    console.log('[TaskFilters] tarefas recebidas:', tarefas);
-    console.log('[TaskFilters] assignees recebidos:', assignees);
-    console.log('[TaskFilters] projetos recebidos:', projetos);
-
     const updateFilter = (key: keyof FiltroTarefas, value: any) => {
-        console.log('[updateFilter] key:', key, 'value:', value);
         onFiltersChange({ ...filters, [key]: value });
     };
 
+    const handleProjectChange = (projectId: string) => {
+        const newFilters = { ...filters };
+
+        // Correção: Limpa o filtro de nome de projeto legado para evitar conflitos
+        delete newFilters.projectName;
+
+        if (projectId) {
+            newFilters.projectId = [projectId];
+        } else {
+            // Garante que o ID do projeto seja removido se "Todos" for selecionado
+            delete newFilters.projectId;
+        }
+
+        onFiltersChange(newFilters);
+    };
+
     const clearFilter = (key: keyof FiltroTarefas) => {
-        console.log('[clearFilter] key:', key);
         const newFilters = { ...filters };
         delete newFilters[key];
         onFiltersChange(newFilters);
     };
 
     const clearAllFilters = () => {
-        console.log('[clearAllFilters]');
         onFiltersChange({});
     };
 
     const hasActiveFilters = Object.keys(filters).length > 0;
 
-    console.log('[TaskFilters] hasActiveFilters:', hasActiveFilters);
-
     const projectOptions = Array.isArray(projetos)
         ? projetos.map(p => {
-            console.log('[projectOptions] projeto:', p);
             return { value: String(p.id), label: p.name || 'Projeto sem nome' };
         })
         : [];
 
-    console.log('[TaskFilters] projectOptions:', projectOptions);
-
     const assigneeOptions = Array.isArray(assignees)
         ? assignees.map(a => {
-            console.log('[assigneeOptions] assignee:', a);
             return { value: String(a.id), label: a.nome };
         })
         : [];
-
-    console.log('[TaskFilters] assigneeOptions:', assigneeOptions);
 
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm p-4">
@@ -75,7 +74,6 @@ export function TaskFilters({
                     icon={User}
                     value={String((filters.responsaveis && filters.responsaveis[0]) ?? '')}
                     onChange={(val) => {
-                        console.log('[Responsaveis onChange] val:', val);
                         updateFilter('responsaveis', val ? [val] : undefined);
                     }}
                     options={assigneeOptions}
@@ -86,7 +84,6 @@ export function TaskFilters({
                     icon={ListChecks}
                     value={String((filters.status && filters.status[0]) ?? '')}
                     onChange={(val) => {
-                        console.log('[Status onChange] val:', val);
                         updateFilter('status', val ? [val] : undefined);
                     }}
                     options={STATUS_OPTIONS}
@@ -96,10 +93,7 @@ export function TaskFilters({
                 <CompactSelect
                     icon={Briefcase}
                     value={(filters.projectId && filters.projectId[0]) || ''}
-                    onChange={(val) => {
-                        console.log('[Projeto onChange] val:', val);
-                        updateFilter('projectId', val ? [val] : undefined);
-                    }}
+                    onChange={handleProjectChange}
                     options={projectOptions}
                     placeholder="Projeto"
                 />
@@ -113,7 +107,6 @@ export function TaskFilters({
                         value={filters.vencendo ? '3' : filters.atrasadas ? 'overdue' : ''}
                         onChange={(e) => {
                             const value = e.target.value;
-                            console.log('[Periodo onChange] value:', value);
                             updateFilter('vencendo', value === '3');
                             updateFilter('atrasadas', value === 'overdue');
                             if (value === '') {
@@ -132,7 +125,6 @@ export function TaskFilters({
                 {hasActiveFilters && (
                     <div className="flex items-center gap-2 pl-2 border-l">
                         {Object.entries(filters).map(([key, value]) => {
-                            console.log('[Filtro ativo]', key, value);
                             if (!value) return null;
 
                             return (
@@ -161,23 +153,18 @@ interface CompactSelectProps {
 }
 
 function CompactSelect({ icon: Icon, value, onChange, options, placeholder }: CompactSelectProps) {
-
-    console.log('[CompactSelect]', placeholder, 'value:', value, 'options:', options);
-
     return (
         <div className="relative w-auto min-w-[150px]">
             <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <select
                 value={value}
                 onChange={(e) => {
-                    console.log('[CompactSelect onChange]', placeholder, e.target.value);
                     onChange(e.target.value);
                 }}
                 className="w-full pl-9 pr-8 h-10 text-sm"
             >
                 <option value="">{placeholder}</option>
                 {options.map(option => {
-                    console.log('[CompactSelect option]', placeholder, option);
                     return (
                         <option key={option.value} value={option.value}>
                             {option.label}
@@ -190,7 +177,6 @@ function CompactSelect({ icon: Icon, value, onChange, options, placeholder }: Co
 }
 
 function getFilterLabel(key: string, value: any): string {
-    console.log('[getFilterLabel]', key, value);
     switch (key) {
         case 'busca': return `"${value}"`;
         case 'responsaveis': return `Resp: ${Array.isArray(value) ? value.length : 1}`;
