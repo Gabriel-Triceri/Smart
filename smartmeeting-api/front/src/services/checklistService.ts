@@ -42,7 +42,7 @@ export const checklistService = {
     },
 
     async getAssigneesDisponiveis() {
-        const response = await axios.get('/api/checklist/assignees');
+        const response = await api.get('/tarefas/assignees');
         return response.data;
     }
 };

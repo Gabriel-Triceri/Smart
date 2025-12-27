@@ -39,19 +39,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String token = getJwtFromRequest(request);
 
         if (!StringUtils.hasText(token)) {
-            logger.debug("[JWT FILTER] Nenhum token encontrado no request {} {}", request.getMethod(), request.getRequestURI());
+            logger.debug("[JWT FILTER] Nenhum token encontrado no request {} {}", request.getMethod(),
+                    request.getRequestURI());
         } else {
             logger.debug("[JWT FILTER] Token recebido (mascarado) {} para {} {}",
-                    token.length() > 16 ? token.substring(0,8) + "..." + token.substring(token.length()-8) : token,
+                    token.length() > 16 ? token.substring(0, 8) + "..." + token.substring(token.length() - 8) : token,
                     request.getMethod(),
-                    request.getRequestURI()
-            );
+                    request.getRequestURI());
 
             try {
                 // Valida token
@@ -83,15 +83,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
                 // SEMPRE carregar o UserDetails para ter o UserPrincipal com ID correto
-                // As authorities do token são usadas para verificação, mas precisamos do UserPrincipal
+                // As authorities do token são usadas para verificação, mas precisamos do
+                // UserPrincipal
                 // para que SecurityUtils.getCurrentUserId() funcione corretamente
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 logger.debug("[JWT FILTER] UserDetails carregado: {}", userDetails.getUsername());
 
-                // Usa as authorities do UserDetails (que vêm do banco) para garantir consistência
-                // Se preferir usar as do token: new UsernamePasswordAuthenticationToken(userDetails, null, authorities)
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                // Usa as authorities do UserDetails (que vêm do banco) para garantir
+                // consistência
+                // Se preferir usar as do token: new
+                // UsernamePasswordAuthenticationToken(userDetails, null, authorities)
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -117,5 +120,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        // Lista de endpoints públicos que não precisam de autenticação JWT
+        return path.startsWith("/auth/") ||
+                path.startsWith("/h2-console") ||
+                path.equals("/ws/permissions") ||
+                path.equals("/permissions") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs");
     }
 }

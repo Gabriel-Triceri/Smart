@@ -91,6 +91,7 @@ export function TaskManager() {
         setExibirDetalhes,
         setFiltros: _setFiltros,
         assigneesDisponiveis,
+        projects,
 
         atualizarProgresso
     } = useTarefas();
@@ -102,6 +103,12 @@ export function TaskManager() {
 
     // Derived state for column management
     const selectedProjectId = (() => {
+        // Fix: Prioritize explicit projectId filter which is set by TaskFilters
+        if (filtros.projectId && filtros.projectId.length > 0) {
+            return filtros.projectId[0]; // Assuming single project selection for Kanban view
+        }
+
+        // Fallback: Try to find projectId by project name (legacy/search behavior)
         if (filtros.projectName && filtros.projectName.length === 1) {
             const nomeProjeto = filtros.projectName[0];
             const tarefa = tarefas.find(t => t.projectName === nomeProjeto);
@@ -412,6 +419,7 @@ export function TaskManager() {
                                 onFiltersChange={aplicarFiltros}
                                 tarefas={tarefas}
                                 assignees={assigneesDisponiveis}
+                                projetos={projects}
                             />
                         </div>
                     )}

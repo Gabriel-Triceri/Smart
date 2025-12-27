@@ -7,13 +7,15 @@ import {
     NotificacaoTarefa,
     Assignee,
     KanbanBoard,
-    TemplateTarefa
+    TemplateTarefa,
+    ProjectDTO
 } from '../types/meetings';
 import { tarefaService } from '../services/tarefaService';
 import { kanbanService } from '../services/kanbanService';
 import { checklistService } from '../services/checklistService';
 import { historyService } from '../services/historyService';
 import { notificationService } from '../services/notificationService';
+import { projectService } from '../services/projectService';
 
 interface UseTarefasProps {
     reuniaoId?: string;
@@ -26,6 +28,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
     const [kanbanBoard, setKanbanBoard] = useState<KanbanBoard | null>(null);
     const [templates, setTemplates] = useState<TemplateTarefa[]>([]);
     const [assigneesDisponiveis, setAssigneesDisponiveis] = useState<Assignee[]>([]);
+    const [projects, setProjects] = useState<ProjectDTO[]>([]);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -48,24 +51,30 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         setError(null);
 
         try {
+            // Fix: Fetch tasks directly from getAllTarefas instead of relying on getKanbanBoard
+            // This bypasses the backend issue where getKanbanBoard ignores projectId
             const [
                 kanbanData,
+                listaTarefas,
                 templatesData,
                 assigneesData,
-                statsData
+                statsData,
+                projectsData
             ] = await Promise.all([
                 kanbanService.getKanbanBoard(reuniaoId, projectId),
+                tarefaService.getAllTarefas(filtros),
                 checklistService.getTemplatesTarefas(),
                 checklistService.getAssigneesDisponiveis(),
-                historyService.getStatisticsTarefas()
+                historyService.getStatisticsTarefas(),
+                projectService.getMyProjects()
             ]);
 
-            const allTarefas = kanbanData.colunas.flatMap(c => c.tarefas);
-            setTarefas(allTarefas);
+            setTarefas(listaTarefas);
             setKanbanBoard(kanbanData);
             setTemplates(templatesData);
             setAssigneesDisponiveis(assigneesData);
             setStatistics(statsData);
+            setProjects(projectsData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao carregar tarefas');
         } finally {
@@ -321,14 +330,16 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
             const filteredTarefas = tarefasData.filter(tarefa => {
                 if (novosFiltros.responsaveis && novosFiltros.responsaveis.length > 0) {
-                    const hasAssignee = tarefa.responsaveis.some(r => novosFiltros.responsaveis?.includes(r.id));
+                    // Fix: Convert r.id to string manually to match filter type
+                    const hasAssignee = tarefa.responsaveis.some(r => novosFiltros.responsaveis?.includes(String(r.id)));
                     if (!hasAssignee) return false;
                 }
                 if (novosFiltros.status && novosFiltros.status.length > 0) {
                     if (!novosFiltros.status.includes(tarefa.status)) return false;
                 }
                 if (novosFiltros.projectId && novosFiltros.projectId.length > 0) {
-                    if (!tarefa.projectId || !novosFiltros.projectId.includes(tarefa.projectId)) return false;
+                    // Fix: Convert tarefa.projectId to string manually
+                    if (!tarefa.projectId || !novosFiltros.projectId.includes(String(tarefa.projectId))) return false;
                 }
                 if (novosFiltros.prazo_tarefaInicio) {
                     if (!tarefa.prazo_tarefa || tarefa.prazo_tarefa < novosFiltros.prazo_tarefaInicio) return false;
@@ -440,6 +451,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         kanbanBoard,
         templates,
         assigneesDisponiveis,
+        projects,
         loading,
         error,
         statistics,
@@ -449,7 +461,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         exibirFormulario,
         exibirDetalhes,
         exibirKanban,
-    
+
 
         criarTarefa,
         atualizarTarefa,

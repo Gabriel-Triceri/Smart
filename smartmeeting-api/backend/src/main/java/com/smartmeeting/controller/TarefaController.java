@@ -18,7 +18,6 @@ import com.smartmeeting.dto.MovimentacaoTarefaDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 @RestController
 @RequestMapping("/tarefas")
 public class TarefaController {
@@ -32,8 +31,8 @@ public class TarefaController {
     private final ProjectPermissionService projectPermissionService;
 
     public TarefaController(TarefaService tarefaService, KanbanService kanbanService, ReuniaoMapper reuniaoMapper,
-                            TarefaChecklistService checklistService,
-                            ProjectPermissionService projectPermissionService) {
+            TarefaChecklistService checklistService,
+            ProjectPermissionService projectPermissionService) {
         this.tarefaService = tarefaService;
         this.kanbanService = kanbanService;
         this.reuniaoMapper = reuniaoMapper;
@@ -227,7 +226,7 @@ public class TarefaController {
      */
     @PostMapping("/{id:\\d+}/mover")
     public ResponseEntity<TarefaDTO> moverTarefa(@PathVariable(name = "id") Long id,
-                                                 @Valid @RequestBody MovimentacaoTarefaRequest request) {
+            @Valid @RequestBody MovimentacaoTarefaRequest request) {
         // Validação de permissão
         TarefaDTO existing = tarefaService.buscarPorIdDTO(id);
         if (existing.getProjectId() != null) {

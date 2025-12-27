@@ -154,12 +154,12 @@ export function KanbanBoard({
 
   const loadGlobalColumns = async () => {
     try {
-      // Mapeia colunas padrão. O ID do Kanban é o próprio Status (string)
+      // Corrected: Use backendId for kanbanColumnId to match task.columnId values (1, 2, 3, 4)
       setColumns(DEFAULT_COLUMNS_VISUAL.map(c => ({
         status: c.id,
         title: c.title,
-        id: c.id, // O StatusTarefa é o ID para D&D (ex: 'in_progress')
-        kanbanColumnId: c.id, // O ID que é enviado ao Backend (o Backend deve traduzir a string do Enum para Long ou aceitar o Enum)
+        id: c.id, // StatusTarefa is used as DroppableId for global columns
+        kanbanColumnId: c.backendId, // Send '1', '2', etc. to backend and use for matching
       })));
     } catch (err) {
       console.error('Erro ao carregar colunas globais:', err);
@@ -213,9 +213,21 @@ export function KanbanBoard({
     }
   }, [dynamicColumns, projectId]);
 
-  // Group tarefas by columnId
+  // Group tarefas by columnId with Fallback Logic
   const tarefasPorColuna: Record<KanbanDroppableId, Tarefa[]> = columns.reduce((acc, col) => {
-    acc[col.id] = tarefas.filter(t => String(t.columnId) === String(col.kanbanColumnId)).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+    acc[col.id] = tarefas.filter(t => {
+      // 1. Precise Match: Task columnId matches Column backend ID
+      const matchId = t.columnId && String(t.columnId) === String(col.kanbanColumnId);
+
+      // 2. Fallback Match: Task has NO columnId, but Status matches Column Status
+      // Only apply this fallback if the column is suitable (e.g. isDefault for that status, or global board)
+      const matchStatus = (!t.columnId || t.columnId === '0') && t.status === col.status;
+
+      // We prioritize ID match. Fallback allows "orphaned" tasks to appear.
+      // Note: If multiple columns have same status, task might duplicate if we aren't careful.
+      // But in this logic, filter runs for EACH column independently.
+      return matchId || matchStatus;
+    }).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
     return acc;
   }, {} as Record<KanbanDroppableId, Tarefa[]>);
 
