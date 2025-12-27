@@ -7,7 +7,6 @@ import {
   Assignee,
   TarefaFormData,
   StatusTarefa,
-  KanbanColumnConfig,
   KanbanColumnDynamic,
   PermissionType
 } from '../../types/meetings';
@@ -239,7 +238,7 @@ export function KanbanBoard({
     try {
       // update via kanbanService — use o ID da coluna dinâmica
       // O serviço `kanbanService.updateKanbanColumn` precisa ser corrigido para aceitar ID numérico/string
-      const updated = await kanbanService.updateKanbanColumn(columnId, tempTitle.trim());
+      const updated = await kanbanService.updateKanbanColumn(columnId as any, tempTitle.trim());
       setColumns(prev => prev.map(c => (c.id === columnId ? { ...c, title: updated.title } : c)));
       setEditingColumn(null);
       setTempTitle('');

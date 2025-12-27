@@ -40,28 +40,28 @@ public class RoleController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RoleDTO>> findAll() {
         List<RoleDTO> list = roleService.findAll().stream().map(this::toDTO).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleDTO> findById(@PathVariable Long id) {
         Role role = roleService.findById(id);
         return ResponseEntity.ok(toDTO(role));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleDTO> create(@RequestBody RoleDTO dto) {
         Role created = roleService.create(toEntity(dto));
         return ResponseEntity.ok(toDTO(created));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleDTO> update(@PathVariable Long id, @RequestBody RoleDTO dto) {
         Role updated = roleService.update(id, toEntity(dto));
         return ResponseEntity.ok(toDTO(updated));
@@ -75,14 +75,14 @@ public class RoleController {
     // }
 
     @PostMapping("/{id}/permissions/{permissionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleDTO> addPermission(@PathVariable Long id, @PathVariable Long permissionId) {
         Role role = roleService.addPermissionToRole(id, permissionId);
         return ResponseEntity.ok(toDTO(role));
     }
 
     @DeleteMapping("/{id}/permissions/{permissionId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleDTO> removePermission(@PathVariable Long id, @PathVariable Long permissionId) {
         Role role = roleService.removePermissionFromRole(id, permissionId);
         return ResponseEntity.ok(toDTO(role));

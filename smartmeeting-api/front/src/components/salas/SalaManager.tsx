@@ -325,7 +325,6 @@ export const SalaManager: React.FC = () => {
                                     salas={salasFiltradas}
                                     currentDate={timelineDate}
                                     onDateChange={setTimelineDate}
-                                    isLoading={loading}
                                 />
                             )}
                         </>

@@ -21,8 +21,9 @@ import {
     Check,
     AlignLeft
 } from 'lucide-react';
-import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem, PermissionType, PrioridadeTarefa, Assignee, TarefaFormData } from '../../types/meetings';
+import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem, PermissionType, PrioridadeTarefa, Assignee, TarefaFormData, KanbanColumnConfig } from '../../types/meetings';
 import { CanDo } from '../permissions/CanDo';
+import { tarefaService } from '../../services/tarefaService';
 import { formatDate, isDateBefore } from '../../utils/dateHelpers';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
@@ -109,9 +110,8 @@ export function TaskDetails({
     useEffect(() => {
         const loadColumns = async () => {
             try {
-                const { meetingsApi } = await import('../../services/meetingsApi');
-                const cols = await meetingsApi.getKanbanColumns();
-                setColumns(cols);
+                const cols = await tarefaService.getKanbanColumns();
+                setColumns(cols.map((c: KanbanColumnConfig) => ({ status: c.status, title: c.title })));
             } catch (error) {
                 console.error('Failed to load kanban columns', error);
             }

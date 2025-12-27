@@ -1,5 +1,4 @@
 import api from './httpClient';
-import { AxiosResponse } from 'axios';
 import {
     KanbanBoard,
     KanbanColumn,

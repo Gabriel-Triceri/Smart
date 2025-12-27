@@ -12,31 +12,29 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@NamedEntityGraph(
-        name = "ComentarioTarefa.comTarefaEAutor",
-        attributeNodes = {
+@EqualsAndHashCode(exclude = "tarefa")
+@NamedEntityGraph(name = "ComentarioTarefa.comTarefaEAutor", attributeNodes = {
                 @NamedAttributeNode("tarefa"),
                 @NamedAttributeNode("autor")
-        }
-)
+})
 public class ComentarioTarefa {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID_COMENTARIO")
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "ID_COMENTARIO")
+        private Long id;
 
-    @Column(name = "TEXTO_COMENTARIO", nullable = false, columnDefinition = "TEXT")
-    private String texto;
+        @Column(name = "TEXTO_COMENTARIO", nullable = false, columnDefinition = "TEXT")
+        private String texto;
 
-    @Column(name = "DATA_CRIACAO", nullable = false)
-    private LocalDateTime dataCriacao = LocalDateTime.now();
+        @Column(name = "DATA_CRIACAO", nullable = false)
+        private LocalDateTime dataCriacao = LocalDateTime.now();
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "ID_TAREFA", nullable = false)
-    private Tarefa tarefa;
+        @ManyToOne(fetch = FetchType.EAGER)
+        @JoinColumn(name = "ID_TAREFA", nullable = false)
+        private Tarefa tarefa;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "ID_AUTOR", nullable = false)
-    private Pessoa autor;
+        @ManyToOne(fetch = FetchType.EAGER)
+        @JoinColumn(name = "ID_AUTOR", nullable = false)
+        private Pessoa autor;
 }

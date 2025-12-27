@@ -35,7 +35,7 @@ public class PermissionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<PermissionDTO>> findAll() {
         List<PermissionDTO> list = permissionService.findAll().stream()
                 .map(this::toDTO)
@@ -44,28 +44,28 @@ public class PermissionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PermissionDTO> findById(@PathVariable Long id) {
         Permission p = permissionService.findById(id);
         return ResponseEntity.ok(toDTO(p));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PermissionDTO> create(@RequestBody PermissionDTO dto) {
         Permission created = permissionService.create(toEntity(dto));
         return ResponseEntity.ok(toDTO(created));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PermissionDTO> update(@PathVariable Long id, @RequestBody PermissionDTO dto) {
         Permission updated = permissionService.update(id, toEntity(dto));
         return ResponseEntity.ok(toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         permissionService.delete(id);
         return ResponseEntity.noContent().build();

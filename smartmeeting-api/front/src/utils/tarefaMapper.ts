@@ -183,8 +183,8 @@ export const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => 
   const tags = Array.isArray(task.tags)
     ? task.tags.map(String)
     : typeof task.tags === 'string'
-    ? task.tags.split(',').map(s => s.trim())
-    : [];
+      ? task.tags.split(',').map((s: string) => s.trim())
+      : [];
 
   return {
     id: String(task.id ?? task._id ?? generateClientId()),
@@ -248,7 +248,7 @@ export const mapTarefaFormToBackend = (
 export const mapKanbanColumnsFromBackend = (raw: any[]): KanbanColumnConfig[] => {
   if (!Array.isArray(raw)) return [];
   return raw.map((c: any) => ({
-    id: Number(c.id ?? c.columnId ?? 0),
+    id: String(c.id ?? c.columnId ?? 0),
     title: c.title ?? c.titulo ?? `Coluna ${c.id ?? ''}`,
     ordem: c.ordem ?? c.order ?? undefined,
     descricao: c.descricao ?? c.description ?? undefined,

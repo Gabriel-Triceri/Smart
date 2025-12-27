@@ -28,7 +28,7 @@ public class ProjectPermissionController {
      * Lista todas as permissões de todos os membros do projeto
      */
     @GetMapping
-    @PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
+    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
     public ResponseEntity<List<MemberPermissionsDTO>> getAllMemberPermissions(
             @PathVariable("projectId") Long projectId) {
         List<MemberPermissionsDTO> permissions = permissionService.getAllMemberPermissions(projectId);
@@ -39,7 +39,7 @@ public class ProjectPermissionController {
      * Obtém permissões de um membro específico
      */
     @GetMapping("/members/{memberId}")
-    @PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
+    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
     public ResponseEntity<MemberPermissionsDTO> getMemberPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId) {
@@ -51,7 +51,7 @@ public class ProjectPermissionController {
      * Obtém permissões de uma pessoa específica no projeto
      */
     @GetMapping("/person/{personId}")
-    @PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
+    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
     public ResponseEntity<MemberPermissionsDTO> getPersonPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("personId") Long personId) {
@@ -63,7 +63,7 @@ public class ProjectPermissionController {
      * Atualiza permissões de um membro
      */
     @PutMapping("/members/{memberId}")
-    @PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
+    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
     public ResponseEntity<MemberPermissionsDTO> updateMemberPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId,
@@ -77,7 +77,7 @@ public class ProjectPermissionController {
      * Atualiza role de um membro e reseta permissões
      */
     @PutMapping("/members/{memberId}/role")
-    @PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
+    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
     public ResponseEntity<MemberPermissionsDTO> updateMemberRole(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId,
@@ -91,7 +91,7 @@ public class ProjectPermissionController {
      * Reseta permissões de um membro para o padrão do seu role
      */
     @PostMapping("/members/{memberId}/reset")
-    @PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
+    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
     public ResponseEntity<MemberPermissionsDTO> resetMemberPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId) {

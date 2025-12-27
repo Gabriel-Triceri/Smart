@@ -1,10 +1,11 @@
 import api from './httpClient';
 import { Tarefa, TarefaFormData, FiltroTarefas, KanbanColumnConfig } from '../types/meetings';
-// Adicionado TarefaDTO para tipagem interna do Axios, facilitando o uso do mapper
-import { TarefaDTO } from '../types/dto/tarefaDTO'; 
 import { mapBackendTask, normalizeTaskArray, mapTarefaFormToBackend } from '../utils/tarefaMapper';
 import { IdValidation } from '../utils/validation';
 import { AxiosResponse } from 'axios';
+
+// DTO para representar a tarefa vinda do backend
+type TarefaDTO = any;
 
 export const tarefaService = {
     // 1. GET /tarefas (Com filtros opcionais)
@@ -16,8 +17,8 @@ export const tarefaService = {
     // 2. CORREÇÃO: Usando o endpoint principal com filtro (reuniaoId).
     // O backend não tinha um endpoint dedicado para listar tarefas por reunião.
     async getTarefasPorReuniao(reuniaoId: string): Promise<Tarefa[]> {
-        const response: AxiosResponse<TarefaDTO[]> = await api.get('/tarefas', { 
-            params: { reuniaoId } 
+        const response: AxiosResponse<TarefaDTO[]> = await api.get('/tarefas', {
+            params: { reuniaoId }
         });
         return normalizeTaskArray(response.data ?? []);
     },
@@ -45,7 +46,7 @@ export const tarefaService = {
         const payload = mapTarefaFormToBackend(data, { includeDefaults: true });
         const response: AxiosResponse<TarefaDTO> = await api.post('/tarefas', payload);
         // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data); 
+        return mapBackendTask(response.data);
     },
 
     // 7. PUT /tarefas/{id} (Atualizar Tarefa)
@@ -54,7 +55,7 @@ export const tarefaService = {
         const payload = mapTarefaFormToBackend(data);
         const response: AxiosResponse<TarefaDTO> = await api.put(`/tarefas/${id}`, payload);
         // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data); 
+        return mapBackendTask(response.data);
     },
 
     // 8. DELETE /tarefas/{id} (Deletar Tarefa)
@@ -65,16 +66,19 @@ export const tarefaService = {
 
     // 9. POST /tarefas/{id}/comentarios (Adicionar Comentário)
     async adicionarComentario(tarefaId: string, conteudo: string, mencoes?: string[]): Promise<any> {
-        // Assume que 'mencoes' no Java espera List<String>
         const response = await api.post(`/tarefas/${tarefaId}/comentarios`, { conteudo, mencoes });
         return response.data;
     },
 
-    // --- MÉTODOS DE COMENTÁRIO REMOVIDOS ---
-    // O Backend (TarefaController.java) não implementa PUT/DELETE para comentários.
-    // async atualizarComentario(tarefaId: string, comentarioId: string, conteudo: string): Promise<any> { ... }
-    // async deletarComentario(tarefaId: string, comentarioId: string): Promise<void> { ... }
-    
+    async atualizarComentario(tarefaId: string, comentarioId: string, conteudo: string): Promise<any> {
+        const response = await api.put(`/tarefas/${tarefaId}/comentarios/${comentarioId}`, { conteudo });
+        return response.data;
+    },
+
+    async deletarComentario(tarefaId: string, comentarioId: string): Promise<void> {
+        await api.delete(`/tarefas/${tarefaId}/comentarios/${comentarioId}`);
+    },
+
     // 10. POST /tarefas/{id}/anexos (Anexar Arquivo)
     // CORREÇÃO: Removido o header manual 'Content-Type' para evitar conflito com FormData.
     async anexarArquivo(tarefaId: string, arquivo: File): Promise<any> {
@@ -88,7 +92,7 @@ export const tarefaService = {
     async atribuirTarefa(tarefaId: string, responsavelId: string, principal = false): Promise<Tarefa> {
         const response: AxiosResponse<TarefaDTO> = await api.post(`/tarefas/${tarefaId}/atribuir`, { responsavelId, principal });
         // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data); 
+        return mapBackendTask(response.data);
     },
 
     // 12. PATCH /tarefas/{id}/progresso (Atualizar Progresso)
@@ -96,7 +100,7 @@ export const tarefaService = {
     async atualizarProgresso(tarefaId: string, progresso: number): Promise<Tarefa> {
         const response: AxiosResponse<TarefaDTO> = await api.patch(`/tarefas/${tarefaId}/progresso`, { progresso });
         // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data); 
+        return mapBackendTask(response.data);
     },
 
     // 13. GET /tarefas/buscar (Busca por termo)
@@ -127,11 +131,11 @@ export const tarefaService = {
     async duplicarTarefa(tarefaId: string, modificacoes?: any): Promise<Tarefa> {
         const response: AxiosResponse<TarefaDTO> = await api.post(`/tarefas/${tarefaId}/duplicar`, modificacoes);
         // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data); 
+        return mapBackendTask(response.data);
     },
 
     // 18. GET /tarefas/kanbanColumns (Configurações do Kanban)
-    async getKanbanColumns(projectId: number): Promise<KanbanColumnConfig[]> {
+    async getKanbanColumns(projectId?: string): Promise<KanbanColumnConfig[]> {
         const response = await api.get('/tarefas/kanbanColumns', {
             params: { projectId }
         });
@@ -143,10 +147,10 @@ export const tarefaService = {
         // CORREÇÃO CRÍTICA: O Controller Java espera 'newStatus' e 'newPosition' no body 
         // para o DTO 'MovimentacaoTarefaRequest'.
         const response: AxiosResponse<TarefaDTO> = await api.post(`/tarefas/${tarefaId}/mover`, {
-            colunaId: colunaId, 
-            newPosition: posicao ?? 0 
+            colunaId: colunaId,
+            newPosition: posicao ?? 0
         });
         // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data); 
+        return mapBackendTask(response.data);
     }
 };

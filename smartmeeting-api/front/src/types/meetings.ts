@@ -194,7 +194,7 @@ export enum StatusReuniao {
  */
 export function normalizeStatusReuniao(status: string | StatusReuniao): StatusReuniao {
     const statusStr = status.toString().toUpperCase();
-    
+
     switch (statusStr) {
         case 'AGENDADA':
         case 'agendada':
@@ -276,8 +276,18 @@ export interface NotificacaoTarefa {
 }
 
 export interface KanbanColumnConfig {
-    status: StatusTarefa | undefined;
+    id?: string;
+    status: StatusTarefa;
     title: string;
+}
+
+export interface ProjectDTO {
+    id: string;
+    name: string;
+    description: string;
+    status?: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface Tarefa {
@@ -311,7 +321,7 @@ export interface Tarefa {
     projectId?: string;
     projectName?: string;
     deletedAt?: string;
-    columnId: string; 
+    columnId: string;
     ordem?: number;
     // Campos de Checklist
     checklist?: ChecklistItem[];

@@ -34,44 +34,44 @@ export function TaskFilters({
         ? [...new Map(
             tarefas
                 .filter(t => t.projectId) // garante que só tarefas com projectId
-                .map(t => [t.projectId, { value: t.projectId, label: t.projectName || 'Projeto sem nome' }])
+                .map(t => [t.projectId, { value: String(t.projectId), label: t.projectName || 'Projeto sem nome' }])
         ).values()]
         : [];
 
     return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm p-4">
             <div className="flex flex-wrap items-center gap-4">
-                
+
                 {/* Ícone decorativo */}
                 <div className="hidden md:flex items-center justify-center w-10 h-10 text-slate-400">
                     <Filter className="w-5 h-5" />
                 </div>
 
                 {/* Dropdown de responsáveis */}
-                <CompactSelect 
-                    icon={User} 
-                    value={String((filters.responsaveis && filters.responsaveis[0]) ?? '')} 
-                    onChange={(val) => updateFilter('responsaveis', val ? [val] : undefined)} 
-                    options={Array.isArray(assignees) ? assignees.map(a => ({ value: String(a.id), label: a.nome })) : []} 
-                    placeholder="Responsável" 
+                <CompactSelect
+                    icon={User}
+                    value={String((filters.responsaveis && filters.responsaveis[0]) ?? '')}
+                    onChange={(val) => updateFilter('responsaveis', val ? [val] : undefined)}
+                    options={Array.isArray(assignees) ? assignees.map(a => ({ value: String(a.id), label: a.nome })) : []}
+                    placeholder="Responsável"
                 />
-                
+
                 {/* Dropdown de status */}
-                <CompactSelect 
-                    icon={ListChecks} 
-                    value={String((filters.status && filters.status[0]) ?? '')} 
-                    onChange={(val) => updateFilter('status', val ? [val] : undefined)} 
-                    options={STATUS_OPTIONS} 
-                    placeholder="Status" 
+                <CompactSelect
+                    icon={ListChecks}
+                    value={String((filters.status && filters.status[0]) ?? '')}
+                    onChange={(val) => updateFilter('status', val ? [val] : undefined)}
+                    options={STATUS_OPTIONS}
+                    placeholder="Status"
                 />
-                
+
                 {/* Dropdown de projetos */}
-                <CompactSelect 
-                    icon={Briefcase} 
-                    value={(filters.projectName && filters.projectName[0]) || ''} 
-                    onChange={(val) => updateFilter('projectName', val ? [val] : undefined)} 
-                    options={projectOptions} 
-                    placeholder="Projeto" 
+                <CompactSelect
+                    icon={Briefcase}
+                    value={(filters.projectName && filters.projectName[0]) || ''}
+                    onChange={(val) => updateFilter('projectName', val ? [val] : undefined)}
+                    options={projectOptions}
+                    placeholder="Projeto"
                 />
 
                 {/* Separador */}
@@ -80,7 +80,7 @@ export function TaskFilters({
                 {/* Controle de datas */}
                 <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-md h-10 px-3 transition-all hover:border-slate-300 dark:hover:border-slate-500">
                     <Calendar className="w-4 h-4 text-slate-400 mr-3" />
-                    
+
                     <select
                         value={filters.vencendo ? '3' : filters.atrasadas ? 'overdue' : ''}
                         onChange={(e) => {
@@ -99,24 +99,24 @@ export function TaskFilters({
                     <div className="w-px h-5 bg-slate-300 dark:bg-slate-600 mx-3"></div>
 
                     <div className="flex items-center gap-2">
-                        <input 
-                            type="date" 
-                            value={filters.prazo_tarefaInicio || ''} 
-                            onChange={(e) => updateFilter('prazo_tarefaInicio', e.target.value)} 
-                            className="bg-transparent text-sm text-slate-600 dark:text-slate-300 border-none focus:ring-0 p-0 w-[110px] h-full" 
+                        <input
+                            type="date"
+                            value={filters.prazo_tarefaInicio || ''}
+                            onChange={(e) => updateFilter('prazo_tarefaInicio', e.target.value)}
+                            className="bg-transparent text-sm text-slate-600 dark:text-slate-300 border-none focus:ring-0 p-0 w-[110px] h-full"
                         />
                         <span className="text-slate-400 text-xs">à</span>
-                        <input 
-                            type="date" 
-                            value={filters.prazo_tarefaFim || ''} 
-                            onChange={(e) => updateFilter('prazo_tarefaFim', e.target.value)} 
-                            className="bg-transparent text-sm text-slate-600 dark:text-slate-300 border-none focus:ring-0 p-0 w-[110px] h-full" 
+                        <input
+                            type="date"
+                            value={filters.prazo_tarefaFim || ''}
+                            onChange={(e) => updateFilter('prazo_tarefaFim', e.target.value)}
+                            className="bg-transparent text-sm text-slate-600 dark:text-slate-300 border-none focus:ring-0 p-0 w-[110px] h-full"
                         />
                     </div>
 
                     {(filters.vencendo || filters.atrasadas || filters.prazo_tarefaInicio || filters.prazo_tarefaFim) && (
-                        <button 
-                            onClick={() => { clearFilter('vencendo'); clearFilter('atrasadas'); clearFilter('prazo_tarefaInicio'); clearFilter('prazo_tarefaFim'); }} 
+                        <button
+                            onClick={() => { clearFilter('vencendo'); clearFilter('atrasadas'); clearFilter('prazo_tarefaInicio'); clearFilter('prazo_tarefaFim'); }}
                             className="ml-3 text-slate-400 hover:text-red-500 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 p-1 transition-colors"
                         >
                             <X className="w-4 h-4" />

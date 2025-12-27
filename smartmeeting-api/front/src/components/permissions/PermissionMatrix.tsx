@@ -8,12 +8,10 @@ import {
 import { useRoles } from '../../hooks/useRoles';
 import { usePermissions } from '../../hooks/usePermissions';
 import { MatrixSkeleton } from './PermissionSkeleton';
-import { useTheme } from '../../context/ThemeContext';
 
 export const PermissionMatrix: React.FC = () => {
     const { roles, isLoading: rolesLoading, addPermissionToRole, removePermissionFromRole } = useRoles();
     const { permissions, isLoading: permissionsLoading } = usePermissions();
-    const { theme } = useTheme();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRoleFilter, setSelectedRoleFilter] = useState<number | null>(null);
@@ -114,8 +112,8 @@ export const PermissionMatrix: React.FC = () => {
                                 key={role.id}
                                 onClick={() => setSelectedRoleFilter(role.id)}
                                 className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between transition-all ${selectedRoleFilter === role.id
-                                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
-                                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
+                                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'
                                     }`}
                             >
                                 <span className="truncate">{role.nome}</span>

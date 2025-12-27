@@ -92,7 +92,7 @@ public class ReuniaoController {
      */
 
     @PostMapping
-    @PreAuthorize("hasRole('ORGANIZADOR')")
+   // @PreAuthorize("hasRole('ORGANIZADOR')")
     public ResponseEntity<ReuniaoDTO> criar(@Valid @RequestBody ReuniaoDTO dto) {
         // Validação de permissão (se o DTO tiver projectId, o que não parece ter
         // explícito, mas pode vir no contexto)

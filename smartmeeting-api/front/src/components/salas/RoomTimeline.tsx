@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { format, addDays, startOfDay, setHours, setMinutes, differenceInMinutes, isSameDay, addMinutes } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
-import { Sala, Reuniao, StatusReuniao, SalaStatus } from '../../types/meetings';
+import { Sala, Reuniao, StatusReuniao } from '../../types/meetings';
 import { MeetingForm } from '../meetings/MeetingForm';
 import { MeetingDetailsModal } from '../meetings/MeetingDetailsModal';
 import { reuniaoService } from '../../services/reuniaoService';
@@ -14,7 +14,6 @@ interface RoomTimelineProps {
     salas: Sala[];
     currentDate: Date;
     onDateChange: (date: Date) => void;
-    isLoading?: boolean;
 }
 
 const START_HOUR = 7;
@@ -42,8 +41,7 @@ const getTimeFromX = (x: number, baseDate: Date) => {
 export const RoomTimeline: React.FC<RoomTimelineProps> = ({
     salas,
     currentDate,
-    onDateChange,
-    isLoading
+    onDateChange
 }) => {
     const [meetings, setMeetings] = useState<Reuniao[]>([]);
     const [selectedSlot, setSelectedSlot] = useState<{ salaId: number, time: Date } | null>(null);
@@ -226,7 +224,6 @@ export const RoomTimeline: React.FC<RoomTimelineProps> = ({
 
                             {salas.map(sala => {
                                 const roomMeetings = meetings.filter(m => m.sala.id === sala.id);
-                                const isMaintenance = sala.status === SalaStatus.MANUTENCAO;
 
                                 return (
                                     <div key={sala.id} className="h-14 border-b border-slate-400 dark:border-slate-500 relative">

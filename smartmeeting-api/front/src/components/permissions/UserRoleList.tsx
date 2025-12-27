@@ -14,7 +14,6 @@ import { userRoleService } from '../../services/userRoleService';
 import { useRoles } from '../../hooks/useRoles';
 import { UserRoleModal } from './UserRoleModal';
 import { UserTableSkeleton } from './PermissionSkeleton';
-import { useTheme } from '../../context/ThemeContext';
 
 interface User {
     id: number;
@@ -25,7 +24,6 @@ interface User {
 
 export const UserRoleList: React.FC = () => {
     const { roles } = useRoles();
-    const { theme } = useTheme();
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

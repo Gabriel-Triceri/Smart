@@ -1,6 +1,7 @@
 package com.smartmeeting.repository;
 
 import com.smartmeeting.model.Tarefa;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,21 +14,16 @@ import java.util.List;
 @Repository
 public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
-    @Query("SELECT t FROM Tarefa t " +
-           "LEFT JOIN FETCH t.comentarios " +
-           "LEFT JOIN FETCH t.anexos " +
-           "LEFT JOIN FETCH t.participantes " +
-           "LEFT JOIN FETCH t.reuniao " +
-           "LEFT JOIN FETCH t.project")
-    List<Tarefa> findAllWithDetails();
+    @EntityGraph(value = "Tarefa.completa")
+    List<Tarefa> findAll();
+
+    @EntityGraph(value = "Tarefa.completa")
+    List<Tarefa> findByReuniaoId(Long reuniaoId);
 
     /**
      * Busca tarefas por ID da reunião
-     *
-     * @param idReuniao ID da reunião
      * @return Lista de tarefas da reunião
      */
-    List<Tarefa> findByReuniaoId(Long idReuniao);
 
     /*
      * Busca tarefas por ID da coluna

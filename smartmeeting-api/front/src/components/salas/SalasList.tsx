@@ -96,8 +96,7 @@ export const SalasList: React.FC<SalasListProps> = ({
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                         {salas.map((sala) => {
-                            const status = getStatusConfig(sala.status);
-                            const StatusIcon = status.icon;
+                            getStatusConfig(sala.status);
 
                             return (
                                 <tr

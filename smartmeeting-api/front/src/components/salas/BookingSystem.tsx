@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Calendar, Clock, Users, Save, X, CheckCircle2,
+    Calendar, Clock, Users, Save, X,
     AlertCircle, RefreshCw, MapPin
 } from 'lucide-react';
 import { Sala, HorarioDisponivel } from '../../types/meetings';
@@ -48,10 +48,6 @@ export const BookingSystem: React.FC<BookingSystemProps> = ({
     }, [isOpen, sala.id]);
 
     const horariosDisponiveis = disponibilidade || [];
-    const horariosLivres = horarios.filter(horario => {
-        const horarioObj = horariosDisponiveis.find(h => h.inicio === horario);
-        return horarioObj?.disponivel;
-    });
 
     const horariosOcupados = horarios.filter(horario => {
         const horarioObj = horariosDisponiveis.find(h => h.inicio === horario);

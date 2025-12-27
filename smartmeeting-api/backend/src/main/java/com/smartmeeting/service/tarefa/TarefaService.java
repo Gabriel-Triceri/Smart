@@ -47,11 +47,11 @@ public class TarefaService {
     }
 
     public List<TarefaDTO> listarTodasDTO() {
-        return tarefaRepository.findAllWithDetails().stream().map(this::toDTO).collect(Collectors.toList());
+        return tarefaRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     public List<TarefaDTO> listarTodas() {
-        return tarefaRepository.findAllWithDetails().stream().map(this::toDTO).collect(Collectors.toList());
+        return tarefaRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     public TarefaDTO criar(TarefaDTO dto) {
