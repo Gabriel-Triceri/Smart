@@ -215,8 +215,9 @@ public class TarefaController {
 
     @GetMapping("/kanban")
     public ResponseEntity<KanbanBoardDTO> getKanbanBoard(
-            @RequestParam(required = false, name = "reuniaoId") Long reuniaoId) {
-        KanbanBoardDTO kanbanBoard = tarefaService.getKanbanBoard(reuniaoId);
+            @RequestParam(required = false, name = "reuniaoId") Long reuniaoId,
+            @RequestParam(required = false, name = "projectId") Long projectId) {
+        KanbanBoardDTO kanbanBoard = tarefaService.getKanbanBoard(reuniaoId, projectId);
         return ResponseEntity.ok(kanbanBoard);
     }
 

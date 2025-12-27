@@ -183,8 +183,8 @@ public class TarefaService {
     }
 
     // Kanban
-    public KanbanBoardDTO getKanbanBoard(Long reuniaoId) {
-        return kanbanService.getKanbanBoard(reuniaoId);
+    public KanbanBoardDTO getKanbanBoard(Long reuniaoId, Long projectId) {
+        return kanbanService.getKanbanBoard(reuniaoId, projectId);
     }
 
     public List<KanbanColumnConfig> getKanbanColumns(Long projectId) {

@@ -53,24 +53,29 @@ public class KanbanService {
     }
 
     @Transactional(readOnly = true)
-    public KanbanBoardDTO getKanbanBoard(Long reuniaoId) {
+    public KanbanBoardDTO getKanbanBoard(Long reuniaoId, Long projectId) {
         try {
-            Long projectId = null;
             List<Tarefa> tarefas;
+            List<KanbanColumnDynamic> columns;
 
-            if (reuniaoId != null) {
-                tarefas = tarefaRepository.findByReuniaoId(reuniaoId);
-                var reuniao = reuniaoRepository.findById(reuniaoId).orElse(null);
-                if (reuniao != null && reuniao.getProject() != null) {
-                    projectId = reuniao.getProject().getId();
+            if (projectId != null) {
+                tarefas = tarefaRepository.findByProjectId(projectId);
+                columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
+            } else if (reuniaoId != null) {
+                var reuniao = reuniaoRepository.findById(reuniaoId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada: " + reuniaoId));
+                Long pid = Optional.ofNullable(reuniao.getProject()).map(Project::getId).orElse(null);
+
+                if (pid != null) {
+                    tarefas = tarefaRepository.findByReuniaoId(reuniaoId);
+                    columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(pid);
+                } else {
+                    tarefas = Collections.emptyList();
+                    columns = Collections.emptyList();
                 }
             } else {
-                tarefas = tarefaRepository.findAll();
-            }
-
-            List<KanbanColumnDynamic> columns = new ArrayList<>();
-            if (projectId != null) {
-                columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
+                return new KanbanBoardDTO("kanban-board-principal", "Board de Tarefas", null, Collections.emptyList(),
+                    LocalDateTime.now(), LocalDateTime.now());
             }
 
             Map<Long, List<TarefaDTO>> tarefasPorColuna = tarefas.stream()
@@ -81,7 +86,6 @@ public class KanbanService {
             List<KanbanColumnDTO> colunasDTO = columns.stream()
                     .map(col -> {
                         List<TarefaDTO> tarefasDaColuna = tarefasPorColuna.getOrDefault(col.getId(), new ArrayList<>());
-                        // Ordena por posição se disponível
                         tarefasDaColuna.sort(Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
                         return new KanbanColumnDTO(col.getId(), col.getTitle(), tarefasDaColuna, col.getWipLimit(),
                                 col.getColor(), col.getOrdem());
@@ -91,7 +95,7 @@ public class KanbanService {
             return new KanbanBoardDTO("kanban-board-principal", "Board de Tarefas", reuniaoId, colunasDTO,
                     LocalDateTime.now(), LocalDateTime.now());
         } catch (Exception e) {
-            logger.error("Error retrieving Kanban Board for reuniaoId {}: {}", reuniaoId, e.getMessage(), e);
+            logger.error("Error retrieving Kanban Board for projectId {}: {}", projectId, e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve Kanban Board", e);
         }
     }

@@ -24,7 +24,7 @@ public class KanbanController {
     public ResponseEntity<KanbanBoardDTO> getKanbanBoard(
             @RequestParam(value = "reuniaoId", required = false) Long reuniaoId) {
 
-        KanbanBoardDTO board = kanbanService.getKanbanBoard(reuniaoId);
+        KanbanBoardDTO board = kanbanService.getKanbanBoard(reuniaoId, null);
         return ResponseEntity.ok(board);
     }
 
