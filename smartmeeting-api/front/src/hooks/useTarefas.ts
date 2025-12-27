@@ -327,8 +327,8 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 if (novosFiltros.status && novosFiltros.status.length > 0) {
                     if (!novosFiltros.status.includes(tarefa.status)) return false;
                 }
-                if (novosFiltros.projectName && novosFiltros.projectName.length > 0) {
-                    if (!tarefa.projectName || !novosFiltros.projectName.includes(tarefa.projectName)) return false;
+                if (novosFiltros.projectId && novosFiltros.projectId.length > 0) {
+                    if (!tarefa.projectId || !novosFiltros.projectId.includes(tarefa.projectId)) return false;
                 }
                 if (novosFiltros.prazo_tarefaInicio) {
                     if (!tarefa.prazo_tarefa || tarefa.prazo_tarefa < novosFiltros.prazo_tarefaInicio) return false;

@@ -1,5 +1,5 @@
 import { X, Calendar, User, ListChecks, LucideIcon, Briefcase, Filter } from 'lucide-react';
-import { FiltroTarefas, Tarefa, Assignee } from '../../types/meetings';
+import { FiltroTarefas, Tarefa, Assignee, ProjectDTO } from '../../types/meetings';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 
 interface TaskFiltersProps {
@@ -7,13 +7,15 @@ interface TaskFiltersProps {
     onFiltersChange: (filters: FiltroTarefas) => void;
     tarefas: Tarefa[];
     assignees?: Assignee[];
+    projetos?: ProjectDTO[];
 }
 
 export function TaskFilters({
     filters,
     onFiltersChange,
     tarefas,
-    assignees = []
+    assignees = [],
+    projetos = []
 }: TaskFiltersProps) {
     const updateFilter = (key: keyof FiltroTarefas, value: any) => {
         onFiltersChange({ ...filters, [key]: value });
@@ -30,12 +32,8 @@ export function TaskFilters({
     const hasActiveFilters = Object.keys(filters).length > 0;
 
     // Cria opções de projetos garantindo que value = projectId e label = projectName ou "Projeto sem nome"
-    const projectOptions = Array.isArray(tarefas)
-        ? [...new Map(
-            tarefas
-                .filter(t => t.projectId) // garante que só tarefas com projectId
-                .map(t => [t.projectId, { value: String(t.projectId), label: t.projectName || 'Projeto sem nome' }])
-        ).values()]
+    const projectOptions = Array.isArray(projetos)
+        ? projetos.map(p => ({ value: String(p.id), label: p.name || 'Projeto sem nome' }))
         : [];
 
     return (
@@ -68,8 +66,8 @@ export function TaskFilters({
                 {/* Dropdown de projetos */}
                 <CompactSelect
                     icon={Briefcase}
-                    value={(filters.projectName && filters.projectName[0]) || ''}
-                    onChange={(val) => updateFilter('projectName', val ? [val] : undefined)}
+                    value={(filters.projectId && filters.projectId[0]) || ''}
+                    onChange={(val) => updateFilter('projectId', val ? [val] : undefined)}
                     options={projectOptions}
                     placeholder="Projeto"
                 />
