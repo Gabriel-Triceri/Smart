@@ -51,6 +51,14 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         setError(null);
 
         try {
+            // Preparar filtros para o backend
+            const params: any = { ...filtros };
+            if (projectId) {
+                params.projectId = projectId;
+            } else if (filtros.projectId && filtros.projectId.length > 0) {
+                params.projectId = filtros.projectId[0];
+            }
+
             // Fix: Fetch tasks directly from getAllTarefas instead of relying on getKanbanBoard
             // This bypasses the backend issue where getKanbanBoard ignores projectId
             const [
@@ -62,7 +70,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 projectsData
             ] = await Promise.all([
                 kanbanService.getKanbanBoard(reuniaoId, projectId),
-                tarefaService.getAllTarefas(filtros),
+                tarefaService.getAllTarefas(params),
                 checklistService.getTemplatesTarefas(),
                 checklistService.getAssigneesDisponiveis(),
                 historyService.getStatisticsTarefas(),
@@ -326,7 +334,17 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         setFiltros(novosFiltros);
         try {
             setLoading(true);
-            const tarefasData = await tarefaService.getAllTarefas(novosFiltros);
+            
+            // Preparar filtros para o backend
+            const params: any = { ...novosFiltros };
+            if (novosFiltros.projectId && novosFiltros.projectId.length > 0) {
+                params.projectId = novosFiltros.projectId[0];
+            }
+            if (novosFiltros.responsaveis && novosFiltros.responsaveis.length > 0) {
+                params.responsavelId = novosFiltros.responsaveis[0];
+            }
+
+            const tarefasData = await tarefaService.getAllTarefas(params);
 
             const filteredTarefas = tarefasData.filter(tarefa => {
                 if (novosFiltros.responsaveis && novosFiltros.responsaveis.length > 0) {

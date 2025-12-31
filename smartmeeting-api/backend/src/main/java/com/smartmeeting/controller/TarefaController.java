@@ -41,7 +41,7 @@ public class TarefaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TarefaDTO>> listarTodas() {
+    public ResponseEntity<List<TarefaDTO>> listarTodas(@RequestParam(required = false) Map<String, Object> filtros) {
         Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
             return ResponseEntity.ok(List.of());
@@ -49,7 +49,10 @@ public class TarefaController {
 
         boolean isAdmin = com.smartmeeting.util.SecurityUtils.isAdmin();
 
-        List<TarefaDTO> todasTarefas = tarefaService.listarTodasDTO();
+        List<TarefaDTO> todasTarefas = (filtros != null && !filtros.isEmpty())
+                ? tarefaService.buscarPorTexto(null, filtros)
+                : tarefaService.listarTodasDTO();
+
         List<TarefaDTO> tarefasPermitidas = todasTarefas.stream()
                 .filter(t -> {
                     if (isAdmin) {

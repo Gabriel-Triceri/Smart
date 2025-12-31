@@ -67,6 +67,28 @@ public class TarefaSearchService {
                                 && t.getResponsavel().getId().equals(responsavelId))
                         .collect(Collectors.toList());
             }
+
+            // ===== FILTRO POR PROJETO =====
+            if (filtros.containsKey("projectId")) {
+                Object projectIdObj = filtros.get("projectId");
+                Long projectId = null;
+                if (projectIdObj instanceof List) {
+                    List<?> list = (List<?>) projectIdObj;
+                    if (!list.isEmpty()) {
+                        projectId = Long.valueOf(list.get(0).toString());
+                    }
+                } else {
+                    projectId = Long.valueOf(projectIdObj.toString());
+                }
+
+                if (projectId != null) {
+                    final Long finalProjectId = projectId;
+                    tarefas = tarefas.stream()
+                            .filter(t -> t.getProject() != null
+                                    && t.getProject().getId().equals(finalProjectId))
+                            .collect(Collectors.toList());
+                }
+            }
         }
 
         return tarefas.stream()
