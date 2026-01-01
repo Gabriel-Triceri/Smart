@@ -196,6 +196,7 @@ function getFilterLabel(key: string, value: any): string {
         case 'responsaveis': return `Resp: ${Array.isArray(value) ? value.length : 1}`;
         case 'status': return `Status: ${Array.isArray(value) ? value.length : 1}`;
         case 'projectName': return `Proj: ${Array.isArray(value) ? value.length : 1}`;
+        case 'projectId': return `Proj: ${Array.isArray(value) ? value.length : 1}`;
         case 'prazo_tarefaInicio': return `De: ${value}`;
         case 'prazo_tarefaFim': return `Até: ${value}`;
         case 'vencendo': return 'Vence em 3d';
