@@ -248,14 +248,25 @@ export function KanbanBoard({
   const handleSaveColumn = async (columnId: string) => {
     if (!tempTitle.trim()) return;
     try {
-      // update via kanbanService — use o ID da coluna dinâmica
-      // O serviço `kanbanService.updateKanbanColumn` precisa ser corrigido para aceitar ID numérico/string
-      const updated = await kanbanService.updateKanbanColumn(columnId as any, tempTitle.trim());
-      setColumns(prev => prev.map(c => (c.id === columnId ? { ...c, title: updated.title } : c)));
+      if (projectId) {
+        // Se estiver em um projeto, usa o serviço de colunas dinâmicas
+        const updated = await projectService.updateKanbanColumnDynamic(String(projectId), columnId, {
+          title: tempTitle.trim()
+        });
+        setDynamicColumns(prev => prev.map(c => (String(c.id) === columnId ? updated : c)));
+      } else {
+        // Fallback para colunas globais (legado)
+        const column = columns.find(c => c.id === columnId);
+        if (column) {
+          const updated = await kanbanService.updateKanbanColumn(column.status, tempTitle.trim());
+          setColumns(prev => prev.map(c => (c.id === columnId ? { ...c, title: updated.title } : c)));
+        }
+      }
       setEditingColumn(null);
       setTempTitle('');
     } catch (err) {
       console.error('Erro ao salvar coluna:', err);
+      alert('Erro ao salvar coluna. Verifique suas permissões.');
     }
   };
 
@@ -270,12 +281,23 @@ export function KanbanBoard({
 
   const handleDeleteDynamicColumn = async (columnId: string) => {
     if (!projectId) return;
-    if (!confirm('Tem certeza que deseja excluir esta coluna? Tarefas nela poderão ficar inacessíveis.')) return;
+    
+    const columnToDelete = dynamicColumns.find(c => String(c.id) === columnId);
+    if (columnToDelete?.isDefault) {
+      return alert('Não é possível excluir a coluna padrão do projeto.');
+    }
+
+    if (!confirm('Tem certeza que deseja excluir esta coluna? As tarefas nela serão movidas para a coluna padrão.')) return;
+    
     try {
       await projectService.deleteKanbanColumnDynamic(String(projectId), columnId);
-      setDynamicColumns(prev => prev.filter(c => c.id !== columnId));
-    } catch (err) {
+      // Recarrega as colunas e tarefas para garantir sincronia após o movimento de tarefas no backend
+      await loadDynamicColumns();
+      // Opcional: disparar um refresh global de tarefas se necessário, 
+      // mas o loadDynamicColumns já deve atualizar a visão do board.
+    } catch (err: any) {
       console.error('Erro ao deletar coluna dinâmica:', err);
+      alert('Erro ao excluir coluna: ' + (err?.response?.data?.message || err?.message));
     }
   };
 
@@ -327,10 +349,29 @@ export function KanbanBoard({
   };
 
   // Drag & Drop handler delegates movement to parent via onMoveTask
-  const onDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result;
+  const onDragEnd = async (result: DropResult) => {
+    const { source, destination, draggableId, type } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    // Lógica para reordenação de colunas (se implementado Draggable nas colunas)
+    if (type === 'COLUMN') {
+      const newColumns = Array.from(columns);
+      const [removed] = newColumns.splice(source.index, 1);
+      newColumns.splice(destination.index, 0, removed);
+      
+      setColumns(newColumns);
+      
+      if (projectId) {
+        try {
+          const columnIds = newColumns.map(c => c.kanbanColumnId);
+          await projectService.reorderKanbanColumns(String(projectId), columnIds);
+        } catch (err) {
+          console.error('Erro ao reordenar colunas:', err);
+        }
+      }
+      return;
+    }
 
     // 1. Encontra a coluna de destino (usa o droppableId - que agora é o ID da coluna)
     const targetColumn = columns.find(c => c.id === destination.droppableId);
