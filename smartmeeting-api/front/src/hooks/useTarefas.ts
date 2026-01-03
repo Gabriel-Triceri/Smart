@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Tarefa,
     TarefaFormData,
@@ -41,12 +41,20 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
     const [exibirDetalhes, setExibirDetalhes] = useState(false);
     const [exibirKanban, setExibirKanban] = useState(true);
 
+    // Cache refs to avoid redundant API calls for static/long-lived data
+    const cacheRef = useRef<{
+        templates?: TemplateTarefa[];
+        assignees?: Assignee[];
+        projects?: ProjectDTO[];
+        lastFetch?: number;
+    }>({});
+
     useEffect(() => {
         carregarDados();
         carregarNotificacoes();
     }, [reuniaoId, projectId]);
 
-    const carregarDados = useCallback(async () => {
+    const carregarDados = useCallback(async (forceRefresh = false) => {
         setLoading(true);
         setError(null);
 
@@ -59,30 +67,64 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 params.projectId = filtros.projectId[0];
             }
 
-            // Fix: Fetch tasks directly from getAllTarefas instead of relying on getKanbanBoard
-            // This bypasses the backend issue where getKanbanBoard ignores projectId
+            const now = Date.now();
+            const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+            const isCacheValid = cacheRef.current.lastFetch && (now - cacheRef.current.lastFetch < CACHE_TTL);
+
+            // Fetch dynamic data (tasks and board) always
+            const dynamicPromises = [
+                kanbanService.getKanbanBoard(reuniaoId, projectId),
+                tarefaService.getAllTarefas(params),
+                historyService.getStatisticsTarefas(),
+            ];
+
+            // Fetch static data only if not cached or forced
+            const staticPromises = [];
+            if (forceRefresh || !isCacheValid || !cacheRef.current.templates) {
+                staticPromises.push(checklistService.getTemplatesTarefas());
+            } else {
+                staticPromises.push(Promise.resolve(cacheRef.current.templates || []));
+            }
+
+            if (forceRefresh || !isCacheValid || !cacheRef.current.assignees) {
+                staticPromises.push(checklistService.getAssigneesDisponiveis());
+            } else {
+                staticPromises.push(Promise.resolve(cacheRef.current.assignees || []));
+            }
+
+            if (forceRefresh || !isCacheValid || !cacheRef.current.projects) {
+                staticPromises.push(projectService.getMyProjects());
+            } else {
+                staticPromises.push(Promise.resolve(cacheRef.current.projects || []));
+            }
+
             const [
                 kanbanData,
                 listaTarefas,
+                statsData,
                 templatesData,
                 assigneesData,
-                statsData,
                 projectsData
             ] = await Promise.all([
-                kanbanService.getKanbanBoard(reuniaoId, projectId),
-                tarefaService.getAllTarefas(params),
-                checklistService.getTemplatesTarefas(),
-                checklistService.getAssigneesDisponiveis(),
-                historyService.getStatisticsTarefas(),
-                projectService.getMyProjects()
+                ...dynamicPromises,
+                ...staticPromises
             ]);
 
+            // Update state
             setTarefas(listaTarefas);
             setKanbanBoard(kanbanData);
+            setStatistics(statsData);
             setTemplates(templatesData);
             setAssigneesDisponiveis(assigneesData);
-            setStatistics(statsData);
             setProjects(projectsData);
+
+            // Update cache
+            cacheRef.current = {
+                templates: templatesData,
+                assignees: assigneesData,
+                projects: projectsData,
+                lastFetch: now
+            };
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao carregar tarefas');
         } finally {
@@ -216,8 +258,6 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         }
     }, [kanbanBoard]);
 
-
-
     const adicionarComentario = useCallback(async (tarefaId: string, conteudo: string, mencoes?: string[]) => {
         try {
             const comentario = await tarefaService.adicionarComentario(tarefaId, conteudo, mencoes);
@@ -298,34 +338,9 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 return prev;
             });
 
-            return tarefaParaState;
+            return tarefaAtualizada;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao atribuir tarefa');
-            throw err;
-        }
-    }, []);
-
-    const atualizarProgresso = useCallback(async (tarefaId: string, progresso: number) => {
-        try {
-            const tarefaAtualizada = await tarefaService.atualizarProgresso(tarefaId, progresso);
-            const idStr = String(tarefaId);
-            let tarefaParaState: Tarefa = tarefaAtualizada;
-
-            setTarefas(prevList => {
-                const prev = prevList.find(t => String(t.id) === idStr);
-                const prevStatus = prev?.status;
-                tarefaParaState = { ...tarefaAtualizada, status: prevStatus ?? tarefaAtualizada.status };
-                return prevList.map(t => String(t.id) === idStr ? tarefaParaState : t);
-            });
-
-            setTarefaSelecionada(prev => {
-                if (prev && String(prev.id) === idStr) return tarefaParaState;
-                return prev;
-            });
-
-            return tarefaParaState;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao atualizar progresso');
             throw err;
         }
     }, []);
@@ -365,19 +380,6 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 if (novosFiltros.prazo_tarefaFim) {
                     if (!tarefa.prazo_tarefa || tarefa.prazo_tarefa > novosFiltros.prazo_tarefaFim) return false;
                 }
-                if (novosFiltros.vencendo) {
-                    if (!tarefa.prazo_tarefa) return false;
-                    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-                    const prazo = new Date(tarefa.prazo_tarefa + 'T00:00:00');
-                    const diffDays = Math.ceil((prazo.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-                    if (diffDays < 0 || diffDays > 3) return false;
-                }
-                if (novosFiltros.atrasadas) {
-                    if (!tarefa.prazo_tarefa) return false;
-                    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-                    const prazo = new Date(tarefa.prazo_tarefa + 'T00:00:00');
-                    if (prazo >= hoje) return false;
-                }
                 return true;
             });
 
@@ -392,84 +394,31 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
     const buscarTarefas = useCallback(async (termo: string) => {
         try {
             setLoading(true);
-            const tarefasData = await tarefaService.buscarTarefas(termo, filtros);
+            const tarefasData = await tarefaService.searchTarefas(termo);
             setTarefas(tarefasData);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro na busca');
+            setError(err instanceof Error ? err.message : 'Erro ao buscar tarefas');
         } finally {
             setLoading(false);
         }
-    }, [filtros]);
+    }, []);
 
-    const criarTarefasPorTemplate = useCallback(async (templateId: string, dados: {
-        responsaveisIds?: string[];
-        prazo_tarefa?: string[];
-    }) => {
+    const atualizarProgresso = useCallback(async (tarefaId: string, progresso: number) => {
         try {
-            const novasTarefas = await tarefaService.criarTarefasPorTemplate(templateId, { ...dados, reuniaoId });
-            setTarefas(prev => [...prev, ...novasTarefas]);
-            return novasTarefas;
+            const tarefaAtualizada = await tarefaService.updateProgresso(tarefaId, progresso);
+            setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, progresso } : t));
+            if (tarefaSelecionada?.id === tarefaId) {
+                setTarefaSelecionada(prev => prev ? { ...prev, progresso } : null);
+            }
+            return tarefaAtualizada;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao criar tarefas por template');
+            setError(err instanceof Error ? err.message : 'Erro ao atualizar progresso');
             throw err;
         }
-    }, [reuniaoId]);
-
-    const marcarNotificacaoLida = useCallback(async (notificacaoId: string) => {
-        try {
-            await tarefaService.marcarNotificacaoLida(notificacaoId);
-            setNotificacoes(prev => prev.map(n => n.id === notificacaoId ? { ...n, lida: true } : n));
-        } catch (err) {
-            console.error('Erro ao marcar notificação como lida:', err);
-        }
-    }, []);
-
-    const duplicarTarefa = useCallback(async (tarefaId: string, modificacoes?: Partial<TarefaFormData>) => {
-        try {
-            const novaTarefa = await tarefaService.duplicarTarefa(tarefaId, modificacoes);
-            setTarefas(prev => [...prev, novaTarefa]);
-            return novaTarefa;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao duplicar tarefa');
-            throw err;
-        }
-    }, []);
-
-    const getTarefasVencendo = useCallback(async (dias = 3) => {
-        try {
-            return await tarefaService.getTarefasVencendo(dias);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao buscar tarefas vencendo');
-            throw err;
-        }
-    }, []);
-
-    const getMinhasTarefas = useCallback(async () => {
-        try {
-            const minhasTarefas = await tarefaService.getMinhasTarefas();
-            setTarefas(minhasTarefas);
-            return minhasTarefas;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao carregar minhas tarefas');
-            throw err;
-        }
-    }, []);
-
-    const atualizarStatistics = useCallback(async () => {
-        try {
-            const statsData = await tarefaService.getStatisticsTarefas();
-            setStatistics(statsData);
-        } catch (err) {
-            console.error('Erro ao atualizar estatísticas:', err);
-        }
-    }, []);
+    }, [tarefaSelecionada]);
 
     return {
         tarefas,
-        kanbanBoard,
-        templates,
-        assigneesDisponiveis,
-        projects,
         loading,
         error,
         statistics,
@@ -479,8 +428,16 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         exibirFormulario,
         exibirDetalhes,
         exibirKanban,
-
-
+        kanbanBoard,
+        templates,
+        assigneesDisponiveis,
+        projects,
+        setFiltros,
+        setTarefaSelecionada,
+        setExibirFormulario,
+        setExibirDetalhes,
+        setExibirKanban,
+        carregarDados,
         criarTarefa,
         atualizarTarefa,
         deletarTarefa,
@@ -490,23 +447,8 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         removerComentario,
         anexarArquivo,
         atribuirTarefa,
-        atualizarProgresso,
         aplicarFiltros,
         buscarTarefas,
-        criarTarefasPorTemplate,
-        marcarNotificacaoLida,
-        duplicarTarefa,
-        getTarefasVencendo,
-        getMinhasTarefas,
-        atualizarStatistics,
-
-        carregarDados,
-
-        setTarefaSelecionada,
-        setExibirFormulario,
-        setExibirDetalhes,
-        setExibirKanban,
-        setFiltros,
-        setError
+        atualizarProgresso
     };
 }
