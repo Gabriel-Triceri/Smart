@@ -8,9 +8,6 @@ import {
 } from '../types/meetings';
 import {
     normalizeTaskArray,
-    normalizeColumnId,
-    STATUS_TO_COLUMN_MAP,
-    normalizeStatus,
     mapBackendTask
 } from '../utils/tarefaMapper';
 
@@ -34,7 +31,7 @@ export const kanbanService = {
         const board = response.data;
 
         const colunas: KanbanColumn[] = (board.colunas ?? []).map((c: any) => ({
-            id: normalizeColumnId(c.id ?? STATUS_TO_COLUMN_MAP[normalizeStatus(c.status)]),
+            id: String(c.id ?? c.columnId ?? '0'),
             titulo: c.title ?? c.titulo,
             tarefas: normalizeTaskArray(c.tarefas ?? []),
             cor: c.color,
@@ -54,8 +51,9 @@ export const kanbanService = {
     },
 
     async moveTask(tarefaId: string, newColumnId: string, newPosition: number): Promise<Tarefa> {
-        const response = await api.put(`/kanban/mover/${tarefaId}`, {
-            newColumnId,
+        // CORREÇÃO DE SEGURANÇA: Usar endpoint seguro do TarefaController
+        const response = await api.post(`/tarefas/${tarefaId}/mover`, {
+            colunaId: newColumnId,
             newPosition
         });
         return mapBackendTask(response.data);

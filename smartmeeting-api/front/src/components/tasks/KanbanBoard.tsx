@@ -167,65 +167,78 @@ export function KanbanBoard({
     }
   };
 
-  // Load dynamic columns for project (if projectId provided)
+  // Reset and Load dynamic columns for project (if projectId provided)
   useEffect(() => {
-    if (projectId) loadDynamicColumns();
+    if (projectId) {
+      console.log(`[KanbanBoard] Mudando para projeto ${projectId}. Limpando colunas antigas.`);
+      setDynamicColumns([]); // Limpa colunas do projeto anterior
+      setColumns([]); // Limpa visualização anterior
+      loadDynamicColumns();
+    } else {
+      loadGlobalColumns();
+    }
   }, [projectId]);
 
   const loadDynamicColumns = async () => {
     if (!projectId) return;
     try {
-      // Usa o ID da coluna dinâmica (que corresponde ao Long no Java) como ID principal
+      console.log(`[KanbanBoard] Buscando colunas para ${projectId}...`);
       const cols = await projectService.getKanbanColumnsByProject(String(projectId));
-      setDynamicColumns(cols.filter(c => c.isActive));
+      console.log(`[KanbanBoard] Colunas recebidas do backend para ${projectId}:`, cols);
+
+      const activeCols = (cols || []).filter(c => c.isActive);
+      setDynamicColumns(activeCols);
+
+      // Se não houver colunas (nem padrões), o backend deveria ter inicializado, 
+      // mas se voltar vazio, usamos o fallback global visual
+      if (activeCols.length === 0) {
+        console.warn(`[KanbanBoard] Projeto ${projectId} retornou 0 colunas ativas.`);
+        loadGlobalColumns();
+      }
     } catch (err) {
       console.error('Erro ao carregar colunas dinâmicas:', err);
       setDynamicColumns([]);
+      loadGlobalColumns();
     }
   };
 
   // When dynamic columns change, map them to display columns
   useEffect(() => {
     if (projectId && dynamicColumns.length > 0) {
+      console.log(`[KanbanBoard] Mapeando ${dynamicColumns.length} colunas dinâmicas para exibição.`);
       try {
-        const mapped = dynamicColumns
-          .slice()
+        const mapped = [...dynamicColumns]
           .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
           .map(col => ({
-            // Manter status para a cor/acento (se for um dos 4 padrões, caso contrário, use TO_DO como fallback)
             status: (col.columnKey as StatusTarefa) || StatusTarefa.TODO,
             title: col.title,
             id: String(col.id),
             isDefault: !!col.isDefault,
-            kanbanColumnId: String(col.id), // O ID numérico/string que o Backend espera
+            kanbanColumnId: String(col.id),
           }));
 
         setColumns(mapped);
       } catch (err) {
         console.error('Erro ao mapear colunas dinâmicas:', err);
-        loadGlobalColumns();
       }
-    }
-
-    // if projectId but no dynamic columns, fall back to defaults
-    if (projectId && dynamicColumns.length === 0) {
-      loadGlobalColumns(); // Recarrega as globais se as dinâmicas falharem
     }
   }, [dynamicColumns, projectId]);
 
   // Group tarefas by columnId with Fallback Logic
+  const validColumnIds = new Set(columns.map(c => String(c.kanbanColumnId)));
+
   const tarefasPorColuna: Record<KanbanDroppableId, Tarefa[]> = columns.reduce((acc, col) => {
     acc[col.id] = tarefas.filter(t => {
+      const taskColId = t.columnId ? String(t.columnId) : null;
+
       // 1. Precise Match: Task columnId matches Column backend ID
-      const matchId = t.columnId && String(t.columnId) === String(col.kanbanColumnId);
+      const matchId = taskColId === String(col.kanbanColumnId);
 
-      // 2. Fallback Match: Task has NO columnId, but Status matches Column Status
-      // Only apply this fallback if the column is suitable (e.g. isDefault for that status, or global board)
-      const matchStatus = (!t.columnId || t.columnId === '0') && t.status === col.status;
+      // 2. Fallback Match: Task has NO columnId, OR its columnId is not in the current board
+      // AND its status matches the Column Status
+      const isOrphan = !taskColId || taskColId === '0' || !validColumnIds.has(taskColId);
+      const matchStatus = isOrphan && t.status === col.status;
 
-      // We prioritize ID match. Fallback allows "orphaned" tasks to appear.
-      // Note: If multiple columns have same status, task might duplicate if we aren't careful.
-      // But in this logic, filter runs for EACH column independently.
       return matchId || matchStatus;
     }).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
     return acc;
@@ -281,14 +294,14 @@ export function KanbanBoard({
 
   const handleDeleteDynamicColumn = async (columnId: string) => {
     if (!projectId) return;
-    
+
     const columnToDelete = dynamicColumns.find(c => String(c.id) === columnId);
     if (columnToDelete?.isDefault) {
       return alert('Não é possível excluir a coluna padrão do projeto.');
     }
 
     if (!confirm('Tem certeza que deseja excluir esta coluna? As tarefas nela serão movidas para a coluna padrão.')) return;
-    
+
     try {
       await projectService.deleteKanbanColumnDynamic(String(projectId), columnId);
       // Recarrega as colunas e tarefas para garantir sincronia após o movimento de tarefas no backend
@@ -320,13 +333,18 @@ export function KanbanBoard({
         ordem: (dynamicColumns.length ?? 0) + 1,
         isDoneColumn: false,
       };
-      const created: KanbanColumnDynamic = await projectService.createKanbanColumnDynamic(payload);
-      setDynamicColumns(prev => [...prev, created]);
+
+      await projectService.createKanbanColumnDynamic(payload);
+
+      // RE-LOAD: Sincroniza todas as colunas (incluindo as padrões inicializadas pelo backend)
+      await loadDynamicColumns();
+
       setNewColumnTitle('');
       setNewColumnColor(COLUMN_COLORS[0]);
       setShowAddColumnModal(false);
       alert('Coluna adicionada com sucesso!');
     } catch (err: any) {
+      console.error('[KanbanBoard] Erro ao criar coluna:', err);
       alert('Erro ao adicionar coluna: ' + (err?.response?.data?.message || err?.message || String(err)));
     } finally {
       setAddingColumn(false);
@@ -346,6 +364,12 @@ export function KanbanBoard({
     await onCreateOrUpdateTask(data);
     setShowTaskForm(false);
     setSelectedTask(null);
+
+    // Se o projeto não tinha colunas (estava usando fallbacks), recarrega as colunas
+    // pois a criação da primeira tarefa gatilha a inicialização no backend.
+    if (projectId && dynamicColumns.length === 0) {
+      await loadDynamicColumns();
+    }
   };
 
   // Drag & Drop handler delegates movement to parent via onMoveTask
@@ -359,9 +383,9 @@ export function KanbanBoard({
       const newColumns = Array.from(columns);
       const [removed] = newColumns.splice(source.index, 1);
       newColumns.splice(destination.index, 0, removed);
-      
+
       setColumns(newColumns);
-      
+
       if (projectId) {
         try {
           const columnIds = newColumns.map(c => c.kanbanColumnId);
@@ -391,11 +415,13 @@ export function KanbanBoard({
     onMoveTask(draggableId, targetColumnId, newPosition);
   };
 
+  console.log('[KanbanBoard] Renderizando colunas:', columns.map(c => c.title));
+
   return (
-    <div className="h-full flex flex-col relative">
-      <div className="flex-1">
+    <div className="h-full flex flex-col relative animate-in fade-in duration-500">
+      <div className="flex-1 overflow-x-auto custom-scrollbar">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex h-full gap-6 pb-2">
+          <div className="flex h-full gap-6 pb-4 min-w-full">
             {columns.map(column => {
               const columnTasks = tarefasPorColuna[column.id] ?? [];
               const accentColor = COLUMN_ACCENTS[column.status] || 'bg-gray-400';

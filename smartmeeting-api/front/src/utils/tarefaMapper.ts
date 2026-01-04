@@ -19,32 +19,13 @@ const generateClientId = (): string => {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
-// Mapas de Status ↔ Coluna Kanban
-export const STATUS_TO_COLUMN_MAP: Record<StatusTarefa, number> = {
-  [StatusTarefa.TODO]: 1,
-  [StatusTarefa.IN_PROGRESS]: 2,
-  [StatusTarefa.REVIEW]: 3,
-  [StatusTarefa.DONE]: 4
+// Status normalization - accepts any string, returns as-is
+// Note: StatusTarefa enum is deprecated - use column keys directly
+export const normalizeStatus = (value?: string | StatusTarefa): string => {
+  if (!value) return 'todo';
+  return String(value).toLowerCase();
 };
 
-export const COLUMN_ID_TO_STATUS: Record<number, StatusTarefa> = {
-  1: StatusTarefa.TODO,
-  2: StatusTarefa.IN_PROGRESS,
-  3: StatusTarefa.REVIEW,
-  4: StatusTarefa.DONE
-};
-
-// Normaliza ID de coluna (string, número ou status)
-export function normalizeColumnId(columnId: string | number | StatusTarefa): number {
-  if (typeof columnId === 'number') return columnId;
-  if (typeof columnId === 'string') {
-    const parsed = parseInt(columnId, 10);
-    if (!isNaN(parsed)) return parsed;
-    const statusKey = columnId.toUpperCase() as StatusTarefa;
-    if ((STATUS_TO_COLUMN_MAP as any)[statusKey]) return (STATUS_TO_COLUMN_MAP as any)[statusKey];
-  }
-  return 0;
-}
 
 // Normaliza prioridade
 export const normalizePrioridade = (value?: string | PrioridadeTarefa): PrioridadeTarefa => {
@@ -52,34 +33,6 @@ export const normalizePrioridade = (value?: string | PrioridadeTarefa): Priorida
   const v = String(value).toUpperCase();
   if (Object.values(PrioridadeTarefa).includes(v as PrioridadeTarefa)) return v as PrioridadeTarefa;
   return PrioridadeTarefa.MEDIA;
-};
-
-// Normaliza status
-export const normalizeStatus = (value?: string | StatusTarefa): StatusTarefa => {
-  if (!value) return StatusTarefa.TODO;
-  const v = String(value).toLowerCase();
-
-  switch (v) {
-    case 'in_progress':
-    case 'in-progress':
-    case 'in progress':
-    case 'em_progresso':
-    case 'em-progresso':
-    case 'em progresso':
-    case 'em andamento':
-      return StatusTarefa.IN_PROGRESS;
-    case 'review':
-    case 'revisao':
-    case 'revisão':
-      return StatusTarefa.REVIEW;
-    case 'done':
-    case 'concluido':
-    case 'concluído':
-    case 'finalizado':
-      return StatusTarefa.DONE;
-    default:
-      return StatusTarefa.TODO;
-  }
 };
 
 // Normaliza responsáveis da tarefa
@@ -170,10 +123,8 @@ const normalizeAnexos = (raw: any): AnexoTarefa[] => {
 // Mapeia tarefa do backend para frontend
 export const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => {
   const status = normalizeStatus(task.status ?? task.statusTarefa ?? task.estado);
-  const columnId =
-    Number(task.columnId ?? task.column_id ?? 0) ||
-    (STATUS_TO_COLUMN_MAP as any)[status] ||
-    0;
+  // columnId comes directly from backend (already a number or string ID)
+  const columnId = String(task.columnId ?? task.column_id ?? '0');
 
   const responsaveis = normalizeAssignees(task, (task.responsaveisIds ?? task.assigneeIds ?? []) as string[]);
 
@@ -192,7 +143,9 @@ export const mapBackendTask = (task: any, fallback?: TarefaFormData): Tarefa => 
     descricao: task.descricao ?? task.description ?? fallback?.descricao ?? '',
     status,
     columnId: String(columnId),
+    columnName: task.columnName ?? task.column_name ?? null,
     dataInicio: task.dataInicio ?? task.startDate ?? task.start ?? null,
+
     prioridade: normalizePrioridade(task.prioridade ?? task.priority),
     responsaveis,
     responsavelPrincipalId: String(task.responsavelId ?? task.responsavel_principal ?? responsaveis[0]?.id ?? '') || null,
@@ -233,8 +186,9 @@ export const mapTarefaFormToBackend = (
   if ((data as any).status !== undefined) payload.statusTarefa = String((data as any).status);
   if ((data as any).columnId !== undefined) payload.columnId = Number((data as any).columnId);
   if (data.prazo_tarefa !== undefined) payload.prazo = data.prazo_tarefa;
+  if (data.dataInicio !== undefined) payload.dataInicio = data.dataInicio;
   if ((data as any).responsaveisIds !== undefined) payload.responsaveisIds = data.responsaveisIds;
-  if (data.estimadoHoras !== undefined) payload.estimativaHoras = data.estimadoHoras;
+  if (data.estimadoHoras !== undefined) payload.estimadoHoras = data.estimadoHoras;
 
   if (includeDefaults) {
     if (!payload.statusTarefa) payload.statusTarefa = StatusTarefa.TODO;

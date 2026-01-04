@@ -67,6 +67,20 @@ const getStatusLabel = (status: string) => {
     }
 };
 
+const ProjectSelectionPlaceholder = () => (
+    <div className="flex-1 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 m-4 animate-in fade-in zoom-in duration-300">
+        <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-blue-500/10">
+            <svg className="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Selecione um Projeto</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm px-6">
+            Para visualizar e gerenciar suas tarefas, escolha um projeto específico no filtro acima.
+        </p>
+    </div>
+);
+
 export function TaskManager() {
     const {
         tarefas,
@@ -226,9 +240,10 @@ export function TaskManager() {
                                         {/* Status Column */}
                                         <div className="px-4 py-4">
                                             <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ring-1 ring-inset ${getStatusStyles(tarefa.status)}`}>
-                                                {getStatusLabel(tarefa.status)}
+                                                {tarefa.columnName || getStatusLabel(tarefa.status)}
                                             </div>
                                         </div>
+
 
                                         {/* Assignees Column - Full Name Display */}
                                         <div className="px-4 py-4">
@@ -296,12 +311,13 @@ export function TaskManager() {
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
-                        <span>{tarefas.filter(t => t.status === StatusTarefa.DONE).length} Concluídos</span>
+                        <span>{tarefas.filter(t => t.concluida).length} Concluídos</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></span>
-                        <span>{tarefas.filter(t => t.status === StatusTarefa.IN_PROGRESS).length} Em andamento</span>
+                        <span>{tarefas.filter(t => !t.concluida).length} Pendentes</span>
                     </div>
+
                 </div>
                 <div className="opacity-70">
                     Total: {tarefas.length} tarefas
@@ -439,7 +455,9 @@ export function TaskManager() {
                         </div>
                     )}
 
-                    {viewMode === 'kanban' ? (
+                    {!selectedProjectId ? (
+                        <ProjectSelectionPlaceholder />
+                    ) : viewMode === 'kanban' ? (
                         <div className="h-full">
                             <KanbanBoard
                                 tarefas={tarefas}

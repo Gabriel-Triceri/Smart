@@ -318,11 +318,15 @@ export interface Tarefa {
     atualizadaPorNome?: string;
     createdAt: string;
     updatedAt: string;
+    concluida: boolean;
+
     projectId?: string;
     projectName?: string;
     deletedAt?: string;
     columnId: string;
+    columnName?: string;
     ordem?: number;
+
     // Campos de Checklist
     checklist?: ChecklistItem[];
     checklistProgresso?: number;

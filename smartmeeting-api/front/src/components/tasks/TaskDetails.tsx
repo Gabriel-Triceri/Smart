@@ -109,15 +109,21 @@ export function TaskDetails({
 
     useEffect(() => {
         const loadColumns = async () => {
+            if (!tarefa?.projectId) {
+                setColumns([]);
+                return;
+            }
             try {
-                const cols = await tarefaService.getKanbanColumns();
+                const cols = await tarefaService.getKanbanColumns(tarefa.projectId);
                 setColumns(cols.map((c: KanbanColumnConfig) => ({ status: c.status, title: c.title })));
             } catch (error) {
                 console.error('Failed to load kanban columns', error);
+                setColumns([]);
             }
         };
         loadColumns();
-    }, []);
+    }, [tarefa?.projectId]);
+
 
     const scrollToBottom = () => {
         try {
