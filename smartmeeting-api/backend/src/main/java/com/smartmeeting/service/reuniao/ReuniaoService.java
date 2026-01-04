@@ -1,7 +1,6 @@
 package com.smartmeeting.service.reuniao;
 
 import com.smartmeeting.dto.ReuniaoListDTO;
-import com.smartmeeting.dto.ReuniaoListDTO;
 import com.smartmeeting.dto.ReuniaoStatisticsDTO;
 import com.smartmeeting.model.Reuniao;
 import lombok.RequiredArgsConstructor;

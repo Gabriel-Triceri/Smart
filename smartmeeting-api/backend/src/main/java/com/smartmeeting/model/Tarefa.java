@@ -31,7 +31,8 @@ import java.util.Set;
                 @NamedAttributeNode("participantes"),
                 @NamedAttributeNode("column"),
                 @NamedAttributeNode("comentarios"),
-                @NamedAttributeNode("anexos")
+                @NamedAttributeNode("anexos"),
+                @NamedAttributeNode("tags")
 })
 public class Tarefa extends Auditable {
 

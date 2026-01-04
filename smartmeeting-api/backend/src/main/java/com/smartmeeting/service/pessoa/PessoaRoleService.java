@@ -10,16 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.smartmeeting.exception.BadRequestException;
-import com.smartmeeting.exception.ResourceNotFoundException;
-import com.smartmeeting.model.Pessoa;
-import com.smartmeeting.model.Role;
-import com.smartmeeting.repository.PessoaRepository;
-import com.smartmeeting.repository.RoleRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

@@ -1,0 +1,1412 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< com.smartmeeting:smartmeeting-api >------------------
+[INFO] Building smartmeeting-api 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.2.0:run (default-cli) > test-compile @ smartmeeting-api >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ smartmeeting-api ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ smartmeeting-api ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ smartmeeting-api ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ smartmeeting-api ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] <<< spring-boot:3.2.0:run (default-cli) < test-compile @ smartmeeting-api <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.2.0:run (default-cli) @ smartmeeting-api ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2026-01-04T11:04:14.193-03:00  INFO 13468 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Starting SmartmeetingApiApplication using Java 17.0.10 with PID 13468 (C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\target\classes started by mniac in C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend)
+2026-01-04T11:04:14.197-03:00 DEBUG 13468 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Running with Spring Boot v3.2.0, Spring v6.1.1
+2026-01-04T11:04:14.199-03:00  INFO 13468 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-01-04T11:04:14.297-03:00  INFO 13468 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-01-04T11:04:14.297-03:00  INFO 13468 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-01-04T11:04:15.903-03:00  INFO 13468 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-04T11:04:16.092-03:00  INFO 13468 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 180 ms. Found 19 JPA repository interfaces.
+2026-01-04T11:04:18.029-03:00  INFO 13468 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-01-04T11:04:18.053-03:00  INFO 13468 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-04T11:04:18.053-03:00  INFO 13468 --- [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
+2026-01-04T11:04:18.172-03:00  INFO 13468 --- [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-01-04T11:04:18.176-03:00  INFO 13468 --- [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3874 ms
+2026-01-04T11:04:18.235-03:00  INFO 13468 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-01-04T11:04:19.081-03:00  INFO 13468 --- [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn1: url=jdbc:h2:file:./data/smartmeeting user=SA
+2026-01-04T11:04:19.085-03:00  INFO 13468 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-01-04T11:04:19.107-03:00  INFO 13468 --- [  restartedMain] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:h2:file:./data/smartmeeting'
+2026-01-04T11:04:19.150-03:00 DEBUG 13468 --- [  restartedMain] c.s.security.JwtTokenProvider            : [DEBUG] Secret interpretada como Base64 (54 bytes)
+2026-01-04T11:04:19.150-03:00  WARN 13468 --- [  restartedMain] c.s.security.JwtTokenProvider            : [WARN] Secret <64 bytes, derivada via SHA-512 (64 bytes)
+2026-01-04T11:04:19.162-03:00  INFO 13468 --- [  restartedMain] c.s.security.JwtTokenProvider            : [INFO] SigningKey JWT inicializada (512 bits)
+2026-01-04T11:04:19.348-03:00  INFO 13468 --- [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-04T11:04:19.498-03:00  INFO 13468 --- [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.3.1.Final
+2026-01-04T11:04:19.568-03:00  INFO 13468 --- [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-01-04T11:04:20.242-03:00  INFO 13468 --- [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-04T11:04:20.402-03:00  WARN 13468 --- [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-01-04T11:04:23.998-03:00  INFO 13468 --- [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-04T11:04:24.128-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m kanban_column_dynamic 
+       [34mdrop[0m [34mconstraint[0m [34mif[0m [34mexists[0m UKh1pspf85sy9ukwtienj4x8205
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m kanban_column_dynamic 
+       [34mdrop[0m [34mconstraint[0m [34mif[0m [34mexists[0m UKh1pspf85sy9ukwtienj4x8205
+2026-01-04T11:04:24.131-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m kanban_column_dynamic 
+       [34madd[0m [34mconstraint[0m UKh1pspf85sy9ukwtienj4x8205 [34munique[0m (id_project, column_key)
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m kanban_column_dynamic 
+       [34madd[0m [34mconstraint[0m UKh1pspf85sy9ukwtienj4x8205 [34munique[0m (id_project, column_key)
+2026-01-04T11:04:24.131-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_permission 
+       [34mdrop[0m [34mconstraint[0m [34mif[0m [34mexists[0m UKe72imppeig4njd9gtrt2p4qbk
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_permission 
+       [34mdrop[0m [34mconstraint[0m [34mif[0m [34mexists[0m UKe72imppeig4njd9gtrt2p4qbk
+2026-01-04T11:04:24.131-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_permission 
+       [34madd[0m [34mconstraint[0m UKe72imppeig4njd9gtrt2p4qbk [34munique[0m (id_project_member, permission_type)
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_permission 
+       [34madd[0m [34mconstraint[0m UKe72imppeig4njd9gtrt2p4qbk [34munique[0m (id_project_member, permission_type)
+2026-01-04T11:04:24.135-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_member 
+       [34mdrop[0m [34mconstraint[0m [34mif[0m [34mexists[0m UKt1b0je0wsjwsjpy2axdmu69o
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_member 
+       [34mdrop[0m [34mconstraint[0m [34mif[0m [34mexists[0m UKt1b0je0wsjwsjpy2axdmu69o
+2026-01-04T11:04:24.135-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_member 
+       [34madd[0m [34mconstraint[0m UKt1b0je0wsjwsjpy2axdmu69o [34munique[0m (id_project, id_person)
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_member 
+       [34madd[0m [34mconstraint[0m UKt1b0je0wsjwsjpy2axdmu69o [34munique[0m (id_project, id_person)
+2026-01-04T11:04:24.137-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission_template 
+       [34mdrop[0m [34mconstraint[0m [34mif[0m [34mexists[0m UKtmtj9c5ajx5ynypp0kw6pm47c
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission_template 
+       [34mdrop[0m [34mconstraint[0m [34mif[0m [34mexists[0m UKtmtj9c5ajx5ynypp0kw6pm47c
+2026-01-04T11:04:24.137-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission_template 
+       [34madd[0m [34mconstraint[0m UKtmtj9c5ajx5ynypp0kw6pm47c [34munique[0m (project_role, permission_type)
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission_template 
+       [34madd[0m [34mconstraint[0m UKtmtj9c5ajx5ynypp0kw6pm47c [34munique[0m (project_role, permission_type)
+2026-01-04T11:04:24.179-03:00  INFO 13468 --- [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-04T11:04:24.899-03:00  INFO 13468 --- [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-01-04T11:04:26.635-03:00 DEBUG 13468 --- [  restartedMain] c.s.security.JwtAuthenticationFilter     : Filter 'jwtAuthenticationFilter' configured for use
+2026-01-04T11:04:28.892-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mselect[0m
+        count(*) 
+    [34mfrom[0m
+        role_permission_template rpt1_0
+[35m[Hibernate][0m 
+    [34mselect[0m
+        count(*) 
+    [34mfrom[0m
+        role_permission_template rpt1_0
+2026-01-04T11:04:29.759-03:00  INFO 13468 --- [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@107dc213, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@384778d4, org.springframework.security.web.context.SecurityContextHolderFilter@7b9ce718, org.springframework.security.web.header.HeaderWriterFilter@5bafd7be, org.springframework.web.filter.CorsFilter@72c697fd, org.springframework.security.web.authentication.logout.LogoutFilter@fe6f1c0, com.smartmeeting.security.JwtAuthenticationFilter@7e4effbf, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@59272423, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@4b0c88bb, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@4e7f988, org.springframework.security.web.session.SessionManagementFilter@336ab9fe, org.springframework.security.web.access.ExceptionTranslationFilter@7414c70b, org.springframework.security.web.access.intercept.AuthorizationFilter@1453ae2]
+2026-01-04T11:04:30.194-03:00 DEBUG 13468 --- [  restartedMain] s.w.s.m.m.a.RequestMappingHandlerMapping : 139 mappings in 'requestMappingHandlerMapping'
+2026-01-04T11:04:30.409-03:00 DEBUG 13468 --- [  restartedMain] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**, /swagger-ui*/*swagger-initializer.js, /swagger-ui*/**] in 'resourceHandlerMapping'
+2026-01-04T11:04:30.483-03:00 DEBUG 13468 --- [  restartedMain] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2026-01-04T11:04:30.540-03:00 DEBUG 13468 --- [  restartedMain] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 2 @ExceptionHandler, 1 ResponseBodyAdvice
+2026-01-04T11:04:31.267-03:00  INFO 13468 --- [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-01-04T11:04:31.635-03:00  INFO 13468 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2026-01-04T11:04:31.701-03:00  INFO 13468 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Started SmartmeetingApiApplication in 18.145 seconds (process running for 19.087)
+2026-01-04T11:04:32.014-03:00  INFO 13468 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-04T11:04:32.015-03:00  INFO 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-04T11:04:32.015-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2026-01-04T11:04:32.017-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2026-01-04T11:04:32.018-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
+2026-01-04T11:04:32.023-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@67460ed6
+2026-01-04T11:04:32.027-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@2dee21ff
+2026-01-04T11:04:32.028-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2026-01-04T11:04:32.030-03:00  INFO 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 15 ms
+2026-01-04T11:04:32.067-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:04:32.179-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:04:32.181-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:04:32.192-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:04:32.239-03:00 DEBUG 13468 --- [nio-8080-exec-1] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:04:32.366-03:00 DEBUG 13468 --- [nio-8080-exec-1] org.hibernate.SQL                        : 
+    [34mselect[0m
+        p1_0.id_permission,
+        p1_0.created_by,
+        p1_0.created_date,
+        p1_0.last_modified_by,
+        p1_0.last_modified_date,
+        p1_0.nome_permission 
+    [34mfrom[0m
+        permission p1_0
+[35m[Hibernate][0m 
+    [34mselect[0m
+        p1_0.id_permission,
+        p1_0.created_by,
+        p1_0.created_date,
+        p1_0.last_modified_by,
+        p1_0.last_modified_date,
+        p1_0.nome_permission 
+    [34mfrom[0m
+        permission p1_0
+2026-01-04T11:04:32.475-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:04:32.480-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@4ba574f4, com.smartmeeting.dto.PermissionDTO@3f05e870, com.smart (truncated)...]
+2026-01-04T11:04:32.678-03:00 DEBUG 13468 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:04:41.662-03:00 DEBUG 13468 --- [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:04:41.664-03:00 DEBUG 13468 --- [nio-8080-exec-2] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:04:41.664-03:00 DEBUG 13468 --- [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:04:41.666-03:00 DEBUG 13468 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:04:41.667-03:00 DEBUG 13468 --- [nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:04:41.672-03:00 DEBUG 13468 --- [nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:04:41.672-03:00 DEBUG 13468 --- [nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@12bfc77b, com.smartmeeting.dto.PermissionDTO@71dc74f2, com.smart (truncated)...]
+2026-01-04T11:04:41.677-03:00 DEBUG 13468 --- [nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:04:48.896-03:00 DEBUG 13468 --- [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:04:48.898-03:00 DEBUG 13468 --- [nio-8080-exec-3] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:04:48.898-03:00 DEBUG 13468 --- [nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:04:48.900-03:00 DEBUG 13468 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:04:48.901-03:00 DEBUG 13468 --- [nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:04:48.904-03:00 DEBUG 13468 --- [nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:04:48.904-03:00 DEBUG 13468 --- [nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@165a56a6, com.smartmeeting.dto.PermissionDTO@189daa1d, com.smart (truncated)...]
+2026-01-04T11:04:48.907-03:00 DEBUG 13468 --- [nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:04:54.805-03:00 DEBUG 13468 --- [nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:04:54.807-03:00 DEBUG 13468 --- [nio-8080-exec-6] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:04:54.809-03:00 DEBUG 13468 --- [nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:04:54.810-03:00 DEBUG 13468 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:04:54.810-03:00 DEBUG 13468 --- [nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:04:54.812-03:00 DEBUG 13468 --- [nio-8080-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:04:54.812-03:00 DEBUG 13468 --- [nio-8080-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@3279cb15, com.smartmeeting.dto.PermissionDTO@3cbe232a, com.smart (truncated)...]
+2026-01-04T11:04:54.812-03:00 DEBUG 13468 --- [nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:05:01.119-03:00 DEBUG 13468 --- [nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:05:01.122-03:00 DEBUG 13468 --- [nio-8080-exec-7] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:05:01.122-03:00 DEBUG 13468 --- [nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:05:01.122-03:00 DEBUG 13468 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:05:01.123-03:00 DEBUG 13468 --- [nio-8080-exec-7] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:05:01.124-03:00 DEBUG 13468 --- [nio-8080-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:05:01.125-03:00 DEBUG 13468 --- [nio-8080-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@45c44fd9, com.smartmeeting.dto.PermissionDTO@4b03b911, com.smart (truncated)...]
+2026-01-04T11:05:01.127-03:00 DEBUG 13468 --- [nio-8080-exec-7] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:05:07.155-03:00 DEBUG 13468 --- [io-8080-exec-10] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:05:07.157-03:00 DEBUG 13468 --- [io-8080-exec-10] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:05:07.158-03:00 DEBUG 13468 --- [io-8080-exec-10] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:05:07.158-03:00 DEBUG 13468 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:05:07.159-03:00 DEBUG 13468 --- [io-8080-exec-10] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:05:07.160-03:00 DEBUG 13468 --- [io-8080-exec-10] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:05:07.160-03:00 DEBUG 13468 --- [io-8080-exec-10] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@47dc83d6, com.smartmeeting.dto.PermissionDTO@491b755d, com.smart (truncated)...]
+2026-01-04T11:05:07.162-03:00 DEBUG 13468 --- [io-8080-exec-10] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:05:13.149-03:00 DEBUG 13468 --- [nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:05:13.151-03:00 DEBUG 13468 --- [nio-8080-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:05:13.151-03:00 DEBUG 13468 --- [nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:05:13.152-03:00 DEBUG 13468 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:05:13.153-03:00 DEBUG 13468 --- [nio-8080-exec-4] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:05:13.154-03:00 DEBUG 13468 --- [nio-8080-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:05:13.156-03:00 DEBUG 13468 --- [nio-8080-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@6d985a2c, com.smartmeeting.dto.PermissionDTO@635fb9ef, com.smart (truncated)...]
+2026-01-04T11:05:13.157-03:00 DEBUG 13468 --- [nio-8080-exec-4] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:05:20.609-03:00 DEBUG 13468 --- [nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:05:20.612-03:00 DEBUG 13468 --- [nio-8080-exec-5] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:05:20.612-03:00 DEBUG 13468 --- [nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:05:20.612-03:00 DEBUG 13468 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:05:20.612-03:00 DEBUG 13468 --- [nio-8080-exec-5] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:05:20.613-03:00 DEBUG 13468 --- [nio-8080-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:05:20.613-03:00 DEBUG 13468 --- [nio-8080-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@1afce8f0, com.smartmeeting.dto.PermissionDTO@143b15df, com.smart (truncated)...]
+2026-01-04T11:05:20.613-03:00 DEBUG 13468 --- [nio-8080-exec-5] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:05:29.081-03:00 DEBUG 13468 --- [nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:05:29.082-03:00 DEBUG 13468 --- [nio-8080-exec-8] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:05:29.082-03:00 DEBUG 13468 --- [nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:05:29.082-03:00 DEBUG 13468 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:05:29.082-03:00 DEBUG 13468 --- [nio-8080-exec-8] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:05:29.084-03:00 DEBUG 13468 --- [nio-8080-exec-8] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:05:29.084-03:00 DEBUG 13468 --- [nio-8080-exec-8] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@12d3e38f, com.smartmeeting.dto.PermissionDTO@1c141fa5, com.smart (truncated)...]
+2026-01-04T11:05:29.086-03:00 DEBUG 13468 --- [nio-8080-exec-8] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:05:37.708-03:00 DEBUG 13468 --- [nio-8080-exec-9] o.s.security.web.FilterChainProxy        : Securing GET /ws/permissions
+2026-01-04T11:05:37.710-03:00 DEBUG 13468 --- [nio-8080-exec-9] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-04T11:05:37.710-03:00 DEBUG 13468 --- [nio-8080-exec-9] o.s.security.web.FilterChainProxy        : Secured GET /ws/permissions
+2026-01-04T11:05:37.710-03:00 DEBUG 13468 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : GET "/ws/permissions", parameters={}
+2026-01-04T11:05:37.712-03:00 DEBUG 13468 --- [nio-8080-exec-9] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.smartmeeting.controller.PermissionController#findAll()
+2026-01-04T11:05:37.712-03:00 DEBUG 13468 --- [nio-8080-exec-9] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2026-01-04T11:05:37.714-03:00 DEBUG 13468 --- [nio-8080-exec-9] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [[com.smartmeeting.dto.PermissionDTO@86d86a2, com.smartmeeting.dto.PermissionDTO@6aa79df, com.smartme (truncated)...]
+2026-01-04T11:05:37.714-03:00 DEBUG 13468 --- [nio-8080-exec-9] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2026-01-04T11:05:37.954-03:00  INFO 13468 --- [   File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2026-01-04T11:05:38.022-03:00  INFO 13468 --- [       Thread-7] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-01-04T11:05:38.029-03:00  INFO 13468 --- [       Thread-7] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-01-04T11:05:38.031-03:00  INFO 13468 --- [       Thread-7] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+2026-01-04T11:05:38.194-03:00  INFO 13468 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Starting SmartmeetingApiApplication using Java 17.0.10 with PID 13468 (C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend\target\classes started by mniac in C:\Users\mniac\Desktop\Smart\smartmeeting-api\backend)
+2026-01-04T11:05:38.194-03:00 DEBUG 13468 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : Running with Spring Boot v3.2.0, Spring v6.1.1
+2026-01-04T11:05:38.194-03:00  INFO 13468 --- [  restartedMain] c.s.api.SmartmeetingApiApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-01-04T11:05:38.827-03:00  INFO 13468 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-04T11:05:38.929-03:00  INFO 13468 --- [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 102 ms. Found 19 JPA repository interfaces.
+2026-01-04T11:05:39.356-03:00  INFO 13468 --- [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-01-04T11:05:39.357-03:00  INFO 13468 --- [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-04T11:05:39.358-03:00  INFO 13468 --- [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
+2026-01-04T11:05:39.399-03:00  INFO 13468 --- [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-01-04T11:05:39.399-03:00  INFO 13468 --- [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1202 ms
+2026-01-04T11:05:39.431-03:00  INFO 13468 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-01-04T11:05:39.437-03:00  INFO 13468 --- [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn11: url=jdbc:h2:file:./data/smartmeeting user=SA
+2026-01-04T11:05:39.438-03:00  INFO 13468 --- [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-01-04T11:05:39.438-03:00  INFO 13468 --- [  restartedMain] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:h2:file:./data/smartmeeting'
+2026-01-04T11:05:39.448-03:00 DEBUG 13468 --- [  restartedMain] c.s.security.JwtTokenProvider            : [DEBUG] Secret interpretada como Base64 (54 bytes)
+2026-01-04T11:05:39.448-03:00  WARN 13468 --- [  restartedMain] c.s.security.JwtTokenProvider            : [WARN] Secret <64 bytes, derivada via SHA-512 (64 bytes)
+2026-01-04T11:05:39.448-03:00  INFO 13468 --- [  restartedMain] c.s.security.JwtTokenProvider            : [INFO] SigningKey JWT inicializada (512 bits)
+2026-01-04T11:05:39.480-03:00  INFO 13468 --- [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-04T11:05:39.485-03:00  INFO 13468 --- [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-01-04T11:05:39.491-03:00  INFO 13468 --- [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-04T11:05:39.496-03:00  WARN 13468 --- [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-01-04T11:05:40.251-03:00  INFO 13468 --- [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-04T11:05:40.259-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m checklist_item [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m checklist_item [34mcascade[0m 
+2026-01-04T11:05:40.261-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m kanban_column_dynamic [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m kanban_column_dynamic [34mcascade[0m 
+2026-01-04T11:05:40.261-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m notificacao [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m notificacao [34mcascade[0m 
+2026-01-04T11:05:40.261-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m notificacoes_tarefa [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m notificacoes_tarefa [34mcascade[0m 
+2026-01-04T11:05:40.266-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m permission [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m permission [34mcascade[0m 
+2026-01-04T11:05:40.268-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m pessoa [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m pessoa [34mcascade[0m 
+2026-01-04T11:05:40.272-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m pessoa_role [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m pessoa_role [34mcascade[0m 
+2026-01-04T11:05:40.272-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m presenca [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m presenca [34mcascade[0m 
+2026-01-04T11:05:40.275-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m project [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m project [34mcascade[0m 
+2026-01-04T11:05:40.278-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m project_permission [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m project_permission [34mcascade[0m 
+2026-01-04T11:05:40.279-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m project_member [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m project_member [34mcascade[0m 
+2026-01-04T11:05:40.279-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao [34mcascade[0m 
+2026-01-04T11:05:40.282-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao_participantes [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao_participantes [34mcascade[0m 
+2026-01-04T11:05:40.282-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m role [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m role [34mcascade[0m 
+2026-01-04T11:05:40.284-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission [34mcascade[0m 
+2026-01-04T11:05:40.288-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission_template [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission_template [34mcascade[0m 
+2026-01-04T11:05:40.290-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m sala [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m sala [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m sala_equipamentos [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m sala_equipamentos [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_anexo [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_anexo [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_comentario [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_comentario [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_history [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_history [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_participantes [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_participantes [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_tags [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_tags [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefa_dependencias [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefa_dependencias [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefa_tags [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefa_tags [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefas [34mcascade[0m 
+[35m[Hibernate][0m 
+    [34mdrop[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefas [34mcascade[0m 
+2026-01-04T11:05:40.291-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_notificacao
+[35m[Hibernate][0m 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_notificacao
+2026-01-04T11:05:40.297-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_permission
+[35m[Hibernate][0m 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_permission
+2026-01-04T11:05:40.298-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_pessoa
+[35m[Hibernate][0m 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_pessoa
+2026-01-04T11:05:40.299-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_presenca
+[35m[Hibernate][0m 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_presenca
+2026-01-04T11:05:40.299-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_reuniao
+[35m[Hibernate][0m 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_reuniao
+2026-01-04T11:05:40.300-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_role
+[35m[Hibernate][0m 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_role
+2026-01-04T11:05:40.300-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_sala
+[35m[Hibernate][0m 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_sala
+2026-01-04T11:05:40.300-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_tarefa
+[35m[Hibernate][0m 
+    [34mdrop[0m [34msequence[0m [34mif[0m [34mexists[0m sq_tarefa
+2026-01-04T11:05:40.312-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34msequence[0m sq_notificacao [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+[35m[Hibernate][0m 
+    [34mcreate[0m [34msequence[0m sq_notificacao [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+2026-01-04T11:05:40.312-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34msequence[0m sq_permission [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+[35m[Hibernate][0m 
+    [34mcreate[0m [34msequence[0m sq_permission [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+2026-01-04T11:05:40.315-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34msequence[0m sq_pessoa [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+[35m[Hibernate][0m 
+    [34mcreate[0m [34msequence[0m sq_pessoa [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+2026-01-04T11:05:40.315-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34msequence[0m sq_presenca [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+[35m[Hibernate][0m 
+    [34mcreate[0m [34msequence[0m sq_presenca [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+2026-01-04T11:05:40.315-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34msequence[0m sq_reuniao [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+[35m[Hibernate][0m 
+    [34mcreate[0m [34msequence[0m sq_reuniao [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+2026-01-04T11:05:40.315-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34msequence[0m sq_role [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+[35m[Hibernate][0m 
+    [34mcreate[0m [34msequence[0m sq_role [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+2026-01-04T11:05:40.315-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34msequence[0m sq_sala [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+[35m[Hibernate][0m 
+    [34mcreate[0m [34msequence[0m sq_sala [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+2026-01-04T11:05:40.317-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34msequence[0m sq_tarefa [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+[35m[Hibernate][0m 
+    [34mcreate[0m [34msequence[0m sq_tarefa [34mstart[0m [34mwith[0m 1 [34mincrement[0m [34mby[0m 1
+2026-01-04T11:05:40.322-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m checklist_item (
+        concluido [34mboolean[0m [34mnot[0m [34mnull[0m,
+        ordem [34minteger[0m [34mnot[0m [34mnull[0m,
+        created_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        data_conclusao [34mtimestamp[0m(6),
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_concluido_por [34mbigint[0m,
+        id_responsavel [34mbigint[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        updated_at [34mtimestamp[0m(6),
+        descricao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m checklist_item (
+        concluido [34mboolean[0m [34mnot[0m [34mnull[0m,
+        ordem [34minteger[0m [34mnot[0m [34mnull[0m,
+        created_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        data_conclusao [34mtimestamp[0m(6),
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_concluido_por [34mbigint[0m,
+        id_responsavel [34mbigint[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        updated_at [34mtimestamp[0m(6),
+        descricao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id)
+    )
+2026-01-04T11:05:40.328-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m kanban_column_dynamic (
+        is_active [34mboolean[0m [34mnot[0m [34mnull[0m,
+        is_default [34mboolean[0m [34mnot[0m [34mnull[0m,
+        is_done_column [34mboolean[0m [34mnot[0m [34mnull[0m,
+        ordem [34minteger[0m [34mnot[0m [34mnull[0m,
+        wip_limit [34minteger[0m,
+        created_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_project [34mbigint[0m [34mnot[0m [34mnull[0m,
+        updated_at [34mtimestamp[0m(6),
+        color [34mvarchar[0m(20),
+        column_key [34mvarchar[0m(50) [34mnot[0m [34mnull[0m,
+        description [34mvarchar[0m(255),
+        title [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id),
+        [34munique[0m (id_project, column_key)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m kanban_column_dynamic (
+        is_active [34mboolean[0m [34mnot[0m [34mnull[0m,
+        is_default [34mboolean[0m [34mnot[0m [34mnull[0m,
+        is_done_column [34mboolean[0m [34mnot[0m [34mnull[0m,
+        ordem [34minteger[0m [34mnot[0m [34mnull[0m,
+        wip_limit [34minteger[0m,
+        created_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_project [34mbigint[0m [34mnot[0m [34mnull[0m,
+        updated_at [34mtimestamp[0m(6),
+        color [34mvarchar[0m(20),
+        column_key [34mvarchar[0m(50) [34mnot[0m [34mnull[0m,
+        description [34mvarchar[0m(255),
+        title [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id),
+        [34munique[0m (id_project, column_key)
+    )
+2026-01-04T11:05:40.332-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m notificacao (
+        created_date [34mtimestamp[0m(6),
+        id_destinatario [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_notificacao [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        mensagem_notificacao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        tipo_notificacao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (tipo_notificacao [34min[0m ([36m'EMAIL'[0m,[36m'CONSOLE'[0m,[36m'PUSH'[0m)),
+        [34mprimary[0m [34mkey[0m (id_notificacao)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m notificacao (
+        created_date [34mtimestamp[0m(6),
+        id_destinatario [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_notificacao [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        mensagem_notificacao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        tipo_notificacao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (tipo_notificacao [34min[0m ([36m'EMAIL'[0m,[36m'CONSOLE'[0m,[36m'PUSH'[0m)),
+        [34mprimary[0m [34mkey[0m (id_notificacao)
+    )
+2026-01-04T11:05:40.336-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m notificacoes_tarefa (
+        lida [34mboolean[0m [34mnot[0m [34mnull[0m,
+        agendada_para [34mtimestamp[0m(6),
+        created_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        tarefa_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        usuario_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        mensagem TEXT [34mnot[0m [34mnull[0m,
+        tipo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (tipo [34min[0m ([36m'VENCIMENTO'[0m,[36m'ATRASO'[0m,[36m'ATRIBUICAO'[0m,[36m'COMENTARIO'[0m,[36m'VENCENDO'[0m)),
+        titulo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m notificacoes_tarefa (
+        lida [34mboolean[0m [34mnot[0m [34mnull[0m,
+        agendada_para [34mtimestamp[0m(6),
+        created_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        tarefa_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        usuario_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        mensagem TEXT [34mnot[0m [34mnull[0m,
+        tipo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (tipo [34min[0m ([36m'VENCIMENTO'[0m,[36m'ATRASO'[0m,[36m'ATRIBUICAO'[0m,[36m'COMENTARIO'[0m,[36m'VENCENDO'[0m)),
+        titulo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id)
+    )
+2026-01-04T11:05:40.339-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m permission (
+        created_date [34mtimestamp[0m(6),
+        id_permission [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        nome_permission [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34munique[0m,
+        [34mprimary[0m [34mkey[0m (id_permission)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m permission (
+        created_date [34mtimestamp[0m(6),
+        id_permission [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        nome_permission [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34munique[0m,
+        [34mprimary[0m [34mkey[0m (id_permission)
+    )
+2026-01-04T11:05:40.342-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m pessoa (
+        created_date [34mtimestamp[0m(6),
+        id_pessoa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        cracheid_pessoa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        created_by [34mvarchar[0m(255),
+        email_pessoa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        last_modified_by [34mvarchar[0m(255),
+        nome_pessoa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        senha_pessoa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        tipo_usuario [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (tipo_usuario [34min[0m ([36m'ADMIN'[0m,[36m'ORGANIZADOR'[0m,[36m'PARTICIPANTE'[0m)),
+        [34mprimary[0m [34mkey[0m (id_pessoa)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m pessoa (
+        created_date [34mtimestamp[0m(6),
+        id_pessoa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        cracheid_pessoa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        created_by [34mvarchar[0m(255),
+        email_pessoa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        last_modified_by [34mvarchar[0m(255),
+        nome_pessoa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        senha_pessoa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        tipo_usuario [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (tipo_usuario [34min[0m ([36m'ADMIN'[0m,[36m'ORGANIZADOR'[0m,[36m'PARTICIPANTE'[0m)),
+        [34mprimary[0m [34mkey[0m (id_pessoa)
+    )
+2026-01-04T11:05:40.342-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m pessoa_role (
+        id_pessoa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_role [34mbigint[0m [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_pessoa, id_role)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m pessoa_role (
+        id_pessoa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_role [34mbigint[0m [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_pessoa, id_role)
+    )
+2026-01-04T11:05:40.346-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m presenca (
+        validoporcracha_presenca [34mboolean[0m [34mnot[0m [34mnull[0m,
+        created_date [34mtimestamp[0m(6),
+        hora_entrada [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id_presenca [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        participante_id [34mbigint[0m,
+        reuniao [34mbigint[0m,
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        [34mprimary[0m [34mkey[0m (id_presenca)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m presenca (
+        validoporcracha_presenca [34mboolean[0m [34mnot[0m [34mnull[0m,
+        created_date [34mtimestamp[0m(6),
+        hora_entrada [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id_presenca [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        participante_id [34mbigint[0m,
+        reuniao [34mbigint[0m,
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        [34mprimary[0m [34mkey[0m (id_presenca)
+    )
+2026-01-04T11:05:40.347-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m project (
+        actual_end_date [34mdate[0m,
+        end_date [34mdate[0m,
+        start_date [34mdate[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_owner [34mbigint[0m [34mnot[0m [34mnull[0m,
+        client_contact_email [34mvarchar[0m(255),
+        client_contact_name [34mvarchar[0m(255),
+        client_contact_phone [34mvarchar[0m(255),
+        client_contact_position [34mvarchar[0m(255),
+        description TEXT,
+        name [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        status [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (status [34min[0m ([36m'PLANNING'[0m,[36m'ACTIVE'[0m,[36m'PAUSED'[0m,[36m'COMPLETED'[0m,[36m'ARCHIVED'[0m)),
+        [34mprimary[0m [34mkey[0m (id)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m project (
+        actual_end_date [34mdate[0m,
+        end_date [34mdate[0m,
+        start_date [34mdate[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_owner [34mbigint[0m [34mnot[0m [34mnull[0m,
+        client_contact_email [34mvarchar[0m(255),
+        client_contact_name [34mvarchar[0m(255),
+        client_contact_phone [34mvarchar[0m(255),
+        client_contact_position [34mvarchar[0m(255),
+        description TEXT,
+        name [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        status [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (status [34min[0m ([36m'PLANNING'[0m,[36m'ACTIVE'[0m,[36m'PAUSED'[0m,[36m'COMPLETED'[0m,[36m'ARCHIVED'[0m)),
+        [34mprimary[0m [34mkey[0m (id)
+    )
+2026-01-04T11:05:40.349-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m project_permission (
+        granted [34mboolean[0m [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_project_member [34mbigint[0m [34mnot[0m [34mnull[0m,
+        permission_type [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (permission_type [34min[0m ([36m'PROJECT_VIEW'[0m,[36m'PROJECT_EDIT'[0m,[36m'PROJECT_DELETE'[0m,[36m'PROJECT_MANAGE_MEMBERS'[0m,[36m'TASK_CREATE'[0m,[36m'TASK_VIEW'[0m,[36m'TASK_EDIT'[0m,[36m'TASK_DELETE'[0m,[36m'TASK_MOVE'[0m,[36m'TASK_ASSIGN'[0m,[36m'TASK_COMMENT'[0m,[36m'TASK_ATTACH'[0m,[36m'KANBAN_VIEW'[0m,[36m'KANBAN_MANAGE_COLUMNS'[0m,[36m'MEETING_CREATE'[0m,[36m'MEETING_VIEW'[0m,[36m'MEETING_EDIT'[0m,[36m'MEETING_DELETE'[0m,[36m'MEETING_MANAGE_PARTICIPANTS'[0m,[36m'ADMIN_MANAGE_USERS'[0m,[36m'ADMIN_MANAGE_ROLES'[0m,[36m'ADMIN_VIEW_REPORTS'[0m,[36m'ADMIN_SYSTEM_SETTINGS'[0m)),
+        [34mprimary[0m [34mkey[0m (id),
+        [34munique[0m (id_project_member, permission_type)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m project_permission (
+        granted [34mboolean[0m [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_project_member [34mbigint[0m [34mnot[0m [34mnull[0m,
+        permission_type [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (permission_type [34min[0m ([36m'PROJECT_VIEW'[0m,[36m'PROJECT_EDIT'[0m,[36m'PROJECT_DELETE'[0m,[36m'PROJECT_MANAGE_MEMBERS'[0m,[36m'TASK_CREATE'[0m,[36m'TASK_VIEW'[0m,[36m'TASK_EDIT'[0m,[36m'TASK_DELETE'[0m,[36m'TASK_MOVE'[0m,[36m'TASK_ASSIGN'[0m,[36m'TASK_COMMENT'[0m,[36m'TASK_ATTACH'[0m,[36m'KANBAN_VIEW'[0m,[36m'KANBAN_MANAGE_COLUMNS'[0m,[36m'MEETING_CREATE'[0m,[36m'MEETING_VIEW'[0m,[36m'MEETING_EDIT'[0m,[36m'MEETING_DELETE'[0m,[36m'MEETING_MANAGE_PARTICIPANTS'[0m,[36m'ADMIN_MANAGE_USERS'[0m,[36m'ADMIN_MANAGE_ROLES'[0m,[36m'ADMIN_VIEW_REPORTS'[0m,[36m'ADMIN_SYSTEM_SETTINGS'[0m)),
+        [34mprimary[0m [34mkey[0m (id),
+        [34munique[0m (id_project_member, permission_type)
+    )
+2026-01-04T11:05:40.354-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m project_member (
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_person [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_project [34mbigint[0m [34mnot[0m [34mnull[0m,
+        joined_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        role [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (role [34min[0m ([36m'OWNER'[0m,[36m'ADMIN'[0m,[36m'MEMBER_EDITOR'[0m)),
+        [34mprimary[0m [34mkey[0m (id),
+        [34munique[0m (id_project, id_person)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m project_member (
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_person [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_project [34mbigint[0m [34mnot[0m [34mnull[0m,
+        joined_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        role [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (role [34min[0m ([36m'OWNER'[0m,[36m'ADMIN'[0m,[36m'MEMBER_EDITOR'[0m)),
+        [34mprimary[0m [34mkey[0m (id),
+        [34munique[0m (id_project, id_person)
+    )
+2026-01-04T11:05:40.358-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m reuniao (
+        duracaominutos_reuniao [34minteger[0m [34mnot[0m [34mnull[0m,
+        created_date [34mtimestamp[0m(6),
+        datahorainicio_reuniao [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id_project [34mbigint[0m,
+        id_reuniao [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        organizador_id [34mbigint[0m,
+        sala_id [34mbigint[0m,
+        version [34mbigint[0m,
+        ata_reuniao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        pauta_reuniao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        status_reuniao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (status_reuniao [34min[0m ([36m'AGENDADA'[0m,[36m'EM_ANDAMENTO'[0m,[36m'FINALIZADA'[0m,[36m'CANCELADA'[0m)),
+        titulo_reuniao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_reuniao)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m reuniao (
+        duracaominutos_reuniao [34minteger[0m [34mnot[0m [34mnull[0m,
+        created_date [34mtimestamp[0m(6),
+        datahorainicio_reuniao [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id_project [34mbigint[0m,
+        id_reuniao [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        organizador_id [34mbigint[0m,
+        sala_id [34mbigint[0m,
+        version [34mbigint[0m,
+        ata_reuniao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        pauta_reuniao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        status_reuniao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (status_reuniao [34min[0m ([36m'AGENDADA'[0m,[36m'EM_ANDAMENTO'[0m,[36m'FINALIZADA'[0m,[36m'CANCELADA'[0m)),
+        titulo_reuniao [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_reuniao)
+    )
+2026-01-04T11:05:40.358-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m reuniao_participantes (
+        pessoa_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        reuniao_id [34mbigint[0m [34mnot[0m [34mnull[0m
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m reuniao_participantes (
+        pessoa_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        reuniao_id [34mbigint[0m [34mnot[0m [34mnull[0m
+    )
+2026-01-04T11:05:40.358-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m role (
+        created_date [34mtimestamp[0m(6),
+        id_role [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        nome_role [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34munique[0m,
+        [34mprimary[0m [34mkey[0m (id_role)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m role (
+        created_date [34mtimestamp[0m(6),
+        id_role [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        created_by [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        nome_role [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34munique[0m,
+        [34mprimary[0m [34mkey[0m (id_role)
+    )
+2026-01-04T11:05:40.358-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m role_permission (
+        id_permission [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_role [34mbigint[0m [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_permission, id_role)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m role_permission (
+        id_permission [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_role [34mbigint[0m [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_permission, id_role)
+    )
+2026-01-04T11:05:40.358-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m role_permission_template (
+        default_granted [34mboolean[0m [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        permission_type [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (permission_type [34min[0m ([36m'PROJECT_VIEW'[0m,[36m'PROJECT_EDIT'[0m,[36m'PROJECT_DELETE'[0m,[36m'PROJECT_MANAGE_MEMBERS'[0m,[36m'TASK_CREATE'[0m,[36m'TASK_VIEW'[0m,[36m'TASK_EDIT'[0m,[36m'TASK_DELETE'[0m,[36m'TASK_MOVE'[0m,[36m'TASK_ASSIGN'[0m,[36m'TASK_COMMENT'[0m,[36m'TASK_ATTACH'[0m,[36m'KANBAN_VIEW'[0m,[36m'KANBAN_MANAGE_COLUMNS'[0m,[36m'MEETING_CREATE'[0m,[36m'MEETING_VIEW'[0m,[36m'MEETING_EDIT'[0m,[36m'MEETING_DELETE'[0m,[36m'MEETING_MANAGE_PARTICIPANTS'[0m,[36m'ADMIN_MANAGE_USERS'[0m,[36m'ADMIN_MANAGE_ROLES'[0m,[36m'ADMIN_VIEW_REPORTS'[0m,[36m'ADMIN_SYSTEM_SETTINGS'[0m)),
+        project_role [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (project_role [34min[0m ([36m'OWNER'[0m,[36m'ADMIN'[0m,[36m'MEMBER_EDITOR'[0m)),
+        [34mprimary[0m [34mkey[0m (id),
+        [34munique[0m (project_role, permission_type)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m role_permission_template (
+        default_granted [34mboolean[0m [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        permission_type [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (permission_type [34min[0m ([36m'PROJECT_VIEW'[0m,[36m'PROJECT_EDIT'[0m,[36m'PROJECT_DELETE'[0m,[36m'PROJECT_MANAGE_MEMBERS'[0m,[36m'TASK_CREATE'[0m,[36m'TASK_VIEW'[0m,[36m'TASK_EDIT'[0m,[36m'TASK_DELETE'[0m,[36m'TASK_MOVE'[0m,[36m'TASK_ASSIGN'[0m,[36m'TASK_COMMENT'[0m,[36m'TASK_ATTACH'[0m,[36m'KANBAN_VIEW'[0m,[36m'KANBAN_MANAGE_COLUMNS'[0m,[36m'MEETING_CREATE'[0m,[36m'MEETING_VIEW'[0m,[36m'MEETING_EDIT'[0m,[36m'MEETING_DELETE'[0m,[36m'MEETING_MANAGE_PARTICIPANTS'[0m,[36m'ADMIN_MANAGE_USERS'[0m,[36m'ADMIN_MANAGE_ROLES'[0m,[36m'ADMIN_VIEW_REPORTS'[0m,[36m'ADMIN_SYSTEM_SETTINGS'[0m)),
+        project_role [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (project_role [34min[0m ([36m'OWNER'[0m,[36m'ADMIN'[0m,[36m'MEMBER_EDITOR'[0m)),
+        [34mprimary[0m [34mkey[0m (id),
+        [34munique[0m (project_role, permission_type)
+    )
+2026-01-04T11:05:40.368-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m sala (
+        capacidade_sala [34minteger[0m [34mnot[0m [34mnull[0m,
+        created_date [34mtimestamp[0m(6),
+        id_sala [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        andar [34mvarchar[0m(255),
+        categoria [34mvarchar[0m(255),
+        created_by [34mvarchar[0m(255),
+        imagem [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        localizacao_sala [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        nome_sala [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        observacoes [34mvarchar[0m(255),
+        status_sala [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (status_sala [34min[0m ([36m'LIVRE'[0m,[36m'OCUPADA'[0m,[36m'RESERVADA'[0m,[36m'MANUTENCAO'[0m)),
+        [34mprimary[0m [34mkey[0m (id_sala)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m sala (
+        capacidade_sala [34minteger[0m [34mnot[0m [34mnull[0m,
+        created_date [34mtimestamp[0m(6),
+        id_sala [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        andar [34mvarchar[0m(255),
+        categoria [34mvarchar[0m(255),
+        created_by [34mvarchar[0m(255),
+        imagem [34mvarchar[0m(255),
+        last_modified_by [34mvarchar[0m(255),
+        localizacao_sala [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        nome_sala [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        observacoes [34mvarchar[0m(255),
+        status_sala [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (status_sala [34min[0m ([36m'LIVRE'[0m,[36m'OCUPADA'[0m,[36m'RESERVADA'[0m,[36m'MANUTENCAO'[0m)),
+        [34mprimary[0m [34mkey[0m (id_sala)
+    )
+2026-01-04T11:05:40.370-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m sala_equipamentos (
+        sala_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        equipamento [34mvarchar[0m(255)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m sala_equipamentos (
+        sala_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        equipamento [34mvarchar[0m(255)
+    )
+2026-01-04T11:05:40.373-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m tarefa (
+        concluida_tarefa [34mboolean[0m [34mnot[0m [34mnull[0m,
+        data_inicio_tarefa [34mdate[0m,
+        estimado_horas_tarefa [34mfloat[0m(53),
+        prazo_tarefa [34mdate[0m [34mnot[0m [34mnull[0m,
+        progresso_tarefa [34minteger[0m,
+        created_date [34mtimestamp[0m(6),
+        id_kanban_column [34mbigint[0m,
+        id_project [34mbigint[0m,
+        id_responsavel [34mbigint[0m,
+        id_reuniao [34mbigint[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        cor_tarefa [34mvarchar[0m(255),
+        created_by [34mvarchar[0m(255),
+        descricao_tarefa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        last_modified_by [34mvarchar[0m(255),
+        prioridade_tarefa [34mvarchar[0m(255),
+        titulo_tarefa [34mvarchar[0m(255),
+        [34mprimary[0m [34mkey[0m (id_tarefa)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m tarefa (
+        concluida_tarefa [34mboolean[0m [34mnot[0m [34mnull[0m,
+        data_inicio_tarefa [34mdate[0m,
+        estimado_horas_tarefa [34mfloat[0m(53),
+        prazo_tarefa [34mdate[0m [34mnot[0m [34mnull[0m,
+        progresso_tarefa [34minteger[0m,
+        created_date [34mtimestamp[0m(6),
+        id_kanban_column [34mbigint[0m,
+        id_project [34mbigint[0m,
+        id_responsavel [34mbigint[0m,
+        id_reuniao [34mbigint[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        last_modified_date [34mtimestamp[0m(6),
+        cor_tarefa [34mvarchar[0m(255),
+        created_by [34mvarchar[0m(255),
+        descricao_tarefa [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        last_modified_by [34mvarchar[0m(255),
+        prioridade_tarefa [34mvarchar[0m(255),
+        titulo_tarefa [34mvarchar[0m(255),
+        [34mprimary[0m [34mkey[0m (id_tarefa)
+    )
+2026-01-04T11:05:40.375-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m tarefa_anexo (
+        data_upload [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id_anexo [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_autor [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        tamanho_arquivo [34mbigint[0m,
+        nome_arquivo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        tipo_arquivo [34mvarchar[0m(255),
+        url_arquivo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_anexo)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m tarefa_anexo (
+        data_upload [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id_anexo [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_autor [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        tamanho_arquivo [34mbigint[0m,
+        nome_arquivo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        tipo_arquivo [34mvarchar[0m(255),
+        url_arquivo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_anexo)
+    )
+2026-01-04T11:05:40.377-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m tarefa_comentario (
+        data_criacao [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id_autor [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_comentario [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        texto_comentario TEXT [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_comentario)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m tarefa_comentario (
+        data_criacao [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id_autor [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_comentario [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        texto_comentario TEXT [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_comentario)
+    )
+2026-01-04T11:05:40.377-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m tarefa_history (
+        created_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_usuario [34mbigint[0m,
+        action_type [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (action_type [34min[0m ([36m'CREATED'[0m,[36m'UPDATED'[0m,[36m'STATUS_CHANGED'[0m,[36m'ASSIGNEE_CHANGED'[0m,[36m'PRIORITY_CHANGED'[0m,[36m'DUE_DATE_CHANGED'[0m,[36m'TITLE_CHANGED'[0m,[36m'DESCRIPTION_CHANGED'[0m,[36m'COMMENT_ADDED'[0m,[36m'COMMENT_DELETED'[0m,[36m'ATTACHMENT_ADDED'[0m,[36m'ATTACHMENT_REMOVED'[0m,[36m'CHECKLIST_ITEM_ADDED'[0m,[36m'CHECKLIST_ITEM_COMPLETED'[0m,[36m'CHECKLIST_ITEM_UNCOMPLETED'[0m,[36m'CHECKLIST_ITEM_REMOVED'[0m,[36m'MOVED_TO_COLUMN'[0m,[36m'PROGRESS_UPDATED'[0m,[36m'TAG_ADDED'[0m,[36m'TAG_REMOVED'[0m,[36m'DUPLICATED'[0m,[36m'DELETED'[0m)),
+        description TEXT,
+        field_name [34mvarchar[0m(255),
+        new_value TEXT,
+        old_value TEXT,
+        [34mprimary[0m [34mkey[0m (id)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m tarefa_history (
+        created_at [34mtimestamp[0m(6) [34mnot[0m [34mnull[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_usuario [34mbigint[0m,
+        action_type [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (action_type [34min[0m ([36m'CREATED'[0m,[36m'UPDATED'[0m,[36m'STATUS_CHANGED'[0m,[36m'ASSIGNEE_CHANGED'[0m,[36m'PRIORITY_CHANGED'[0m,[36m'DUE_DATE_CHANGED'[0m,[36m'TITLE_CHANGED'[0m,[36m'DESCRIPTION_CHANGED'[0m,[36m'COMMENT_ADDED'[0m,[36m'COMMENT_DELETED'[0m,[36m'ATTACHMENT_ADDED'[0m,[36m'ATTACHMENT_REMOVED'[0m,[36m'CHECKLIST_ITEM_ADDED'[0m,[36m'CHECKLIST_ITEM_COMPLETED'[0m,[36m'CHECKLIST_ITEM_UNCOMPLETED'[0m,[36m'CHECKLIST_ITEM_REMOVED'[0m,[36m'MOVED_TO_COLUMN'[0m,[36m'PROGRESS_UPDATED'[0m,[36m'TAG_ADDED'[0m,[36m'TAG_REMOVED'[0m,[36m'DUPLICATED'[0m,[36m'DELETED'[0m)),
+        description TEXT,
+        field_name [34mvarchar[0m(255),
+        new_value TEXT,
+        old_value TEXT,
+        [34mprimary[0m [34mkey[0m (id)
+    )
+2026-01-04T11:05:40.379-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m tarefa_participantes (
+        id_pessoa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_pessoa, id_tarefa)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m tarefa_participantes (
+        id_pessoa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id_pessoa, id_tarefa)
+    )
+2026-01-04T11:05:40.380-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m tarefa_tags (
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        tag [34mvarchar[0m(255)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m tarefa_tags (
+        id_tarefa [34mbigint[0m [34mnot[0m [34mnull[0m,
+        tag [34mvarchar[0m(255)
+    )
+2026-01-04T11:05:40.380-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m template_tarefa_dependencias (
+        template_tarefa_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        dependencia [34mvarchar[0m(255)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m template_tarefa_dependencias (
+        template_tarefa_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        dependencia [34mvarchar[0m(255)
+    )
+2026-01-04T11:05:40.382-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m template_tarefa_tags (
+        template_tarefa_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        tag [34mvarchar[0m(255)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m template_tarefa_tags (
+        template_tarefa_id [34mbigint[0m [34mnot[0m [34mnull[0m,
+        tag [34mvarchar[0m(255)
+    )
+2026-01-04T11:05:40.382-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34mcreate[0m [34mtable[0m template_tarefas (
+        estimada_horas [34minteger[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        descricao TEXT,
+        prioridade [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (prioridade [34min[0m ([36m'BAIXA'[0m,[36m'MEDIA'[0m,[36m'ALTA'[0m,[36m'CRITICA'[0m,[36m'URGENTE'[0m)),
+        titulo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id)
+    )
+[35m[Hibernate][0m 
+    [34mcreate[0m [34mtable[0m template_tarefas (
+        estimada_horas [34minteger[0m,
+        id [34mbigint[0m generated [34mby[0m [34mdefault[0m [34mas[0m [34midentity[0m,
+        descricao TEXT,
+        prioridade [34mvarchar[0m(255) [34mnot[0m [34mnull[0m [34mcheck[0m (prioridade [34min[0m ([36m'BAIXA'[0m,[36m'MEDIA'[0m,[36m'ALTA'[0m,[36m'CRITICA'[0m,[36m'URGENTE'[0m)),
+        titulo [34mvarchar[0m(255) [34mnot[0m [34mnull[0m,
+        [34mprimary[0m [34mkey[0m (id)
+    )
+2026-01-04T11:05:40.388-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m checklist_item 
+       [34madd[0m [34mconstraint[0m FK7irt9u03wjd6rpa3uut96ggv7 
+       [34mforeign[0m [34mkey[0m (id_concluido_por) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m checklist_item 
+       [34madd[0m [34mconstraint[0m FK7irt9u03wjd6rpa3uut96ggv7 
+       [34mforeign[0m [34mkey[0m (id_concluido_por) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.392-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m checklist_item 
+       [34madd[0m [34mconstraint[0m FKqw85gikcyewctafr2054smoye 
+       [34mforeign[0m [34mkey[0m (id_responsavel) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m checklist_item 
+       [34madd[0m [34mconstraint[0m FKqw85gikcyewctafr2054smoye 
+       [34mforeign[0m [34mkey[0m (id_responsavel) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.398-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m checklist_item 
+       [34madd[0m [34mconstraint[0m FKqc798pa7ilsdvcyvnirs3lh6v 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m checklist_item 
+       [34madd[0m [34mconstraint[0m FKqc798pa7ilsdvcyvnirs3lh6v 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+2026-01-04T11:05:40.399-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m kanban_column_dynamic 
+       [34madd[0m [34mconstraint[0m FK7m6lxwm61242y9rbj3jfpbu4 
+       [34mforeign[0m [34mkey[0m (id_project) 
+       [34mreferences[0m project
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m kanban_column_dynamic 
+       [34madd[0m [34mconstraint[0m FK7m6lxwm61242y9rbj3jfpbu4 
+       [34mforeign[0m [34mkey[0m (id_project) 
+       [34mreferences[0m project
+2026-01-04T11:05:40.400-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m notificacao 
+       [34madd[0m [34mconstraint[0m FKlb52w4f92yhoos25esoj3ifim 
+       [34mforeign[0m [34mkey[0m (id_destinatario) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m notificacao 
+       [34madd[0m [34mconstraint[0m FKlb52w4f92yhoos25esoj3ifim 
+       [34mforeign[0m [34mkey[0m (id_destinatario) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.406-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m notificacoes_tarefa 
+       [34madd[0m [34mconstraint[0m FKst16pkpjd4jgj0jf4xldywi0r 
+       [34mforeign[0m [34mkey[0m (tarefa_id) 
+       [34mreferences[0m tarefa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m notificacoes_tarefa 
+       [34madd[0m [34mconstraint[0m FKst16pkpjd4jgj0jf4xldywi0r 
+       [34mforeign[0m [34mkey[0m (tarefa_id) 
+       [34mreferences[0m tarefa
+2026-01-04T11:05:40.408-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m notificacoes_tarefa 
+       [34madd[0m [34mconstraint[0m FKesg2bl8bs65ota1kmp16v66y1 
+       [34mforeign[0m [34mkey[0m (usuario_id) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m notificacoes_tarefa 
+       [34madd[0m [34mconstraint[0m FKesg2bl8bs65ota1kmp16v66y1 
+       [34mforeign[0m [34mkey[0m (usuario_id) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.408-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m pessoa_role 
+       [34madd[0m [34mconstraint[0m FKcyayqaqwkpabsmbfhpgjvfswl 
+       [34mforeign[0m [34mkey[0m (id_role) 
+       [34mreferences[0m role
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m pessoa_role 
+       [34madd[0m [34mconstraint[0m FKcyayqaqwkpabsmbfhpgjvfswl 
+       [34mforeign[0m [34mkey[0m (id_role) 
+       [34mreferences[0m role
+2026-01-04T11:05:40.413-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m pessoa_role 
+       [34madd[0m [34mconstraint[0m FK38qcc0rleiu5b46hf8inqai8b 
+       [34mforeign[0m [34mkey[0m (id_pessoa) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m pessoa_role 
+       [34madd[0m [34mconstraint[0m FK38qcc0rleiu5b46hf8inqai8b 
+       [34mforeign[0m [34mkey[0m (id_pessoa) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.414-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m presenca 
+       [34madd[0m [34mconstraint[0m FK_PRESENCA_PARTICIPANTE 
+       [34mforeign[0m [34mkey[0m (participante_id) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m presenca 
+       [34madd[0m [34mconstraint[0m FK_PRESENCA_PARTICIPANTE 
+       [34mforeign[0m [34mkey[0m (participante_id) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.418-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m presenca 
+       [34madd[0m [34mconstraint[0m FK_PRESENCA_REUNIAO 
+       [34mforeign[0m [34mkey[0m (reuniao) 
+       [34mreferences[0m reuniao
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m presenca 
+       [34madd[0m [34mconstraint[0m FK_PRESENCA_REUNIAO 
+       [34mforeign[0m [34mkey[0m (reuniao) 
+       [34mreferences[0m reuniao
+2026-01-04T11:05:40.422-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project 
+       [34madd[0m [34mconstraint[0m FKt89b3pwcsoosaoopajv8m9je0 
+       [34mforeign[0m [34mkey[0m (id_owner) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project 
+       [34madd[0m [34mconstraint[0m FKt89b3pwcsoosaoopajv8m9je0 
+       [34mforeign[0m [34mkey[0m (id_owner) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.422-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_permission 
+       [34madd[0m [34mconstraint[0m FKtq0dm1ajdl3yglh174rxw0px9 
+       [34mforeign[0m [34mkey[0m (id_project_member) 
+       [34mreferences[0m project_member
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_permission 
+       [34madd[0m [34mconstraint[0m FKtq0dm1ajdl3yglh174rxw0px9 
+       [34mforeign[0m [34mkey[0m (id_project_member) 
+       [34mreferences[0m project_member
+2026-01-04T11:05:40.425-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_member 
+       [34madd[0m [34mconstraint[0m FK7menmxgnc9fhbfxikh3f5pn2i 
+       [34mforeign[0m [34mkey[0m (id_person) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_member 
+       [34madd[0m [34mconstraint[0m FK7menmxgnc9fhbfxikh3f5pn2i 
+       [34mforeign[0m [34mkey[0m (id_person) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.427-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_member 
+       [34madd[0m [34mconstraint[0m FKd4i57qai0num2vbvwqys3pjdj 
+       [34mforeign[0m [34mkey[0m (id_project) 
+       [34mreferences[0m project
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m project_member 
+       [34madd[0m [34mconstraint[0m FKd4i57qai0num2vbvwqys3pjdj 
+       [34mforeign[0m [34mkey[0m (id_project) 
+       [34mreferences[0m project
+2026-01-04T11:05:40.428-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao 
+       [34madd[0m [34mconstraint[0m FK_REUNIAO_ORGANIZADOR 
+       [34mforeign[0m [34mkey[0m (organizador_id) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao 
+       [34madd[0m [34mconstraint[0m FK_REUNIAO_ORGANIZADOR 
+       [34mforeign[0m [34mkey[0m (organizador_id) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.431-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao 
+       [34madd[0m [34mconstraint[0m FK6mxgh9hd0r2fdhqoihejexbjl 
+       [34mforeign[0m [34mkey[0m (id_project) 
+       [34mreferences[0m project
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao 
+       [34madd[0m [34mconstraint[0m FK6mxgh9hd0r2fdhqoihejexbjl 
+       [34mforeign[0m [34mkey[0m (id_project) 
+       [34mreferences[0m project
+2026-01-04T11:05:40.432-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao 
+       [34madd[0m [34mconstraint[0m FK_REUNIAO_SALA 
+       [34mforeign[0m [34mkey[0m (sala_id) 
+       [34mreferences[0m sala
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao 
+       [34madd[0m [34mconstraint[0m FK_REUNIAO_SALA 
+       [34mforeign[0m [34mkey[0m (sala_id) 
+       [34mreferences[0m sala
+2026-01-04T11:05:40.432-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao_participantes 
+       [34madd[0m [34mconstraint[0m FK_REUNIAO_PARTICIPANTES_PESSOA 
+       [34mforeign[0m [34mkey[0m (pessoa_id) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao_participantes 
+       [34madd[0m [34mconstraint[0m FK_REUNIAO_PARTICIPANTES_PESSOA 
+       [34mforeign[0m [34mkey[0m (pessoa_id) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.440-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao_participantes 
+       [34madd[0m [34mconstraint[0m FK_REUNIAO_PARTICIPANTES_REUNIAO 
+       [34mforeign[0m [34mkey[0m (reuniao_id) 
+       [34mreferences[0m reuniao
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m reuniao_participantes 
+       [34madd[0m [34mconstraint[0m FK_REUNIAO_PARTICIPANTES_REUNIAO 
+       [34mforeign[0m [34mkey[0m (reuniao_id) 
+       [34mreferences[0m reuniao
+2026-01-04T11:05:40.440-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission 
+       [34madd[0m [34mconstraint[0m FK2ws6nbakjvnk1p41enwua5c2j 
+       [34mforeign[0m [34mkey[0m (id_permission) 
+       [34mreferences[0m permission
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission 
+       [34madd[0m [34mconstraint[0m FK2ws6nbakjvnk1p41enwua5c2j 
+       [34mforeign[0m [34mkey[0m (id_permission) 
+       [34mreferences[0m permission
+2026-01-04T11:05:40.442-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission 
+       [34madd[0m [34mconstraint[0m FK4mqvliy9oxgi2g5h2tqpvvd3l 
+       [34mforeign[0m [34mkey[0m (id_role) 
+       [34mreferences[0m role
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m role_permission 
+       [34madd[0m [34mconstraint[0m FK4mqvliy9oxgi2g5h2tqpvvd3l 
+       [34mforeign[0m [34mkey[0m (id_role) 
+       [34mreferences[0m role
+2026-01-04T11:05:40.442-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m sala_equipamentos 
+       [34madd[0m [34mconstraint[0m FKimw07s0mag828intp6a9ghvip 
+       [34mforeign[0m [34mkey[0m (sala_id) 
+       [34mreferences[0m sala
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m sala_equipamentos 
+       [34madd[0m [34mconstraint[0m FKimw07s0mag828intp6a9ghvip 
+       [34mforeign[0m [34mkey[0m (sala_id) 
+       [34mreferences[0m sala
+2026-01-04T11:05:40.442-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa 
+       [34madd[0m [34mconstraint[0m FKfn4o9xurwc9osmwk4nce8qoe8 
+       [34mforeign[0m [34mkey[0m (id_kanban_column) 
+       [34mreferences[0m kanban_column_dynamic
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa 
+       [34madd[0m [34mconstraint[0m FKfn4o9xurwc9osmwk4nce8qoe8 
+       [34mforeign[0m [34mkey[0m (id_kanban_column) 
+       [34mreferences[0m kanban_column_dynamic
+2026-01-04T11:05:40.448-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa 
+       [34madd[0m [34mconstraint[0m FK1mbdo1j4x283eodxcxuclm6mv 
+       [34mforeign[0m [34mkey[0m (id_project) 
+       [34mreferences[0m project
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa 
+       [34madd[0m [34mconstraint[0m FK1mbdo1j4x283eodxcxuclm6mv 
+       [34mforeign[0m [34mkey[0m (id_project) 
+       [34mreferences[0m project
+2026-01-04T11:05:40.450-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa 
+       [34madd[0m [34mconstraint[0m FK_TAREFA_PESSOA 
+       [34mforeign[0m [34mkey[0m (id_responsavel) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa 
+       [34madd[0m [34mconstraint[0m FK_TAREFA_PESSOA 
+       [34mforeign[0m [34mkey[0m (id_responsavel) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.455-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa 
+       [34madd[0m [34mconstraint[0m FK_TAREFA_REUNIAO 
+       [34mforeign[0m [34mkey[0m (id_reuniao) 
+       [34mreferences[0m reuniao
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa 
+       [34madd[0m [34mconstraint[0m FK_TAREFA_REUNIAO 
+       [34mforeign[0m [34mkey[0m (id_reuniao) 
+       [34mreferences[0m reuniao
+2026-01-04T11:05:40.457-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_anexo 
+       [34madd[0m [34mconstraint[0m FKcpvstawhkb1ha29un0cyqmg 
+       [34mforeign[0m [34mkey[0m (id_autor) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_anexo 
+       [34madd[0m [34mconstraint[0m FKcpvstawhkb1ha29un0cyqmg 
+       [34mforeign[0m [34mkey[0m (id_autor) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.458-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_anexo 
+       [34madd[0m [34mconstraint[0m FKoay98pha0oqg1nukd8r604pw5 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_anexo 
+       [34madd[0m [34mconstraint[0m FKoay98pha0oqg1nukd8r604pw5 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+2026-01-04T11:05:40.459-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_comentario 
+       [34madd[0m [34mconstraint[0m FKkgrblfnefq72cqvkr4kjkbi5t 
+       [34mforeign[0m [34mkey[0m (id_autor) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_comentario 
+       [34madd[0m [34mconstraint[0m FKkgrblfnefq72cqvkr4kjkbi5t 
+       [34mforeign[0m [34mkey[0m (id_autor) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.461-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_comentario 
+       [34madd[0m [34mconstraint[0m FKaclia6nrh5e76447caflj3yll 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_comentario 
+       [34madd[0m [34mconstraint[0m FKaclia6nrh5e76447caflj3yll 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+2026-01-04T11:05:40.464-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_history 
+       [34madd[0m [34mconstraint[0m FK8cwdb0v9l2fgrmnqesbgb1jqj 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_history 
+       [34madd[0m [34mconstraint[0m FK8cwdb0v9l2fgrmnqesbgb1jqj 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+2026-01-04T11:05:40.464-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_history 
+       [34madd[0m [34mconstraint[0m FK4ktmnmiat4rejxqrt2fxpgq3w 
+       [34mforeign[0m [34mkey[0m (id_usuario) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_history 
+       [34madd[0m [34mconstraint[0m FK4ktmnmiat4rejxqrt2fxpgq3w 
+       [34mforeign[0m [34mkey[0m (id_usuario) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.467-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_participantes 
+       [34madd[0m [34mconstraint[0m FK4il6lqxykbs85aupkdp7uhkkd 
+       [34mforeign[0m [34mkey[0m (id_pessoa) 
+       [34mreferences[0m pessoa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_participantes 
+       [34madd[0m [34mconstraint[0m FK4il6lqxykbs85aupkdp7uhkkd 
+       [34mforeign[0m [34mkey[0m (id_pessoa) 
+       [34mreferences[0m pessoa
+2026-01-04T11:05:40.472-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_participantes 
+       [34madd[0m [34mconstraint[0m FK3tkjjy9b2kw6snqy5fi2fht0d 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_participantes 
+       [34madd[0m [34mconstraint[0m FK3tkjjy9b2kw6snqy5fi2fht0d 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+2026-01-04T11:05:40.475-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_tags 
+       [34madd[0m [34mconstraint[0m FK9f21ck95coj05c1kpleaxu9x0 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m tarefa_tags 
+       [34madd[0m [34mconstraint[0m FK9f21ck95coj05c1kpleaxu9x0 
+       [34mforeign[0m [34mkey[0m (id_tarefa) 
+       [34mreferences[0m tarefa
+2026-01-04T11:05:40.477-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefa_dependencias 
+       [34madd[0m [34mconstraint[0m FKf7bwd1yvew9yx0gnur4b8m9pl 
+       [34mforeign[0m [34mkey[0m (template_tarefa_id) 
+       [34mreferences[0m template_tarefas
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefa_dependencias 
+       [34madd[0m [34mconstraint[0m FKf7bwd1yvew9yx0gnur4b8m9pl 
+       [34mforeign[0m [34mkey[0m (template_tarefa_id) 
+       [34mreferences[0m template_tarefas
+2026-01-04T11:05:40.477-03:00 DEBUG 13468 --- [  restartedMain] org.hibernate.SQL                        : 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefa_tags 
+       [34madd[0m [34mconstraint[0m FKfm6b4t8bmam6l8ah64te6duh0 
+       [34mforeign[0m [34mkey[0m (template_tarefa_id) 
+       [34mreferences[0m template_tarefas
+[35m[Hibernate][0m 
+    [34malter[0m [34mtable[0m [34mif[0m [34mexists[0m template_tarefa_tags 
+       [34madd[0m [34mconstraint[0m FKfm6b4t8bmam6l8ah64te6duh0 
+       [34mforeign[0m [34mkey[0m (template_tarefa_id) 
+       [34mreferences[0m template_tarefas
+2026-01-04T11:05:40.487-03:00  INFO 13468 --- [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-04T11:05:40.875-03:00 DEBUG 13468 --- [  restartedMain] c.s.security.JwtAuthenticationFilter     : Filter 'jwtAuthenticationFilter' configured for use

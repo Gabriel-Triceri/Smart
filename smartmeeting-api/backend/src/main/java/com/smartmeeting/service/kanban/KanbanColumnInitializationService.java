@@ -33,7 +33,7 @@ public class KanbanColumnInitializationService {
                 .orElseThrow(() -> new com.smartmeeting.exception.ResourceNotFoundException(
                         "Projeto não encontrado: " + projectId));
 
-        List<KanbanColumnDynamic> existing = columnRepository.findByProjectIdOrderByOrdemAsc(projectId);
+        List<KanbanColumnDynamic> existing = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
         if (!existing.isEmpty()) {
             return existing.stream().map(mapper::toDTO).collect(Collectors.toList());
         }
@@ -52,6 +52,7 @@ public class KanbanColumnInitializationService {
         defaultColumns.add(done);
 
         List<KanbanColumnDynamic> saved = columnRepository.saveAll(defaultColumns);
+        columnRepository.flush();
         log.info("Colunas padrão criadas para projeto {}", projectId);
 
         return saved.stream().map(mapper::toDTO).collect(Collectors.toList());

@@ -55,9 +55,16 @@ public class KanbanBoardService {
 
                         List<Tarefa> tarefas = tarefaRepository.findByProjectId(projectId);
 
+                        final Long defaultColId = columns.get(0).getId();
+
                         Map<Long, List<TarefaDTO>> tarefasPorColuna = tarefas.stream()
-                                        .filter(t -> t.getColumn() != null)
-                                        .map(tarefaService::toDTO)
+                                        .map(t -> {
+                                                TarefaDTO dto = tarefaService.toDTO(t);
+                                                if (dto.getColumnId() == null) {
+                                                        dto.setColumnId(defaultColId);
+                                                }
+                                                return dto;
+                                        })
                                         .collect(Collectors.groupingBy(TarefaDTO::getColumnId));
 
                         List<KanbanColumnDTO> dtos = columns.stream()
@@ -102,10 +109,17 @@ public class KanbanBoardService {
                                 .map(column -> {
                                         KanbanColumnDynamicDTO dto = mapper.toDTO(column);
 
+                                        final Long defaultColId = columns.get(0).getId();
+
                                         List<TarefaDTO> tarefasDaColuna = tarefas.stream()
-                                                        .filter(t -> t.getColumn() != null &&
-                                                                        t.getColumn().getId().equals(column.getId()))
-                                                        .map(tarefaService::toDTO)
+                                                        .map(t -> {
+                                                                TarefaDTO tDto = tarefaService.toDTO(t);
+                                                                if (tDto.getColumnId() == null) {
+                                                                        tDto.setColumnId(defaultColId);
+                                                                }
+                                                                return tDto;
+                                                        })
+                                                        .filter(t -> t.getColumnId().equals(column.getId()))
                                                         .collect(Collectors.toList());
 
                                         dto.setTarefas(tarefasDaColuna);

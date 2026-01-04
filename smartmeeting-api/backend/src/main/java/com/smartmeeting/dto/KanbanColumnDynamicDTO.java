@@ -21,9 +21,15 @@ public class KanbanColumnDynamicDTO {
     private String color;
     private Integer ordem;
     private Integer wipLimit;
+    @com.fasterxml.jackson.annotation.JsonProperty("isDefault")
     private boolean isDefault;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("isDoneColumn")
     private boolean isDoneColumn;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("isActive")
     private boolean isActive;
+
     private Integer taskCount;
     private List<TarefaDTO> tarefas;
     private LocalDateTime createdAt;

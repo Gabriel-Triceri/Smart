@@ -1,5 +1,6 @@
 package com.smartmeeting.enums;
 
+import com.smartmeeting.exception.BadRequestException;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import org.slf4j.Logger;
@@ -21,26 +22,10 @@ public class PrioridadeTarefaConverter implements AttributeConverter<PrioridadeT
 
     @Override
     public PrioridadeTarefa convertToEntityAttribute(String dbData) {
-        if (dbData == null) {
-            return null;
-        }
-        logger.debug("Converting database column {} to enum", dbData);
-
-        if ("MÉDIA".equalsIgnoreCase(dbData)) {
-            logger.debug("Mapped 'MÉDIA' to PrioridadeTarefa.MEDIA");
-            return PrioridadeTarefa.MEDIA;
-        }
-
-        if ("MEDIA".equalsIgnoreCase(dbData)) {
-            logger.debug("Mapped 'MEDIA' to PrioridadeTarefa.MEDIA");
-            return PrioridadeTarefa.MEDIA;
-        }
         try {
-            PrioridadeTarefa result = PrioridadeTarefa.valueOf(dbData.toUpperCase());
-            logger.debug("Mapped '{}' to {}", dbData, result);
-            return result;
-        } catch (IllegalArgumentException e) {
-            logger.error("Unknown database value for PrioridadeTarefa: {}", dbData, e);
+            return PrioridadeTarefa.fromValue(dbData);
+        } catch (BadRequestException e) {
+            logger.error("Unknown database value for PrioridadeTarefa: {}", dbData);
             throw new IllegalArgumentException("Unknown database value: " + dbData, e);
         }
     }

@@ -50,6 +50,16 @@ public class KanbanColumnManagerService {
             throw new BadRequestException("Já existe uma coluna com este título no projeto");
         }
 
+        // Se o projeto for novo (não tem colunas dinâmicas ATIVAS), inicializa as
+        // padrões
+        // primeiro
+        if (!columnRepository.existsByProjectIdAndIsActiveTrue(request.getProjectId())) {
+            log.info("Inicializando colunas padrão para o projeto {} antes de criar nova coluna customizada",
+                    request.getProjectId());
+            initializer.initializeDefaultColumns(request.getProjectId());
+            columnRepository.flush(); // Garante que as colunas apareçam para o findMaxOrdem subsequente
+        }
+
         Integer maxOrdem = columnRepository.findMaxOrdemByProjectId(request.getProjectId());
         int novaOrdem = request.getOrdem() != null ? request.getOrdem() : (maxOrdem != null ? maxOrdem + 1 : 1);
 
@@ -157,14 +167,17 @@ public class KanbanColumnManagerService {
         if (tasks.isEmpty()) {
             return;
         }
-        KanbanColumnDynamic defaultColumn = columnRepository.findByProjectIdAndIsDefaultTrue(column.getProject().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Coluna padrão não encontrada para o projeto: " + column.getProject().getId()));
+        KanbanColumnDynamic defaultColumn = columnRepository
+                .findByProjectIdAndIsDefaultTrue(column.getProject().getId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Coluna padrão não encontrada para o projeto: " + column.getProject().getId()));
 
         for (Tarefa task : tasks) {
             task.setColumn(defaultColumn);
         }
         tarefaRepository.saveAll(tasks);
-        log.info("{} tarefas movidas da coluna {} para a coluna padrão {}", tasks.size(), column.getId(), defaultColumn.getId());
+        log.info("{} tarefas movidas da coluna {} para a coluna padrão {}", tasks.size(), column.getId(),
+                defaultColumn.getId());
     }
 
     @Transactional

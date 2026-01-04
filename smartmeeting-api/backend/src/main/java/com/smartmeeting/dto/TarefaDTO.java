@@ -25,6 +25,7 @@ public class TarefaDTO {
     private boolean concluida;
     private Long columnId;
     private String columnName;
+    private String status;
     private String prioridade;
     private LocalDate dataInicio;
     private Double estimadoHoras;

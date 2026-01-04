@@ -2,12 +2,9 @@ package com.smartmeeting.service.sala;
 
 import com.smartmeeting.dto.SalaDTO;
 import com.smartmeeting.dto.SalaStatisticsDTO;
-import com.smartmeeting.exception.ResourceNotFoundException;
-import com.smartmeeting.model.Reuniao;
 
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 

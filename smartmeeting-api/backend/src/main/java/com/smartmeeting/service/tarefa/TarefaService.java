@@ -80,7 +80,7 @@ public class TarefaService {
     }
 
     public List<TarefaDTO> criarTarefasPorTemplate(Long templateId, List<Long> responsaveisIds,
-                                                   List<String> datasVencimento, Long reuniaoId) {
+            List<String> datasVencimento, Long reuniaoId) {
         return crudService.criarTarefasPorTemplate(templateId, responsaveisIds, datasVencimento, reuniaoId);
     }
 
@@ -112,7 +112,7 @@ public class TarefaService {
 
     // History
     public TarefaHistory registrarAlteracao(Tarefa tarefa, String campo, String valorAntigo,
-                                            String valorNovo, Pessoa autor) {
+            String valorNovo, Pessoa autor) {
         return historyService.registrarHistorico(
                 tarefa.getId(),
                 com.smartmeeting.enums.HistoryActionType.UPDATED,
@@ -183,7 +183,10 @@ public class TarefaService {
     }
 
     // Kanban
-    public KanbanBoardDTO getKanbanBoard(Long reuniaoId) {
+    public KanbanBoardDTO getKanbanBoard(Long reuniaoId, Long projectId) {
+        if (projectId != null) {
+            return kanbanService.getKanbanBoardByProject(projectId);
+        }
         return kanbanService.getKanbanBoard(reuniaoId);
     }
 

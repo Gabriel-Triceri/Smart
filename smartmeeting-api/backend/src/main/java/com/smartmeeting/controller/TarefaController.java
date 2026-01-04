@@ -218,8 +218,9 @@ public class TarefaController {
 
     @GetMapping("/kanban")
     public ResponseEntity<KanbanBoardDTO> getKanbanBoard(
-            @RequestParam(required = false, name = "reuniaoId") Long reuniaoId) {
-        KanbanBoardDTO kanbanBoard = tarefaService.getKanbanBoard(reuniaoId);
+            @RequestParam(required = false, name = "reuniaoId") Long reuniaoId,
+            @RequestParam(required = false, name = "projectId") Long projectId) {
+        KanbanBoardDTO kanbanBoard = tarefaService.getKanbanBoard(reuniaoId, projectId);
         return ResponseEntity.ok(kanbanBoard);
     }
 
@@ -240,21 +241,21 @@ public class TarefaController {
             }
         }
 
-        // O frontend envia columnKey (ex: "in_progress") em colunaId
-        String columnKey = request.getColunaId();
+        // O frontend agora envia o ID da coluna (Long) corretamente
+        Long columnId = request.getColunaId();
 
-        if (columnKey == null || columnKey.trim().isEmpty()) {
-            logger.error("columnKey não pode ser nulo ou vazio para tarefa {}", id);
+        if (columnId == null) {
+            logger.error("columnId não pode ser nulo para tarefa {}", id);
             return ResponseEntity.badRequest().build();
         }
 
-        logger.info("Movendo tarefa {} para coluna com columnKey: {}", id, columnKey);
+        logger.info("Movendo tarefa {} para coluna ID: {}", id, columnId);
 
         try {
-            TarefaDTO tarefaAtualizada = kanbanService.moverTarefaPorColumnKey(id, columnKey, request.getNewPosition());
+            TarefaDTO tarefaAtualizada = kanbanService.moverTarefa(id, columnId, request.getNewPosition());
             return ResponseEntity.ok(tarefaAtualizada);
         } catch (Exception e) {
-            logger.error("Erro ao mover tarefa {} para coluna {}: {}", id, columnKey, e.getMessage(), e);
+            logger.error("Erro ao mover tarefa {} para coluna ID {}: {}", id, columnId, e.getMessage(), e);
             return ResponseEntity.badRequest().build();
         }
     }

@@ -22,6 +22,7 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
     /**
      * Busca tarefas por ID da reunião
+     * 
      * @return Lista de tarefas da reunião
      */
 
@@ -32,13 +33,17 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
      *
      * @return Lista de tarefas da coluna
      */
+    @EntityGraph(value = "Tarefa.completa")
     List<Tarefa> findByColumnId(Long columnId);
 
     long countByColumnId(Long columnId);
 
+    @EntityGraph(value = "Tarefa.completa")
     List<Tarefa> findByPrazoBetween(LocalDate inicio, LocalDate fim);
 
     long countByProjectId(Long projectId);
+
+    @EntityGraph(value = "Tarefa.completa")
     List<Tarefa> findByProjectId(Long projectId);
 
     @Modifying

@@ -106,12 +106,14 @@ public class ProjectCrudService {
         return toDTO(saved);
     }
 
+    @Transactional(readOnly = true)
     public ProjectDTO buscarPorId(Long id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with ID: " + id));
         return toDTO(project);
     }
 
+    @Transactional(readOnly = true)
     public List<ProjectDTO> listarTodos() {
         return projectRepository.findAll().stream()
                 .map(this::toDTO)

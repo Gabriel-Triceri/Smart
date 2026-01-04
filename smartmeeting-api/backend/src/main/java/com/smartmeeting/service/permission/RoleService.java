@@ -10,15 +10,6 @@ import com.smartmeeting.repository.RoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.smartmeeting.exception.BadRequestException;
-import com.smartmeeting.exception.ResourceNotFoundException;
-import com.smartmeeting.model.Permission;
-import com.smartmeeting.model.Role;
-import com.smartmeeting.repository.PermissionRepository;
-import com.smartmeeting.repository.RoleRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

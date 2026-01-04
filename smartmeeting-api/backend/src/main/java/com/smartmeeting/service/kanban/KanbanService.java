@@ -35,13 +35,13 @@ public class KanbanService {
     private final ProjectStatusService projectStatusService;
 
     public KanbanService(TarefaRepository tarefaRepository,
-                         TarefaMapperService mapper,
-                         TarefaHistoryService historyService,
-                         TarefaMovimentacaoService movimentacaoService,
-                         KanbanColumnDynamicRepository columnRepository,
-                         ReuniaoRepository reuniaoRepository,
-                         KanbanColumnInitializationService columnInitializationService,
-                         ProjectStatusService projectStatusService) {
+            TarefaMapperService mapper,
+            TarefaHistoryService historyService,
+            TarefaMovimentacaoService movimentacaoService,
+            KanbanColumnDynamicRepository columnRepository,
+            ReuniaoRepository reuniaoRepository,
+            KanbanColumnInitializationService columnInitializationService,
+            ProjectStatusService projectStatusService) {
         this.tarefaRepository = tarefaRepository;
         this.mapper = mapper;
         this.historyService = historyService;
@@ -73,16 +73,25 @@ public class KanbanService {
                 columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
             }
 
+            final Long defaultColId = (columns.isEmpty()) ? null : columns.get(0).getId();
+
             Map<Long, List<TarefaDTO>> tarefasPorColuna = tarefas.stream()
-                    .filter(t -> t.getColumn() != null)
-                    .map(mapper::toDTO)
+                    .map(t -> {
+                        TarefaDTO dto = mapper.toDTO(t);
+                        if (dto.getColumnId() == null && defaultColId != null) {
+                            dto.setColumnId(defaultColId);
+                        }
+                        return dto;
+                    })
+                    .filter(t -> t.getColumnId() != null)
                     .collect(Collectors.groupingBy(TarefaDTO::getColumnId));
 
             List<KanbanColumnDTO> colunasDTO = columns.stream()
                     .map(col -> {
                         List<TarefaDTO> tarefasDaColuna = tarefasPorColuna.getOrDefault(col.getId(), new ArrayList<>());
                         // Ordena por posição se disponível
-                        tarefasDaColuna.sort(Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
+                        tarefasDaColuna
+                                .sort(Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
                         return new KanbanColumnDTO(col.getId(), col.getTitle(), tarefasDaColuna, col.getWipLimit(),
                                 col.getColor(), col.getOrdem());
                     })
@@ -108,8 +117,10 @@ public class KanbanService {
         Tarefa tarefa = tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
 
-        KanbanColumnDynamic newColumn = columnRepository.findByProjectIdAndColumnKeyAndIsActiveTrue(tarefa.getProject().getId(), columnKey)
-                .orElseThrow(() -> new ResourceNotFoundException("Coluna com columnKey '" + columnKey + "' não encontrada para o projeto da tarefa."));
+        KanbanColumnDynamic newColumn = columnRepository
+                .findByProjectIdAndColumnKeyAndIsActiveTrue(tarefa.getProject().getId(), columnKey)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Coluna com columnKey '" + columnKey + "' não encontrada para o projeto da tarefa."));
 
         return moveTask(tarefaId, newColumn, newPosition);
     }
@@ -167,20 +178,39 @@ public class KanbanService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public KanbanBoardDTO getKanbanBoardByProject(Long projectId) {
         try {
             List<Tarefa> tarefas = tarefaRepository.findByProjectId(projectId);
-            List<KanbanColumnDynamic> columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
+            List<KanbanColumnDynamic> columns = columnRepository
+                    .findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
+
+            if (columns.isEmpty()) {
+                logger.info("Projeto {} sem colunas Kanban. Inicializando colunas padrão...", projectId);
+                columnInitializationService.initializeDefaultColumns(projectId);
+                columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
+            }
+
+            final List<KanbanColumnDynamic> finalColumns = columns;
+
+            final Long finalDefaultColId = columns.isEmpty() ? null : getDefaultColumnId(columns);
 
             Map<Long, List<TarefaDTO>> tarefasPorColuna = tarefas.stream()
-                    .map(mapper::toDTO)
-                    .collect(Collectors.groupingBy(t -> t.getColumnId() != null ? t.getColumnId() : getDefaultColumnId(columns)));
+                    .map(t -> {
+                        TarefaDTO dto = mapper.toDTO(t);
+                        if (dto.getColumnId() == null && finalDefaultColId != null) {
+                            dto.setColumnId(finalDefaultColId);
+                        }
+                        return dto;
+                    })
+                    .filter(t -> t.getColumnId() != null)
+                    .collect(Collectors.groupingBy(TarefaDTO::getColumnId));
 
             List<KanbanColumnDTO> colunasDTO = columns.stream()
                     .map(col -> {
                         List<TarefaDTO> tarefasDaColuna = tarefasPorColuna.getOrDefault(col.getId(), new ArrayList<>());
-                        tarefasDaColuna.sort(Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
+                        tarefasDaColuna
+                                .sort(Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
                         return new KanbanColumnDTO(col.getId(), col.getTitle(), tarefasDaColuna, col.getWipLimit(),
                                 col.getColor(), col.getOrdem());
                     })
@@ -201,6 +231,5 @@ public class KanbanService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Default column not found for the project"));
     }
-
 
 }

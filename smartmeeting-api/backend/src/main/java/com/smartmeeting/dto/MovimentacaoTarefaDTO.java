@@ -1,6 +1,5 @@
 package com.smartmeeting.dto;
 
-import com.smartmeeting.enums.StatusTarefa;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -9,10 +8,8 @@ import java.time.LocalDateTime;
 public class MovimentacaoTarefaDTO {
     @NotNull
     private Long tarefaId;
-    @NotNull
-    private StatusTarefa statusAnterior;
-    @NotNull
-    private StatusTarefa statusNovo;
+    private String statusAnterior;
+    private String statusNovo;
     private String colunaAnterior;
     private String colunaNova;
     @NotBlank
@@ -29,14 +26,14 @@ public class MovimentacaoTarefaDTO {
 
     // Construtor completo
     public MovimentacaoTarefaDTO(@NotNull Long tarefaId,
-                                 @NotNull StatusTarefa statusAnterior,
-                                 @NotNull StatusTarefa statusNovo,
-                                 String colunaAnterior,
-                                 String colunaNova,
-                                 @NotBlank String usuarioId,
-                                 @NotBlank String usuarioNome,
-                                 @NotNull LocalDateTime timestamp,
-                                 String comentario) {
+            String statusAnterior,
+            String statusNovo,
+            String colunaAnterior,
+            String colunaNova,
+            @NotBlank String usuarioId,
+            @NotBlank String usuarioNome,
+            @NotNull LocalDateTime timestamp,
+            String comentario) {
         this.tarefaId = tarefaId;
         this.statusAnterior = statusAnterior;
         this.statusNovo = statusNovo;
@@ -50,30 +47,12 @@ public class MovimentacaoTarefaDTO {
 
     // Construtor simplificado sem colunas e comentário
     public MovimentacaoTarefaDTO(@NotNull Long tarefaId,
-                                 @NotNull StatusTarefa statusAnterior,
-                                 @NotNull StatusTarefa statusNovo,
-                                 @NotBlank String usuarioId,
-                                 @NotBlank String usuarioNome,
-                                 @NotNull LocalDateTime timestamp) {
+            String statusAnterior,
+            String statusNovo,
+            @NotBlank String usuarioId,
+            @NotBlank String usuarioNome,
+            @NotNull LocalDateTime timestamp) {
         this(tarefaId, statusAnterior, statusNovo, null, null, usuarioId, usuarioNome, timestamp, null);
-    }
-
-    // Construtor simplificado que aceita String para status (para Kanban)
-    public MovimentacaoTarefaDTO(@NotNull Long tarefaId,
-                                 String statusAnteriorDesc,
-                                 String statusNovoDesc,
-                                 String usuarioId,
-                                 String usuarioNome,
-                                 LocalDateTime timestamp) {
-        this.tarefaId = tarefaId;
-        // Armazenar como strings já que são títulos de colunas do Kanban
-        this.statusAnterior = null; // Não aplicável para Kanban
-        this.statusNovo = null; // Não aplicável para Kanban
-        this.colunaAnterior = statusAnteriorDesc;
-        this.colunaNova = statusNovoDesc;
-        this.usuarioId = usuarioId != null ? usuarioId : "";
-        this.usuarioNome = usuarioNome != null ? usuarioNome : "";
-        this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
     }
 
     // Getters e Setters (mantenha os que você já tem)
@@ -85,19 +64,19 @@ public class MovimentacaoTarefaDTO {
         this.tarefaId = tarefaId;
     }
 
-    public StatusTarefa getStatusAnterior() {
+    public String getStatusAnterior() {
         return statusAnterior;
     }
 
-    public void setStatusAnterior(StatusTarefa statusAnterior) {
+    public void setStatusAnterior(String statusAnterior) {
         this.statusAnterior = statusAnterior;
     }
 
-    public StatusTarefa getStatusNovo() {
+    public String getStatusNovo() {
         return statusNovo;
     }
 
-    public void setStatusNovo(StatusTarefa statusNovo) {
+    public void setStatusNovo(String statusNovo) {
         this.statusNovo = statusNovo;
     }
 

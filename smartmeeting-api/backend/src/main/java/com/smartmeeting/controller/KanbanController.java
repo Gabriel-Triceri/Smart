@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 public class KanbanController {
 
     private final KanbanService kanbanService;
+    private final com.smartmeeting.service.project.ProjectPermissionService projectPermissionService;
+    private final com.smartmeeting.service.tarefa.TarefaService tarefaService;
 
     /**
      * Obtém o board Kanban para uma reunião específica
@@ -23,6 +25,12 @@ public class KanbanController {
     @GetMapping("/board")
     public ResponseEntity<KanbanBoardDTO> getKanbanBoard(
             @RequestParam(value = "reuniaoId", required = false) Long reuniaoId) {
+
+        // Verificação básica de autenticação
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new com.smartmeeting.exception.ForbiddenException("Usuário não autenticado");
+        }
 
         KanbanBoardDTO board = kanbanService.getKanbanBoard(reuniaoId);
         return ResponseEntity.ok(board);
@@ -36,12 +44,22 @@ public class KanbanController {
     public ResponseEntity<TarefaDTO> moverTarefa(
             @PathVariable("tarefaId") Long tarefaId,
             @RequestBody MoverTarefaRequest request) {
+
+        // Verificação de permissão
+        TarefaDTO existing = tarefaService.buscarPorIdDTO(tarefaId);
+        if (existing.getProjectId() != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(existing.getProjectId(),
+                    com.smartmeeting.enums.PermissionType.TASK_MOVE)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para mover tarefas neste projeto.");
+            }
+        }
+
         System.out.println("Column ID: " + request.getNewColumnId() + " | New Position: " + request.getNewPosition());
         TarefaDTO tarefa = kanbanService.moverTarefa(
                 tarefaId,
                 request.getNewColumnId(),
-                request.getNewPosition()
-        );
+                request.getNewPosition());
         return ResponseEntity.ok(tarefa);
     }
 

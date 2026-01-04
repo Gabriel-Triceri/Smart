@@ -8,10 +8,8 @@ import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.model.Tarefa;
 import com.smartmeeting.model.TemplateTarefa;
-import com.smartmeeting.repository.PessoaRepository;
-import com.smartmeeting.repository.ReuniaoRepository;
-import com.smartmeeting.repository.TarefaRepository;
-import com.smartmeeting.repository.TemplateTarefaRepository;
+import com.smartmeeting.repository.*;
+import com.smartmeeting.service.kanban.KanbanColumnInitializationService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,11 +32,15 @@ public class TarefaCrudService {
     private final TemplateTarefaRepository templateTarefaRepository;
     private final TarefaMapperService tarefaMapper;
     private final TarefaHistoryService historyService;
+    private final ProjectRepository projectRepository;
+    private final KanbanColumnDynamicRepository columnRepository;
+    private final KanbanColumnInitializationService columnInitializationService;
 
     public TarefaDTO toDTO(Tarefa tarefa) {
         return tarefaMapper.toDTO(tarefa);
     }
 
+    @Transactional(readOnly = true)
     public List<TarefaDTO> listarTodas() {
         return tarefaRepository.findAll()
                 .stream()
@@ -46,6 +48,7 @@ public class TarefaCrudService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public TarefaDTO buscarPorIdDTO(Long id) {
         Tarefa tarefa = tarefaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -75,6 +78,49 @@ public class TarefaCrudService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Reunião não encontrada com ID: " + dto.getReuniaoId()));
             tarefa.setReuniao(reuniao);
+        }
+
+        // Tentar obter o projeto pelo DTO ou pela reunião
+        Long projectIdDto = dto.getProjectId();
+        if (projectIdDto == null && tarefa.getReuniao() != null && tarefa.getReuniao().getProject() != null) {
+            projectIdDto = tarefa.getReuniao().getProject().getId();
+        }
+
+        final Long finalProjectId = projectIdDto;
+        if (finalProjectId != null) {
+            projectRepository.findById(finalProjectId).ifPresent(project -> {
+                tarefa.setProject(project);
+
+                // Garantir que o projeto tenha colunas (inicializa se estiver vazio)
+                if (!columnRepository.existsByProjectId(finalProjectId)) {
+                    columnInitializationService.initializeDefaultColumns(finalProjectId);
+                }
+
+                // Atribuir coluna padrão do projeto
+                columnRepository.findByProjectIdAndIsDefaultTrue(finalProjectId)
+                        .ifPresent(tarefa::setColumn);
+            });
+        }
+
+        // Processar participantes adicionais (responsaveisIds)
+        if (dto.getResponsaveisIds() != null && !dto.getResponsaveisIds().isEmpty()) {
+            Set<Pessoa> participantes = new HashSet<>();
+            Long principalId = tarefa.getResponsavel() != null ? tarefa.getResponsavel().getId() : null;
+
+            for (String idStr : dto.getResponsaveisIds()) {
+                try {
+                    Long pessoaId = Long.parseLong(idStr);
+                    // Evitar adicionar o responsável principal também como participante
+                    if (principalId != null && pessoaId.equals(principalId)) {
+                        continue;
+                    }
+
+                    pessoaRepository.findById(pessoaId).ifPresent(participantes::add);
+                } catch (NumberFormatException e) {
+                    logger.warn("ID de participante inválido na criação: {}", idStr);
+                }
+            }
+            tarefa.setParticipantes(participantes);
         }
 
         Tarefa salvo = tarefaRepository.save(tarefa);
@@ -111,8 +157,7 @@ public class TarefaCrudService {
         LocalDate prazoAntigo = tarefa.getPrazo();
         Integer progressoAntigo = tarefa.getProgresso();
         Pessoa responsavelAntigo = tarefa.getResponsavel();
-        String nomeResponsavelAntigo =
-                responsavelAntigo != null ? responsavelAntigo.getNome() : null;
+        String nomeResponsavelAntigo = responsavelAntigo != null ? responsavelAntigo.getNome() : null;
 
         if (dtoAtualizada.getTitulo() != null)
             tarefa.setTitulo(dtoAtualizada.getTitulo());
@@ -129,7 +174,7 @@ public class TarefaCrudService {
 
         if (dtoAtualizada.getPrioridade() != null)
             tarefa.setPrioridade(
-                    PrioridadeTarefa.valueOf(dtoAtualizada.getPrioridade()));
+                    PrioridadeTarefa.fromValue(dtoAtualizada.getPrioridade()));
 
         if (dtoAtualizada.getDataInicio() != null)
             tarefa.setDataInicio(dtoAtualizada.getDataInicio());
@@ -164,8 +209,7 @@ public class TarefaCrudService {
 
         if (dtoAtualizada.getResponsaveisIds() != null) {
             Set<Pessoa> participantes = new HashSet<>();
-            Long principalId =
-                    tarefa.getResponsavel() != null ? tarefa.getResponsavel().getId() : null;
+            Long principalId = tarefa.getResponsavel() != null ? tarefa.getResponsavel().getId() : null;
 
             for (String idStr : dtoAtualizada.getResponsaveisIds()) {
                 try {
@@ -191,6 +235,11 @@ public class TarefaCrudService {
             tarefa.setReuniao(reuniao);
         }
 
+        if (dtoAtualizada.getColumnId() != null) {
+            columnRepository.findById(dtoAtualizada.getColumnId())
+                    .ifPresent(tarefa::setColumn);
+        }
+
         Tarefa atualizado = tarefaRepository.save(tarefa);
 
         try {
@@ -199,17 +248,14 @@ public class TarefaCrudService {
             historyService.registrarMudancaDescricao(
                     tarefaOriginal, descricaoAntiga, atualizado.getDescricao());
 
-            String colunaNova =
-                    atualizado.getColumn() != null ? atualizado.getColumn().getTitle() : null;
+            String colunaNova = atualizado.getColumn() != null ? atualizado.getColumn().getTitle() : null;
             historyService.registrarMudancaStatus(
                     tarefaOriginal, colunaAntiga, colunaNova);
 
-            String pAntiga =
-                    prioridadeAntiga != null ? prioridadeAntiga.getDescricao() : null;
-            String pNova =
-                    atualizado.getPrioridade() != null
-                            ? atualizado.getPrioridade().getDescricao()
-                            : null;
+            String pAntiga = prioridadeAntiga != null ? prioridadeAntiga.getDescricao() : null;
+            String pNova = atualizado.getPrioridade() != null
+                    ? atualizado.getPrioridade().getDescricao()
+                    : null;
             historyService.registrarMudancaPrioridade(
                     tarefaOriginal, pAntiga, pNova);
 
@@ -307,6 +353,13 @@ public class TarefaCrudService {
                         reuniaoRepository.findById(rid)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                         "Reunião não encontrada com ID: " + rid)));
+
+                // Atribuir coluna padrão se houver projeto
+                if (tarefa.getReuniao().getProject() != null) {
+                    tarefa.setProject(tarefa.getReuniao().getProject());
+                    columnRepository.findByProjectIdAndIsDefaultTrue(tarefa.getProject().getId())
+                            .ifPresent(tarefa::setColumn);
+                }
             }
 
             criadas.add(tarefaMapper.toDTO(tarefaRepository.save(tarefa)));

@@ -17,10 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.mockito.ArgumentMatchers.anyLong;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -65,8 +62,9 @@ class ReuniaoAuthorizationTest {
         when(reuniaoMapper.toDTO(any())).thenReturn(new ReuniaoDTO());
 
         // Mock permission check for MEETING_CREATE
-        // when(projectPermissionService.hasPermissionForCurrentUser(anyLong(), eq(PermissionType.MEETING_CREATE)))
-        //         .thenReturn(true);
+        // when(projectPermissionService.hasPermissionForCurrentUser(anyLong(),
+        // eq(PermissionType.MEETING_CREATE)))
+        // .thenReturn(true);
 
         // Provide valid JSON content for the request
         String validContent = "{\"projectId\": 1, \"title\": \"Reunião Teste\"}";

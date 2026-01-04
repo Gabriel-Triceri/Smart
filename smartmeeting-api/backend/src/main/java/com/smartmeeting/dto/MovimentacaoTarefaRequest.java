@@ -5,15 +5,15 @@ import jakarta.validation.constraints.NotNull;
 
 public class MovimentacaoTarefaRequest {
     @NotNull
-    // Mude de StatusTarefa para Long, que é o ID da Coluna do Kanban
-    private String colunaId;
+    // ID da Coluna do Kanban (Long)
+    private Long colunaId;
     private Integer newPosition;
 
-    public String getColunaId() { // Getter também deve mudar
+    public Long getColunaId() {
         return colunaId;
     }
 
-    public void setColunaId(String colunaId) { // Setter também deve mudar
+    public void setColunaId(Long colunaId) {
         this.colunaId = colunaId;
     }
 

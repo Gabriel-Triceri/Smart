@@ -32,29 +32,70 @@ public class ProjectPermissionService {
     private final ProjectPermissionRepository permissionRepository;
     private final ProjectMemberRepository memberRepository;
     private final RolePermissionTemplateRepository templateRepository;
-    //private final PermissionWebSocketHandler webSocketHandler;
+    private final com.smartmeeting.repository.RoleRepository roleRepository;
+    // private final PermissionWebSocketHandler webSocketHandler;
 
     /**
      * Inicializa os templates de permissões por role (executado no startup)
      */
     @PostConstruct
     public void initializePermissionTemplates() {
-        if (templateRepository.count() == 0) {
-            log.info("Inicializando templates de permissões...");
+        // Sempre re-sincroniza templates ao iniciar para garantir consistência com o
+        // banco global
+        log.info("Sincronizando templates de permissões com Roles globais...");
 
-            // OWNER - todas as permissões
+        // OWNER - todas as permissões (hardcoded, pois é superusuário do projeto)
+        for (PermissionType perm : PermissionType.values()) {
+            saveOrUpdateTemplate(ProjectRole.OWNER, perm, true);
+        }
+
+        // Outros Roles: Tenta buscar do banco global
+        syncRoleFromGlobal(ProjectRole.ADMIN);
+        syncRoleFromGlobal(ProjectRole.MEMBER_EDITOR);
+
+        log.info("Templates de permissões sincronizados com sucesso!");
+    }
+
+    private void syncRoleFromGlobal(ProjectRole projectRole) {
+        // 1. Tenta buscar Role global pelo nome
+        Optional<com.smartmeeting.model.Role> globalRoleOpt = roleRepository.findByNome(projectRole.name());
+
+        if (globalRoleOpt.isPresent()) {
+            // Existe no banco global -> Sincroniza
+            com.smartmeeting.model.Role globalRole = globalRoleOpt.get();
+            Set<String> grantedPermissions = globalRole.getPermissions().stream()
+                    .map(com.smartmeeting.model.Permission::getNome)
+                    .collect(Collectors.toSet());
+
             for (PermissionType perm : PermissionType.values()) {
-                templateRepository.save(new RolePermissionTemplate(ProjectRole.OWNER, perm, true));
+                boolean granted = grantedPermissions.contains(perm.name());
+                saveOrUpdateTemplate(projectRole, perm, granted);
             }
+            log.info("Role {} sincronizado do banco global. Permissões ativas: {}", projectRole,
+                    grantedPermissions.size());
 
-            // ADMIN - quase todas, exceto algumas administrativas
+        } else {
+            // Não existe no banco global -> Usa Defaults Hardcoded (Fallback)
+            log.warn("Role global {} não encontrado. Usando defaults hardcoded.", projectRole);
+            applyHardcodedDefaults(projectRole);
+        }
+    }
+
+    private void saveOrUpdateTemplate(ProjectRole role, PermissionType type, boolean granted) {
+        RolePermissionTemplate template = templateRepository.findByProjectRoleAndPermissionType(role, type)
+                .orElse(new RolePermissionTemplate(role, type, granted));
+        template.setDefaultGranted(granted);
+        templateRepository.save(template);
+    }
+
+    private void applyHardcodedDefaults(ProjectRole role) {
+        if (role == ProjectRole.ADMIN) {
             for (PermissionType perm : PermissionType.values()) {
                 boolean granted = perm != PermissionType.PROJECT_DELETE &&
                         perm != PermissionType.ADMIN_SYSTEM_SETTINGS;
-                templateRepository.save(new RolePermissionTemplate(ProjectRole.ADMIN, perm, granted));
+                saveOrUpdateTemplate(role, perm, granted);
             }
-
-            // MEMBER_EDITOR - permissões básicas de edição
+        } else if (role == ProjectRole.MEMBER_EDITOR) {
             Set<PermissionType> memberPermissions = Set.of(
                     PermissionType.PROJECT_VIEW,
                     PermissionType.TASK_CREATE, PermissionType.TASK_VIEW, PermissionType.TASK_EDIT,
@@ -62,11 +103,8 @@ public class ProjectPermissionService {
                     PermissionType.KANBAN_VIEW,
                     PermissionType.MEETING_VIEW, PermissionType.MEETING_CREATE);
             for (PermissionType perm : PermissionType.values()) {
-                templateRepository.save(new RolePermissionTemplate(
-                        ProjectRole.MEMBER_EDITOR, perm, memberPermissions.contains(perm)));
+                saveOrUpdateTemplate(role, perm, memberPermissions.contains(perm));
             }
-
-            log.info("Templates de permissões inicializados com sucesso!");
         }
     }
 
@@ -196,8 +234,8 @@ public class ProjectPermissionService {
 
         // Notifica o usuario via WebSocket sobre a mudanca de permissoes
         // webSocketHandler.notifyPermissionsUpdated(
-        //         member.getPerson().getId(),
-        //         member.getProject().getId());
+        // member.getPerson().getId(),
+        // member.getProject().getId());
 
         return getMemberPermissions(member.getId());
     }
@@ -226,8 +264,8 @@ public class ProjectPermissionService {
 
         // Notifica o usuario via WebSocket sobre a mudanca de role/permissoes
         // webSocketHandler.notifyPermissionsUpdated(
-        //         member.getPerson().getId(),
-        //         member.getProject().getId());
+        // member.getPerson().getId(),
+        // member.getProject().getId());
 
         return getMemberPermissions(projectMemberId);
     }
@@ -248,8 +286,8 @@ public class ProjectPermissionService {
 
         // Notifica o usuario via WebSocket sobre o reset de permissoes
         // webSocketHandler.notifyPermissionsUpdated(
-        //         member.getPerson().getId(),
-        //         member.getProject().getId());
+        // member.getPerson().getId(),
+        // member.getProject().getId());
 
         return getMemberPermissions(projectMemberId);
     }
