@@ -22,7 +22,7 @@ public class ProjectService {
     private final ProjectCrudService crudService;
     private final ProjectMemberService memberService;
     private final ProjectSearchService searchService;
-    // ProjectPermissionService could be used here for checks if needed
+    private final ProjectPermissionService projectPermissionService;
 
     // CRUD
     public ProjectDTO createProject(CreateProjectDTO createProjectDTO, Pessoa currentUser) {
@@ -40,17 +40,36 @@ public class ProjectService {
     }
 
     public void deleteProject(Long id, Pessoa currentUser) {
-        // Implementar checkPermission se necessário
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!projectPermissionService.hasPermission(id, currentUser.getId(),
+                    com.smartmeeting.enums.PermissionType.PROJECT_DELETE)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para excluir este projeto.");
+            }
+        }
         crudService.deletar(id);
     }
 
     // Members
     public ProjectMemberDTO addMember(Long projectId, AddProjectMemberDTO addProjectMemberDTO, Pessoa currentUser) {
-        // Implementar checkPermission se necessário
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!projectPermissionService.hasPermission(projectId, currentUser.getId(),
+                    com.smartmeeting.enums.PermissionType.PROJECT_MANAGE_MEMBERS)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para gerenciar membros neste projeto.");
+            }
+        }
         return memberService.addMember(projectId, addProjectMemberDTO.getPersonId(), addProjectMemberDTO.getRole());
     }
 
     public void removeMember(Long projectId, Long memberId, Pessoa currentUser) {
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!projectPermissionService.hasPermission(projectId, currentUser.getId(),
+                    com.smartmeeting.enums.PermissionType.PROJECT_MANAGE_MEMBERS)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para gerenciar membros neste projeto.");
+            }
+        }
         memberService.removeMemberById(memberId);
     }
 

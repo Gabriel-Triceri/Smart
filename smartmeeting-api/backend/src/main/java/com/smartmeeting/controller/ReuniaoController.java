@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -46,7 +47,7 @@ public class ReuniaoController {
     }
 
     /**
-    /**
+     * /**
      * Lista todas as reuniões cadastradas (filtradas por permissão do usuário)
      */
     @GetMapping
@@ -74,9 +75,7 @@ public class ReuniaoController {
                     // Validação de permissão
                     if (reuniao.getProject() != null) {
                         if (!projectPermissionService.hasPermissionForCurrentUser(reuniao.getProject().getId(),
-                                com.smartmeeting.enums.PermissionType.MEETING_VIEW) &&
-                                !projectPermissionService.hasPermissionForCurrentUser(reuniao.getProject().getId(),
-                                        com.smartmeeting.enums.PermissionType.PROJECT_VIEW)) {
+                                com.smartmeeting.enums.PermissionType.MEETING_VIEW)) {
                             throw new com.smartmeeting.exception.ForbiddenException(
                                     "Você não tem permissão para visualizar esta reunião.");
                         }
@@ -92,7 +91,7 @@ public class ReuniaoController {
      */
 
     @PostMapping
-   // @PreAuthorize("hasRole('ORGANIZADOR')")
+    // @PreAuthorize("hasRole('ORGANIZADOR')")
     public ResponseEntity<ReuniaoDTO> criar(@Valid @RequestBody ReuniaoDTO dto) {
         // Validação de permissão (se o DTO tiver projectId, o que não parece ter
         // explícito, mas pode vir no contexto)
@@ -241,6 +240,7 @@ public class ReuniaoController {
     /**
      * API de estatísticas de reuniões
      */
+    @Transactional(readOnly = true)
     @GetMapping("/statistics")
     public ResponseEntity<ReuniaoStatisticsDTO> getReuniaoStatistics() {
         ReuniaoStatisticsDTO statistics = service.getReuniaoStatistics();

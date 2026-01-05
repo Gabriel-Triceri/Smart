@@ -74,12 +74,6 @@ export const CanDo: React.FC<CanDoProps> = ({
     // Para permissões de projeto, verificar via API
     useEffect(() => {
         if (!global && projectId) {
-            // Admin global sempre tem permissão
-            if (authService.hasRole('ADMIN')) {
-                setHasProjectPermission(true);
-                return;
-            }
-
             // Verificar permissão via API (sem personId, usa usuário atual)
             projectService.checkPermission(projectId, undefined, permission)
                 .then(result => setHasProjectPermission(result))
@@ -88,11 +82,6 @@ export const CanDo: React.FC<CanDoProps> = ({
     }, [global, projectId, permission]);
 
     const hasPermission = useMemo(() => {
-        // Admin global sempre tem permissão
-        if (authService.hasRole('ADMIN')) {
-            return true;
-        }
-
         if (global) {
             return authService.hasPermission(permission);
         }
@@ -127,12 +116,6 @@ export const useCanDo = (permission: PermissionType, projectId?: string, global 
 
     useEffect(() => {
         if (!global && projectId) {
-            // Admin global sempre tem permissão
-            if (authService.hasRole('ADMIN')) {
-                setHasProjectPermission(true);
-                return;
-            }
-
             projectService.checkPermission(projectId, undefined, permission)
                 .then(result => {
                     setHasProjectPermission(result);
@@ -144,11 +127,6 @@ export const useCanDo = (permission: PermissionType, projectId?: string, global 
     }, [global, projectId, permission]);
 
     return useMemo(() => {
-
-        if (authService.hasRole('ADMIN')) {
-            return true;
-        }
-
         if (global) {
             return authService.hasPermission(permission);
         }

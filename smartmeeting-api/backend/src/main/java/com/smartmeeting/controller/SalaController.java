@@ -55,6 +55,10 @@ public class SalaController {
      */
     @PostMapping
     public ResponseEntity<SalaDTO> criar(@Valid @RequestBody SalaDTO dto) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_SYSTEM_SETTINGS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar salas.");
+        }
         SalaDTO salvo = service.criar(dto);
         return ResponseEntity.ok(salvo);
     }
@@ -69,6 +73,10 @@ public class SalaController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<SalaDTO> atualizar(@PathVariable(name = "id") Long id, @Valid @RequestBody SalaDTO dto) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_SYSTEM_SETTINGS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar salas.");
+        }
         SalaDTO atualizado = service.atualizar(id, dto);
         return ResponseEntity.ok(atualizado);
     }
@@ -81,6 +89,10 @@ public class SalaController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable(name = "id") Long id) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_SYSTEM_SETTINGS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar salas.");
+        }
         service.deletar(id);
         return ResponseEntity.noContent().build();
     }
@@ -156,6 +168,10 @@ public class SalaController {
     public ResponseEntity<SalaDTO> updateRecursosSala(
             @PathVariable("id") Long id,
             @RequestBody Map<String, Object> requestBody) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_SYSTEM_SETTINGS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar salas.");
+        }
         @SuppressWarnings("unchecked")
         List<String> recursos = (List<String>) requestBody.get("recursos");
         SalaDTO salaAtualizada = service.updateRecursos(id, recursos);
@@ -169,6 +185,10 @@ public class SalaController {
     public ResponseEntity<SalaDTO> atualizarStatusSala(
             @PathVariable("id") Long id,
             @RequestBody Map<String, String> requestBody) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_SYSTEM_SETTINGS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar salas.");
+        }
         String status = requestBody.get("status");
         SalaDTO salaAtualizada = service.atualizarStatus(id, status);
         return ResponseEntity.ok(salaAtualizada);

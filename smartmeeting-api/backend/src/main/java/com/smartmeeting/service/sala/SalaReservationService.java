@@ -82,6 +82,5 @@ public class SalaReservationService {
             repository.save(sala);
         }
 
-        System.out.println("Reserva ID " + reservaId + " da sala " + sala.getNome() + " foi cancelada");
     }
 }

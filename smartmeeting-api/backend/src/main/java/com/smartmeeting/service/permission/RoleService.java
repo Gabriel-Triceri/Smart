@@ -37,6 +37,7 @@ public class RoleService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)
     public Role create(Role role) {
         if (role == null || role.getNome() == null || role.getNome().isBlank()) {
             throw new BadRequestException("Nome do cargo é obrigatório.");
@@ -52,6 +53,7 @@ public class RoleService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)
     public Role update(Long id, Role updated) {
         if (updated == null || updated.getNome() == null || updated.getNome().isBlank()) {
             throw new BadRequestException("Nome do cargo é obrigatório.");
@@ -92,6 +94,7 @@ public class RoleService {
     // }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)
     public Role addPermissionToRole(Long roleId, Long permissionId) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + roleId));
@@ -108,6 +111,7 @@ public class RoleService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)
     public Role removePermissionFromRole(Long roleId, Long permissionId) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + roleId));

@@ -11,12 +11,14 @@ public class ReuniaoListDTO {
     private StatusReuniao status;
     private String organizadorNome;
     private String projectName;
+    private Long projectId;
 
     // Constructors
     public ReuniaoListDTO() {
     }
 
-    public ReuniaoListDTO(Long id, String titulo, LocalDateTime dataHoraInicio, Integer duracaoMinutos, StatusReuniao status, String organizadorNome, String projectName) {
+    public ReuniaoListDTO(Long id, String titulo, LocalDateTime dataHoraInicio, Integer duracaoMinutos,
+            StatusReuniao status, String organizadorNome, String projectName, Long projectId) {
         this.id = id;
         this.titulo = titulo;
         this.dataHoraInicio = dataHoraInicio;
@@ -24,6 +26,15 @@ public class ReuniaoListDTO {
         this.status = status;
         this.organizadorNome = organizadorNome;
         this.projectName = projectName;
+        this.projectId = projectId;
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
     }
 
     // Getters and Setters

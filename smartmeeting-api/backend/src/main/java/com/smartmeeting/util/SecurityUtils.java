@@ -80,12 +80,22 @@ public class SecurityUtils {
      * @return true se for admin, false caso contrário
      */
     public static boolean isAdmin() {
+        return hasRole("ROLE_ADMIN");
+    }
+
+    /**
+     * Verifica se o usuário atual tem uma autoridade específica
+     * 
+     * @param role Nome da autoridade (ex: ROLE_ADMIN, ADMIN_VIEW_REPORTS)
+     * @return true se tiver a autoridade, false caso contrário
+     */
+    public static boolean hasRole(String role) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
         }
 
         return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals(role));
     }
 }

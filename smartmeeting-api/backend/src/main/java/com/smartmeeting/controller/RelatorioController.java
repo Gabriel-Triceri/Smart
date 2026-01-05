@@ -34,6 +34,11 @@ public class RelatorioController {
     public ResponseEntity<Map<String, Object>> getReunioesPorSala(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getReunioesPorSala(dataInicio, dataFim);
         return ResponseEntity.ok(relatorio);
     }
@@ -49,6 +54,11 @@ public class RelatorioController {
     public ResponseEntity<String> exportReunioesPorSalaCsv(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getReunioesPorSala(dataInicio, dataFim);
         String csv = csvExportService.exportToCsv(relatorio);
 
@@ -70,6 +80,11 @@ public class RelatorioController {
     public ResponseEntity<Map<String, Object>> getTarefasConcluidas(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getTarefasConcluidas(dataInicio, dataFim);
         return ResponseEntity.ok(relatorio);
     }
@@ -85,6 +100,11 @@ public class RelatorioController {
     public ResponseEntity<String> exportTarefasConcluidasCsv(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getTarefasConcluidas(dataInicio, dataFim);
         String csv = csvExportService.exportToCsv(relatorio);
 
@@ -103,6 +123,11 @@ public class RelatorioController {
      */
     @GetMapping("/presenca-pessoa")
     public ResponseEntity<Map<String, Object>> getPresencaPorPessoa(@RequestParam(required = false) Long pessoaId) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getPresencaPorPessoa(pessoaId);
         return ResponseEntity.ok(relatorio);
     }
@@ -118,6 +143,11 @@ public class RelatorioController {
     public ResponseEntity<Map<String, Object>> getDuracaoReunioes(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getDuracaoReunioes(dataInicio, dataFim);
         return ResponseEntity.ok(relatorio);
     }
@@ -133,6 +163,11 @@ public class RelatorioController {
     public ResponseEntity<String> exportDuracaoReunioesCsv(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getDuracaoReunioes(dataInicio, dataFim);
         String csv = csvExportService.exportToCsv(relatorio);
 
@@ -154,6 +189,11 @@ public class RelatorioController {
     public ResponseEntity<Map<String, Object>> getProdutividadePorParticipante(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getProdutividadePorParticipante(dataInicio, dataFim);
         return ResponseEntity.ok(relatorio);
     }
@@ -169,6 +209,11 @@ public class RelatorioController {
     public ResponseEntity<String> exportProdutividadePorParticipanteCsv(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_VIEW_REPORTS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar relatórios.");
+        }
         Map<String, Object> relatorio = relatorioService.getProdutividadePorParticipante(dataInicio, dataFim);
         String csv = csvExportService.exportToCsv(relatorio);
 

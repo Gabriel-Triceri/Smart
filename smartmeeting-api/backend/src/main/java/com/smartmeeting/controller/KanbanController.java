@@ -32,6 +32,18 @@ public class KanbanController {
             throw new com.smartmeeting.exception.ForbiddenException("Usuário não autenticado");
         }
 
+        // Se houver reunião, verifica permissão de KANBAN_VIEW no projeto da reunião
+        if (reuniaoId != null) {
+            com.smartmeeting.dto.ReuniaoDTO reuniao = tarefaService.buscarReuniaoPorId(reuniaoId);
+            if (reuniao != null && reuniao.getProjectId() != null) {
+                if (!projectPermissionService.hasPermission(reuniao.getProjectId(), currentUserId,
+                        com.smartmeeting.enums.PermissionType.KANBAN_VIEW)) {
+                    throw new com.smartmeeting.exception.ForbiddenException(
+                            "Você não tem permissão para visualizar o Kanban deste projeto.");
+                }
+            }
+        }
+
         KanbanBoardDTO board = kanbanService.getKanbanBoard(reuniaoId);
         return ResponseEntity.ok(board);
     }
@@ -55,7 +67,6 @@ public class KanbanController {
             }
         }
 
-        System.out.println("Column ID: " + request.getNewColumnId() + " | New Position: " + request.getNewPosition());
         TarefaDTO tarefa = kanbanService.moverTarefa(
                 tarefaId,
                 request.getNewColumnId(),

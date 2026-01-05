@@ -104,7 +104,8 @@ public class ReuniaoMapper {
                 organizadorDTO,
                 salaDTO,
                 participantesDetalhes,
-                tarefasStrings);
+                tarefasStrings,
+                reuniao.getProject() != null ? reuniao.getProject().getId() : null);
 
         dto.setOrganizadorId(organizadorId);
         dto.setSalaId(salaId);
@@ -173,8 +174,8 @@ public class ReuniaoMapper {
                 reuniao.getDuracaoMinutos(),
                 reuniao.getStatus(),
                 organizadorNome,
-                projectName
-        );
+                projectName,
+                reuniao.getProject() != null ? reuniao.getProject().getId() : null);
     }
 
     public ReuniaoDetailsDTO toReuniaoDetailsDTO(Reuniao reuniao) {
@@ -195,7 +196,7 @@ public class ReuniaoMapper {
                 reuniao.getOrganizador(),
                 reuniao.getSala(),
                 reuniao.getParticipantes(),
-                projectName
-        );
+                projectName,
+                reuniao.getProject() != null ? reuniao.getProject().getId() : null);
     }
 }

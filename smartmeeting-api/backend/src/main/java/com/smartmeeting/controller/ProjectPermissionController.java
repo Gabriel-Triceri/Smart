@@ -28,9 +28,18 @@ public class ProjectPermissionController {
      * Lista todas as permissões de todos os membros do projeto
      */
     @GetMapping
-    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
+    // @PreAuthorize("@projectPermissionService.hasPermission(#projectId,
+    // @securityUtils.getCurrentUserId(),
+    // T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
     public ResponseEntity<List<MemberPermissionsDTO>> getAllMemberPermissions(
             @PathVariable("projectId") Long projectId) {
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!permissionService.hasPermission(projectId, currentUserId, PermissionType.PROJECT_VIEW)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para visualizar este projeto.");
+            }
+        }
         List<MemberPermissionsDTO> permissions = permissionService.getAllMemberPermissions(projectId);
         return ResponseEntity.ok(permissions);
     }
@@ -39,10 +48,19 @@ public class ProjectPermissionController {
      * Obtém permissões de um membro específico
      */
     @GetMapping("/members/{memberId}")
-    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
+    // @PreAuthorize("@projectPermissionService.hasPermission(#projectId,
+    // @securityUtils.getCurrentUserId(),
+    // T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
     public ResponseEntity<MemberPermissionsDTO> getMemberPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId) {
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!permissionService.hasPermission(projectId, currentUserId, PermissionType.PROJECT_VIEW)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para visualizar este projeto.");
+            }
+        }
         MemberPermissionsDTO permissions = permissionService.getMemberPermissions(memberId);
         return ResponseEntity.ok(permissions);
     }
@@ -51,10 +69,19 @@ public class ProjectPermissionController {
      * Obtém permissões de uma pessoa específica no projeto
      */
     @GetMapping("/person/{personId}")
-    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
+    // @PreAuthorize("@projectPermissionService.hasPermission(#projectId,
+    // @securityUtils.getCurrentUserId(),
+    // T(com.smartmeeting.enums.PermissionType).PROJECT_VIEW)")
     public ResponseEntity<MemberPermissionsDTO> getPersonPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("personId") Long personId) {
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!permissionService.hasPermission(projectId, currentUserId, PermissionType.PROJECT_VIEW)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para visualizar este projeto.");
+            }
+        }
         MemberPermissionsDTO permissions = permissionService.getPermissionsByProjectAndPerson(projectId, personId);
         return ResponseEntity.ok(permissions);
     }
@@ -63,11 +90,20 @@ public class ProjectPermissionController {
      * Atualiza permissões de um membro
      */
     @PutMapping("/members/{memberId}")
-    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
+    // @PreAuthorize("@projectPermissionService.hasPermission(#projectId,
+    // @securityUtils.getCurrentUserId(),
+    // T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
     public ResponseEntity<MemberPermissionsDTO> updateMemberPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId,
             @RequestBody UpdatePermissionsRequest request) {
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!permissionService.hasPermission(projectId, currentUserId, PermissionType.PROJECT_MANAGE_MEMBERS)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para gerenciar membros neste projeto.");
+            }
+        }
         request.setProjectMemberId(memberId);
         MemberPermissionsDTO updated = permissionService.updateMemberPermissions(request);
         return ResponseEntity.ok(updated);
@@ -77,11 +113,20 @@ public class ProjectPermissionController {
      * Atualiza role de um membro e reseta permissões
      */
     @PutMapping("/members/{memberId}/role")
-    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
+    // @PreAuthorize("@projectPermissionService.hasPermission(#projectId,
+    // @securityUtils.getCurrentUserId(),
+    // T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
     public ResponseEntity<MemberPermissionsDTO> updateMemberRole(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId,
             @RequestBody Map<String, String> request) {
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!permissionService.hasPermission(projectId, currentUserId, PermissionType.PROJECT_MANAGE_MEMBERS)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para gerenciar membros neste projeto.");
+            }
+        }
         ProjectRole newRole = ProjectRole.valueOf(request.get("role"));
         MemberPermissionsDTO updated = permissionService.updateMemberRole(memberId, newRole);
         return ResponseEntity.ok(updated);
@@ -91,10 +136,19 @@ public class ProjectPermissionController {
      * Reseta permissões de um membro para o padrão do seu role
      */
     @PostMapping("/members/{memberId}/reset")
-    //@PreAuthorize("@projectPermissionService.hasPermission(#projectId, @securityUtils.getCurrentUserId(), T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
+    // @PreAuthorize("@projectPermissionService.hasPermission(#projectId,
+    // @securityUtils.getCurrentUserId(),
+    // T(com.smartmeeting.enums.PermissionType).PROJECT_MANAGE_MEMBERS)")
     public ResponseEntity<MemberPermissionsDTO> resetMemberPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId) {
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!permissionService.hasPermission(projectId, currentUserId, PermissionType.PROJECT_MANAGE_MEMBERS)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para gerenciar membros neste projeto.");
+            }
+        }
         MemberPermissionsDTO reset = permissionService.resetToDefaultPermissions(memberId);
         return ResponseEntity.ok(reset);
     }

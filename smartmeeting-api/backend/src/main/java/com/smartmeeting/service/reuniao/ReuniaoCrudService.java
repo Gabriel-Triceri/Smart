@@ -35,6 +35,7 @@ public class ReuniaoCrudService {
     private ReuniaoListDTO toReuniaoListDTO(Reuniao reuniao) {
         String organizadorNome = reuniao.getOrganizador() != null ? reuniao.getOrganizador().getNome() : null;
         String projectName = reuniao.getProject() != null ? reuniao.getProject().getName() : null;
+        Long projectId = reuniao.getProject() != null ? reuniao.getProject().getId() : null;
         return new ReuniaoListDTO(
                 reuniao.getId(),
                 reuniao.getTitulo(),
@@ -42,8 +43,8 @@ public class ReuniaoCrudService {
                 reuniao.getDuracaoMinutos(),
                 reuniao.getStatus(),
                 organizadorNome,
-                projectName
-        );
+                projectName,
+                projectId);
     }
 
     public Optional<Reuniao> buscarPorId(Long id) {

@@ -129,10 +129,6 @@ public class ProjectPermissionService {
      * Verifica se um usuário tem uma permissão específica em um projeto
      */
     public boolean hasPermission(Long projectId, Long personId, PermissionType permissionType) {
-        // Admin global tem acesso a tudo
-        if (com.smartmeeting.util.SecurityUtils.isAdmin()) {
-            return true;
-        }
         return permissionRepository.hasPermission(projectId, personId, permissionType);
     }
 
@@ -149,11 +145,6 @@ public class ProjectPermissionService {
      * Verifica se o usuário atual tem permissão (para uso em @PreAuthorize)
      */
     public boolean hasPermissionForCurrentUser(Long projectId, PermissionType permissionType) {
-        // Admin global tem acesso a tudo
-        if (com.smartmeeting.util.SecurityUtils.isAdmin()) {
-            return true;
-        }
-
         Long userId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
         if (userId == null)
             return false;

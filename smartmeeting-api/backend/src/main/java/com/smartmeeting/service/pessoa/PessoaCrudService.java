@@ -84,6 +84,7 @@ public class PessoaCrudService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + id));
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)
     public PessoaDTO salvar(PessoaCreateDTO dto) {
         if (dto == null) {
             throw new BadRequestException("DTO não pode ser null");
@@ -103,6 +104,7 @@ public class PessoaCrudService {
         return convertToDto(salvo);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)
     public PessoaDTO atualizar(Long id, PessoaDTO dtoAtualizada) {
         if (id == null) {
             throw new BadRequestException("ID não pode ser null");
@@ -136,6 +138,7 @@ public class PessoaCrudService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + id));
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)
     public void deletar(Long id) {
         if (id == null) {
             throw new BadRequestException("ID não pode ser null");

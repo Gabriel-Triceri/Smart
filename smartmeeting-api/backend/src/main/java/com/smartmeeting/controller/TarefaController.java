@@ -9,7 +9,6 @@ import com.smartmeeting.service.kanban.KanbanService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,10 +59,9 @@ public class TarefaController {
                     }
 
                     if (t.getProjectId() != null) {
+                        // STRICT CHECK: Only TASK_VIEW allowed
                         return projectPermissionService.hasPermission(t.getProjectId(), currentUserId,
-                                com.smartmeeting.enums.PermissionType.TASK_VIEW) ||
-                                projectPermissionService.hasPermission(t.getProjectId(), currentUserId,
-                                        com.smartmeeting.enums.PermissionType.PROJECT_VIEW);
+                                com.smartmeeting.enums.PermissionType.TASK_VIEW);
                     }
 
                     String currentUserIdStr = String.valueOf(currentUserId);
@@ -101,10 +99,9 @@ public class TarefaController {
         TarefaDTO dto = tarefaService.buscarPorIdDTO(id);
 
         if (dto.getProjectId() != null) {
+            // STRICT CHECK: Only TASK_VIEW allowed
             if (!projectPermissionService.hasPermissionForCurrentUser(dto.getProjectId(),
-                    com.smartmeeting.enums.PermissionType.TASK_VIEW) &&
-                    !projectPermissionService.hasPermissionForCurrentUser(dto.getProjectId(),
-                            com.smartmeeting.enums.PermissionType.PROJECT_VIEW)) {
+                    com.smartmeeting.enums.PermissionType.TASK_VIEW)) {
                 throw new com.smartmeeting.exception.ForbiddenException(
                         "Você não tem permissão para visualizar esta tarefa.");
             }
@@ -124,8 +121,7 @@ public class TarefaController {
         }
 
         TarefaDTO salvo = tarefaService.criar(dto);
-        System.out.println(salvo);
-        System.out.println(dto);
+        // Logs removed
         return ResponseEntity.ok(salvo);
     }
 
@@ -220,6 +216,25 @@ public class TarefaController {
     public ResponseEntity<KanbanBoardDTO> getKanbanBoard(
             @RequestParam(required = false, name = "reuniaoId") Long reuniaoId,
             @RequestParam(required = false, name = "projectId") Long projectId) {
+
+        // Strict KANBAN_VIEW check
+        if (projectId != null) {
+            if (!projectPermissionService.hasPermissionForCurrentUser(projectId,
+                    com.smartmeeting.enums.PermissionType.KANBAN_VIEW)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para visualizar o Kanban deste projeto.");
+            }
+        } else if (reuniaoId != null) {
+            com.smartmeeting.dto.ReuniaoDTO reuniao = tarefaService.buscarReuniaoPorId(reuniaoId);
+            if (reuniao != null && reuniao.getProjectId() != null) {
+                if (!projectPermissionService.hasPermissionForCurrentUser(reuniao.getProjectId(),
+                        com.smartmeeting.enums.PermissionType.KANBAN_VIEW)) {
+                    throw new com.smartmeeting.exception.ForbiddenException(
+                            "Você não tem permissão para visualizar o Kanban deste projeto.");
+                }
+            }
+        }
+
         KanbanBoardDTO kanbanBoard = tarefaService.getKanbanBoard(reuniaoId, projectId);
         return ResponseEntity.ok(kanbanBoard);
     }

@@ -109,6 +109,11 @@ public class ProjectController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id, @AuthenticationPrincipal Pessoa currentUser) {
+        if (!SecurityUtils.isAdmin()) {
+            if (!projectPermissionService.hasPermission(id, currentUser.getId(), PermissionType.PROJECT_DELETE)) {
+                throw new ForbiddenException("Você não tem permissão para excluir este projeto.");
+            }
+        }
         projectService.deleteProject(id, currentUser);
         return ResponseEntity.noContent().build();
     }
@@ -117,6 +122,12 @@ public class ProjectController {
     public ResponseEntity<ProjectMemberDTO> addMember(@PathVariable Long projectId,
             @Valid @RequestBody AddProjectMemberDTO addProjectMemberDTO,
             @AuthenticationPrincipal Pessoa currentUser) {
+        if (!SecurityUtils.isAdmin()) {
+            if (!projectPermissionService.hasPermission(projectId, currentUser.getId(),
+                    PermissionType.PROJECT_MANAGE_MEMBERS)) {
+                throw new ForbiddenException("Você não tem permissão para gerenciar membros neste projeto.");
+            }
+        }
         ProjectMemberDTO newMember = projectService.addMember(projectId, addProjectMemberDTO, currentUser);
         return new ResponseEntity<>(newMember, HttpStatus.CREATED);
     }
@@ -124,6 +135,12 @@ public class ProjectController {
     @DeleteMapping("/{projectId}/members/{memberId}")
     public ResponseEntity<Void> removeMember(@PathVariable Long projectId, @PathVariable Long memberId,
             @AuthenticationPrincipal Pessoa currentUser) {
+        if (!SecurityUtils.isAdmin()) {
+            if (!projectPermissionService.hasPermission(projectId, currentUser.getId(),
+                    PermissionType.PROJECT_MANAGE_MEMBERS)) {
+                throw new ForbiddenException("Você não tem permissão para gerenciar membros neste projeto.");
+            }
+        }
         projectService.removeMember(projectId, memberId, currentUser);
         return ResponseEntity.noContent().build();
     }

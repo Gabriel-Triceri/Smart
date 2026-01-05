@@ -23,6 +23,8 @@ import java.util.Map;
 public class TarefaHistoryController {
 
     private final TarefaHistoryService historyService;
+    private final com.smartmeeting.service.project.ProjectPermissionService projectPermissionService;
+    private final com.smartmeeting.repository.TarefaRepository tarefaRepository;
 
     /**
      * Obtém histórico completo de uma tarefa
@@ -30,6 +32,7 @@ public class TarefaHistoryController {
     @GetMapping
     public ResponseEntity<List<TarefaHistoryDTO>> getHistorico(
             @PathVariable("tarefaId") Long tarefaId) {
+        validarPermissaoTarefa(tarefaId);
         List<TarefaHistoryDTO> historico = historyService.getHistoricoTarefa(tarefaId);
         return ResponseEntity.ok(historico);
     }
@@ -41,6 +44,7 @@ public class TarefaHistoryController {
     public ResponseEntity<Page<TarefaHistoryDTO>> getHistoricoPaginado(
             @PathVariable("tarefaId") Long tarefaId,
             Pageable pageable) {
+        validarPermissaoTarefa(tarefaId);
         Page<TarefaHistoryDTO> historico = historyService.getHistoricoTarefaPaginado(tarefaId, pageable);
         return ResponseEntity.ok(historico);
     }
@@ -63,7 +67,24 @@ public class TarefaHistoryController {
     @GetMapping("/count")
     public ResponseEntity<Map<String, Long>> contarAlteracoes(
             @PathVariable("tarefaId") Long tarefaId) {
+        validarPermissaoTarefa(tarefaId);
         long count = historyService.contarAlteracoes(tarefaId);
         return ResponseEntity.ok(Map.of("totalAlteracoes", count));
+    }
+
+    private void validarPermissaoTarefa(Long tarefaId) {
+        if (com.smartmeeting.util.SecurityUtils.isAdmin())
+            return;
+
+        com.smartmeeting.model.Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new com.smartmeeting.exception.ResourceNotFoundException(
+                        "Tarefa não encontrada: " + tarefaId));
+
+        if (tarefa.getProject() == null
+                || !projectPermissionService.hasPermissionForCurrentUser(tarefa.getProject().getId(),
+                        com.smartmeeting.enums.PermissionType.TASK_VIEW)) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não tem permissão para visualizar o histórico desta tarefa.");
+        }
     }
 }

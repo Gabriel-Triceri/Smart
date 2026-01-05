@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Extrai username e authorities (roles/permissions) do token
                 String username = tokenProvider.getUsernameFromJWT(token);
-                logger.debug("[JWT FILTER] Username extraído do token: {}", username);
+
                 List<String> roles = tokenProvider.getRoles(token);
                 List<String> permissions = tokenProvider.getPermissions(token);
 
@@ -87,7 +87,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // UserPrincipal
                 // para que SecurityUtils.getCurrentUserId() funcione corretamente
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                logger.debug("[JWT FILTER] UserDetails carregado: {}", userDetails.getUsername());
 
                 // Usa as authorities do UserDetails (que vêm do banco) para garantir
                 // consistência
@@ -97,8 +96,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                logger.debug("[JWT FILTER] Autenticação configurada no SecurityContext para {}", username);
 
             } catch (ExpiredJwtException eje) {
                 logger.warn("[JWT FILTER] Token expirado: {}", eje.getMessage());

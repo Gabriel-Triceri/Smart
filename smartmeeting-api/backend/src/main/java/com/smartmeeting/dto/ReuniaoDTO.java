@@ -22,6 +22,7 @@ public class ReuniaoDTO {
     private String ata;
     private StatusReuniao status;
     private List<String> tarefas;
+    private Long projectId;
 
     private Long organizadorId;
     private Long salaId;
@@ -41,7 +42,8 @@ public class ReuniaoDTO {
             PessoaDTO organizador,
             SalaDTO sala,
             List<PessoaDTO> participantesDetalhes,
-            List<String> tarefas) {
+            List<String> tarefas,
+            Long projectId) {
 
         this.id = id;
         this.titulo = titulo;
@@ -54,6 +56,7 @@ public class ReuniaoDTO {
         this.sala = sala;
         this.participantesDetalhes = participantesDetalhes;
         this.tarefas = tarefas;
+        this.projectId = projectId;
 
         if (organizador != null) {
             this.organizadorId = organizador.getId();

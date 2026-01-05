@@ -36,6 +36,8 @@ public class TarefaService {
     private final TarefaAssigneeService assigneeService;
 
     private final KanbanService kanbanService;
+    private final com.smartmeeting.service.reuniao.ReuniaoService reuniaoService;
+    private final com.smartmeeting.mapper.ReuniaoMapper reuniaoMapper;
 
     // CRUD
     public TarefaDTO toDTO(Tarefa tarefa) {
@@ -103,6 +105,12 @@ public class TarefaService {
 
     public List<TarefaDTO> getTarefasDoUsuarioAtual() {
         return searchService.getTarefasDoUsuarioAtual();
+    }
+
+    public ReuniaoDTO buscarReuniaoPorId(Long reuniaoId) {
+        return reuniaoService.buscarPorId(reuniaoId)
+                .map(reuniaoMapper::toDTO)
+                .orElse(null);
     }
 
     // Progress

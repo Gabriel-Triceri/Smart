@@ -16,7 +16,7 @@ public class PrioridadeTarefaConverter implements AttributeConverter<PrioridadeT
         if (prioridadeTarefa == null) {
             return null;
         }
-        logger.debug("Converting enum {} to database column: {}", prioridadeTarefa, prioridadeTarefa.name());
+
         return prioridadeTarefa.name();
     }
 

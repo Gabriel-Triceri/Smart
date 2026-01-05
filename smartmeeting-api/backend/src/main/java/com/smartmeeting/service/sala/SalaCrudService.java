@@ -8,6 +8,7 @@ import com.smartmeeting.repository.SalaRepository;
 import com.smartmeeting.repository.ReuniaoRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,7 +63,7 @@ public class SalaCrudService {
         sala.setStatus(dtoAtualizada.getStatus());
 
         if (dtoAtualizada.getEquipamentos() != null)
-            sala.setEquipamentos(dtoAtualizada.getEquipamentos());
+            sala.setEquipamentos(new HashSet<>(dtoAtualizada.getEquipamentos()));
         if (dtoAtualizada.getCategoria() != null)
             sala.setCategoria(dtoAtualizada.getCategoria());
         if (dtoAtualizada.getAndar() != null)

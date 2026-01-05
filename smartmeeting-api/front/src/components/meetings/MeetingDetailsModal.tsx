@@ -284,7 +284,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-slate-500">Local</p>
-                                                    <p className="text-sm font-medium text-slate-900 dark:text-white">{reuniao.sala.nome}</p>
+                                                    <p className="text-sm font-medium text-slate-900 dark:text-white">{reuniao.sala?.nome ?? 'Não definido'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -296,7 +296,7 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                             <div>
                                                 <p className="text-xs text-slate-500 mb-1">Equipamentos</p>
                                                 <div className="flex flex-wrap gap-1">
-                                                    {(reuniao.sala.equipamentos || []).map((eq, i) => (
+                                                    {(reuniao.sala?.equipamentos?? []).map((eq, i) => (
                                                         <span key={i} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] rounded border border-slate-200 dark:border-slate-600">
                                                             {eq}
                                                         </span>
@@ -328,12 +328,12 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                             <div className="space-y-4">
                                 <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-lg">
-                                        {reuniao.organizador.nome.charAt(0)}
+                                        {reuniao.organizador?.nome?.charAt(0) ?? '?'}
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase tracking-wide font-semibold">Organizador</p>
-                                        <p className="text-sm font-medium text-slate-900 dark:text-white">{reuniao.organizador.nome}</p>
-                                        <p className="text-xs text-slate-500">{reuniao.organizador.email}</p>
+                                        <p className="text-sm font-medium text-slate-900 dark:text-white">{reuniao.organizador?.nome ?? 'Não informado'}</p>
+                                        <p className="text-xs text-slate-500">{reuniao.organizador?.email ?? '—'}</p>
                                     </div>
                                 </div>
 
@@ -346,10 +346,10 @@ export const MeetingDetailsModal: React.FC<MeetingDetailsModalProps> = ({
                                             <div key={p.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-medium text-xs">
-                                                        {p.nome.charAt(0)}
+                                                        {p.nome.charAt(0) ?? '?'}
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-medium text-slate-900 dark:text-white">{p.nome}</p>
+                                                        <p className="text-sm font-medium text-slate-900 dark:text-white">{p.nome ?? 'Sem nome'}</p>
                                                         <p className="text-xs text-slate-500">{p.email}</p>
                                                     </div>
                                                 </div>

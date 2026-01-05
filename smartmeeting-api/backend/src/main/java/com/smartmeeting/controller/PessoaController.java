@@ -57,6 +57,10 @@ public class PessoaController {
      */
     @PostMapping
     public ResponseEntity<PessoaDTO> criarPessoa(@Valid @RequestBody PessoaCreateDTO dto) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_MANAGE_USERS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar usuários.");
+        }
         PessoaDTO pessoaSalva = pessoaService.salvar(dto);
         return ResponseEntity.ok(pessoaSalva);
     }
@@ -71,6 +75,10 @@ public class PessoaController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<PessoaDTO> atualizarPessoa(@PathVariable Long id, @RequestBody PessoaDTO pessoaDTO) {
+        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_MANAGE_USERS")
+                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar usuários.");
+        }
         PessoaDTO pessoaAtualizada = pessoaService.atualizar(id, pessoaDTO);
         return ResponseEntity.ok(pessoaAtualizada);
     }

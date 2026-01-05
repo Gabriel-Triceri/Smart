@@ -64,8 +64,6 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        logger.debug("[DEBUG] Gerando token para {} com exp {}ms", userPrincipal.getUsername(), jwtExpirationMs);
-
         // Extrai roles (sem prefixo ROLE_) e permissions das authorities do principal
         List<String> allAuthorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -96,7 +94,7 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        logger.debug("[DEBUG] getUsernameFromJWT: {}", claims.getSubject());
+
         return claims.getSubject();
     }
 

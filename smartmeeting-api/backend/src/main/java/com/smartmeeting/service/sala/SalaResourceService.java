@@ -27,9 +27,6 @@ public class SalaResourceService {
         Sala sala = repository.findById(salaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada com ID: " + salaId));
 
-        System.out.println("Atualizando recursos da sala " + sala.getNome());
-        System.out.println("Recursos: " + recursos);
-
         // Por enquanto não altera a entidade (como no original). Retorna DTO atual.
         return mapper.toDTO(sala);
     }

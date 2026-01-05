@@ -23,6 +23,8 @@ interface NavigationItem {
     icon: React.FC<{ className?: string }>;
     /** Roles permitidas para ver este item de navegacao */
     allowedRoles?: string[];
+    /** Permissoes permitidas para ver este item de navegacao */
+    allowedPermissions?: string[];
 }
 
 interface NavigationProps {
@@ -37,12 +39,21 @@ interface NavigationProps {
 function Navigation({ activeView, setActiveView, items, showMobile = false, setShowMobile }: NavigationProps) {
     const userRoles = authService.getRoles();
 
-    // Filtrar itens baseado nas roles do usuario
+    // Filtrar itens baseado nas roles e permissoes do usuario
     const visibleItems = items.filter(item => {
-        if (!item.allowedRoles || item.allowedRoles.length === 0) {
-            return true; // Sem restricao
-        }
-        return item.allowedRoles.some(role => userRoles.includes(role));
+        const userPermissions = authService.getPermissions();
+
+        // Se tiver roles especificas, verifica
+        const roleMatch = !item.allowedRoles ||
+            item.allowedRoles.length === 0 ||
+            item.allowedRoles.some(role => userRoles.includes(role));
+
+        // Se tiver permissoes especificas, verifica
+        const permissionMatch = !item.allowedPermissions ||
+            item.allowedPermissions.length === 0 ||
+            item.allowedPermissions.some(perm => userPermissions.includes(perm));
+
+        return roleMatch && permissionMatch;
     });
 
     return (
@@ -110,13 +121,49 @@ function App() {
     }, []);
 
     const navigationItems = useMemo<NavigationItem[]>(() => [
-        { id: 'dashboard', label: 'Dashboard', description: 'Metricas e indicadores', icon: BarChart3 },
-        { id: 'meetings', label: 'Reunioes', description: 'Calendario e organizacao', icon: Calendar },
-        { id: 'salas', label: 'Salas', description: 'Salas e recursos', icon: Building },
-        { id: 'tarefas', label: 'Tarefas', description: 'Kanban e produtividade', icon: CheckSquare },
-        { id: 'projects', label: 'Projetos', description: 'Gerencie seus projetos', icon: Briefcase },
-        // Gestao de Permissoes - apenas ADMIN pode acessar
-        { id: 'permissions', label: 'Permissoes', description: 'Permissoes, roles e usuarios', icon: Shield, allowedRoles: ['ADMIN'] }
+        {
+            id: 'dashboard',
+            label: 'Dashboard',
+            description: 'Metricas e indicadores',
+            icon: BarChart3,
+            allowedPermissions: ['ADMIN_VIEW_REPORTS']
+        },
+        {
+            id: 'meetings',
+            label: 'Reunioes',
+            description: 'Calendario e organizacao',
+            icon: Calendar,
+            allowedPermissions: ['MEETING_VIEW']
+        },
+        {
+            id: 'salas',
+            label: 'Salas',
+            description: 'Salas e recursos',
+            icon: Building,
+            allowedPermissions: ['ADMIN_SYSTEM_SETTINGS']
+        },
+        {
+            id: 'tarefas',
+            label: 'Tarefas',
+            description: 'Kanban e produtividade',
+            icon: CheckSquare,
+            allowedPermissions: ['TASK_VIEW', 'KANBAN_VIEW']
+        },
+        {
+            id: 'projects',
+            label: 'Projetos',
+            description: 'Gerencie seus projetos',
+            icon: Briefcase,
+            allowedPermissions: ['PROJECT_VIEW']
+        },
+        // Gestao de Permissoes - Requer permissao ADMIN_MANAGE_ROLES
+        {
+            id: 'permissions',
+            label: 'Permissoes',
+            description: 'Permissoes, roles e usuarios',
+            icon: Shield,
+            allowedPermissions: ['ADMIN_MANAGE_ROLES']
+        }
     ], []);
 
     // Os componentes usam refreshKey para re-renderizar quando permissoes mudam

@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.Accessors;
 
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "SALA")
@@ -17,45 +17,42 @@ import java.util.List;
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false, exclude = { "reunioes" })
 @ToString(exclude = { "reunioes" })
-@NamedEntityGraph(
-        name = "Sala.comEquipamentosEReunioes",
-        attributeNodes = {
+@NamedEntityGraph(name = "Sala.comEquipamentosEReunioes", attributeNodes = {
                 @NamedAttributeNode("equipamentos"),
                 @NamedAttributeNode("reunioes")
-        }
-)
+})
 public class Sala extends Auditable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_SALA")
-    @SequenceGenerator(name = "SQ_SALA", sequenceName = "SQ_SALA", allocationSize = 1, initialValue = 1)
-    @Column(name = "ID_SALA")
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_SALA")
+        @SequenceGenerator(name = "SQ_SALA", sequenceName = "SQ_SALA", allocationSize = 1, initialValue = 1)
+        @Column(name = "ID_SALA")
+        private Long id;
 
-    @Column(name = "NOME_SALA", nullable = false)
-    private String nome;
+        @Column(name = "NOME_SALA", nullable = false)
+        private String nome;
 
-    @Column(name = "CAPACIDADE_SALA", nullable = false)
-    private Integer capacidade;
+        @Column(name = "CAPACIDADE_SALA", nullable = false)
+        private Integer capacidade;
 
-    @Column(name = "LOCALIZACAO_SALA", nullable = false)
-    private String localizacao;
+        @Column(name = "LOCALIZACAO_SALA", nullable = false)
+        private String localizacao;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "STATUS_SALA", nullable = false)
-    private SalaStatus status;
+        @Enumerated(EnumType.STRING)
+        @Column(name = "STATUS_SALA", nullable = false)
+        private SalaStatus status;
 
-    @ElementCollection
-    @CollectionTable(name = "sala_equipamentos", joinColumns = @JoinColumn(name = "sala_id"))
-    @Column(name = "equipamento")
-    private List<String> equipamentos;
+        @ElementCollection
+        @CollectionTable(name = "sala_equipamentos", joinColumns = @JoinColumn(name = "sala_id"))
+        @Column(name = "equipamento")
+        private Set<String> equipamentos = new java.util.HashSet<>();
 
-    private String categoria;
-    private String andar;
-    private String imagem;
-    private String observacoes;
+        private String categoria;
+        private String andar;
+        private String imagem;
+        private String observacoes;
 
-    @OneToMany(mappedBy = "sala", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<Reuniao> reunioes;
+        @OneToMany(mappedBy = "sala", fetch = FetchType.LAZY)
+        @JsonIgnore
+        private Set<Reuniao> reunioes = new java.util.HashSet<>();
 }

@@ -59,12 +59,12 @@ export const MeetingList: React.FC<MeetingListProps> = ({
 
         if (filtros.organizador) {
             const orgId = typeof filtros.organizador === 'string' ? Number(filtros.organizador) : filtros.organizador;
-            resultado = resultado.filter(r => r.organizador.id === orgId);
+            resultado = resultado.filter(r => r.organizador?.id === orgId);
         }
 
         if (filtros.sala) {
             const salaId = typeof filtros.sala === 'string' ? Number(filtros.sala) : filtros.sala;
-            resultado = resultado.filter(r => r.sala.id === salaId);
+            resultado = resultado.filter(r => r.sala?.id === salaId);
         }
 
         if (filtros.dataInicio) {
@@ -285,11 +285,11 @@ export const MeetingList: React.FC<MeetingListProps> = ({
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 {reuniao.tipo === 'online' ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
-                                                <span className="truncate max-w-[150px]">{reuniao.sala.nome}</span>
+                                                <span className="truncate max-w-[150px]">{reuniao.sala?.nome ?? '-'}</span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <Users className="w-4 h-4" />
-                                                <span>{reuniao.participantes.length}</span>
+                                                <span>{reuniao.participantes?.length ?? 0}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -302,10 +302,10 @@ export const MeetingList: React.FC<MeetingListProps> = ({
                                                 {getStatusLabel(reuniao.status)}
                                             </span>
                                             <div className="flex items-center gap-2">
-                                                <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300" title={`Organizador: ${reuniao.organizador.nome}`}>
-                                                    {reuniao.organizador.nome.charAt(0)}
+                                                <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300" title={`Organizador: ${reuniao.organizador?.nome ?? '-'}`}>
+                                                    {reuniao.organizador?.nome?.charAt(0) ?? '-'}
                                                 </div>
-                                                <span className="text-xs text-slate-400 dark:text-slate-500">{reuniao.organizador.nome.split(' ')[0]}</span>
+                                                <span className="text-xs text-slate-400 dark:text-slate-500">{reuniao.organizador?.nome?.split(' ')[0] ?? '-'}</span>
                                             </div>
                                         </div>
 

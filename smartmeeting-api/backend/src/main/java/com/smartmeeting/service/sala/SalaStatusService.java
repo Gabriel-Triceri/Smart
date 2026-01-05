@@ -44,7 +44,7 @@ public class SalaStatusService {
                 .append(" alterado de ").append(statusAnterior)
                 .append(" para ").append(novoStatus);
 
-        System.out.println(logMessage.toString());
+        // Log removed
 
         Sala salaAtualizada = repository.save(sala);
         return mapper.toDTO(salaAtualizada);

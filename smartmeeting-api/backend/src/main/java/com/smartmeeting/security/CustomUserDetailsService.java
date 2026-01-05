@@ -24,16 +24,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Cacheable("users")
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        System.out.println("DEBUG: CustomUserDetailsService - Tentando carregar usuário com email: " + email); // DEBUG PRINT
 
         // Buscar pessoa pelo email
         Pessoa pessoa = pessoaRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    System.out.println("DEBUG: CustomUserDetailsService - Usuário não encontrado para o email: " + email); // DEBUG PRINT
+
                     return new UsernameNotFoundException("Usuário não encontrado com o email: " + email);
                 });
 
-        System.out.println("DEBUG: CustomUserDetailsService - Usuário encontrado: " + pessoa.getEmail()); // DEBUG PRINT
         // Criar e retornar um UserPrincipal baseado na pessoa encontrada
         return UserPrincipal.create(pessoa);
     }

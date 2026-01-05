@@ -4,6 +4,9 @@ import com.smartmeeting.dto.SalaDTO;
 import com.smartmeeting.model.Sala;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+
 /**
  * Mapper Sala <-> SalaDTO
  */
@@ -19,7 +22,7 @@ public class SalaMapper {
         dto.setCapacidade(sala.getCapacidade());
         dto.setLocalizacao(sala.getLocalizacao());
         dto.setStatus(sala.getStatus());
-        dto.setEquipamentos(sala.getEquipamentos());
+        dto.setEquipamentos(sala.getEquipamentos() != null ? new ArrayList<>(sala.getEquipamentos()) : null);
         dto.setCategoria(sala.getCategoria());
         dto.setAndar(sala.getAndar());
         dto.setImagem(sala.getImagem());
@@ -36,7 +39,7 @@ public class SalaMapper {
         sala.setCapacidade(dto.getCapacidade());
         sala.setLocalizacao(dto.getLocalizacao());
         sala.setStatus(dto.getStatus());
-        sala.setEquipamentos(dto.getEquipamentos());
+        sala.setEquipamentos(dto.getEquipamentos() != null ? new HashSet<>(dto.getEquipamentos()) : new HashSet<>());
         sala.setCategoria(dto.getCategoria());
         sala.setAndar(dto.getAndar());
         sala.setImagem(dto.getImagem());

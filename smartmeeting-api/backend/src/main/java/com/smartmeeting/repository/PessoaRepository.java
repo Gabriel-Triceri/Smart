@@ -25,4 +25,12 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
 
     @EntityGraph(value = "Pessoa.default")
     List<Pessoa> findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(String nome, String email);
+
+    @Override
+    @EntityGraph(value = "Pessoa.default")
+    Optional<Pessoa> findById(Long id);
+
+    @Override
+    @EntityGraph(value = "Pessoa.default")
+    List<Pessoa> findAll();
 }

@@ -19,12 +19,15 @@ public class ReuniaoDetailsDTO {
     private Sala sala;
     private List<Pessoa> participantes;
     private String projectName;
+    private Long projectId;
 
     // Constructors
     public ReuniaoDetailsDTO() {
     }
 
-    public ReuniaoDetailsDTO(Long id, String titulo, LocalDateTime dataHoraInicio, Integer duracaoMinutos, String pauta, String ata, StatusReuniao status, Pessoa organizador, Sala sala, List<Pessoa> participantes, String projectName) {
+    public ReuniaoDetailsDTO(Long id, String titulo, LocalDateTime dataHoraInicio, Integer duracaoMinutos, String pauta,
+            String ata, StatusReuniao status, Pessoa organizador, Sala sala, List<Pessoa> participantes,
+            String projectName, Long projectId) {
         this.id = id;
         this.titulo = titulo;
         this.dataHoraInicio = dataHoraInicio;
@@ -36,6 +39,15 @@ public class ReuniaoDetailsDTO {
         this.sala = sala;
         this.participantes = participantes;
         this.projectName = projectName;
+        this.projectId = projectId;
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
     }
 
     // Getters and Setters
