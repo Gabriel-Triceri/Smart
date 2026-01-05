@@ -17,6 +17,32 @@ import { historyService } from '../services/historyService';
 import { notificationService } from '../services/notificationService';
 import { projectService } from '../services/projectService';
 
+/* --------------------
+   Helper: normaliza um objeto Tarefa vindo da API
+---------------------*/
+function normalizeTarefa(raw: any): Tarefa {
+    if (!raw) return {} as Tarefa;
+
+    // Garante que arrays nunca sejam nulos
+    const responsaveis = Array.isArray(raw.responsaveis) ? raw.responsaveis : [];
+    const comentarios = Array.isArray(raw.comentarios) ? raw.comentarios : [];
+    const anexos = Array.isArray(raw.anexos) ? raw.anexos : [];
+    const checklist = Array.isArray(raw.checklist) ? raw.checklist : [];
+
+    const normalized: Tarefa = {
+        ...(raw as object) as Tarefa,
+        id: String(raw.id || ''),
+        progresso: raw.progresso !== undefined && raw.progresso !== null ? Number(raw.progresso) : 0,
+        responsaveis,
+        comentarios,
+        anexos,
+        checklist,
+    };
+
+    return normalized;
+}
+
+
 interface UseTarefasProps {
     reuniaoId?: string;
     projectId?: string;
@@ -49,22 +75,19 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         lastFetch?: number;
     }>({});
 
-    useEffect(() => {
-        carregarDados();
-        carregarNotificacoes();
-    }, [reuniaoId, projectId]);
-
-    const carregarDados = useCallback(async (forceRefresh = false) => {
+    const carregarDados = useCallback(async (forceRefresh = false, filtrosAtuais?: FiltroTarefas) => {
         setLoading(true);
         setError(null);
 
         try {
             // Preparar filtros para o backend
-            const params: any = { ...filtros };
+            const filtrosParaUsar = filtrosAtuais || filtros;
+            const params: any = { ...filtrosParaUsar };
+
             if (projectId) {
                 params.projectId = projectId;
-            } else if (filtros.projectId && filtros.projectId.length > 0) {
-                params.projectId = filtros.projectId[0];
+            } else if (filtrosParaUsar.projectId && filtrosParaUsar.projectId.length > 0) {
+                params.projectId = filtrosParaUsar.projectId[0];
             }
 
             const now = Date.now();
@@ -111,7 +134,9 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
             ]);
 
             // Update state
-            setTarefas(listaTarefas);
+            const normalizedTarefas = Array.isArray(listaTarefas) ? listaTarefas.map(normalizeTarefa) : [];
+            setTarefas(normalizedTarefas);
+
             setKanbanBoard(kanbanData);
             setStatistics(statsData);
             setTemplates(templatesData);
@@ -126,70 +151,81 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 lastFetch: now
             };
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao carregar tarefas');
+            const errorMsg = 'Erro ao carregar dados das tarefas';
+            setError(errorMsg);
+            console.error(errorMsg, err);
         } finally {
             setLoading(false);
         }
     }, [reuniaoId, filtros, projectId]);
+
+    useEffect(() => {
+        carregarDados();
+        carregarNotificacoes();
+    }, [carregarDados]);
+
 
     const carregarNotificacoes = useCallback(async () => {
         try {
             const notificacoesData = await notificationService.getNotificacoesTarefas();
             setNotificacoes(notificacoesData);
         } catch (err) {
-            console.error('Erro ao carregar notificações:', err);
+            // Silenciosamente loga o erro sem impactar a UI principal
+            console.error('Falha ao carregar notificações em background:', err);
         }
     }, []);
 
     const criarTarefa = useCallback(async (data: TarefaFormData) => {
+        setLoading(true);
+        setError(null);
         try {
-            const novaTarefa = await tarefaService.createTarefa({
+            const rawNovaTarefa = await tarefaService.createTarefa({
                 ...data,
                 reuniaoId,
                 projectId
             });
+            const novaTarefa = normalizeTarefa(rawNovaTarefa);
             setTarefas(prev => [...prev, novaTarefa]);
             return novaTarefa;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao criar tarefa');
-            throw err;
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao criar tarefa';
+            setError(errorMsg);
+            console.error('Erro ao criar tarefa:', err);
+            throw err; // Relança o erro para o componente
+        } finally {
+            setLoading(false);
         }
     }, [reuniaoId, projectId]);
 
     const atualizarTarefa = useCallback(async (id: string, data: Partial<TarefaFormData>) => {
+        setLoading(true);
+        setError(null);
         try {
-            const tarefaAtualizada = await tarefaService.updateTarefa(id, data);
-            const idStr = String(id);
-            const explicitProgressoProvided = typeof (data as any).progresso !== 'undefined';
+            const rawTarefaAtualizada = await tarefaService.updateTarefa(id, data);
+            const tarefaAtualizada = normalizeTarefa(rawTarefaAtualizada);
 
-            const computeTarefaParaState = (prev: Tarefa | undefined): Tarefa => {
-                const progressoParaState = explicitProgressoProvided
-                    ? (tarefaAtualizada.progresso ?? (prev?.progresso ?? 0))
-                    : (prev?.progresso ?? (tarefaAtualizada.progresso ?? 0));
-                return { ...tarefaAtualizada, progresso: progressoParaState };
-            };
+            setTarefas(prevList =>
+                prevList.map(t => (t.id === id ? tarefaAtualizada : t))
+            );
 
-            setTarefas(prevList => {
-                const prev = prevList.find(t => String(t.id) === idStr);
-                const tarefaParaState = computeTarefaParaState(prev);
-                return prevList.map(t => String(t.id) === idStr ? tarefaParaState : t);
-            });
-
-            setTarefaSelecionada(prev => {
-                if (prev && String(prev.id) === idStr) {
-                    return computeTarefaParaState(prev);
-                }
-                return prev;
-            });
+            setTarefaSelecionada(prev =>
+                prev && prev.id === id ? tarefaAtualizada : prev
+            );
 
             return tarefaAtualizada;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao atualizar tarefa');
-            throw err;
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao atualizar tarefa';
+            setError(errorMsg);
+            console.error('Erro ao atualizar tarefa:', err);
+            throw err; // Relança o erro
+        } finally {
+            setLoading(false);
         }
     }, []);
 
     const deletarTarefa = useCallback(async (id: string) => {
+        setLoading(true);
+        setError(null);
         try {
             await tarefaService.deleteTarefa(id);
             setTarefas(prev => prev.filter(t => t.id !== id));
@@ -197,68 +233,59 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 setTarefaSelecionada(null);
                 setExibirDetalhes(false);
             }
+            return true;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao deletar tarefa');
-            throw err;
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao deletar tarefa';
+            setError(errorMsg);
+            console.error('Erro ao deletar tarefa:', err);
+            throw err; // Relança o erro
+        } finally {
+            setLoading(false);
         }
     }, [tarefaSelecionada]);
 
     const moverTarefa = useCallback(async (tarefaId: string, colunaId: string, newPosition?: number) => {
+        setLoading(true);
+        setError(null);
+
+        // Otimistic UI update
+        let originalTarefas: Tarefa[] = [];
+        setTarefas(prev => {
+            originalTarefas = [...prev];
+            const tarefa = prev.find(t => t.id === tarefaId);
+            if (!tarefa) return prev;
+
+            const outrasTarefas = prev.filter(t => t.id !== tarefaId);
+            const tarefaAtualizada = { ...tarefa, status: colunaId }; // Assume-se que colunaId é o novo status
+            outrasTarefas.splice(newPosition ?? outrasTarefas.length, 0, tarefaAtualizada);
+            return outrasTarefas;
+        });
+
+
         try {
-            if (!colunaId) {
-                setError('ID da coluna inválido');
-                return;
-            }
+            const rawTarefaAtualizada = await tarefaService.moverTarefa(tarefaId, colunaId, newPosition);
+            const tarefaAtualizada = normalizeTarefa(rawTarefaAtualizada);
 
-            console.log('Mover tarefa:', { tarefaId, colunaId, newPosition });
-
-            // Chamada ao backend para mover a tarefa (String diretamente)
-            const tarefaAtualizada = await tarefaService.moverTarefa(tarefaId, colunaId, newPosition);
-
-            // Atualiza lista de tarefas no frontend
-            setTarefas(prev => prev.map(t =>
-                t.id === tarefaAtualizada.id ? tarefaAtualizada : t
-            ));
-
-            // Atualiza o Kanban local
-            if (kanbanBoard) {
-                setKanbanBoard(prev => {
-                    if (!prev) return null;
-
-                    const novasColunas = prev.colunas.map(coluna => {
-                        // Remove a tarefa da coluna antiga
-                        const tarefaNaColuna = coluna.tarefas.find(t => t.id === tarefaId);
-                        if (tarefaNaColuna) {
-                            return {
-                                ...coluna,
-                                tarefas: coluna.tarefas.filter(t => t.id !== tarefaId)
-                            };
-                        }
-
-                        // Adiciona a tarefa na coluna nova
-                        if (coluna.id.toString() === colunaId) {
-                            const novasTarefas = [...coluna.tarefas];
-                            const index = newPosition !== undefined ? newPosition : novasTarefas.length;
-                            const tarefaComColumnId = { ...tarefaAtualizada, columnId: colunaId };
-                            novasTarefas.splice(index, 0, tarefaComColumnId);
-                            return { ...coluna, tarefas: novasTarefas };
-                        }
-
-                        return coluna;
-                    });
-
-                    return { ...prev, colunas: novasColunas };
-                });
-            }
-
+            // Confirma a atualização com dados do servidor
+            setTarefas(prev => prev.map(t => t.id === tarefaId ? tarefaAtualizada : t));
             return tarefaAtualizada;
+
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao mover tarefa');
-            throw err;
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao mover tarefa';
+            setError(errorMsg);
+            console.error('Erro ao mover tarefa:', err);
+            // Reverte a UI em caso de erro
+            setTarefas(originalTarefas);
+            throw err; // Relança o erro
+        } finally {
+            setLoading(false);
         }
-    }, [kanbanBoard]);
+    }, []);
+
 
     const adicionarComentario = useCallback(async (tarefaId: string, conteudo: string, mencoes?: string[]) => {
+        setLoading(true);
+        setError(null);
         try {
             const comentario = await tarefaService.adicionarComentario(tarefaId, conteudo, mencoes);
             setTarefas(prev => prev.map(t =>
@@ -271,12 +298,18 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
             }
             return comentario;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao adicionar comentário');
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao adicionar comentário';
+            setError(errorMsg);
+            console.error('Erro ao adicionar comentário:', err);
             throw err;
+        } finally {
+            setLoading(false);
         }
     }, [tarefaSelecionada]);
 
     const atualizarComentario = useCallback(async (tarefaId: string, comentarioId: string, conteudo: string) => {
+        setLoading(true);
+        setError(null);
         try {
             const comentarioAtualizado = await tarefaService.atualizarComentario(tarefaId, comentarioId, conteudo);
             setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, comentarios: t.comentarios.map(c => c.id === comentarioId ? comentarioAtualizado : c) } : t));
@@ -285,25 +318,38 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
             }
             return comentarioAtualizado;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao atualizar comentário');
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao atualizar comentário';
+            setError(errorMsg);
+            console.error('Erro ao atualizar comentário:', err);
             throw err;
+        } finally {
+            setLoading(false);
         }
     }, [tarefaSelecionada]);
 
     const removerComentario = useCallback(async (tarefaId: string, comentarioId: string) => {
+        setLoading(true);
+        setError(null);
         try {
             await tarefaService.deletarComentario(tarefaId, comentarioId);
             setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, comentarios: t.comentarios.filter(c => c.id !== comentarioId) } : t));
             if (tarefaSelecionada?.id === tarefaId) {
                 setTarefaSelecionada(prev => prev ? { ...prev, comentarios: prev.comentarios.filter(c => c.id !== comentarioId) } : prev);
             }
+            return true;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao remover comentário');
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao remover comentário';
+            setError(errorMsg);
+            console.error('Erro ao remover comentário:', err);
             throw err;
+        } finally {
+            setLoading(false);
         }
     }, [tarefaSelecionada]);
 
     const anexarArquivo = useCallback(async (tarefaId: string, arquivo: File) => {
+        setLoading(true);
+        setError(null);
         try {
             const anexo = await tarefaService.anexarArquivo(tarefaId, arquivo);
             setTarefas(prev => prev.map(t =>
@@ -316,104 +362,82 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
             }
             return anexo;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao anexar arquivo');
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao anexar arquivo';
+            setError(errorMsg);
+            console.error('Erro ao anexar arquivo:', err);
             throw err;
+        } finally {
+            setLoading(false);
         }
     }, [tarefaSelecionada]);
 
     const atribuirTarefa = useCallback(async (tarefaId: string, responsavelId: string, principal = false) => {
+        setLoading(true);
+        setError(null);
         try {
-            const tarefaAtualizada = await tarefaService.atribuirTarefa(tarefaId, responsavelId, principal);
-            const idStr = String(tarefaId);
-            let tarefaParaState: Tarefa = tarefaAtualizada;
+            const rawTarefa = await tarefaService.atribuirTarefa(tarefaId, responsavelId, principal);
+            const tarefaAtualizada = normalizeTarefa(rawTarefa);
 
-            setTarefas(prevList => {
-                const prev = prevList.find(t => String(t.id) === idStr);
-                tarefaParaState = { ...tarefaAtualizada, progresso: tarefaAtualizada.progresso ?? (prev?.progresso ?? 0) };
-                return prevList.map(t => String(t.id) === idStr ? tarefaParaState : t);
-            });
+            setTarefas(prevList =>
+                prevList.map(t => (t.id === tarefaId ? tarefaAtualizada : t))
+            );
 
-            setTarefaSelecionada(prev => {
-                if (prev && String(prev.id) === idStr) return tarefaParaState;
-                return prev;
-            });
+            setTarefaSelecionada(prev =>
+                prev && prev.id === tarefaId ? tarefaAtualizada : prev
+            );
 
             return tarefaAtualizada;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao atribuir tarefa');
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao atribuir tarefa';
+            setError(errorMsg);
+            console.error('Erro ao atribuir tarefa:', err);
             throw err;
-        }
-    }, []);
-
-    const aplicarFiltros = useCallback(async (novosFiltros: FiltroTarefas) => {
-        setFiltros(novosFiltros);
-        try {
-            setLoading(true);
-            
-            // Preparar filtros para o backend
-            const params: any = { ...novosFiltros };
-            if (novosFiltros.projectId && novosFiltros.projectId.length > 0) {
-                params.projectId = novosFiltros.projectId[0];
-            }
-            if (novosFiltros.responsaveis && novosFiltros.responsaveis.length > 0) {
-                params.responsavelId = novosFiltros.responsaveis[0];
-            }
-
-            const tarefasData = await tarefaService.getAllTarefas(params);
-
-            const filteredTarefas = tarefasData.filter(tarefa => {
-                if (novosFiltros.responsaveis && novosFiltros.responsaveis.length > 0) {
-                    // Fix: Convert r.id to string manually to match filter type
-                    const hasAssignee = tarefa.responsaveis.some(r => novosFiltros.responsaveis?.includes(String(r.id)));
-                    if (!hasAssignee) return false;
-                }
-                if (novosFiltros.status && novosFiltros.status.length > 0) {
-                    if (!novosFiltros.status.includes(tarefa.status)) return false;
-                }
-                if (novosFiltros.projectId && novosFiltros.projectId.length > 0) {
-                    // Fix: Convert tarefa.projectId to string manually
-                    if (!tarefa.projectId || !novosFiltros.projectId.includes(String(tarefa.projectId))) return false;
-                }
-                if (novosFiltros.prazo_tarefaInicio) {
-                    if (!tarefa.prazo_tarefa || tarefa.prazo_tarefa < novosFiltros.prazo_tarefaInicio) return false;
-                }
-                if (novosFiltros.prazo_tarefaFim) {
-                    if (!tarefa.prazo_tarefa || tarefa.prazo_tarefa > novosFiltros.prazo_tarefaFim) return false;
-                }
-                return true;
-            });
-
-            setTarefas(filteredTarefas);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao aplicar filtros');
         } finally {
             setLoading(false);
         }
     }, []);
 
+    const aplicarFiltros = useCallback((novosFiltros: FiltroTarefas) => {
+        setFiltros(novosFiltros);
+        carregarDados(false, novosFiltros);
+    }, [carregarDados]);
+
+
     const buscarTarefas = useCallback(async (termo: string) => {
+        setLoading(true);
+        setError(null);
         try {
-            setLoading(true);
             const tarefasData = await tarefaService.searchTarefas(termo);
-            setTarefas(tarefasData);
+            const normalized = Array.isArray(tarefasData) ? tarefasData.map(normalizeTarefa) : [];
+            setTarefas(normalized);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao buscar tarefas');
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao buscar tarefas';
+            setError(errorMsg);
+            console.error('Erro ao buscar tarefas:', err);
+            throw err;
         } finally {
             setLoading(false);
         }
     }, []);
 
     const atualizarProgresso = useCallback(async (tarefaId: string, progresso: number) => {
+        setLoading(true);
+        setError(null);
         try {
-            const tarefaAtualizada = await tarefaService.updateProgresso(tarefaId, progresso);
-            setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, progresso } : t));
+            const rawTarefa = await tarefaService.updateProgresso(tarefaId, progresso);
+            const tarefaAtualizada = normalizeTarefa(rawTarefa);
+            setTarefas(prev => prev.map(t => t.id === tarefaId ? tarefaAtualizada : t));
             if (tarefaSelecionada?.id === tarefaId) {
-                setTarefaSelecionada(prev => prev ? { ...prev, progresso } : null);
+                setTarefaSelecionada(prev => prev ? tarefaAtualizada : null);
             }
             return tarefaAtualizada;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao atualizar progresso');
+            const errorMsg = err instanceof Error ? err.message : 'Erro ao atualizar progresso';
+            setError(errorMsg);
+            console.error('Erro ao atualizar progresso:', err);
             throw err;
+        } finally {
+            setLoading(false);
         }
     }, [tarefaSelecionada]);
 

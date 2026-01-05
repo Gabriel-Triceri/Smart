@@ -130,12 +130,16 @@ export const useMeetings = () => {
     }, []);
 
     useEffect(() => {
-        loadReunioes();
-        loadStatistics();
+        const loadInitialData = async () => {
+            // Executa as duas cargas em paralelo para otimizar o tempo
+            await Promise.all([loadReunioes(), loadStatistics()]);
+        };
+
+        loadInitialData();
 
         const interval = setInterval(() => {
-            loadReunioes();
-            loadStatistics();
+            // Recarrega em paralelo também
+            Promise.all([loadReunioes(), loadStatistics()]);
         }, 5 * 60 * 1000);
 
         return () => clearInterval(interval);
