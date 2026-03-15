@@ -35,54 +35,46 @@ public class RoleController {
         Role role = new Role();
         role.setId(dto.getId());
         role.setNome(dto.getNome());
-        // Permissões devem ser gerenciadas pelos endpoints específicos de add/remove
         return role;
     }
 
     @GetMapping
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_ROLES')")
     public ResponseEntity<List<RoleDTO>> findAll() {
         List<RoleDTO> list = roleService.findAll().stream().map(this::toDTO).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_ROLES')")
     public ResponseEntity<RoleDTO> findById(@PathVariable Long id) {
         Role role = roleService.findById(id);
         return ResponseEntity.ok(toDTO(role));
     }
 
     @PostMapping
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_ROLES')")
     public ResponseEntity<RoleDTO> create(@RequestBody RoleDTO dto) {
         Role created = roleService.create(toEntity(dto));
         return ResponseEntity.ok(toDTO(created));
     }
 
     @PutMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_ROLES')")
     public ResponseEntity<RoleDTO> update(@PathVariable Long id, @RequestBody RoleDTO dto) {
         Role updated = roleService.update(id, toEntity(dto));
         return ResponseEntity.ok(toDTO(updated));
     }
 
-    // @DeleteMapping("/{id}")
-    // @PreAuthorize("hasRole('ADMIN')")
-    // public ResponseEntity<Void> delete(@PathVariable Long id) {
-    // roleService.delete(id);
-    // return ResponseEntity.noContent().build();
-    // }
-
     @PostMapping("/{id}/permissions/{permissionId}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_ROLES')")
     public ResponseEntity<RoleDTO> addPermission(@PathVariable Long id, @PathVariable Long permissionId) {
         Role role = roleService.addPermissionToRole(id, permissionId);
         return ResponseEntity.ok(toDTO(role));
     }
 
     @DeleteMapping("/{id}/permissions/{permissionId}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_ROLES')")
     public ResponseEntity<RoleDTO> removePermission(@PathVariable Long id, @PathVariable Long permissionId) {
         Role role = roleService.removePermissionFromRole(id, permissionId);
         return ResponseEntity.ok(toDTO(role));

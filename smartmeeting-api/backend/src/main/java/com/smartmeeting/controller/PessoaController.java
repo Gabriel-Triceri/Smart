@@ -4,7 +4,7 @@ import com.smartmeeting.dto.PessoaCreateDTO;
 import com.smartmeeting.dto.PessoaDTO;
 import com.smartmeeting.service.pessoa.PessoaService;
 import org.springframework.http.ResponseEntity;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -22,83 +22,44 @@ public class PessoaController {
         this.pessoaService = pessoaService;
     }
 
-    /**
-     * Lista todas as pessoas cadastradas no sistema
-     * 
-     * @return ResponseEntity contendo a lista de pessoas
-     */
     @GetMapping
-    public ResponseEntity<List<PessoaDTO>> listarTodas(@RequestParam(required = false) String search) {
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS')")
+    public ResponseEntity<List<PessoaDTO>> listarTodos(@RequestParam(required = false) String search) {
         List<PessoaDTO> pessoas = pessoaService.listar(search);
         return ResponseEntity.ok(pessoas);
     }
 
-    /**
-     * Busca uma pessoa específica pelo seu ID
-     * 
-     * @param id Identificador da pessoa
-     * @return ResponseEntity contendo a pessoa encontrada ou status 404 se não
-     *         existir
-     */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS') or #id == authentication.principal.id")
     public ResponseEntity<PessoaDTO> buscarPorId(@PathVariable Long id) {
-        // O service lançará ResourceNotFoundException se não encontrar, que será
-        // tratada pelo GlobalExceptionHandler
         return pessoaService.buscarPorId(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build()); // Mantido para o Optional vazio
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Cria uma nova pessoa no sistema
-     * 
-     * @param dto Dados da pessoa a ser criada
-     * @return ResponseEntity contendo a pessoa criada com ID gerado
-     */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS')")
     public ResponseEntity<PessoaDTO> criarPessoa(@Valid @RequestBody PessoaCreateDTO dto) {
-        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_MANAGE_USERS")
-                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
-            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar usuários.");
-        }
         PessoaDTO pessoaSalva = pessoaService.salvar(dto);
         return ResponseEntity.ok(pessoaSalva);
     }
 
-    /**
-     * Atualiza uma pessoa existente
-     * 
-     * @param id        Identificador da pessoa a ser atualizada
-     * @param pessoaDTO Novos dados da pessoa
-     * @return ResponseEntity contendo a pessoa atualizada ou status 404 se não
-     *         existir
-     */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS')")
     public ResponseEntity<PessoaDTO> atualizarPessoa(@PathVariable Long id, @RequestBody PessoaDTO pessoaDTO) {
-        if (!com.smartmeeting.util.SecurityUtils.hasRole("ADMIN_MANAGE_USERS")
-                && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
-            throw new com.smartmeeting.exception.ForbiddenException("Você não tem permissão para gerenciar usuários.");
-        }
         PessoaDTO pessoaAtualizada = pessoaService.atualizar(id, pessoaDTO);
         return ResponseEntity.ok(pessoaAtualizada);
     }
 
-    /**
-     * Remove uma pessoa do sistema
-     * 
-     * @param id Identificador da pessoa a ser removida
-     * @return ResponseEntity com status 204 (No Content) ou 404 se não encontrada
-     */
     @DeleteMapping("/{id}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarPessoa(@PathVariable Long id) {
         pessoaService.deletar(id);
         return ResponseEntity.noContent().build();
     }
 
-    // --- Roles de uma pessoa ---
     @GetMapping("/{id}/roles")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS')")
     public ResponseEntity<List<String>> listarRoles(@PathVariable Long id) {
         List<String> roles = pessoaService.listarRoles(id).stream()
                 .map(Role::getNome)
@@ -107,14 +68,14 @@ public class PessoaController {
     }
 
     @PostMapping("/{id}/roles/{roleId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS')")
     public ResponseEntity<Void> adicionarRole(@PathVariable Long id, @PathVariable Long roleId) {
         pessoaService.addRoleToPessoa(id, roleId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/roles/{roleId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS')")
     public ResponseEntity<Void> removerRole(@PathVariable Long id, @PathVariable Long roleId) {
         pessoaService.removeRoleFromPessoa(id, roleId);
         return ResponseEntity.noContent().build();

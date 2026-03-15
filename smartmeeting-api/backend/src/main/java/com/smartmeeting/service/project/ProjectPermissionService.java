@@ -14,10 +14,13 @@ import com.smartmeeting.model.RolePermissionTemplate;
 import com.smartmeeting.repository.ProjectMemberRepository;
 import com.smartmeeting.repository.ProjectPermissionRepository;
 import com.smartmeeting.repository.RolePermissionTemplateRepository;
+import com.smartmeeting.repository.RoleRepository;
 //import com.smartmeeting.websocket.PermissionWebSocketHandler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,24 +35,23 @@ public class ProjectPermissionService {
     private final ProjectPermissionRepository permissionRepository;
     private final ProjectMemberRepository memberRepository;
     private final RolePermissionTemplateRepository templateRepository;
-    private final com.smartmeeting.repository.RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
+    private final CacheManager cacheManager;
     // private final PermissionWebSocketHandler webSocketHandler;
+
+    private static final String PERMISSIONS_CACHE = "projectPermissions";
 
     /**
      * Inicializa os templates de permissões por role (executado no startup)
      */
     @PostConstruct
     public void initializePermissionTemplates() {
-        // Sempre re-sincroniza templates ao iniciar para garantir consistência com o
-        // banco global
         log.info("Sincronizando templates de permissões com Roles globais...");
 
-        // OWNER - todas as permissões (hardcoded, pois é superusuário do projeto)
         for (PermissionType perm : PermissionType.values()) {
             saveOrUpdateTemplate(ProjectRole.OWNER, perm, true);
         }
 
-        // Outros Roles: Tenta buscar do banco global
         syncRoleFromGlobal(ProjectRole.ADMIN);
         syncRoleFromGlobal(ProjectRole.MEMBER_EDITOR);
 
@@ -57,11 +59,9 @@ public class ProjectPermissionService {
     }
 
     private void syncRoleFromGlobal(ProjectRole projectRole) {
-        // 1. Tenta buscar Role global pelo nome
         Optional<com.smartmeeting.model.Role> globalRoleOpt = roleRepository.findByNome(projectRole.name());
 
         if (globalRoleOpt.isPresent()) {
-            // Existe no banco global -> Sincroniza
             com.smartmeeting.model.Role globalRole = globalRoleOpt.get();
             Set<String> grantedPermissions = globalRole.getPermissions().stream()
                     .map(com.smartmeeting.model.Permission::getNome)
@@ -75,7 +75,6 @@ public class ProjectPermissionService {
                     grantedPermissions.size());
 
         } else {
-            // Não existe no banco global -> Usa Defaults Hardcoded (Fallback)
             log.warn("Role global {} não encontrado. Usando defaults hardcoded.", projectRole);
             applyHardcodedDefaults(projectRole);
         }
@@ -126,10 +125,27 @@ public class ProjectPermissionService {
     }
 
     /**
-     * Verifica se um usuário tem uma permissão específica em um projeto
+     * Verifica se um usuário tem uma permissão específica em um projeto.
+     * Usa cache para melhorar performance.
      */
     public boolean hasPermission(Long projectId, Long personId, PermissionType permissionType) {
-        return permissionRepository.hasPermission(projectId, personId, permissionType);
+        String cacheKey = buildCacheKey(projectId, personId, permissionType);
+
+        Cache cache = getCache();
+        if (cache != null) {
+            Boolean cached = cache.get(cacheKey, Boolean.class);
+            if (cached != null) {
+                return cached;
+            }
+        }
+
+        boolean hasPermission = permissionRepository.hasPermission(projectId, personId, permissionType);
+
+        if (cache != null) {
+            cache.put(cacheKey, hasPermission);
+        }
+
+        return hasPermission;
     }
 
     /**
@@ -152,6 +168,45 @@ public class ProjectPermissionService {
     }
 
     /**
+     * Invalida o cache de permissões para um usuário específico em um projeto.
+     * Chamado após atualizações de permissão para garantir consistência.
+     */
+    public void invalidateUserCache(Long projectId, Long personId) {
+        Cache cache = getCache();
+        if (cache != null) {
+            // Invalida todas as permissões do usuário no projeto
+            for (PermissionType perm : PermissionType.values()) {
+                String cacheKey = buildCacheKey(projectId, personId, perm);
+                cache.evict(cacheKey);
+            }
+            log.debug("Cache invalidado para usuário {} no projeto {}", personId, projectId);
+        }
+    }
+
+    /**
+     * Invalida todo o cache de permissões do projeto.
+     * Use com cuidado - pode afetar performance.
+     */
+    public void invalidateProjectCache(Long projectId) {
+        Cache cache = getCache();
+        if (cache != null) {
+            cache.clear();
+            log.info("Todo o cache de permissões invalidado para o projeto {}", projectId);
+        }
+    }
+
+    private String buildCacheKey(Long projectId, Long personId, PermissionType permissionType) {
+        return String.format("proj_%d_user_%d_perm_%s", projectId, personId, permissionType.name());
+    }
+
+    private Cache getCache() {
+        if (cacheManager != null) {
+            return cacheManager.getCache(PERMISSIONS_CACHE);
+        }
+        return null;
+    }
+
+    /**
      * Obtém todas as permissões de um membro
      */
     public MemberPermissionsDTO getMemberPermissions(Long projectMemberId) {
@@ -160,7 +215,6 @@ public class ProjectPermissionService {
 
         List<ProjectPermission> permissions = permissionRepository.findByProjectMemberId(projectMemberId);
 
-        // Se não houver permissões, inicializa
         if (permissions.isEmpty()) {
             initializePermissionsForMember(member);
             permissions = permissionRepository.findByProjectMemberId(projectMemberId);
@@ -192,7 +246,7 @@ public class ProjectPermissionService {
     }
 
     /**
-     * Atualiza permissões de um membro
+     * Atualiza permissões de um membro com invalidação de cache otimizada.
      */
     @Transactional
     public MemberPermissionsDTO updateMemberPermissions(UpdatePermissionsRequest request) {
@@ -200,10 +254,12 @@ public class ProjectPermissionService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Membro não encontrado: " + request.getProjectMemberId()));
 
-        // OWNER não pode ter permissões alteradas
         if (member.getRole() == ProjectRole.OWNER) {
             throw new BadRequestException("Não é possível alterar permissões do proprietário do projeto");
         }
+
+        Long affectedPersonId = member.getPerson().getId();
+        Long projectId = member.getProject().getId();
 
         for (Map.Entry<PermissionType, Boolean> entry : request.getPermissions().entrySet()) {
             PermissionType permType = entry.getKey();
@@ -223,10 +279,8 @@ public class ProjectPermissionService {
         log.info("Permissões atualizadas para membro {} no projeto {}",
                 member.getPerson().getNome(), member.getProject().getName());
 
-        // Notifica o usuario via WebSocket sobre a mudanca de permissoes
-        // webSocketHandler.notifyPermissionsUpdated(
-        // member.getPerson().getId(),
-        // member.getProject().getId());
+        // Invalida cache ANTES de retornar para garantir que próximas consultas vejam as mudanças
+        invalidateUserCache(projectId, affectedPersonId);
 
         return getMemberPermissions(member.getId());
     }
@@ -243,20 +297,17 @@ public class ProjectPermissionService {
             throw new BadRequestException("Não é possível alterar o papel do proprietário do projeto");
         }
 
-        // Atualiza o role
+        Long affectedPersonId = member.getPerson().getId();
+        Long projectId = member.getProject().getId();
+
         member.setRole(newRole);
         memberRepository.save(member);
 
-        // Remove permissões antigas
         permissionRepository.deleteByProjectMemberId(projectMemberId);
-
-        // Inicializa novas permissões baseadas no novo role
         initializePermissionsForMember(member);
 
-        // Notifica o usuario via WebSocket sobre a mudanca de role/permissoes
-        // webSocketHandler.notifyPermissionsUpdated(
-        // member.getPerson().getId(),
-        // member.getProject().getId());
+        // Invalida cache ANTES de retornar
+        invalidateUserCache(projectId, affectedPersonId);
 
         return getMemberPermissions(projectMemberId);
     }
@@ -269,16 +320,14 @@ public class ProjectPermissionService {
         ProjectMember member = memberRepository.findById(projectMemberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Membro não encontrado: " + projectMemberId));
 
-        // Remove permissões existentes
-        permissionRepository.deleteByProjectMemberId(projectMemberId);
+        Long affectedPersonId = member.getPerson().getId();
+        Long projectId = member.getProject().getId();
 
-        // Reinicializa com base no template do role
+        permissionRepository.deleteByProjectMemberId(projectMemberId);
         initializePermissionsForMember(member);
 
-        // Notifica o usuario via WebSocket sobre o reset de permissoes
-        // webSocketHandler.notifyPermissionsUpdated(
-        // member.getPerson().getId(),
-        // member.getProject().getId());
+        // Invalida cache ANTES de retornar
+        invalidateUserCache(projectId, affectedPersonId);
 
         return getMemberPermissions(projectMemberId);
     }
@@ -309,7 +358,6 @@ public class ProjectPermissionService {
                         RolePermissionTemplate::isDefaultGranted));
     }
 
-    // Métodos auxiliares de conversão
     private MemberPermissionsDTO toMemberPermissionsDTO(ProjectMember member, List<ProjectPermission> permissions) {
         MemberPermissionsDTO dto = new MemberPermissionsDTO();
         dto.setProjectMemberId(member.getId());

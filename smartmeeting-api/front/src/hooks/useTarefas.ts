@@ -394,7 +394,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
     const buscarTarefas = useCallback(async (termo: string) => {
         try {
             setLoading(true);
-            const tarefasData = await tarefaService.searchTarefas(termo);
+            const tarefasData = await tarefaService.buscarTarefas(termo);
             setTarefas(tarefasData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao buscar tarefas');
@@ -405,7 +405,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const atualizarProgresso = useCallback(async (tarefaId: string, progresso: number) => {
         try {
-            const tarefaAtualizada = await tarefaService.updateProgresso(tarefaId, progresso);
+            const tarefaAtualizada = await tarefaService.atualizarProgresso(tarefaId, progresso);
             setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, progresso } : t));
             if (tarefaSelecionada?.id === tarefaId) {
                 setTarefaSelecionada(prev => prev ? { ...prev, progresso } : null);

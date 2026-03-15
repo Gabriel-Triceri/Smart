@@ -27,6 +27,14 @@ export const roleService = {
     },
 
     /**
+     * Get roles for a specific user
+     */
+    getUserRoles: async (userId: number): Promise<string[]> => {
+        const response = await api.get<string[]>(`/pessoas/${userId}/roles`);
+        return response.data || [];
+    },
+
+    /**
      * Create new role
      */
     createRole: async (data: { nome: string }): Promise<Role> => {

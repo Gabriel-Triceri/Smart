@@ -82,6 +82,7 @@ public class AuthController {
                 response.put("token", jwt);
                 response.put("roles", roles);
                 response.put("permissions", permissions);
+                logger.info("[AUTH CONTROLLER] Roles: {}, Permissions: {}", roles, permissions);
                 return ResponseEntity.ok(response);
         }
 

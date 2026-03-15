@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Permission } from '../types/permissions';
 import { permissionService } from '../services/permissionService';
+import { usePermissionCache } from './usePermissionCache';
 
 interface UsePermissionsReturn {
     permissions: Permission[];
@@ -10,12 +11,19 @@ interface UsePermissionsReturn {
     updatePermission: (id: number, nome: string) => Promise<Permission | null>;
     deletePermission: (id: number) => Promise<boolean>;
     refreshPermissions: () => Promise<void>;
+    hasPermission: (permissionName: string) => boolean;
 }
 
 export const usePermissions = (): UsePermissionsReturn => {
+    const permissionCache = usePermissionCache();
     const [permissions, setPermissions] = useState<Permission[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Sync with cache
+    useEffect(() => {
+        setPermissions(permissionCache.permissions);
+    }, [permissionCache.permissions]);
 
     const fetchPermissions = useCallback(async () => {
         setIsLoading(true);
@@ -32,16 +40,25 @@ export const usePermissions = (): UsePermissionsReturn => {
         }
     }, []);
 
+    // Load initial data if cache is empty
     useEffect(() => {
-        fetchPermissions();
-    }, [fetchPermissions]);
+        if (!permissionCache.isInitialized && !permissionCache.isLoading) {
+            fetchPermissions();
+        }
+    }, [permissionCache.isInitialized, permissionCache.isLoading, fetchPermissions]);
 
     const createPermission = async (nome: string): Promise<Permission | null> => {
         setIsLoading(true);
         setError(null);
         try {
             const newPermission = await permissionService.createPermission({ nome });
+            
+            // Update local state
             setPermissions(prev => [...prev, newPermission]);
+            
+            // Update cache
+            permissionCache.refreshPermissions();
+            
             return newPermission;
         } catch (err: any) {
             const errorMessage = err.response?.data?.message || 'Erro ao criar permissão';
@@ -58,7 +75,13 @@ export const usePermissions = (): UsePermissionsReturn => {
         setError(null);
         try {
             const updated = await permissionService.updatePermission(id, { nome });
+            
+            // Update local state
             setPermissions(prev => prev.map(p => p.id === id ? updated : p));
+            
+            // Update cache
+            permissionCache.refreshPermissions();
+            
             return updated;
         } catch (err: any) {
             const errorMessage = err.response?.data?.message || 'Erro ao atualizar permissão';
@@ -75,7 +98,13 @@ export const usePermissions = (): UsePermissionsReturn => {
         setError(null);
         try {
             await permissionService.deletePermission(id);
+            
+            // Update local state
             setPermissions(prev => prev.filter(p => p.id !== id));
+            
+            // Update cache
+            permissionCache.refreshPermissions();
+            
             return true;
         } catch (err: any) {
             const errorMessage = err.response?.data?.message || 'Erro ao deletar permissão';
@@ -88,12 +117,16 @@ export const usePermissions = (): UsePermissionsReturn => {
     };
 
     return {
-        permissions,
-        isLoading,
-        error,
+        permissions: permissions.length > 0 ? permissions : permissionCache.permissions,
+        isLoading: isLoading || permissionCache.isLoading,
+        error: error || permissionCache.error,
         createPermission,
         updatePermission,
         deletePermission,
-        refreshPermissions: fetchPermissions
+        refreshPermissions: () => {
+            fetchPermissions();
+            return permissionCache.refreshPermissions();
+        },
+        hasPermission: permissionCache.hasPermission
     };
 };

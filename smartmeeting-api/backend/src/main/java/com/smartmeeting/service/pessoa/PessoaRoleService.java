@@ -6,10 +6,10 @@ import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Role;
 import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.RoleRepository;
+import com.smartmeeting.websocket.PermissionWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +26,7 @@ public class PessoaRoleService {
 
     private final PessoaRepository repository;
     private final RoleRepository roleRepository;
+    private final PermissionWebSocketHandler webSocketHandler;
 
     public List<Role> listarRoles(Long pessoaId) {
         if (pessoaId == null) {
@@ -68,6 +69,7 @@ public class PessoaRoleService {
             roles.add(role);
             pessoa.setRoles(roles);
             repository.save(pessoa);
+            webSocketHandler.sendPermissionUpdate(pessoaId);
         }
     }
 
@@ -92,6 +94,7 @@ public class PessoaRoleService {
             if (changed) {
                 pessoa.setRoles(roles);
                 repository.save(pessoa);
+                webSocketHandler.sendPermissionUpdate(pessoaId);
             }
         }
     }

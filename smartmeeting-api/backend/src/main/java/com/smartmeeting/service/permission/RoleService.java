@@ -7,6 +7,7 @@ import com.smartmeeting.model.Role;
 
 import com.smartmeeting.repository.PermissionRepository;
 import com.smartmeeting.repository.RoleRepository;
+import com.smartmeeting.websocket.PermissionWebSocketHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +21,12 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final PermissionWebSocketHandler webSocketHandler;
 
-    public RoleService(RoleRepository roleRepository, PermissionRepository permissionRepository) {
+    public RoleService(RoleRepository roleRepository, PermissionRepository permissionRepository, PermissionWebSocketHandler webSocketHandler) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
+        this.webSocketHandler = webSocketHandler;
     }
 
     // --- CRUD básicos ---
@@ -107,7 +110,9 @@ public class RoleService {
         if (!already) {
             role.getPermissions().add(permission);
         }
-        return roleRepository.save(role);
+        Role saved = roleRepository.save(role);
+        webSocketHandler.broadcastPermissionUpdate();
+        return saved;
     }
 
     @Transactional
@@ -119,9 +124,14 @@ public class RoleService {
         permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Permissão não encontrada com ID: " + permissionId));
         if (role.getPermissions() != null && !role.getPermissions().isEmpty()) {
-            role.getPermissions().removeIf(p -> p.getId().equals(permissionId));
+            boolean changed = role.getPermissions().removeIf(p -> p.getId().equals(permissionId));
+            if (changed) {
+                Role saved = roleRepository.save(role);
+                webSocketHandler.broadcastPermissionUpdate();
+                return saved;
+            }
         }
-        return roleRepository.save(role);
+        return role;
     }
 
     /**

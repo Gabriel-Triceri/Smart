@@ -13,6 +13,7 @@ import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X, Briefcase 
 import { inicializarDados } from './services/seedData';
 import { authService } from './services/authService';
 import { usePermissionWebSocket } from './hooks/usePermissionWebSocket';
+import { usePermissionCache } from './hooks/usePermissionCache';
 
 type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas' | 'permissions' | 'projects';
 
@@ -96,11 +97,16 @@ function App() {
     const [showNavigation, setShowNavigation] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
 
+    const { refreshAll } = usePermissionCache();
+
     // Callback quando permissoes sao atualizadas via WebSocket
     const handlePermissionsUpdated = useCallback((_projectId: number) => {
-        // Incrementa a key para forcar re-render dos componentes filhos
-        setRefreshKey(prev => prev + 1);
-    }, []);
+        // Busca os novos dados do backend assim que receber o evento
+        refreshAll().then(() => {
+            // Incrementa a key para forcar re-render dos componentes filhos com os dados novos
+            setRefreshKey(prev => prev + 1);
+        });
+    }, [refreshAll]);
 
     // Conectar ao WebSocket de permissoes
     usePermissionWebSocket({

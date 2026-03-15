@@ -126,8 +126,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Lista de endpoints públicos que não precisam de autenticação JWT
         return path.startsWith("/auth/") ||
                 path.startsWith("/h2-console") ||
-                path.equals("/ws/permissions") ||
-                path.equals("/permissions") ||
+                path.startsWith("/ws/") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs");
     }
