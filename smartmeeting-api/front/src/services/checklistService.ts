@@ -1,5 +1,4 @@
 import api from './httpClient';
-import axios from 'axios';
 import { ChecklistItem } from '../types/meetings';
 import { IdValidation } from '../utils/validation';
 
@@ -18,17 +17,12 @@ export const checklistService = {
     },
 
     async updateChecklistItem(tarefaId: string, itemId: string, data: any) {
-        const response = await api.put(
-            `/tarefas/${tarefaId}/checklist/${itemId}`,
-            data
-        );
+        const response = await api.put(`/tarefas/${tarefaId}/checklist/${itemId}`, data);
         return response.data;
     },
 
     async toggleChecklistItem(tarefaId: string, itemId: string) {
-        const response = await api.patch(
-            `/tarefas/${tarefaId}/checklist/${itemId}/toggle`
-        );
+        const response = await api.patch(`/tarefas/${tarefaId}/checklist/${itemId}/toggle`);
         return response.data;
     },
 
@@ -36,9 +30,14 @@ export const checklistService = {
         await api.delete(`/tarefas/${tarefaId}/checklist/${itemId}`);
     },
 
-    async getTemplatesTarefas() {
-        const response = await axios.get('/api/checklist/templates');
-        return response.data;
+    // Retorna lista vazia em vez de chamar endpoint inexistente sem auth
+    async getTemplatesTarefas(): Promise<any[]> {
+        try {
+            const response = await api.get('/tarefas/templates');
+            return Array.isArray(response.data) ? response.data : [];
+        } catch {
+            return [];
+        }
     },
 
     async getAssigneesDisponiveis() {

@@ -1,16 +1,19 @@
-// Service for handling notification-related operations
-import axios from 'axios';
+import api from './httpClient';
 import { NotificacaoTarefa } from '../types/meetings';
-
-const API_BASE_URL = '/api/notifications';
 
 export const notificationService = {
     async getNotificacoesTarefas(): Promise<NotificacaoTarefa[]> {
-        const response = await axios.get(`${API_BASE_URL}/tarefas`);
-        return response.data;
+        try {
+            const response = await api.get('/tarefas/notifications');
+            return Array.isArray(response.data) ? response.data : [];
+        } catch (err: any) {
+            if (err.response?.status === 404) return [];
+            console.error('Erro ao buscar notificações:', err);
+            return [];
+        }
     },
 
     async marcarNotificacaoLida(notificacaoId: string): Promise<void> {
-        await axios.post(`${API_BASE_URL}/marcar-lida/${notificacaoId}`);
+        await api.patch(`/tarefas/notifications/${notificacaoId}/lida`);
     }
 };

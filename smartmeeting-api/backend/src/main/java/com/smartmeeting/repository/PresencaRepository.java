@@ -13,10 +13,12 @@ public interface PresencaRepository extends JpaRepository<Presenca, Long> {
 
     long countByReuniao(Reuniao reuniao);
 
-    @EntityGraph(value = "Presenca.comReuniaoEParticipante")
+    // FIX: nome corrigido de "Presenca.comReuniaoEParticipante"
+    //      para  "Presenca.comParticipanteEReuniao"  (conforme definido na entidade).
+    @EntityGraph(value = "Presenca.comParticipanteEReuniao")
     List<Presenca> findByReuniaoAndValidadoPorCrachaTrue(Reuniao reuniao);
 
-    @EntityGraph(value = "Presenca.comReuniaoEParticipante")
+    @EntityGraph(value = "Presenca.comParticipanteEReuniao")
     List<Presenca> findByParticipanteId(Long participantId);
 
     long countByParticipanteId(Long participanteId);

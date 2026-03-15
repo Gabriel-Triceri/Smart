@@ -20,7 +20,13 @@ interface UsePermissionWebSocketOptions {
 }
 
 /**
- * Hook para conexao WebSocket de permissoes em tempo real
+ * Hook para conexão WebSocket de permissões em tempo real.
+ *
+ * IMPORTANTE: O backend agora exige o JWT como query param na URL:
+ *   ws://host:8080/ws/permissions?token=SEU_JWT
+ *
+ * Sem o token, o JwtHandshakeInterceptor rejeita a conexão com HTTP 403.
+ * O servidor identifica o usuário pelo JWT — NÃO envie mais {type:"register",userId:X}.
  */
 export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = {}) {
     const {
@@ -34,34 +40,45 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const isConnectingRef = useRef(false); // Previne conexoes duplicadas (StrictMode)
+    const isConnectingRef = useRef(false);
     const isMountedRef = useRef(true);
     const [isConnected, setIsConnected] = useState(false);
     const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
 
     const connect = useCallback(() => {
-        // Nao conectar se nao estiver autenticado
+        // Não conectar se não autenticado
         if (!authService.isAuthenticated()) {
             return;
         }
 
-        // Prevenir conexoes duplicadas (React StrictMode)
+        // Prevenir conexões duplicadas (React StrictMode)
         if (isConnectingRef.current || (wsRef.current && wsRef.current.readyState === WebSocket.OPEN)) {
             return;
         }
 
-        // Fechar conexao existente que nao esta aberta
+        // Fechar conexão existente que não está aberta
         if (wsRef.current && wsRef.current.readyState !== WebSocket.OPEN) {
             wsRef.current.close();
         }
 
         isConnectingRef.current = true;
 
-        // Determinar URL do WebSocket
+        // ─────────────────────────────────────────────────────────────────
+        // CORREÇÃO CRÍTICA: token obrigatório como query param na URL.
+        // O JwtHandshakeInterceptor lê o token de ?token= ou do header
+        // Authorization. Como WebSocket do browser não suporta headers
+        // customizados, usamos query param.
+        // ─────────────────────────────────────────────────────────────────
+        const token = authService.getToken();
+        if (!token) {
+            isConnectingRef.current = false;
+            return;
+        }
+
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.hostname;
-        const port = '8080'; // Porta do backend
-        const wsUrl = `${protocol}//${host}:${port}/ws/permissions`;
+        const port = '8080';
+        const wsUrl = `${protocol}//${host}:${port}/ws/permissions?token=${encodeURIComponent(token)}`;
 
         try {
             const ws = new WebSocket(wsUrl);
@@ -70,38 +87,22 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
             ws.onopen = () => {
                 isConnectingRef.current = false;
                 if (!isMountedRef.current) return;
+
                 setIsConnected(true);
                 onConnected?.();
 
-                // Registrar o userId do usuario atual
-                const userInfo = authService.getUserInfo();
-                if (userInfo.id) {
-                    // Garantir que userId seja um numero valido (nao email)
-                    let userId: number | null = null;
+                // ─────────────────────────────────────────────────────────
+                // NÃO enviar mais {type:"register",userId:X}
+                // O backend agora identifica o usuário exclusivamente pelo JWT
+                // do handshake — qualquer userId enviado pelo cliente é ignorado.
+                // ─────────────────────────────────────────────────────────
 
-                    if (typeof userInfo.id === 'number') {
-                        userId = userInfo.id;
-                    } else if (typeof userInfo.id === 'string') {
-                        // Verificar se e um numero (nao contem @ ou letras)
-                        if (/^\d+$/.test(userInfo.id)) {
-                            userId = parseInt(userInfo.id, 10);
-                        }
-                    }
-
-                    if (userId !== null && !isNaN(userId)) {
-                        ws.send(JSON.stringify({
-                            type: 'register',
-                            userId: userId
-                        }));
-                    }
-                }
-
-                // Iniciar ping para manter conexao viva
+                // Iniciar ping para manter conexão viva
                 pingIntervalRef.current = setInterval(() => {
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify({ type: 'ping' }));
                     }
-                }, 30000); // Ping a cada 30 segundos
+                }, 30000);
             };
 
             ws.onmessage = (event) => {
@@ -109,12 +110,10 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
                     const message: WebSocketMessage = JSON.parse(event.data);
                     setLastMessage(message);
 
-                    // Tratar diferentes tipos de mensagens
                     if (message.type === 'permissions_updated' || message.type === 'permission_updated') {
                         if (message.projectId) {
                             onPermissionsUpdated?.(message.projectId);
                         }
-                        // Disparar evento global para que outros componentes possam reagir
                         window.dispatchEvent(new CustomEvent('permissionsUpdated', {
                             detail: message
                         }));
@@ -131,7 +130,7 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
                 }
             };
 
-            ws.onclose = () => {
+            ws.onclose = (event) => {
                 isConnectingRef.current = false;
                 if (!isMountedRef.current) return;
 
@@ -144,7 +143,22 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
                     pingIntervalRef.current = null;
                 }
 
-                // Reconectar automaticamente (apenas se ainda estiver montado)
+                // ─────────────────────────────────────────────────────────
+                // Código 1008 = POLICY_VIOLATION
+                // O backend fecha com este código quando o token JWT é
+                // inválido, expirado ou ausente. Neste caso, redirecionar
+                // para login em vez de tentar reconectar.
+                // ─────────────────────────────────────────────────────────
+                if (event.code === 1008) {
+                    console.warn('[WS] Token inválido ou expirado. Redirecionando para login.');
+                    authService.logout();
+                    if (window.location.pathname !== '/login') {
+                        window.location.href = '/login';
+                    }
+                    return;
+                }
+
+                // Para outros fechamentos, reconectar automaticamente
                 if (isMountedRef.current && autoReconnect && authService.isAuthenticated()) {
                     reconnectTimeoutRef.current = setTimeout(() => {
                         if (isMountedRef.current) {
@@ -156,29 +170,25 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
 
             ws.onerror = () => {
                 isConnectingRef.current = false;
-                // Silenciosamente ignorar erros de WebSocket
+                // Silenciosamente ignorar — onclose será chamado em seguida
             };
 
         } catch {
             isConnectingRef.current = false;
-            // Silenciosamente ignorar erros de conexao
         }
     }, [onPermissionsUpdated, onConnected, onDisconnected, autoReconnect, reconnectInterval]);
 
     const disconnect = useCallback(() => {
-        // Limpar timeout de reconexao
         if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current);
             reconnectTimeoutRef.current = null;
         }
 
-        // Limpar intervalo de ping
         if (pingIntervalRef.current) {
             clearInterval(pingIntervalRef.current);
             pingIntervalRef.current = null;
         }
 
-        // Fechar conexao
         if (wsRef.current) {
             wsRef.current.close();
             wsRef.current = null;
@@ -188,11 +198,10 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
         setIsConnected(false);
     }, []);
 
-    // Conectar ao montar o componente
     useEffect(() => {
         isMountedRef.current = true;
 
-        // Pequeno delay para evitar conexoes duplicadas do StrictMode
+        // Pequeno delay para evitar conexões duplicadas do StrictMode
         const timer = setTimeout(() => {
             if (isMountedRef.current) {
                 connect();
@@ -206,15 +215,13 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
         };
     }, [connect, disconnect]);
 
-    // Reconectar quando o usuario fizer login
+    // Reconectar quando o usuário fizer login (token adicionado ao storage)
     useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'authToken') {
                 if (e.newValue) {
-                    // Token adicionado - conectar
                     connect();
                 } else {
-                    // Token removido - desconectar
                     disconnect();
                 }
             }
@@ -233,7 +240,7 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
 }
 
 /**
- * Hook para escutar eventos de atualizacao de permissoes
+ * Hook para escutar eventos de atualização de permissões
  */
 export function usePermissionUpdateListener(callback: (detail: WebSocketMessage) => void) {
     useEffect(() => {

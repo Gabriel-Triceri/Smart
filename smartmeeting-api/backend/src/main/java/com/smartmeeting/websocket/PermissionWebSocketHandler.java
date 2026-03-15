@@ -1,6 +1,5 @@
 package com.smartmeeting.websocket;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,73 +17,87 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PermissionWebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PermissionWebSocketHandler.class);
-    
-    // Maps a user ID to their active WebSocket session
+
     private final Map<Long, WebSocketSession> userSessions = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        logger.info("New WebSocket connection established: {}", session.getId());
+        // Usuário identificado pelo JwtHandshakeInterceptor — sem necessidade de mensagem "register"
+        Object userId = session.getAttributes().get("userId");
+        if (userId instanceof Long) {
+            userSessions.put((Long) userId, session);
+            logger.info("Usuário {} conectado via WebSocket (sessão {})", userId, session.getId());
+        } else {
+            logger.warn("Sessão {} sem userId nos atributos — ignorada", session.getId());
+        }
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        String payload = message.getPayload();
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         try {
-            JsonNode jsonNode = objectMapper.readTree(payload);
+            var jsonNode = objectMapper.readTree(message.getPayload());
             String type = jsonNode.has("type") ? jsonNode.get("type").asText() : null;
 
-            if ("register".equals(type) && jsonNode.has("userId")) {
-                Long userId = jsonNode.get("userId").asLong();
-                userSessions.put(userId, session);
-                logger.info("User {} registered with session {}", userId, session.getId());
-            } else if ("ping".equals(type)) {
-                // Ignore pings, just keeps connection alive
+            if ("ping".equals(type)) {
+                // keepalive — sem ação necessária
             }
+            // Mensagens "register" são ignoradas intencionalmente:
+            // o userId vem do JWT no handshake, não do cliente
         } catch (Exception e) {
-            logger.warn("Error processing WebSocket message: {}", payload, e);
+            logger.warn("Erro ao processar mensagem WS: {}", message.getPayload(), e);
         }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        logger.info("WebSocket connection closed: {}", session.getId());
         userSessions.values().removeIf(s -> s.getId().equals(session.getId()));
+        logger.info("Sessão {} encerrada ({})", session.getId(), status);
     }
 
     /**
-     * Sends a permission update event to a specific user.
+     * Envia permissions_updated para um usuário específico com projectId.
      */
-    public void sendPermissionUpdate(Long userId) {
+    public void sendPermissionUpdate(Long userId, Long projectId) {
         WebSocketSession session = userSessions.get(userId);
         if (session != null && session.isOpen()) {
             try {
-                String payload = "{\"type\": \"permissions_updated\", \"userId\": " + userId + "}";
+                String payload = String.format(
+                        "{\"type\":\"permissions_updated\",\"userId\":%d,\"projectId\":%d,\"timestamp\":%d}",
+                        userId, projectId, System.currentTimeMillis()
+                );
                 session.sendMessage(new TextMessage(payload));
-                logger.info("Sent permission update to user {}", userId);
+                logger.info("permissions_updated enviado para userId={}, projectId={}", userId, projectId);
             } catch (IOException e) {
-                logger.error("Failed to send permission update to user {}", userId, e);
+                logger.error("Falha ao enviar para userId={}: {}", userId, e.getMessage());
             }
+        } else {
+            logger.debug("Usuário {} sem sessão WS ativa — notificação ignorada", userId);
         }
     }
 
     /**
-     * Broadcasts a permission update event to all connected users.
+     * Mantido para compatibilidade — usa projectId 0 quando não disponível.
+     */
+    public void sendPermissionUpdate(Long userId) {
+        sendPermissionUpdate(userId, 0L);
+    }
+
+    /**
+     * Broadcast para todos os conectados.
      */
     public void broadcastPermissionUpdate() {
-        String payload = "{\"type\": \"permissions_updated\"}";
+        String payload = "{\"type\":\"permissions_updated\"}";
         TextMessage message = new TextMessage(payload);
-        
         userSessions.forEach((userId, session) -> {
             if (session.isOpen()) {
                 try {
                     session.sendMessage(message);
                 } catch (IOException e) {
-                    logger.error("Failed to broadcast to user {}", userId, e);
+                    logger.error("Falha no broadcast para userId={}: {}", userId, e.getMessage());
                 }
             }
         });
-        logger.info("Broadcasted permission update to all connected users");
+        logger.info("Broadcast permissions_updated para {} sessões", userSessions.size());
     }
 }

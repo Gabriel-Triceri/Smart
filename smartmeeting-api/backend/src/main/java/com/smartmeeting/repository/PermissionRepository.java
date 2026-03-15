@@ -20,7 +20,9 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
     @Cacheable(value = "permissions", key = "#id")
     Optional<Permission> findById(Long id);
 
-    @EntityGraph(value = "Permission.default")
+    // FIX: nome corrigido de "Permission.default" (não existe na entidade)
+    //      para  "Permission.semRelacoes"  (conforme @NamedEntityGraph na entidade Permission).
+    @EntityGraph(value = "Permission.semRelacoes")
     @Cacheable(value = "permissions", key = "#nome")
     Optional<Permission> findByNome(String nome);
 

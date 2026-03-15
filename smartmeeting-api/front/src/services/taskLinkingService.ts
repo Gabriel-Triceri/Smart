@@ -1,19 +1,22 @@
-// Service for handling task linking operations
-import axios from 'axios';
-
-const API_BASE_URL = '/api/task-linking';
+import api from './httpClient';
 
 export const taskLinkingService = {
     async getTarefasPorReuniao(reuniaoId: string): Promise<any[]> {
-        const response = await axios.get(`${API_BASE_URL}/reuniao/${reuniaoId}`);
-        return response.data;
+        try {
+            const response = await api.get(`/reunioes/${reuniaoId}/tarefas`);
+            return Array.isArray(response.data) ? response.data : [];
+        } catch (err: any) {
+            if (err.response?.status === 404) return [];
+            console.error('Erro ao buscar tarefas da reunião:', err);
+            return [];
+        }
     },
 
     async vincularTarefaAReuniao(tarefaId: string, reuniaoId: string): Promise<void> {
-        await axios.post(`${API_BASE_URL}/vincular`, { tarefaId, reuniaoId });
+        await api.post(`/reunioes/${reuniaoId}/tarefas/${tarefaId}`);
     },
 
     async desvincularTarefaDeReuniao(tarefaId: string, reuniaoId: string): Promise<void> {
-        await axios.post(`${API_BASE_URL}/desvincular`, { tarefaId, reuniaoId });
+        await api.delete(`/reunioes/${reuniaoId}/tarefas/${tarefaId}`);
     }
 };

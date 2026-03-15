@@ -37,6 +37,13 @@ app:
   jwt:
     secret: c2VjcmV0by1zdXBlci1zdXBlci1zZWd1cm8tcGFyYS1zbWFydG1lZXRpbmctYXBpLWp3dC1hdXRoZW50aWNhdGlvbg==
     expiration-ms: 86400000
+  # FIX: origens permitidas extraídas do código para configuração.
+  # SecurityConfig e WebSocketConfig lêem esta propriedade,
+  # evitando URLs hardcoded (inclusive o manus.computer de desenvolvimento).
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:3001
 
 logging:
   level:

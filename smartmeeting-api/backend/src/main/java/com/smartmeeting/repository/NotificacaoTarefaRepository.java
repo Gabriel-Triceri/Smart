@@ -10,9 +10,11 @@ import java.util.List;
 @Repository
 public interface NotificacaoTarefaRepository extends JpaRepository<NotificacaoTarefa, Long> {
 
-    @EntityGraph(value = "NotificacaoTarefa.comUsuarioETarefa")
+    // FIX: nome corrigido de "NotificacaoTarefa.comUsuarioETarefa"
+    //      para  "NotificacaoTarefa.comTarefaEUsuario"  (conforme definido na entidade).
+    @EntityGraph(value = "NotificacaoTarefa.comTarefaEUsuario")
     List<NotificacaoTarefa> findByUsuarioIdAndLidaFalseOrderByCreatedAtDesc(Long usuarioId);
 
-    @EntityGraph(value = "NotificacaoTarefa.comUsuarioETarefa")
+    @EntityGraph(value = "NotificacaoTarefa.comTarefaEUsuario")
     List<NotificacaoTarefa> findByUsuarioIdOrderByCreatedAtDesc(Long usuarioId);
 }

@@ -1,17 +1,26 @@
-// Service for handling history-related operations
-import axios from 'axios';
+import api from './httpClient';
 import { TarefaHistory } from '../types/meetings';
-
-const API_BASE_URL = '/api/history';
 
 export const historyService = {
     async getTarefaHistory(tarefaId: string): Promise<TarefaHistory[]> {
-        const response = await axios.get(`${API_BASE_URL}/tarefa/${tarefaId}`);
-        return response.data;
+        try {
+            const response = await api.get(`/tarefas/${tarefaId}/history`);
+            const data = response.data;
+            return Array.isArray(data) ? data : [];
+        } catch (err: any) {
+            if (err.response?.status === 404) return [];
+            console.error('Erro ao buscar histórico:', err);
+            return [];
+        }
     },
 
     async getStatisticsTarefas(): Promise<any> {
-        const response = await axios.get(`${API_BASE_URL}/statistics`);
-        return response.data;
+        try {
+            const response = await api.get('/tarefas/statistics');
+            return response.data;
+        } catch (err) {
+            console.error('Erro ao buscar estatísticas:', err);
+            return {};
+        }
     }
 };

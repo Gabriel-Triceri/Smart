@@ -17,19 +17,21 @@ import java.util.Optional;
 @Repository
 public interface TarefaHistoryRepository extends JpaRepository<TarefaHistory, Long> {
 
-    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
+    // FIX: nome corrigido de "TarefaHistory.comRelacionamentos"
+    //      para  "TarefaHistory.comTarefaEUsuario"  (conforme definido na entidade).
+    @EntityGraph(value = "TarefaHistory.comTarefaEUsuario")
     List<TarefaHistory> findByTarefaIdOrderByCreatedAtDesc(Long tarefaId);
 
-    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
+    @EntityGraph(value = "TarefaHistory.comTarefaEUsuario")
     Page<TarefaHistory> findByTarefaIdOrderByCreatedAtDesc(Long tarefaId, Pageable pageable);
 
-    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
+    @EntityGraph(value = "TarefaHistory.comTarefaEUsuario")
     List<TarefaHistory> findByTarefaIdAndActionType(Long tarefaId, HistoryActionType actionType);
 
-    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
+    @EntityGraph(value = "TarefaHistory.comTarefaEUsuario")
     List<TarefaHistory> findByUsuarioId(Long usuarioId);
 
-    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
+    @EntityGraph(value = "TarefaHistory.comTarefaEUsuario")
     @Query("SELECT th FROM TarefaHistory th WHERE th.tarefa.id = :tarefaId " +
             "AND th.createdAt BETWEEN :startDate AND :endDate ORDER BY th.createdAt DESC")
     List<TarefaHistory> findByTarefaIdAndDateRange(
@@ -37,12 +39,12 @@ public interface TarefaHistoryRepository extends JpaRepository<TarefaHistory, Lo
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
-    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
+    @EntityGraph(value = "TarefaHistory.comTarefaEUsuario")
     @Query("SELECT th FROM TarefaHistory th WHERE th.tarefa.project.id = :projectId " +
             "ORDER BY th.createdAt DESC")
     List<TarefaHistory> findByProjectId(@Param("projectId") Long projectId);
 
-    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
+    @EntityGraph(value = "TarefaHistory.comTarefaEUsuario")
     @Query("SELECT th FROM TarefaHistory th WHERE th.tarefa.project.id = :projectId " +
             "ORDER BY th.createdAt DESC")
     Page<TarefaHistory> findByProjectId(@Param("projectId") Long projectId, Pageable pageable);
@@ -78,7 +80,7 @@ public interface TarefaHistoryRepository extends JpaRepository<TarefaHistory, Lo
 
     void deleteByTarefaId(Long tarefaId);
 
-    @EntityGraph(value = "TarefaHistory.comRelacionamentos")
+    @EntityGraph(value = "TarefaHistory.comTarefaEUsuario")
     Optional<TarefaHistory> findTopByTarefaIdAndActionTypeAndFieldNameAndOldValueAndNewValueAndDescriptionOrderByCreatedAtDesc(
             Long tarefaId,
             HistoryActionType actionType,
