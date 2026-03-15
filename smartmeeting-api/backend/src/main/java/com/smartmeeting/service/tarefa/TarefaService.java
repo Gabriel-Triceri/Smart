@@ -12,10 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Orquestrador público que expõe a API de TarefaService.
- * Delega para serviços especializados.
- */
 @Service
 @RequiredArgsConstructor
 public class TarefaService {
@@ -82,7 +78,7 @@ public class TarefaService {
     }
 
     public List<TarefaDTO> criarTarefasPorTemplate(Long templateId, List<Long> responsaveisIds,
-            List<String> datasVencimento, Long reuniaoId) {
+                                                   List<String> datasVencimento, Long reuniaoId) {
         return crudService.criarTarefasPorTemplate(templateId, responsaveisIds, datasVencimento, reuniaoId);
     }
 
@@ -120,13 +116,11 @@ public class TarefaService {
 
     // History
     public TarefaHistory registrarAlteracao(Tarefa tarefa, String campo, String valorAntigo,
-            String valorNovo, Pessoa autor) {
+                                            String valorNovo, Pessoa autor) {
         return historyService.registrarHistorico(
                 tarefa.getId(),
                 com.smartmeeting.enums.HistoryActionType.UPDATED,
-                campo,
-                valorAntigo,
-                valorNovo,
+                campo, valorAntigo, valorNovo,
                 "Alteração em " + campo);
     }
 

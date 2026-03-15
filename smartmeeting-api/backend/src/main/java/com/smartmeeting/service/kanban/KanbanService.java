@@ -4,11 +4,11 @@ import com.smartmeeting.dto.*;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.mapper.TarefaMapperService;
 import com.smartmeeting.model.KanbanColumnDynamic;
-import com.smartmeeting.model.Project;
 import com.smartmeeting.model.Tarefa;
 import com.smartmeeting.repository.ReuniaoRepository;
 import com.smartmeeting.repository.TarefaRepository;
 import com.smartmeeting.repository.KanbanColumnDynamicRepository;
+import com.smartmeeting.service.flow.FlowConnectionService;
 import com.smartmeeting.service.tarefa.TarefaHistoryService;
 import com.smartmeeting.service.tarefa.TarefaMovimentacaoService;
 import org.slf4j.Logger;
@@ -33,15 +33,17 @@ public class KanbanService {
     private final ReuniaoRepository reuniaoRepository;
     private final KanbanColumnInitializationService columnInitializationService;
     private final ProjectStatusService projectStatusService;
+    private final FlowConnectionService flowConnectionService;   // <-- NOVO
 
     public KanbanService(TarefaRepository tarefaRepository,
-            TarefaMapperService mapper,
-            TarefaHistoryService historyService,
-            TarefaMovimentacaoService movimentacaoService,
-            KanbanColumnDynamicRepository columnRepository,
-            ReuniaoRepository reuniaoRepository,
-            KanbanColumnInitializationService columnInitializationService,
-            ProjectStatusService projectStatusService) {
+                         TarefaMapperService mapper,
+                         TarefaHistoryService historyService,
+                         TarefaMovimentacaoService movimentacaoService,
+                         KanbanColumnDynamicRepository columnRepository,
+                         ReuniaoRepository reuniaoRepository,
+                         KanbanColumnInitializationService columnInitializationService,
+                         ProjectStatusService projectStatusService,
+                         FlowConnectionService flowConnectionService) {          // <-- NOVO
         this.tarefaRepository = tarefaRepository;
         this.mapper = mapper;
         this.historyService = historyService;
@@ -50,7 +52,10 @@ public class KanbanService {
         this.reuniaoRepository = reuniaoRepository;
         this.columnInitializationService = columnInitializationService;
         this.projectStatusService = projectStatusService;
+        this.flowConnectionService = flowConnectionService;        // <-- NOVO
     }
+
+    // ─── getKanbanBoard (por reunião) ──────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public KanbanBoardDTO getKanbanBoard(Long reuniaoId) {
@@ -73,7 +78,7 @@ public class KanbanService {
                 columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
             }
 
-            final Long defaultColId = (columns.isEmpty()) ? null : columns.get(0).getId();
+            final Long defaultColId = columns.isEmpty() ? null : columns.get(0).getId();
 
             Map<Long, List<TarefaDTO>> tarefasPorColuna = tarefas.stream()
                     .map(t -> {
@@ -89,96 +94,24 @@ public class KanbanService {
             List<KanbanColumnDTO> colunasDTO = columns.stream()
                     .map(col -> {
                         List<TarefaDTO> tarefasDaColuna = tarefasPorColuna.getOrDefault(col.getId(), new ArrayList<>());
-                        // Ordena por posição se disponível
-                        tarefasDaColuna
-                                .sort(Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
-                        return new KanbanColumnDTO(col.getId(), col.getTitle(), tarefasDaColuna, col.getWipLimit(),
-                                col.getColor(), col.getOrdem());
+                        tarefasDaColuna.sort(
+                                Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
+                        return new KanbanColumnDTO(col.getId(), col.getTitle(), tarefasDaColuna,
+                                col.getWipLimit(), col.getColor(), col.getOrdem());
                     })
                     .collect(Collectors.toList());
 
-            return new KanbanBoardDTO("kanban-board-principal", "Board de Tarefas", reuniaoId, colunasDTO,
-                    LocalDateTime.now(), LocalDateTime.now());
+            return new KanbanBoardDTO("kanban-board-principal", "Board de Tarefas", reuniaoId,
+                    colunasDTO, LocalDateTime.now(), LocalDateTime.now());
         } catch (Exception e) {
             logger.error("Error retrieving Kanban Board for reuniaoId {}: {}", reuniaoId, e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve Kanban Board", e);
         }
     }
 
-    @Transactional
-    public TarefaDTO moverTarefa(Long tarefaId, Long newColumnId, Integer newPosition) {
-        KanbanColumnDynamic newColumn = columnRepository.findById(newColumnId)
-                .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada: " + newColumnId));
-        return moveTask(tarefaId, newColumn, newPosition);
-    }
-
-    @Transactional
-    public TarefaDTO moverTarefaPorColumnKey(Long tarefaId, String columnKey, Integer newPosition) {
-        Tarefa tarefa = tarefaRepository.findById(tarefaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
-
-        KanbanColumnDynamic newColumn = columnRepository
-                .findByProjectIdAndColumnKeyAndIsActiveTrue(tarefa.getProject().getId(), columnKey)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Coluna com columnKey '" + columnKey + "' não encontrada para o projeto da tarefa."));
-
-        return moveTask(tarefaId, newColumn, newPosition);
-    }
-
-    private TarefaDTO moveTask(Long tarefaId, KanbanColumnDynamic newColumn, Integer newPosition) {
-        Tarefa tarefa = tarefaRepository.findById(tarefaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
-
-        String statusAntigo = tarefa.getColumn() != null ? tarefa.getColumn().getTitle() : "Sem Coluna";
-        Long oldColumnId = tarefa.getColumn() != null ? tarefa.getColumn().getId() : null;
-        Integer oldPosition = tarefa.getProgresso();
-
-        if (newColumn.getId().equals(oldColumnId)) {
-            logger.info("Tarefa {} já está na coluna {}", tarefaId, newColumn.getTitle());
-            return mapper.toDTO(tarefa);
-        }
-
-        if (oldColumnId != null) {
-            tarefaRepository.decrementarProgressoApos(oldColumnId, oldPosition);
-        }
-
-        tarefaRepository.incrementarProgressoApos(newColumn.getId(), newPosition);
-
-        tarefa.setColumn(newColumn);
-        tarefa.setProgresso(newPosition);
-        Tarefa updated = tarefaRepository.save(tarefa);
-        tarefaRepository.flush();
-        updated = tarefaRepository.findById(tarefaId).orElse(updated);
-
-        historyService.registrarMudancaStatus(tarefa, statusAntigo, newColumn.getTitle());
-
-        Long usuarioId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
-        String usuarioNome = com.smartmeeting.util.SecurityUtils.getCurrentUsername();
-
-        movimentacaoService.registrarMovimentacao(new MovimentacaoTarefaDTO(
-                tarefaId,
-                statusAntigo,
-                newColumn.getTitle(),
-                String.valueOf(usuarioId),
-                usuarioNome,
-                LocalDateTime.now()));
-
-        if (tarefa.getProject() != null) {
-            projectStatusService.updateProjectStatus(tarefa.getProject().getId());
-        }
-
-        return mapper.toDTO(updated);
-    }
+    // ─── getKanbanBoardByProject ───────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<KanbanColumnConfig> getKanbanColumns(Long projectId) {
-        List<KanbanColumnDynamic> columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
-        return columns.stream()
-                .map(c -> new KanbanColumnConfig(c.getColumnKey(), c.getTitle()))
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
     public KanbanBoardDTO getKanbanBoardByProject(Long projectId) {
         try {
             List<Tarefa> tarefas = tarefaRepository.findByProjectId(projectId);
@@ -190,8 +123,6 @@ public class KanbanService {
                 columnInitializationService.initializeDefaultColumns(projectId);
                 columns = columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
             }
-
-            final List<KanbanColumnDynamic> finalColumns = columns;
 
             final Long finalDefaultColId = columns.isEmpty() ? null : getDefaultColumnId(columns);
 
@@ -208,28 +139,122 @@ public class KanbanService {
 
             List<KanbanColumnDTO> colunasDTO = columns.stream()
                     .map(col -> {
-                        List<TarefaDTO> tarefasDaColuna = tarefasPorColuna.getOrDefault(col.getId(), new ArrayList<>());
-                        tarefasDaColuna
-                                .sort(Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
-                        return new KanbanColumnDTO(col.getId(), col.getTitle(), tarefasDaColuna, col.getWipLimit(),
-                                col.getColor(), col.getOrdem());
+                        List<TarefaDTO> tarefasDaColuna = tarefasPorColuna
+                                .getOrDefault(col.getId(), new ArrayList<>());
+                        tarefasDaColuna.sort(
+                                Comparator.comparingInt(t -> t.getProgresso() != null ? t.getProgresso() : 0));
+                        return new KanbanColumnDTO(col.getId(), col.getTitle(), tarefasDaColuna,
+                                col.getWipLimit(), col.getColor(), col.getOrdem());
                     })
                     .collect(Collectors.toList());
 
-            return new KanbanBoardDTO("kanban-board-project", "Board de Tarefas por Projeto", projectId, colunasDTO,
-                    LocalDateTime.now(), LocalDateTime.now());
+            return new KanbanBoardDTO("kanban-board-project", "Board de Tarefas por Projeto",
+                    projectId, colunasDTO, LocalDateTime.now(), LocalDateTime.now());
         } catch (Exception e) {
             logger.error("Error retrieving Kanban Board for projectId {}: {}", projectId, e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve Kanban Board", e);
         }
     }
 
+    // ─── moverTarefa (por ID de coluna) ───────────────────────────────────────
+
+    @Transactional
+    public TarefaDTO moverTarefa(Long tarefaId, Long newColumnId, Integer newPosition) {
+        KanbanColumnDynamic newColumn = columnRepository.findById(newColumnId)
+                .orElseThrow(() -> new ResourceNotFoundException("Coluna não encontrada: " + newColumnId));
+        return moveTask(tarefaId, newColumn, newPosition);
+    }
+
+    // ─── moverTarefaPorColumnKey ───────────────────────────────────────────────
+
+    @Transactional
+    public TarefaDTO moverTarefaPorColumnKey(Long tarefaId, String columnKey, Integer newPosition) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        KanbanColumnDynamic newColumn = columnRepository
+                .findByProjectIdAndColumnKeyAndIsActiveTrue(tarefa.getProject().getId(), columnKey)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Coluna com columnKey '" + columnKey + "' não encontrada para o projeto da tarefa."));
+
+        return moveTask(tarefaId, newColumn, newPosition);
+    }
+
+    // ─── getKanbanColumns ─────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<KanbanColumnConfig> getKanbanColumns(Long projectId) {
+        List<KanbanColumnDynamic> columns =
+                columnRepository.findByProjectIdAndIsActiveTrueOrderByOrdemAsc(projectId);
+        return columns.stream()
+                .map(c -> new KanbanColumnConfig(c.getColumnKey(), c.getTitle()))
+                .collect(Collectors.toList());
+    }
+
+    // ─── moveTask (privado) ────────────────────────────────────────────────────
+
+    private TarefaDTO moveTask(Long tarefaId, KanbanColumnDynamic newColumn, Integer newPosition) {
+        Tarefa tarefa = tarefaRepository.findById(tarefaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com ID: " + tarefaId));
+
+        String statusAntigo = tarefa.getColumn() != null ? tarefa.getColumn().getTitle() : "Sem Coluna";
+        Long oldColumnId    = tarefa.getColumn() != null ? tarefa.getColumn().getId()    : null;
+        Integer oldPosition = tarefa.getProgresso();
+
+        if (newColumn.getId().equals(oldColumnId)) {
+            logger.info("Tarefa {} já está na coluna {}", tarefaId, newColumn.getTitle());
+            return mapper.toDTO(tarefa);
+        }
+
+        if (oldColumnId != null) {
+            tarefaRepository.decrementarProgressoApos(oldColumnId, oldPosition);
+        }
+        tarefaRepository.incrementarProgressoApos(newColumn.getId(), newPosition);
+
+        tarefa.setColumn(newColumn);
+        tarefa.setProgresso(newPosition);
+        Tarefa updated = tarefaRepository.save(tarefa);
+        tarefaRepository.flush();
+        updated = tarefaRepository.findById(tarefaId).orElse(updated);
+
+        historyService.registrarMudancaStatus(tarefa, statusAntigo, newColumn.getTitle());
+
+        Long   usuarioId   = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        String usuarioNome = com.smartmeeting.util.SecurityUtils.getCurrentUsername();
+
+        movimentacaoService.registrarMovimentacao(new MovimentacaoTarefaDTO(
+                tarefaId, statusAntigo, newColumn.getTitle(),
+                String.valueOf(usuarioId), usuarioNome, LocalDateTime.now()));
+
+        if (tarefa.getProject() != null) {
+            projectStatusService.updateProjectStatus(tarefa.getProject().getId());
+        }
+
+        // ── FLOW CONNECTION TRIGGER ────────────────────────────────────────────
+        try {
+            List<FlowConnectionResultDTO> flowResults =
+                    flowConnectionService.dispararConexoes(tarefaId, newColumn.getId());
+
+            if (!flowResults.isEmpty()) {
+                long gerados = flowResults.stream().filter(r -> !r.isSkippedDuplicate()).count();
+                logger.info("FlowConnections: tarefa {} → {} card(s) gerado(s)", tarefaId, gerados);
+            }
+        } catch (Exception e) {
+            // Não falha a movimentação por erros nas conexões
+            logger.error("Erro ao disparar FlowConnections para tarefa {}: {}", tarefaId, e.getMessage(), e);
+        }
+        // ──────────────────────────────────────────────────────────────────────
+
+        return mapper.toDTO(updated);
+    }
+
+    // ─── helper ───────────────────────────────────────────────────────────────
+
     private Long getDefaultColumnId(List<KanbanColumnDynamic> columns) {
         return columns.stream()
                 .filter(KanbanColumnDynamic::isDefault)
                 .map(KanbanColumnDynamic::getId)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Default column not found for the project"));
+                .orElse(columns.get(0).getId());
     }
-
 }
