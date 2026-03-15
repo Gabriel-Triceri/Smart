@@ -6,25 +6,25 @@ import { SalaManager } from './components/salas/SalaManager';
 import { TaskManager } from './components/tasks/TaskManager';
 import { PermissionManager } from './components/permissions/PermissionManager';
 import { ProjectManager } from './components/projects/ProjectManager';
+import { FlowConnectionManager } from './components/projects/FlowConnectionManager';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
 import ThemeToggle from './components/common/ThemeToggle';
 import UserMenu from './components/common/UserMenu';
-import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X, Briefcase } from 'lucide-react';
+import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X, Briefcase, GitBranch } from 'lucide-react';
 import { inicializarDados } from './services/seedData';
 import { authService } from './services/authService';
 import { usePermissionWebSocket } from './hooks/usePermissionWebSocket';
 import { usePermissionCache } from './hooks/usePermissionCache';
 
-type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas' | 'permissions' | 'projects';
+// FIX #5: FlowConnections adicionado como view válida
+type ActiveView = 'dashboard' | 'meetings' | 'salas' | 'tarefas' | 'permissions' | 'projects' | 'flows';
 
 interface NavigationItem {
     id: ActiveView;
     label: string;
     description: string;
     icon: React.FC<{ className?: string }>;
-    /** Roles permitidas para ver este item de navegacao */
     allowedRoles?: string[];
-    /** Permissoes permitidas para ver este item de navegacao */
     allowedPermissions?: string[];
 }
 
@@ -36,20 +36,16 @@ interface NavigationProps {
     setShowMobile?: (state: boolean) => void;
 }
 
-
 function Navigation({ activeView, setActiveView, items, showMobile = false, setShowMobile }: NavigationProps) {
     const userRoles = authService.getRoles();
 
-    // Filtrar itens baseado nas roles e permissoes do usuario
     const visibleItems = items.filter(item => {
         const userPermissions = authService.getPermissions();
 
-        // Se tiver roles especificas, verifica
         const roleMatch = !item.allowedRoles ||
             item.allowedRoles.length === 0 ||
             item.allowedRoles.some(role => userRoles.includes(role));
 
-        // Se tiver permissoes especificas, verifica
         const permissionMatch = !item.allowedPermissions ||
             item.allowedPermissions.length === 0 ||
             item.allowedPermissions.some(perm => userPermissions.includes(perm));
@@ -60,7 +56,6 @@ function Navigation({ activeView, setActiveView, items, showMobile = false, setS
     return (
         <nav className={`${showMobile ? 'space-y-2 py-4 border-t border-mono-200 dark:border-mono-700 md:hidden' : 'hidden md:flex items-center space-x-1'}`}>
             {visibleItems.map(item => {
-
                 const Icon = item.icon;
                 const isActive = activeView === item.id;
 
@@ -99,28 +94,24 @@ function App() {
 
     const { refreshAll } = usePermissionCache();
 
-    // Callback quando permissoes sao atualizadas via WebSocket
     const handlePermissionsUpdated = useCallback((_projectId: number) => {
-        // Busca os novos dados do backend assim que receber o evento
         refreshAll().then(() => {
-            // Incrementa a key para forcar re-render dos componentes filhos com os dados novos
             setRefreshKey(prev => prev + 1);
         });
     }, [refreshAll]);
 
-    // Conectar ao WebSocket de permissoes
     usePermissionWebSocket({
         onPermissionsUpdated: handlePermissionsUpdated,
     });
 
     useEffect(() => {
         setMounted(true);
+        // FIX #5: 'flows' adicionado à lista de views válidas para persistência
         const savedView = localStorage.getItem('smartmeeting-active-view') as ActiveView;
-        if (savedView && ['dashboard', 'meetings', 'salas', 'tarefas', 'permissions', 'projects'].includes(savedView)) {
+        if (savedView && ['dashboard', 'meetings', 'salas', 'tarefas', 'permissions', 'projects', 'flows'].includes(savedView)) {
             setActiveView(savedView);
         }
 
-        // Inicializar dados após login
         inicializarDados().catch(err => {
             console.error('Erro ao inicializar dados:', err);
         });
@@ -162,7 +153,14 @@ function App() {
             icon: Briefcase,
             allowedPermissions: ['PROJECT_VIEW']
         },
-        // Gestao de Permissoes - Requer permissao ADMIN_MANAGE_ROLES
+        // FIX #5: FlowConnectionManager agora aparece na navegação
+        {
+            id: 'flows',
+            label: 'Fluxos',
+            description: 'Conexoes entre projetos',
+            icon: GitBranch,
+            allowedPermissions: ['PROJECT_VIEW']
+        },
         {
             id: 'permissions',
             label: 'Permissoes',
@@ -172,21 +170,21 @@ function App() {
         }
     ], []);
 
-    // Os componentes usam refreshKey para re-renderizar quando permissoes mudam
     const viewComponents: Record<ActiveView, React.ReactNode> = {
         dashboard: <HomeDashboard key={`dashboard-${refreshKey}`} />,
         meetings: <MeetingManager key={`meetings-${refreshKey}`} />,
         salas: <SalaManager key={`salas-${refreshKey}`} />,
         tarefas: <TaskManager key={`tarefas-${refreshKey}`} />,
         permissions: <PermissionManager key={`permissions-${refreshKey}`} />,
-        projects: <ProjectManager key={`projects-${refreshKey}`} />
+        projects: <ProjectManager key={`projects-${refreshKey}`} />,
+        // FIX #5: componente FlowConnectionManager renderizado quando view === 'flows'
+        flows: <FlowConnectionManager key={`flows-${refreshKey}`} />,
     };
 
     if (!mounted) return <LoadingSkeleton />;
 
     return (
         <ErrorBoundary>
-            {/* Removido: <ThemeProvider> */}
             <div className="min-h-screen bg-mono-50 dark:bg-mono-900 transition-colors duration-300">
                 {/* Cabeçalho */}
                 <header className="bg-white dark:bg-mono-800 shadow-sm border-b border-mono-200 dark:border-mono-700 sticky top-0 z-30">
@@ -211,10 +209,7 @@ function App() {
                             {/* Botão de tema, menu do usuário e menu mobile */}
                             <div className="flex items-center gap-2">
                                 <ThemeToggle />
-
-                                {/* Menu do usuário logado */}
                                 <UserMenu />
-
                                 <button
                                     onClick={() => setShowNavigation(!showNavigation)}
                                     className="md:hidden p-2 text-mono-600 dark:text-mono-400 hover:text-mono-900 dark:hover:text-mono-100 hover:bg-mono-50 dark:hover:bg-mono-700 rounded-lg transition-colors"
@@ -227,7 +222,13 @@ function App() {
 
                         {/* Navegação mobile */}
                         {showNavigation && (
-                            <Navigation activeView={activeView} setActiveView={setActiveView} items={navigationItems} showMobile setShowMobile={setShowNavigation} />
+                            <Navigation
+                                activeView={activeView}
+                                setActiveView={setActiveView}
+                                items={navigationItems}
+                                showMobile
+                                setShowMobile={setShowNavigation}
+                            />
                         )}
                     </div>
                 </header>
@@ -255,7 +256,6 @@ function App() {
             </div>
         </ErrorBoundary>
     );
-
 }
 
 export default App;

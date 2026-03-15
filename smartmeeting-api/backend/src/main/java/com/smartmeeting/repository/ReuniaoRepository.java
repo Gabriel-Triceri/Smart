@@ -31,25 +31,28 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
     @EntityGraph(value = "Reuniao.completa")
     Optional<Reuniao> findById(Long id);
 
-    @EntityGraph(value = "Reuniao.comSalaEParticipantes")
+    // FIX: "Reuniao.comSalaEParticipantes" não existe na entidade Reuniao.
+    // Os graphs disponíveis são: "Reuniao.comOrganizadorESala", "Reuniao.completa", "Reuniao.paraListagem".
+    // Substituído por "Reuniao.completa" que carrega organizador, sala, participantes e project.
+    @EntityGraph(value = "Reuniao.completa")
     List<Reuniao> findByDataHoraInicioBetweenAndStatus(
             LocalDateTime inicio,
             LocalDateTime fim,
             StatusReuniao status
     );
 
-    @EntityGraph(value = "Reuniao.comSalaEParticipantes")
+    @EntityGraph(value = "Reuniao.completa")
     List<Reuniao> findByDataHoraInicioBetween(LocalDateTime inicio, LocalDateTime fim);
 
-    @EntityGraph(value = "Reuniao.comSalaEParticipantes")
+    @EntityGraph(value = "Reuniao.completa")
     List<Reuniao> findByStatus(StatusReuniao status);
 
     long countByStatus(StatusReuniao status);
 
-    @EntityGraph(value = "Reuniao.comSalaEParticipantes")
+    @EntityGraph(value = "Reuniao.completa")
     List<Reuniao> findByOrganizadorId(Long organizadorId);
 
-    @EntityGraph(value = "Reuniao.comSalaEParticipantes")
+    @EntityGraph(value = "Reuniao.completa")
     @Query("SELECT r FROM Reuniao r JOIN r.participantes p WHERE p.id = :pessoaId")
     List<Reuniao> findByParticipanteId(@Param("pessoaId") Long pessoaId);
 

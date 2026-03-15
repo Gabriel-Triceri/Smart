@@ -26,7 +26,7 @@ export const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...props}>{children}</Droppable>;
 };
 
-/* Ícones (pequenos componentes SVG) - OMITIDOS PARA BREVIDADE */
+/* Ícones */
 const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" {...props}>
     <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -73,11 +73,8 @@ const ShieldIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   </svg>
 );
 
-
-// Palette
 const COLUMN_COLORS = ['#64748b', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
 
-// Accent classes for status dots (tailwind-ish)
 const COLUMN_ACCENTS: Record<StatusTarefa, string> = {
   [StatusTarefa.TODO]: 'bg-slate-400',
   [StatusTarefa.IN_PROGRESS]: 'bg-blue-500',
@@ -85,25 +82,20 @@ const COLUMN_ACCENTS: Record<StatusTarefa, string> = {
   [StatusTarefa.DONE]: 'bg-emerald-500',
 };
 
-// As colunas padrão ainda usam o Enum para STATUS e ID (para fins de compatibilidade global)
 const DEFAULT_COLUMNS_VISUAL = [
-  { id: StatusTarefa.TODO, title: 'Não Iniciado', backendId: '1' }, // ID Fixo
+  { id: StatusTarefa.TODO, title: 'Não Iniciado', backendId: '1' },
   { id: StatusTarefa.IN_PROGRESS, title: 'Em Andamento', backendId: '2' },
   { id: StatusTarefa.REVIEW, title: 'Em Revisão', backendId: '3' },
   { id: StatusTarefa.DONE, title: 'Concluído', backendId: '4' },
 ];
 
-// O tipo KanbanDroppableId define o que é usado como ID de coluna para Drag & Drop e no estado
 type KanbanDroppableId = string;
 
-// ATUALIZAÇÃO CRÍTICA: O ID para Drag & Drop agora é uma string (que pode ser o StatusTarefa para defaults
-// ou o ID da coluna dinâmica).
 type KanbanBoardColumn = {
-  status: StatusTarefa; // Mantido para lógica de cor/acento (não é o ID para o Backend)
+  status: StatusTarefa;
   title: string;
-  id: KanbanDroppableId; // O ID usado para D&D e enviado ao Backend no caso dinâmico
+  id: KanbanDroppableId;
   isDefault?: boolean;
-  // Adicionamos o ID da coluna Kanban (o Long/string do Backend) para o payload de movimento
   kanbanColumnId: string;
 };
 
@@ -112,7 +104,6 @@ interface KanbanBoardProps {
   assignees: Assignee[];
   loading?: boolean;
   projectId?: string | null;
-  // CORREÇÃO CRÍTICA: onMoveTask agora espera o ID da coluna (string) e a nova posição (number)
   onMoveTask: (tarefaId: string, novoIdColuna: string, novaPosicao: number) => void;
   onDeleteTask: (tarefaId: string) => void;
   onDuplicateTask: (tarefaId: string) => void;
@@ -135,11 +126,10 @@ export function KanbanBoard({
   const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
   const [columns, setColumns] = useState<KanbanBoardColumn[]>([]);
   const [dynamicColumns, setDynamicColumns] = useState<KanbanColumnDynamic[]>([]);
-  const [editingColumn, setEditingColumn] = useState<KanbanDroppableId | null>(null); // Atualizado para usar KanbanDroppableId
+  const [editingColumn, setEditingColumn] = useState<KanbanDroppableId | null>(null);
   const [tempTitle, setTempTitle] = useState('');
-  const [openDropdownForColumn, setOpenDropdownForColumn] = useState<KanbanDroppableId | null>(null); // Atualizado para usar KanbanDroppableId
+  const [openDropdownForColumn, setOpenDropdownForColumn] = useState<KanbanDroppableId | null>(null);
 
-  // Add column modal state
   const [showAddColumnModal, setShowAddColumnModal] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [newColumnColor, setNewColumnColor] = useState(COLUMN_COLORS[0]);
@@ -147,19 +137,17 @@ export function KanbanBoard({
 
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
 
-  // Load static/global columns when not in a project
   useEffect(() => {
     if (!projectId) loadGlobalColumns();
   }, [projectId]);
 
   const loadGlobalColumns = async () => {
     try {
-      // Corrected: Use backendId for kanbanColumnId to match task.columnId values (1, 2, 3, 4)
       setColumns(DEFAULT_COLUMNS_VISUAL.map(c => ({
         status: c.id,
         title: c.title,
-        id: c.id, // StatusTarefa is used as DroppableId for global columns
-        kanbanColumnId: c.backendId, // Send '1', '2', etc. to backend and use for matching
+        id: c.id,
+        kanbanColumnId: c.backendId,
       })));
     } catch (err) {
       console.error('Erro ao carregar colunas globais:', err);
@@ -167,12 +155,11 @@ export function KanbanBoard({
     }
   };
 
-  // Reset and Load dynamic columns for project (if projectId provided)
   useEffect(() => {
     if (projectId) {
       console.log(`[KanbanBoard] Mudando para projeto ${projectId}. Limpando colunas antigas.`);
-      setDynamicColumns([]); // Limpa colunas do projeto anterior
-      setColumns([]); // Limpa visualização anterior
+      setDynamicColumns([]);
+      setColumns([]);
       loadDynamicColumns();
     } else {
       loadGlobalColumns();
@@ -182,15 +169,10 @@ export function KanbanBoard({
   const loadDynamicColumns = async () => {
     if (!projectId) return;
     try {
-      console.log(`[KanbanBoard] Buscando colunas para ${projectId}...`);
       const cols = await projectService.getKanbanColumnsByProject(String(projectId));
-      console.log(`[KanbanBoard] Colunas recebidas do backend para ${projectId}:`, cols);
-
       const activeCols = (cols || []).filter(c => c.isActive);
       setDynamicColumns(activeCols);
 
-      // Se não houver colunas (nem padrões), o backend deveria ter inicializado, 
-      // mas se voltar vazio, usamos o fallback global visual
       if (activeCols.length === 0) {
         console.warn(`[KanbanBoard] Projeto ${projectId} retornou 0 colunas ativas.`);
         loadGlobalColumns();
@@ -202,10 +184,8 @@ export function KanbanBoard({
     }
   };
 
-  // When dynamic columns change, map them to display columns
   useEffect(() => {
     if (projectId && dynamicColumns.length > 0) {
-      console.log(`[KanbanBoard] Mapeando ${dynamicColumns.length} colunas dinâmicas para exibição.`);
       try {
         const mapped = [...dynamicColumns]
           .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
@@ -224,27 +204,31 @@ export function KanbanBoard({
     }
   }, [dynamicColumns, projectId]);
 
-  // Group tarefas by columnId with Fallback Logic
+  // FIX #6: normaliza o status da tarefa para lowercase antes de comparar com col.status
+  // (col.status vem dos enums que são lowercase: 'todo', 'in_progress', etc.)
+  // Antes, tarefas com status 'TODO' (uppercase do backend) não eram alocadas em nenhuma coluna.
+  const normalizeTaskStatus = (status: string): string => String(status).toLowerCase();
+
   const validColumnIds = new Set(columns.map(c => String(c.kanbanColumnId)));
 
   const tarefasPorColuna: Record<KanbanDroppableId, Tarefa[]> = columns.reduce((acc, col) => {
     acc[col.id] = tarefas.filter(t => {
       const taskColId = t.columnId ? String(t.columnId) : null;
 
-      // 1. Precise Match: Task columnId matches Column backend ID
+      // Precise match: Task columnId matches Column backend ID
       const matchId = taskColId === String(col.kanbanColumnId);
 
-      // 2. Fallback Match: Task has NO columnId, OR its columnId is not in the current board
-      // AND its status matches the Column Status
+      // FIX #6: normaliza status para lowercase antes de comparar
       const isOrphan = !taskColId || taskColId === '0' || !validColumnIds.has(taskColId);
-      const matchStatus = isOrphan && t.status === col.status;
+      const taskStatusNormalized = normalizeTaskStatus(t.status);
+      const colStatusNormalized = normalizeTaskStatus(col.status);
+      const matchStatus = isOrphan && taskStatusNormalized === colStatusNormalized;
 
       return matchId || matchStatus;
     }).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
     return acc;
   }, {} as Record<KanbanDroppableId, Tarefa[]>);
 
-  // --- Funções de Coluna (handleStartEditColumn, etc. usam o ID da coluna como referência) ---
   const handleStartEditColumn = (col: KanbanBoardColumn) => {
     setEditingColumn(col.id);
     setTempTitle(col.title);
@@ -262,13 +246,11 @@ export function KanbanBoard({
     if (!tempTitle.trim()) return;
     try {
       if (projectId) {
-        // Se estiver em um projeto, usa o serviço de colunas dinâmicas
         const updated = await projectService.updateKanbanColumnDynamic(String(projectId), columnId, {
           title: tempTitle.trim()
         });
         setDynamicColumns(prev => prev.map(c => (String(c.id) === columnId ? updated : c)));
       } else {
-        // Fallback para colunas globais (legado)
         const column = columns.find(c => c.id === columnId);
         if (column) {
           const updated = await kanbanService.updateKanbanColumn(column.status, tempTitle.trim());
@@ -304,10 +286,7 @@ export function KanbanBoard({
 
     try {
       await projectService.deleteKanbanColumnDynamic(String(projectId), columnId);
-      // Recarrega as colunas e tarefas para garantir sincronia após o movimento de tarefas no backend
       await loadDynamicColumns();
-      // Opcional: disparar um refresh global de tarefas se necessário, 
-      // mas o loadDynamicColumns já deve atualizar a visão do board.
     } catch (err: any) {
       console.error('Erro ao deletar coluna dinâmica:', err);
       alert('Erro ao excluir coluna: ' + (err?.response?.data?.message || err?.message));
@@ -318,11 +297,9 @@ export function KanbanBoard({
     if (column.id && !column.isDefault) handleDeleteDynamicColumn(column.id);
     setOpenDropdownForColumn(null);
   };
-  // ---------------------------------------------------------------------------------------------
 
-  // Add new dynamic column
   const handleAddDynamicColumn = async () => {
-    if (!projectId) return alert('ID do projeto não encontrado. Verifique se você está em um projeto.');
+    if (!projectId) return alert('ID do projeto não encontrado.');
     if (!newColumnTitle.trim()) return alert('Título da coluna é obrigatório.');
     try {
       setAddingColumn(true);
@@ -335,8 +312,6 @@ export function KanbanBoard({
       };
 
       await projectService.createKanbanColumnDynamic(payload);
-
-      // RE-LOAD: Sincroniza todas as colunas (incluindo as padrões inicializadas pelo backend)
       await loadDynamicColumns();
 
       setNewColumnTitle('');
@@ -351,7 +326,6 @@ export function KanbanBoard({
     }
   };
 
-  // Task handlers
   const handleAddTask = () => {
     setSelectedTask(null);
     setShowTaskForm(true);
@@ -365,20 +339,16 @@ export function KanbanBoard({
     setShowTaskForm(false);
     setSelectedTask(null);
 
-    // Se o projeto não tinha colunas (estava usando fallbacks), recarrega as colunas
-    // pois a criação da primeira tarefa gatilha a inicialização no backend.
     if (projectId && dynamicColumns.length === 0) {
       await loadDynamicColumns();
     }
   };
 
-  // Drag & Drop handler delegates movement to parent via onMoveTask
   const onDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    // Lógica para reordenação de colunas (se implementado Draggable nas colunas)
     if (type === 'COLUMN') {
       const newColumns = Array.from(columns);
       const [removed] = newColumns.splice(source.index, 1);
@@ -397,21 +367,15 @@ export function KanbanBoard({
       return;
     }
 
-    // 1. Encontra a coluna de destino (usa o droppableId - que agora é o ID da coluna)
     const targetColumn = columns.find(c => c.id === destination.droppableId);
     if (!targetColumn) {
       console.error(`Coluna de destino não encontrada: ${destination.droppableId}`);
       return;
     }
 
-    // 2. O ID da coluna a ser enviado ao Backend (colunaId/newStatus no Java)
-    console.log('destination.droppableId (ID para busca):', destination.droppableId);
-    const targetColumnId: string = targetColumn.kanbanColumnId; // Este ID deve ser o Long/String que o Backend espera
-
-    // 3. A posição na nova coluna
+    const targetColumnId: string = targetColumn.kanbanColumnId;
     const newPosition: number = destination.index;
 
-    // Chama a função passada via props, usando o ID numérico/string da coluna
     onMoveTask(draggableId, targetColumnId, newPosition);
   };
 
@@ -425,10 +389,9 @@ export function KanbanBoard({
             {columns.map(column => {
               const columnTasks = tarefasPorColuna[column.id] ?? [];
               const accentColor = COLUMN_ACCENTS[column.status] || 'bg-gray-400';
-              const isEditing = editingColumn === column.id; // Usa o ID da coluna
+              const isEditing = editingColumn === column.id;
 
               return (
-                // CRÍTICO: Usar o ID da Coluna como droppableId
                 <StrictModeDroppable droppableId={column.id} key={column.id}>
                   {(provided, snapshot) => (
                     <div
@@ -450,7 +413,7 @@ export function KanbanBoard({
                                 className="flex-1 min-w-0 text-sm px-2 py-1 rounded border border-blue-400 outline-none bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"
                                 autoFocus
                                 onKeyDown={e => {
-                                  if (e.key === 'Enter') handleSaveColumn(column.id); // Usa ID da coluna
+                                  if (e.key === 'Enter') handleSaveColumn(column.id);
                                   if (e.key === 'Escape') handleCancelEditColumn();
                                 }}
                               />
@@ -477,14 +440,14 @@ export function KanbanBoard({
 
                               <div className="relative" data-dropdown>
                                 <button
-                                  onClick={() => handleDropdownToggle(column.id)} // Usa ID da coluna
+                                  onClick={() => handleDropdownToggle(column.id)}
                                   className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all opacity-0 group-hover/header:opacity-100"
                                   title="Opções da coluna"
                                 >
                                   <EllipsisIcon />
                                 </button>
 
-                                {openDropdownForColumn === column.id && ( // Usa ID da coluna
+                                {openDropdownForColumn === column.id && (
                                   <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-[9999] py-1">
                                     <button
                                       onClick={() => handleEditColumn(column)}
@@ -606,11 +569,9 @@ export function KanbanBoard({
         </DragDropContext>
       </div>
 
-      {/* Modals */}
-      {/* Add Column Modal (Mantido) */}
+      {/* Add Column Modal */}
       {showAddColumnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          {/* ... Código do Modal ... */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-200 dark:border-slate-700">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Adicionar Nova Coluna</h2>

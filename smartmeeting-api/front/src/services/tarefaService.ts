@@ -1,6 +1,6 @@
 import api from './httpClient';
-
-
+import { Tarefa, TarefaFormData, ComentarioTarefa, AnexoTarefa, KanbanColumnConfig } from '../types/meetings';
+import { mapBackendTask, normalizeTaskArray } from '../utils/tarefaMapper';
 
 export interface TarefaDTO {
     id: number;
@@ -41,28 +41,53 @@ export interface KanbanBoardDTO {
     updatedAt?: string;
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Mapeia TarefaDTO simples do backend para o tipo Tarefa completo do frontend */
+function dtoToTarefa(dto: any): Tarefa {
+    return mapBackendTask(dto);
+}
+
 // ─── Serviço ─────────────────────────────────────────────────────────────────
 
 const tarefaService = {
 
     // ── Lista plana de tarefas ────────────────────────────────────────────────
 
-    async getAllTarefas(params?: {
-        search?: string;
-        projectId?: number;
-        reuniaoId?: number;
-        responsavelId?: number;
-        prioridade?: string;
-    }): Promise<TarefaDTO[]> {
+    async getAllTarefas(params?: Record<string, any>): Promise<Tarefa[]> {
         const response = await api.get('/tarefas', { params });
         const data = response.data;
-        return Array.isArray(data) ? data : [];
+        return Array.isArray(data) ? normalizeTaskArray(data) : [];
     },
 
-    async buscarPorId(id: number): Promise<TarefaDTO> {
-        const response = await api.get(`/tarefas/${id}`);
-        return response.data;
+    /** Alias usado pelo useTarefas hook */
+    async listar(params?: Record<string, any>): Promise<TarefaDTO[]> {
+        const response = await api.get('/tarefas', { params });
+        return Array.isArray(response.data) ? response.data : [];
     },
+
+    async buscarPorId(id: number): Promise<Tarefa> {
+        const response = await api.get(`/tarefas/${id}`);
+        return dtoToTarefa(response.data);
+    },
+
+    // ── CRUD principal (nomes usados pelo useTarefas) ─────────────────────────
+
+    async createTarefa(data: Partial<TarefaFormData> & Record<string, any>): Promise<Tarefa> {
+        const response = await api.post('/tarefas', data);
+        return dtoToTarefa(response.data);
+    },
+
+    async updateTarefa(id: string | number, data: Partial<TarefaFormData> & Record<string, any>): Promise<Tarefa> {
+        const response = await api.put(`/tarefas/${id}`, data);
+        return dtoToTarefa(response.data);
+    },
+
+    async deleteTarefa(id: string | number): Promise<void> {
+        await api.delete(`/tarefas/${id}`);
+    },
+
+    // ── Alias antigos (mantidos para compatibilidade) ─────────────────────────
 
     async criar(dto: Partial<TarefaDTO>): Promise<TarefaDTO> {
         const response = await api.post('/tarefas', dto);
@@ -83,11 +108,94 @@ const tarefaService = {
         return response.data;
     },
 
+    // ── Movimento de tarefas ──────────────────────────────────────────────────
+
+    /**
+     * Move uma tarefa para outra coluna.
+     * Usa o endpoint correto do TarefaController: POST /tarefas/{id}/mover
+     * FIX #2: o endpoint anterior /kanban/mover/{id} não existia no backend.
+     */
+    async moverTarefa(tarefaId: string | number, colunaId: string, newPosition?: number): Promise<Tarefa> {
+        const response = await api.post(`/tarefas/${tarefaId}/mover`, {
+            colunaId,
+            newPosition: newPosition ?? 0,
+        });
+        return dtoToTarefa(response.data);
+    },
+
+    // ── Comentários ───────────────────────────────────────────────────────────
+
+    async adicionarComentario(
+        tarefaId: string,
+        conteudo: string,
+        mencoes?: string[]
+    ): Promise<ComentarioTarefa> {
+        const response = await api.post(`/tarefas/${tarefaId}/comentarios`, {
+            conteudo,
+            mencoes: mencoes ?? [],
+        });
+        return response.data;
+    },
+
+    async atualizarComentario(
+        tarefaId: string,
+        comentarioId: string,
+        conteudo: string
+    ): Promise<ComentarioTarefa> {
+        const response = await api.put(
+            `/tarefas/${tarefaId}/comentarios/${comentarioId}`,
+            { conteudo }
+        );
+        return response.data;
+    },
+
+    async deletarComentario(tarefaId: string, comentarioId: string): Promise<void> {
+        await api.delete(`/tarefas/${tarefaId}/comentarios/${comentarioId}`);
+    },
+
+    // ── Anexos ────────────────────────────────────────────────────────────────
+
+    async anexarArquivo(tarefaId: string, arquivo: File): Promise<AnexoTarefa> {
+        const formData = new FormData();
+        formData.append('file', arquivo);
+        const response = await api.post(`/tarefas/${tarefaId}/anexos`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+
+    // ── Atribuição ────────────────────────────────────────────────────────────
+
+    async atribuirTarefa(
+        tarefaId: string,
+        responsavelId: string,
+        principal = false
+    ): Promise<Tarefa> {
+        const response = await api.post(`/tarefas/${tarefaId}/responsaveis`, {
+            responsavelId,
+            principal,
+        });
+        return dtoToTarefa(response.data);
+    },
+
+    // ── Busca ─────────────────────────────────────────────────────────────────
+
+    async buscarTarefas(termo: string): Promise<Tarefa[]> {
+        const response = await api.get('/tarefas', { params: { search: termo } });
+        return Array.isArray(response.data) ? normalizeTaskArray(response.data) : [];
+    },
+
+    // ── Progresso ─────────────────────────────────────────────────────────────
+
+    async atualizarProgresso(tarefaId: string | number, progresso: number): Promise<Tarefa> {
+        const response = await api.patch(`/tarefas/${tarefaId}/progresso`, { progresso });
+        return dtoToTarefa(response.data);
+    },
+
     // ── Kanban ────────────────────────────────────────────────────────────────
 
     /**
      * Busca o board Kanban.
-     * IMPORTANTE: sempre passe projectId quando disponível para evitar board vazio.
      */
     async getKanbanBoard(params?: {
         projectId?: number;
@@ -96,13 +204,10 @@ const tarefaService = {
         try {
             const response = await api.get('/tarefas/kanban', { params });
             const board = response.data as KanbanBoardDTO;
-
-            // Garante que columns é sempre um array
             if (!board.columns) board.columns = [];
             return board;
         } catch (err: any) {
             console.error('[tarefaService] Erro ao buscar kanban board:', err);
-            // Fallback local: busca tarefas simples e monta coluna única
             const tarefas = await tarefaService.listar(params);
             return {
                 id: 'fallback',
@@ -118,17 +223,22 @@ const tarefaService = {
         }
     },
 
-    async getKanbanColumns(projectId: number): Promise<Array<{ key: string; title: string }>> {
-        const response = await api.get('/tarefas/kanbanColumns', { params: { projectId } });
-        return Array.isArray(response.data) ? response.data : [];
-    },
-
-    async moverTarefa(tarefaId: number, newColumnId: number, newPosition?: number): Promise<TarefaDTO> {
-        const response = await api.put(`/kanban/mover/${tarefaId}`, {
-            newColumnId,
-            newPosition: newPosition ?? 0,
-        });
-        return response.data;
+    /**
+     * Retorna as colunas kanban de um projeto.
+     * FIX #5: aceita string (como usado no TaskDetails) e converte para number.
+     * Retorna objetos com campo `status` mapeado de `key` para compatibilidade.
+     */
+    async getKanbanColumns(projectId: string | number): Promise<KanbanColumnConfig[]> {
+        const id = typeof projectId === 'string' ? parseInt(projectId, 10) : projectId;
+        if (!id || isNaN(id)) return [];
+        const response = await api.get('/tarefas/kanbanColumns', { params: { projectId: id } });
+        if (!Array.isArray(response.data)) return [];
+        return response.data.map((c: any) => ({
+            id: String(c.id ?? c.columnId ?? 0),
+            // FIX #5b: usa 'key' como status para o select de status funcionar
+            status: (c.key ?? c.status ?? c.columnKey ?? 'todo') as any,
+            title: c.title ?? c.titulo ?? 'Coluna',
+        }));
     },
 
     // ── Estatísticas ──────────────────────────────────────────────────────────
@@ -179,24 +289,10 @@ const tarefaService = {
         }
     },
 
-    // ── Progresso ─────────────────────────────────────────────────────────────
-
-    async atualizarProgresso(tarefaId: number, progresso: number): Promise<TarefaDTO> {
-        const response = await api.patch(`/tarefas/${tarefaId}/progresso`, { progresso });
-        return response.data;
-    },
-
     // ── Checklist ─────────────────────────────────────────────────────────────
 
     async getChecklist(tarefaId: number): Promise<unknown[]> {
         const response = await api.get(`/tarefas/${tarefaId}/checklist`);
-        return Array.isArray(response.data) ? response.data : [];
-    },
-
-    // ── Comentários ───────────────────────────────────────────────────────────
-
-    async getComentarios(tarefaId: number): Promise<unknown[]> {
-        const response = await api.get(`/tarefas/${tarefaId}/comentarios`);
         return Array.isArray(response.data) ? response.data : [];
     },
 

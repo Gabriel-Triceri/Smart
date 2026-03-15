@@ -11,11 +11,11 @@ import {
     ProjectDTO
 } from '../types/meetings';
 import tarefaService from '../services/tarefaService';
-import { kanbanService } from '../services/kanbanService';
 import { checklistService } from '../services/checklistService';
 import { historyService } from '../services/historyService';
 import { notificationService } from '../services/notificationService';
 import { projectService } from '../services/projectService';
+import { kanbanService } from '../services/kanbanService';
 
 interface UseTarefasProps {
     reuniaoId?: string;
@@ -41,7 +41,6 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
     const [exibirDetalhes, setExibirDetalhes] = useState(false);
     const [exibirKanban, setExibirKanban] = useState(true);
 
-    // Cache refs to avoid redundant API calls for static/long-lived data
     const cacheRef = useRef<{
         templates?: TemplateTarefa[];
         assignees?: Assignee[];
@@ -59,7 +58,6 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         setError(null);
 
         try {
-            // Preparar filtros para o backend
             const params: any = { ...filtros };
             if (projectId) {
                 params.projectId = projectId;
@@ -68,17 +66,17 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
             }
 
             const now = Date.now();
-            const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+            const CACHE_TTL = 5 * 60 * 1000;
             const isCacheValid = cacheRef.current.lastFetch && (now - cacheRef.current.lastFetch < CACHE_TTL);
 
-            // Fetch dynamic data (tasks and board) always
             const dynamicPromises = [
                 kanbanService.getKanbanBoard(reuniaoId, projectId),
+                // FIX #1/#3: getAllTarefas agora retorna Tarefa[] (via normalizeTaskArray),
+                // eliminando incompatibilidade de tipos TarefaDTO vs Tarefa.
                 tarefaService.getAllTarefas(params),
                 historyService.getStatisticsTarefas(),
             ];
 
-            // Fetch static data only if not cached or forced
             const staticPromises = [];
             if (forceRefresh || !isCacheValid || !cacheRef.current.templates) {
                 staticPromises.push(checklistService.getTemplatesTarefas());
@@ -110,15 +108,13 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 ...staticPromises
             ]);
 
-            // Update state
-            setTarefas(listaTarefas);
+            setTarefas(listaTarefas as Tarefa[]);
             setKanbanBoard(kanbanData);
             setStatistics(statsData);
             setTemplates(templatesData);
             setAssigneesDisponiveis(assigneesData);
             setProjects(projectsData);
 
-            // Update cache
             cacheRef.current = {
                 templates: templatesData,
                 assignees: assigneesData,
@@ -143,6 +139,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const criarTarefa = useCallback(async (data: TarefaFormData) => {
         try {
+            // FIX #1: createTarefa agora existe no service
             const novaTarefa = await tarefaService.createTarefa({
                 ...data,
                 reuniaoId,
@@ -158,6 +155,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const atualizarTarefa = useCallback(async (id: string, data: Partial<TarefaFormData>) => {
         try {
+            // FIX #1: updateTarefa agora existe no service
             const tarefaAtualizada = await tarefaService.updateTarefa(id, data);
             const idStr = String(id);
             const explicitProgressoProvided = typeof (data as any).progresso !== 'undefined';
@@ -191,6 +189,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const deletarTarefa = useCallback(async (id: string) => {
         try {
+            // FIX #1: deleteTarefa agora existe no service
             await tarefaService.deleteTarefa(id);
             setTarefas(prev => prev.filter(t => t.id !== id));
             if (tarefaSelecionada?.id === id) {
@@ -212,21 +211,19 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
             console.log('Mover tarefa:', { tarefaId, colunaId, newPosition });
 
-            // Chamada ao backend para mover a tarefa (String diretamente)
-            const tarefaAtualizada = await tarefaService.moverTarefa(tarefaId, colunaId, newPosition);
+            // FIX #2: usa kanbanService.moverTarefa que chama o endpoint correto
+            // POST /tarefas/{id}/mover em vez do inexistente PUT /kanban/mover/{id}
+            const tarefaAtualizada = await kanbanService.moverTarefa(tarefaId, colunaId, newPosition);
 
-            // Atualiza lista de tarefas no frontend
             setTarefas(prev => prev.map(t =>
                 t.id === tarefaAtualizada.id ? tarefaAtualizada : t
             ));
 
-            // Atualiza o Kanban local
             if (kanbanBoard) {
                 setKanbanBoard(prev => {
                     if (!prev) return null;
 
                     const novasColunas = prev.colunas.map(coluna => {
-                        // Remove a tarefa da coluna antiga
                         const tarefaNaColuna = coluna.tarefas.find(t => t.id === tarefaId);
                         if (tarefaNaColuna) {
                             return {
@@ -235,7 +232,6 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                             };
                         }
 
-                        // Adiciona a tarefa na coluna nova
                         if (coluna.id.toString() === colunaId) {
                             const novasTarefas = [...coluna.tarefas];
                             const index = newPosition !== undefined ? newPosition : novasTarefas.length;
@@ -260,6 +256,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const adicionarComentario = useCallback(async (tarefaId: string, conteudo: string, mencoes?: string[]) => {
         try {
+            // FIX #1: adicionarComentario agora existe no service
             const comentario = await tarefaService.adicionarComentario(tarefaId, conteudo, mencoes);
             setTarefas(prev => prev.map(t =>
                 t.id === tarefaId
@@ -278,6 +275,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const atualizarComentario = useCallback(async (tarefaId: string, comentarioId: string, conteudo: string) => {
         try {
+            // FIX #1: atualizarComentario agora existe no service
             const comentarioAtualizado = await tarefaService.atualizarComentario(tarefaId, comentarioId, conteudo);
             setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, comentarios: t.comentarios.map(c => c.id === comentarioId ? comentarioAtualizado : c) } : t));
             if (tarefaSelecionada?.id === tarefaId) {
@@ -292,6 +290,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const removerComentario = useCallback(async (tarefaId: string, comentarioId: string) => {
         try {
+            // FIX #1: deletarComentario agora existe no service
             await tarefaService.deletarComentario(tarefaId, comentarioId);
             setTarefas(prev => prev.map(t => t.id === tarefaId ? { ...t, comentarios: t.comentarios.filter(c => c.id !== comentarioId) } : t));
             if (tarefaSelecionada?.id === tarefaId) {
@@ -305,6 +304,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const anexarArquivo = useCallback(async (tarefaId: string, arquivo: File) => {
         try {
+            // FIX #1: anexarArquivo agora existe no service
             const anexo = await tarefaService.anexarArquivo(tarefaId, arquivo);
             setTarefas(prev => prev.map(t =>
                 t.id === tarefaId
@@ -323,6 +323,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
 
     const atribuirTarefa = useCallback(async (tarefaId: string, responsavelId: string, principal = false) => {
         try {
+            // FIX #1: atribuirTarefa agora existe no service
             const tarefaAtualizada = await tarefaService.atribuirTarefa(tarefaId, responsavelId, principal);
             const idStr = String(tarefaId);
             let tarefaParaState: Tarefa = tarefaAtualizada;
@@ -349,8 +350,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
         setFiltros(novosFiltros);
         try {
             setLoading(true);
-            
-            // Preparar filtros para o backend
+
             const params: any = { ...novosFiltros };
             if (novosFiltros.projectId && novosFiltros.projectId.length > 0) {
                 params.projectId = novosFiltros.projectId[0];
@@ -359,19 +359,21 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 params.responsavelId = novosFiltros.responsaveis[0];
             }
 
-            const tarefasData = await tarefaService.getAllTarefas(params);
+            // FIX #3: getAllTarefas agora retorna Tarefa[] (com campo responsaveis correto).
+            // O filtro client-side agora acessa responsaveis com segurança.
+            const tarefasData: Tarefa[] = await tarefaService.getAllTarefas(params);
 
             const filteredTarefas = tarefasData.filter(tarefa => {
                 if (novosFiltros.responsaveis && novosFiltros.responsaveis.length > 0) {
-                    // Fix: Convert r.id to string manually to match filter type
-                    const hasAssignee = tarefa.responsaveis.some(r => novosFiltros.responsaveis?.includes(String(r.id)));
+                    // responsaveis é Assignee[] — seguro de acessar após o fix do tipo
+                    const hasAssignee = Array.isArray(tarefa.responsaveis) &&
+                        tarefa.responsaveis.some(r => novosFiltros.responsaveis?.includes(String(r.id)));
                     if (!hasAssignee) return false;
                 }
                 if (novosFiltros.status && novosFiltros.status.length > 0) {
                     if (!novosFiltros.status.includes(tarefa.status)) return false;
                 }
                 if (novosFiltros.projectId && novosFiltros.projectId.length > 0) {
-                    // Fix: Convert tarefa.projectId to string manually
                     if (!tarefa.projectId || !novosFiltros.projectId.includes(String(tarefa.projectId))) return false;
                 }
                 if (novosFiltros.prazo_tarefaInicio) {
@@ -394,6 +396,7 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
     const buscarTarefas = useCallback(async (termo: string) => {
         try {
             setLoading(true);
+            // FIX #1: buscarTarefas agora existe no service
             const tarefasData = await tarefaService.buscarTarefas(termo);
             setTarefas(tarefasData);
         } catch (err) {

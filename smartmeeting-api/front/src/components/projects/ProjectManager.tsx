@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
     Briefcase, Plus, Search, LayoutGrid, List,
     Shield, Calendar, RefreshCw, X, Save, Loader2,
-    ChevronRight, Users, Clock
+    ChevronRight, Clock
 } from 'lucide-react';
 import { projectService } from '../../services/projectService';
 import { ProjectDTO, PermissionType } from '../../types/meetings';
@@ -56,7 +56,9 @@ function CreateProjectModal({ onClose, onCreated }: CreateProjectModalProps) {
         if (!name.trim()) { setError('Nome é obrigatório'); return; }
         setLoading(true);
         try {
-            await (projectService as any).createProject?.({ name: name.trim(), description: description.trim() });
+            // FIX #6: chama projectService.createProject diretamente (método agora existe)
+            // Antes: await (projectService as any).createProject?.(...) — silenciosamente não fazia nada
+            await projectService.createProject({ name: name.trim(), description: description.trim() || undefined });
             onCreated();
         } catch (err: any) {
             setError(err.response?.data?.message ?? 'Erro ao criar projeto');
@@ -330,9 +332,11 @@ export function ProjectManager() {
                             </div>
 
                             <label className="hidden lg:flex items-center gap-2 cursor-pointer select-none">
-                                <div className={`relative w-8 h-4.5 rounded-full transition-colors ${showAll ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                <div
+                                    className={`relative w-8 rounded-full transition-colors ${showAll ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'}`}
                                     style={{ height: '18px' }}
-                                    onClick={() => setShowAll(v => !v)}>
+                                    onClick={() => setShowAll(v => !v)}
+                                >
                                     <span className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-transform ${showAll ? 'translate-x-4' : 'translate-x-0.5'}`} style={{ left: '2px' }} />
                                 </div>
                                 <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Todos</span>

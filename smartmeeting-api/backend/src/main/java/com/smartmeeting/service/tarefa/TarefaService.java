@@ -192,11 +192,15 @@ public class TarefaService {
         return kanbanService.getKanbanBoard(reuniaoId);
     }
 
-    /** Auto-detecta o primeiro projeto que o usuario corrente possui tarefas */
+    // FIX: Método atualizado para usar findProjectIdsByUserId (List<Long>)
+    // em vez de findFirstProjectIdByUserId (Optional<Long>) que lançava
+    // NonUniqueResultException quando mais de um projeto era encontrado.
     public Long getFirstProjectIdForCurrentUser() {
         try {
             Long userId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
-            return tarefaRepository.findFirstProjectIdByUserId(userId).orElse(null);
+            if (userId == null) return null;
+            List<Long> ids = tarefaRepository.findProjectIdsByUserId(userId);
+            return ids.isEmpty() ? null : ids.get(0);
         } catch (Exception e) {
             return null;
         }

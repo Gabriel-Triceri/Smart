@@ -21,19 +21,6 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     @EntityGraph(value = "Tarefa.completa")
     List<Tarefa> findByReuniaoId(Long reuniaoId);
 
-    /**
-     * Busca tarefas por ID da reunião
-     * 
-     * @return Lista de tarefas da reunião
-     */
-
-    /*
-     * Busca tarefas por ID da coluna
-     *
-     * @param columnId ID da coluna
-     *
-     * @return Lista de tarefas da coluna
-     */
     @EntityGraph(value = "Tarefa.completa")
     List<Tarefa> findByColumnId(Long columnId);
 
@@ -55,9 +42,12 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     @Query("UPDATE Tarefa t SET t.progresso = t.progresso + 1 WHERE t.column.id = :columnId AND t.progresso >= :progresso")
     void incrementarProgressoApos(@Param("columnId") Long columnId, @Param("progresso") Integer progresso);
 
+    // FIX: Retorno alterado de Optional<Long> para List<Long>.
+    // A query pode retornar múltiplos projectIds distintos, causando NonUniqueResultException
+    // quando usada com Optional. TarefaService.getFirstProjectIdForCurrentUser() pega o primeiro elemento.
     @Query("SELECT DISTINCT t.project.id FROM Tarefa t " +
             "WHERE t.project IS NOT NULL " +
             "AND (t.responsavel.id = :userId OR :userId IN (SELECT p.id FROM t.participantes p)) " +
             "ORDER BY t.project.id ASC")
-    Optional<Long> findFirstProjectIdByUserId(@Param("userId") Long userId);
+    List<Long> findProjectIdsByUserId(@Param("userId") Long userId);
 }

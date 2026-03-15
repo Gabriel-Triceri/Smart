@@ -263,17 +263,9 @@ KEY(ID_PRESENCA) VALUES
 (10, TIMESTAMP '2025-11-30 17:00:00', TRUE, 7, 10);
 
 -- =====================================================
--- 13. KANBAN_COLUMNS (Colunas Padrão)
--- =====================================================
-MERGE INTO KANBAN_COLUMNS (STATUS, TITLE)
-KEY(STATUS) VALUES
-('TODO', 'Não Iniciado'),
-('IN_PROGRESS', 'Em Andamento'),
-('REVIEW', 'Em Revisão'),
-('DONE', 'Concluído');
-
--- =====================================================
--- 14. KANBAN_COLUMN_DYNAMIC (Colunas Dinâmicas por Projeto)
+-- 13. KANBAN_COLUMN_DYNAMIC (Colunas Dinâmicas por Projeto)
+-- FIX: Removida seção "KANBAN_COLUMNS" que referenciava tabela inexistente.
+-- As colunas estáticas de status eram legado; o sistema usa KANBAN_COLUMN_DYNAMIC.
 -- =====================================================
 MERGE INTO KANBAN_COLUMN_DYNAMIC (ID, ID_PROJECT, COLUMN_KEY, TITLE, DESCRIPTION, COLOR, ORDEM, WIP_LIMIT, IS_DEFAULT, IS_DONE_COLUMN, IS_ACTIVE, CREATED_AT, UPDATED_AT)
 KEY(ID) VALUES
@@ -291,8 +283,7 @@ KEY(ID) VALUES
 (10, 4, 'deployed', 'Deployed', 'Implantado em produção', '#22c55e', 3, NULL, TRUE, TRUE, TRUE, TIMESTAMP '2025-09-01 09:00:00', NULL);
 
 -- =====================================================
--- 15. TAREFA (Tarefas - IDs 1..10)
--- STATUS_TAREFA REMOVIDO
+-- 14. TAREFA (Tarefas - IDs 1..10)
 -- =====================================================
 MERGE INTO TAREFA (
   ID_TAREFA,
@@ -322,7 +313,7 @@ KEY(ID_TAREFA) VALUES
 (10, 'Planilha', 'Atualizar planilha financeira', DATE '2025-11-30', FALSE, 'MEDIA', DATE '2025-11-20', 4.5, 7, 10, 1, 0, 1);
 
 -- =====================================================
--- 16. CHECKLIST_ITEM (Itens de Checklist das Tarefas)
+-- 15. CHECKLIST_ITEM (Itens de Checklist das Tarefas)
 -- =====================================================
 MERGE INTO CHECKLIST_ITEM (ID, ID_TAREFA, DESCRICAO, CONCLUIDO, ORDEM, ID_RESPONSAVEL, DATA_CONCLUSAO, ID_CONCLUIDO_POR, CREATED_AT, UPDATED_AT)
 KEY(ID) VALUES
@@ -345,7 +336,7 @@ KEY(ID) VALUES
 (14, 6, 'Configurar SSL', FALSE, 3, 10, NULL, NULL, TIMESTAMP '2025-11-12 09:00:00', NULL);
 
 -- =====================================================
--- 17. TAREFA_COMENTARIO (Comentários nas Tarefas)
+-- 16. TAREFA_COMENTARIO (Comentários nas Tarefas)
 -- =====================================================
 MERGE INTO TAREFA_COMENTARIO (ID_COMENTARIO, TEXTO_COMENTARIO, DATA_CRIACAO, ID_TAREFA, ID_AUTOR)
 KEY(ID_COMENTARIO) VALUES
@@ -361,7 +352,7 @@ KEY(ID_COMENTARIO) VALUES
 (10, 'Vamos usar us-east-1 conforme política de custos.', TIMESTAMP '2025-11-12 10:30:00', 6, 10);
 
 -- =====================================================
--- 18. TAREFA_ANEXO (Anexos das Tarefas)
+-- 17. TAREFA_ANEXO (Anexos das Tarefas)
 -- =====================================================
 MERGE INTO TAREFA_ANEXO (ID_ANEXO, NOME_ARQUIVO, TIPO_ARQUIVO, TAMANHO_ARQUIVO, URL_ARQUIVO, DATA_UPLOAD, ID_TAREFA, ID_AUTOR)
 KEY(ID_ANEXO) VALUES
@@ -375,7 +366,7 @@ KEY(ID_ANEXO) VALUES
 (8, 'wireframe_home.fig', 'application/octet-stream', 512000, '/uploads/tarefa/7/wireframe_home.fig', TIMESTAMP '2025-11-20 15:00:00', 7, 5);
 
 -- =====================================================
--- 19. TAREFA_HISTORY (Histórico de Alterações das Tarefas)
+-- 18. TAREFA_HISTORY (Histórico de Alterações das Tarefas)
 -- =====================================================
 MERGE INTO TAREFA_HISTORY (ID, ID_TAREFA, ID_USUARIO, ACTION_TYPE, FIELD_NAME, OLD_VALUE, NEW_VALUE, DESCRIPTION, CREATED_AT)
 KEY(ID) VALUES
@@ -404,7 +395,7 @@ KEY(ID) VALUES
 (18, 5, 2, 'PROGRESS_UPDATED', 'progresso', '0', '100', 'Progresso atualizado para 100%', TIMESTAMP '2025-11-09 10:00:00');
 
 -- =====================================================
--- 20. NOTIFICACAO (Notificações Gerais - IDs 1..10)
+-- 19. NOTIFICACAO (Notificações Gerais - IDs 1..10)
 -- =====================================================
 MERGE INTO NOTIFICACAO (ID_NOTIFICACAO, MENSAGEM_NOTIFICACAO, TIPO_NOTIFICACAO, ID_DESTINATARIO)
 KEY(ID_NOTIFICACAO) VALUES
@@ -420,7 +411,7 @@ KEY(ID_NOTIFICACAO) VALUES
 (10, 'Relatório mensal gerado', 'EMAIL', 8);
 
 -- =====================================================
--- 21. NOTIFICACOES_TAREFA (Notificações de Tarefas)
+-- 20. NOTIFICACOES_TAREFA (Notificações de Tarefas)
 -- =====================================================
 MERGE INTO notificacoes_tarefa (id, tarefa_id, usuario_id, tipo, titulo, mensagem, lida, created_at, agendada_para)
 KEY(id) VALUES
@@ -434,7 +425,7 @@ KEY(id) VALUES
 (8, 4, 6, 'COMENTARIO', 'Você foi mencionado', 'Daniel Desenvolvedor mencionou você em um comentário', FALSE, TIMESTAMP '2025-11-11 12:00:00', NULL);
 
 -- =====================================================
--- 22. TEMPLATE_TAREFAS (Templates de Tarefas)
+-- 21. TEMPLATE_TAREFAS (Templates de Tarefas)
 -- =====================================================
 MERGE INTO TEMPLATE_TAREFAS (ID, TITULO, DESCRICAO, PRIORIDADE, ESTIMADA_HORAS)
 KEY(ID) VALUES
@@ -448,7 +439,7 @@ KEY(ID) VALUES
 (8, 'Testes', 'Template para criação de testes automatizados', 'MEDIA', 6);
 
 -- =====================================================
--- 23. TEMPLATE_TAREFA_TAGS (Tags dos Templates)
+-- 22. TEMPLATE_TAREFA_TAGS (Tags dos Templates)
 -- =====================================================
 MERGE INTO TEMPLATE_TAREFA_TAGS (TEMPLATE_TAREFA_ID, TAG)
 KEY(TEMPLATE_TAREFA_ID, TAG) VALUES
@@ -462,7 +453,7 @@ KEY(TEMPLATE_TAREFA_ID, TAG) VALUES
 (8, 'tests'), (8, 'qa'), (8, 'automation');
 
 -- =====================================================
--- 24. TEMPLATE_TAREFA_DEPENDENCIAS (Dependências dos Templates)
+-- 23. TEMPLATE_TAREFA_DEPENDENCIAS (Dependências dos Templates)
 -- =====================================================
 MERGE INTO TEMPLATE_TAREFA_DEPENDENCIAS (TEMPLATE_TAREFA_ID, DEPENDENCIA)
 KEY(TEMPLATE_TAREFA_ID, DEPENDENCIA) VALUES
@@ -472,7 +463,7 @@ KEY(TEMPLATE_TAREFA_ID, DEPENDENCIA) VALUES
 (8, 'Implementação');
 
 -- =====================================================
--- 25. REINICIAR SEQUENCES para valores altos
+-- 24. REINICIAR SEQUENCES para valores altos
 -- =====================================================
 ALTER SEQUENCE SQ_PESSOA RESTART WITH 10000;
 ALTER SEQUENCE SQ_SALA RESTART WITH 10000;
@@ -485,7 +476,7 @@ ALTER SEQUENCE SQ_ROLE RESTART WITH 10000;
 ALTER SEQUENCE HIBERNATE_SEQUENCE RESTART WITH 20000;
 
 -- =====================================================
--- 26. REINICIAR IDENTITY COLUMNS (Para tabelas com GenerationType.IDENTITY)
+-- 25. REINICIAR IDENTITY COLUMNS (Para tabelas com GenerationType.IDENTITY)
 -- =====================================================
 ALTER TABLE CHECKLIST_ITEM ALTER COLUMN ID RESTART WITH 10000;
 ALTER TABLE PROJECT_MEMBER ALTER COLUMN ID RESTART WITH 10000;
