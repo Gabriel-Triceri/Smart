@@ -1,6 +1,6 @@
 import { reuniaoService } from './reuniaoService';
 import { salaService } from './salaService';
-import { tarefaService } from './tarefaService';
+import  tarefaService  from './tarefaService';
 import type {
     ReuniaoFormData,
     Sala,

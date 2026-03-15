@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Tarefa, StatusTarefa, ComentarioTarefa, ChecklistItem, PermissionType, PrioridadeTarefa, Assignee, TarefaFormData, KanbanColumnConfig } from '../../types/meetings';
 import { CanDo } from '../permissions/CanDo';
-import { tarefaService } from '../../services/tarefaService';
+import  tarefaService  from '../../services/tarefaService';
 import { formatDate, isDateBefore } from '../../utils/dateHelpers';
 import { STATUS_OPTIONS } from '../../config/taskConfig';
 import { Avatar } from '../common/Avatar';
@@ -361,7 +361,7 @@ export function TaskDetails({
                     <div className="flex items-center gap-3">
                         <div className="flex flex-col">
                             <span className="text-xs font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                #{tarefa.id.substring(0, 8)}
+                                #{String(tarefa.id).substring(0, 8)}
                             </span>
                             <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                                 {tarefa.projectName || 'Sem Projeto'}

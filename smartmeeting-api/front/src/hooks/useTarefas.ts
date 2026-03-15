@@ -10,7 +10,7 @@ import {
     TemplateTarefa,
     ProjectDTO
 } from '../types/meetings';
-import { tarefaService } from '../services/tarefaService';
+import tarefaService from '../services/tarefaService';
 import { kanbanService } from '../services/kanbanService';
 import { checklistService } from '../services/checklistService';
 import { historyService } from '../services/historyService';

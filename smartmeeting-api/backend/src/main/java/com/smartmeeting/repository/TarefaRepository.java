@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
@@ -53,4 +54,10 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     @Modifying
     @Query("UPDATE Tarefa t SET t.progresso = t.progresso + 1 WHERE t.column.id = :columnId AND t.progresso >= :progresso")
     void incrementarProgressoApos(@Param("columnId") Long columnId, @Param("progresso") Integer progresso);
+
+    @Query("SELECT DISTINCT t.project.id FROM Tarefa t " +
+            "WHERE t.project IS NOT NULL " +
+            "AND (t.responsavel.id = :userId OR :userId IN (SELECT p.id FROM t.participantes p)) " +
+            "ORDER BY t.project.id ASC")
+    Optional<Long> findFirstProjectIdByUserId(@Param("userId") Long userId);
 }

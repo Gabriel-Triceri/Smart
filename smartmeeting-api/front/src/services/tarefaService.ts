@@ -1,156 +1,226 @@
 import api from './httpClient';
-import { Tarefa, TarefaFormData, FiltroTarefas, KanbanColumnConfig } from '../types/meetings';
-import { mapBackendTask, normalizeTaskArray, mapTarefaFormToBackend } from '../utils/tarefaMapper';
-import { IdValidation } from '../utils/validation';
-import { AxiosResponse } from 'axios';
 
-// DTO para representar a tarefa vinda do backend
-type TarefaDTO = any;
 
-export const tarefaService = {
-    // 1. GET /tarefas (Com filtros opcionais)
-    async getAllTarefas(filtros?: FiltroTarefas): Promise<Tarefa[]> {
-        const response: AxiosResponse<TarefaDTO[]> = await api.get('/tarefas', { params: filtros });
-        return normalizeTaskArray(response.data ?? []);
+
+export interface TarefaDTO {
+    id: number;
+    titulo: string;
+    descricao?: string;
+    prazo?: string;
+    prioridade?: string;
+    status?: string;
+    concluida?: boolean;
+    progresso?: number;
+    columnId?: number;
+    projectId?: number;
+    reuniaoId?: number;
+    responsavelId?: number;
+    responsavelNome?: string;
+    tags?: string[];
+    cor?: string;
+    estimadoHoras?: number;
+    createdDate?: string;
+    lastModifiedDate?: string;
+}
+
+export interface KanbanColumnDTO {
+    id: number;
+    title: string;
+    tarefas: TarefaDTO[];
+    wipLimit?: number;
+    color?: string;
+    ordem?: number;
+}
+
+export interface KanbanBoardDTO {
+    id: string;
+    title: string;
+    reuniaoId?: number | null;
+    columns: KanbanColumnDTO[];
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+// ─── Serviço ─────────────────────────────────────────────────────────────────
+
+const tarefaService = {
+
+    // ── Lista plana de tarefas ────────────────────────────────────────────────
+
+    async getAllTarefas(params?: {
+        search?: string;
+        projectId?: number;
+        reuniaoId?: number;
+        responsavelId?: number;
+        prioridade?: string;
+    }): Promise<TarefaDTO[]> {
+        const response = await api.get('/tarefas', { params });
+        const data = response.data;
+        return Array.isArray(data) ? data : [];
     },
 
-    // 2. CORREÇÃO: Usando o endpoint principal com filtro (reuniaoId).
-    // O backend não tinha um endpoint dedicado para listar tarefas por reunião.
-    async getTarefasPorReuniao(reuniaoId: string): Promise<Tarefa[]> {
-        const response: AxiosResponse<TarefaDTO[]> = await api.get('/tarefas', {
-            params: { reuniaoId }
-        });
-        return normalizeTaskArray(response.data ?? []);
-    },
-
-    // 3. GET /tarefas/vencendo (Coincide com Java)
-    async getTarefasVencendo(dias: number): Promise<Tarefa[]> {
-        const response: AxiosResponse<TarefaDTO[]> = await api.get('/tarefas/vencendo', { params: { dias } });
-        return normalizeTaskArray(response.data ?? []);
-    },
-
-    // 4. GET /tarefas/minhas (Coincide com Java)
-    async getMinhasTarefas(): Promise<Tarefa[]> {
-        const response: AxiosResponse<TarefaDTO[]> = await api.get('/tarefas/minhas');
-        return normalizeTaskArray(response.data ?? []);
-    },
-
-    // 5. GET /tarefas/statistics (Coincide com Java)
-    async getStatisticsTarefas(): Promise<any> {
-        const response = await api.get('/tarefas/statistics');
+    async buscarPorId(id: number): Promise<TarefaDTO> {
+        const response = await api.get(`/tarefas/${id}`);
         return response.data;
     },
 
-    // 6. POST /tarefas (Criar Tarefa)
-    async createTarefa(data: TarefaFormData): Promise<Tarefa> {
-        const payload = mapTarefaFormToBackend(data, { includeDefaults: true });
-        const response: AxiosResponse<TarefaDTO> = await api.post('/tarefas', payload);
-        // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data);
+    async criar(dto: Partial<TarefaDTO>): Promise<TarefaDTO> {
+        const response = await api.post('/tarefas', dto);
+        return response.data;
     },
 
-    // 7. PUT /tarefas/{id} (Atualizar Tarefa)
-    async updateTarefa(id: string, data: Partial<TarefaFormData>): Promise<Tarefa> {
-        if (!IdValidation.isValidId(id)) throw new Error('ID da tarefa inválido');
-        const payload = mapTarefaFormToBackend(data);
-        const response: AxiosResponse<TarefaDTO> = await api.put(`/tarefas/${id}`, payload);
-        // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data);
+    async atualizar(id: number, dto: Partial<TarefaDTO>): Promise<TarefaDTO> {
+        const response = await api.put(`/tarefas/${id}`, dto);
+        return response.data;
     },
 
-    // 8. DELETE /tarefas/{id} (Deletar Tarefa)
-    async deleteTarefa(id: string): Promise<void> {
-        if (!IdValidation.isValidId(id)) throw new Error('ID da tarefa inválido');
+    async deletar(id: number): Promise<void> {
         await api.delete(`/tarefas/${id}`);
     },
 
-    // 9. POST /tarefas/{id}/comentarios (Adicionar Comentário)
-    async adicionarComentario(tarefaId: string, conteudo: string, mencoes?: string[]): Promise<any> {
-        const response = await api.post(`/tarefas/${tarefaId}/comentarios`, { conteudo, mencoes });
+    async duplicar(id: number, modificacoes?: Record<string, unknown>): Promise<TarefaDTO> {
+        const response = await api.post(`/tarefas/${id}/duplicar`, modificacoes ?? {});
         return response.data;
     },
 
-    async atualizarComentario(tarefaId: string, comentarioId: string, conteudo: string): Promise<any> {
-        const response = await api.put(`/tarefas/${tarefaId}/comentarios/${comentarioId}`, { conteudo });
-        return response.data;
+    // ── Kanban ────────────────────────────────────────────────────────────────
+
+    /**
+     * Busca o board Kanban.
+     * IMPORTANTE: sempre passe projectId quando disponível para evitar board vazio.
+     */
+    async getKanbanBoard(params?: {
+        projectId?: number;
+        reuniaoId?: number;
+    }): Promise<KanbanBoardDTO> {
+        try {
+            const response = await api.get('/tarefas/kanban', { params });
+            const board = response.data as KanbanBoardDTO;
+
+            // Garante que columns é sempre um array
+            if (!board.columns) board.columns = [];
+            return board;
+        } catch (err: any) {
+            console.error('[tarefaService] Erro ao buscar kanban board:', err);
+            // Fallback local: busca tarefas simples e monta coluna única
+            const tarefas = await tarefaService.listar(params);
+            return {
+                id: 'fallback',
+                title: 'Tarefas',
+                columns: [{
+                    id: -1,
+                    title: 'Todas as Tarefas',
+                    tarefas,
+                    color: '#64748b',
+                    ordem: 1,
+                }],
+            };
+        }
     },
 
-    async deletarComentario(tarefaId: string, comentarioId: string): Promise<void> {
-        await api.delete(`/tarefas/${tarefaId}/comentarios/${comentarioId}`);
+    async getKanbanColumns(projectId: number): Promise<Array<{ key: string; title: string }>> {
+        const response = await api.get('/tarefas/kanbanColumns', { params: { projectId } });
+        return Array.isArray(response.data) ? response.data : [];
     },
 
-    // 10. POST /tarefas/{id}/anexos (Anexar Arquivo)
-    // CORREÇÃO: Removido o header manual 'Content-Type' para evitar conflito com FormData.
-    async anexarArquivo(tarefaId: string, arquivo: File): Promise<any> {
-        const formData = new FormData();
-        formData.append('arquivo', arquivo);
-        const response = await api.post(`/tarefas/${tarefaId}/anexos`, formData);
-        return response.data;
-    },
-
-    // 11. POST /tarefas/{id}/atribuir (Atribuir Responsável)
-    async atribuirTarefa(tarefaId: string, responsavelId: string, principal = false): Promise<Tarefa> {
-        const response: AxiosResponse<TarefaDTO> = await api.post(`/tarefas/${tarefaId}/atribuir`, { responsavelId, principal });
-        // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data);
-    },
-
-    // 12. PATCH /tarefas/{id}/progresso (Atualizar Progresso)
-    // CORREÇÃO CRÍTICA: O Controller Java usa @PatchMapping, então mudamos de PUT para PATCH.
-    async atualizarProgresso(tarefaId: string, progresso: number): Promise<Tarefa> {
-        const response: AxiosResponse<TarefaDTO> = await api.patch(`/tarefas/${tarefaId}/progresso`, { progresso });
-        // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data);
-    },
-
-    // 13. GET /tarefas/buscar (Busca por termo)
-    // CORREÇÃO: O Controller Java espera o termo de busca no parâmetro 'q'.
-    async buscarTarefas(termo: string, filtros?: any): Promise<Tarefa[]> {
-        const response: AxiosResponse<TarefaDTO[]> = await api.get('/tarefas/buscar', { params: { q: termo, ...filtros } });
-        return normalizeTaskArray(response.data ?? []);
-    },
-
-    // 14. POST /tarefas/templates/{id}/criar (Criar por Template)
-    async criarTarefasPorTemplate(templateId: string, dados: any): Promise<Tarefa[]> {
-        const response: AxiosResponse<TarefaDTO[]> = await api.post(`/tarefas/templates/${templateId}/criar`, dados);
-        return normalizeTaskArray(response.data ?? []);
-    },
-
-    // 15. GET /tarefas/notifications (Notificações)
-    async getNotificacoesTarefas(): Promise<any[]> {
-        const response = await api.get('/tarefas/notifications');
-        return response.data;
-    },
-
-    // 16. PATCH /tarefas/notifications/{id}/lida (Marcar Notificação Lida)
-    async marcarNotificacaoLida(notificacaoId: string): Promise<void> {
-        await api.patch(`/tarefas/notifications/${notificacaoId}/lida`);
-    },
-
-    // 17. POST /tarefas/{id}/duplicar (Duplicar Tarefa)
-    async duplicarTarefa(tarefaId: string, modificacoes?: any): Promise<Tarefa> {
-        const response: AxiosResponse<TarefaDTO> = await api.post(`/tarefas/${tarefaId}/duplicar`, modificacoes);
-        // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data);
-    },
-
-    // 18. GET /tarefas/kanbanColumns (Configurações do Kanban)
-    async getKanbanColumns(projectId?: string): Promise<KanbanColumnConfig[]> {
-        const response = await api.get('/tarefas/kanbanColumns', {
-            params: { projectId }
+    async moverTarefa(tarefaId: number, newColumnId: number, newPosition?: number): Promise<TarefaDTO> {
+        const response = await api.put(`/kanban/mover/${tarefaId}`, {
+            newColumnId,
+            newPosition: newPosition ?? 0,
         });
         return response.data;
     },
 
-    // 19. POST /tarefas/{id}/mover (Mover Tarefa no Kanban)
-    moverTarefa: async (tarefaId: string, colunaId: string, posicao?: number): Promise<Tarefa> => {
-        // CORREÇÃO CRÍTICA: O Controller Java espera 'newStatus' e 'newPosition' no body 
-        // para o DTO 'MovimentacaoTarefaRequest'.
-        const response: AxiosResponse<TarefaDTO> = await api.post(`/tarefas/${tarefaId}/mover`, {
-            colunaId: colunaId,
-            newPosition: posicao ?? 0
-        });
-        // CRÍTICO: Aplica o mapper para normalizar o objeto retornado
-        return mapBackendTask(response.data);
-    }
+    // ── Estatísticas ──────────────────────────────────────────────────────────
+
+    async getStatistics(): Promise<Record<string, unknown>> {
+        try {
+            const response = await api.get('/tarefas/statistics');
+            return response.data ?? {};
+        } catch {
+            return {};
+        }
+    },
+
+    // ── Notificações ──────────────────────────────────────────────────────────
+
+    async getNotificacoes(): Promise<unknown[]> {
+        try {
+            const response = await api.get('/tarefas/notifications');
+            return Array.isArray(response.data) ? response.data : [];
+        } catch {
+            return [];
+        }
+    },
+
+    async marcarNotificacaoLida(notificacaoId: number): Promise<void> {
+        await api.patch(`/tarefas/notifications/${notificacaoId}/read`);
+    },
+
+    // ── Templates ─────────────────────────────────────────────────────────────
+
+    async getTemplates(): Promise<unknown[]> {
+        try {
+            const response = await api.get('/tarefas/templates');
+            return Array.isArray(response.data) ? response.data : [];
+        } catch {
+            return [];
+        }
+    },
+
+    // ── Assignees ─────────────────────────────────────────────────────────────
+
+    async getAssignees(): Promise<unknown[]> {
+        try {
+            const response = await api.get('/tarefas/assignees');
+            return Array.isArray(response.data) ? response.data : [];
+        } catch {
+            return [];
+        }
+    },
+
+    // ── Progresso ─────────────────────────────────────────────────────────────
+
+    async atualizarProgresso(tarefaId: number, progresso: number): Promise<TarefaDTO> {
+        const response = await api.patch(`/tarefas/${tarefaId}/progresso`, { progresso });
+        return response.data;
+    },
+
+    // ── Checklist ─────────────────────────────────────────────────────────────
+
+    async getChecklist(tarefaId: number): Promise<unknown[]> {
+        const response = await api.get(`/tarefas/${tarefaId}/checklist`);
+        return Array.isArray(response.data) ? response.data : [];
+    },
+
+    // ── Comentários ───────────────────────────────────────────────────────────
+
+    async getComentarios(tarefaId: number): Promise<unknown[]> {
+        const response = await api.get(`/tarefas/${tarefaId}/comentarios`);
+        return Array.isArray(response.data) ? response.data : [];
+    },
+
+    // ── Minhas tarefas ────────────────────────────────────────────────────────
+
+    async getMinhasTarefas(): Promise<TarefaDTO[]> {
+        try {
+            const response = await api.get('/tarefas/minhas');
+            return Array.isArray(response.data) ? response.data : [];
+        } catch {
+            return [];
+        }
+    },
+
+    // ── Tarefas vencendo ─────────────────────────────────────────────────────
+
+    async getTarefasVencendo(dias = 7): Promise<TarefaDTO[]> {
+        try {
+            const response = await api.get('/tarefas/vencendo', { params: { dias } });
+            return Array.isArray(response.data) ? response.data : [];
+        } catch {
+            return [];
+        }
+    },
 };
+
+export default tarefaService;

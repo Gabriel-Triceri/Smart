@@ -4,6 +4,7 @@ import com.smartmeeting.dto.TemplateTarefaDTO;
 import com.smartmeeting.model.TemplateTarefa;
 import com.smartmeeting.repository.TemplateTarefaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,20 +18,23 @@ public class TarefaTemplateService {
         this.templateRepo = templateRepo;
     }
 
+    @Transactional(readOnly = true)
     public List<TemplateTarefaDTO> getTemplates() {
-        return templateRepo.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+        return templateRepo.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     public TemplateTarefaDTO toDTO(TemplateTarefa template) {
-        if (template == null)
-            return null;
+        if (template == null) return null;
         return new TemplateTarefaDTO(
                 template.getId(),
                 template.getTitulo(),
                 template.getDescricao(),
                 template.getPrioridade(),
-                template.getTags(),
+                // Força inicialização das coleções lazy dentro da transação
+                template.getTags() != null ? List.copyOf(template.getTags()) : List.of(),
                 template.getEstimadaHoras(),
-                template.getDependencias());
+                template.getDependencias() != null ? List.copyOf(template.getDependencias()) : List.of());
     }
 }

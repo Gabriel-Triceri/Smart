@@ -209,14 +209,21 @@ public class ProjectPermissionService {
     /**
      * Obtém todas as permissões de um membro
      */
+    @Transactional // Adicione aqui, pois o método pode realizar escrita (inicialização)
     public MemberPermissionsDTO getMemberPermissions(Long projectMemberId) {
         ProjectMember member = memberRepository.findById(projectMemberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Membro não encontrado: " + projectMemberId));
 
+        // REMOVA o IF do ProjectRole.OWNER daqui.
+        // Você quer que o sistema mostre as permissões do dono,
+        // apenas não quer que ninguém as altere (isso você já tratou no update).
+
         List<ProjectPermission> permissions = permissionRepository.findByProjectMemberId(projectMemberId);
 
+        // Se o banco estiver vazio para este membro, inicializamos agora (Lazy Initialization)
         if (permissions.isEmpty()) {
             initializePermissionsForMember(member);
+            // Busca novamente após inicializar
             permissions = permissionRepository.findByProjectMemberId(projectMemberId);
         }
 

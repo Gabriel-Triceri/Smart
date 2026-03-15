@@ -192,6 +192,38 @@ public class TarefaService {
         return kanbanService.getKanbanBoard(reuniaoId);
     }
 
+    /** Auto-detecta o primeiro projeto que o usuario corrente possui tarefas */
+    public Long getFirstProjectIdForCurrentUser() {
+        try {
+            Long userId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+            return tarefaRepository.findFirstProjectIdByUserId(userId).orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Fallback: devolve todas as tarefas em uma unica coluna virtual "Todas as Tarefas".
+     * Usado quando nenhum projeto esta selecionado e nao foi possivel auto-detectar.
+     */
+    public KanbanBoardDTO getKanbanBoardFallback() {
+        List<Tarefa> todas = tarefaRepository.findAll();
+        List<TarefaDTO> dtos = todas.stream()
+                .map(crudService::toDTO)
+                .collect(java.util.stream.Collectors.toList());
+
+        KanbanColumnDTO colunaUnica = new KanbanColumnDTO(
+                -1L, "Todas as Tarefas", dtos, null, "#64748b", 1);
+
+        return new KanbanBoardDTO(
+                "kanban-fallback",
+                "Todas as Tarefas",
+                null,
+                java.util.List.of(colunaUnica),
+                java.time.LocalDateTime.now(),
+                java.time.LocalDateTime.now());
+    }
+
     public List<KanbanColumnConfig> getKanbanColumns(Long projectId) {
         return kanbanService.getKanbanColumns(projectId);
     }
