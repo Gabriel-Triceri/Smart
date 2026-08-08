@@ -103,7 +103,7 @@ export function TaskManager() {
     const kanbanSemProjeto = viewMode === 'kanban' && !selectedProjectId;
 
     const handleCreateTask = async (data: TarefaFormData) => { await criarTarefa(data); };
-    const handleUpdateTask  = async (id: string, data: Partial<TarefaFormData>) => atualizarTarefa(id, data);
+    const handleUpdateTask  = async (id: string, data: Partial<TarefaFormData>) => { await atualizarTarefa(id, data); };
     const handleSearch      = async (term: string) => { setSearchTerm(term); if (term.trim()) await buscarTarefas(term); else await aplicarFiltros(filtros); };
     const handleViewTask    = (tarefa: Tarefa) => { setTarefaSelecionada(tarefa); setExibirDetalhes(true); };
     const handleEditTask    = (tarefa: Tarefa) => { setTarefaSelecionada(tarefa); setExibirFormulario(true); };

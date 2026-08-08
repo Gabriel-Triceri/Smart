@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-    GitBranch, Plus, Search, RefreshCw, X, Save, Loader2,
+    GitBranch, Plus, Search, RefreshCw, X, Loader2,
     ArrowRight, Trash2, ToggleLeft, ToggleRight, ChevronDown,
     ChevronUp, Zap, AlertCircle, CheckCircle2, Copy
 } from 'lucide-react';
