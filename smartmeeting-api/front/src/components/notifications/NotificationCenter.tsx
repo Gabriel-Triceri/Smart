@@ -25,6 +25,7 @@ export function NotificationCenter() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<NotificacaoTarefa[]>([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -34,8 +35,11 @@ export function NotificationCenter() {
         try {
             const data = await notificationService.getNotificacoesTarefas();
             setNotifications(data);
+            setError(false);
         } catch {
-            // silently fail — notificações são não-críticas
+            // Não interrompe o usuário, mas o painel precisa mostrar que falhou
+            // em vez de fingir que simplesmente não há notificações.
+            setError(true);
         }
     }, []);
 
@@ -131,6 +135,21 @@ export function NotificationCenter() {
                         {loading ? (
                             <div className="flex items-center justify-center py-10">
                                 <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                            </div>
+                        ) : error ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                                <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-3">
+                                    <AlertCircle className="w-6 h-6 text-red-400" />
+                                </div>
+                                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                                    Não foi possível carregar as notificações
+                                </p>
+                                <button
+                                    onClick={fetchNotifications}
+                                    className="mt-3 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                >
+                                    Tentar novamente
+                                </button>
                             </div>
                         ) : notifications.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center px-4">

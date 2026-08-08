@@ -13,7 +13,6 @@ import ThemeToggle from './components/common/ThemeToggle';
 import UserMenu from './components/common/UserMenu';
 import { NotificationCenter } from './components/notifications/NotificationCenter';
 import { BarChart3, Calendar, Building, CheckSquare, Shield, Menu, X, Briefcase, GitBranch, Settings } from 'lucide-react';
-import { inicializarDados } from './services/seedData';
 import { authService } from './services/authService';
 import { usePermissionWebSocket } from './hooks/usePermissionWebSocket';
 import { usePermissionCache } from './hooks/usePermissionCache';
@@ -111,7 +110,6 @@ function App() {
         setMounted(true);
         const savedView = localStorage.getItem('smartmeeting-active-view') as ActiveView;
         if (savedView && VALID_VIEWS.includes(savedView)) setActiveView(savedView);
-        inicializarDados().catch(err => console.error('Erro ao inicializar dados:', err));
     }, []);
 
     const navigationItems = useMemo<NavigationItem[]>(() => [

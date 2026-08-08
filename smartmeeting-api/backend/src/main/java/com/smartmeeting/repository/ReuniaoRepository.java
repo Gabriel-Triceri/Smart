@@ -44,6 +44,12 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
     @EntityGraph(value = "Reuniao.completa")
     List<Reuniao> findByDataHoraInicioBetween(LocalDateTime inicio, LocalDateTime fim);
 
+    // findAll() não carrega a sala, e com open-in-view=false o proxy lazy estoura
+    // fora da transação. Relatórios que agrupam por sala usam esta variante.
+    @EntityGraph(value = "Reuniao.comOrganizadorESala")
+    @Query("SELECT r FROM Reuniao r")
+    List<Reuniao> findAllComSala();
+
     @EntityGraph(value = "Reuniao.completa")
     List<Reuniao> findByStatus(StatusReuniao status);
 

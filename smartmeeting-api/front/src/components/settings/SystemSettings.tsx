@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Settings, Bell, Clock, Mail, Shield, Save, Loader2, CheckCircle2, Database, Globe, Sliders } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Settings, Bell, Clock, Mail, Shield, Save, Loader2, CheckCircle2, AlertCircle, Database, Globe, Sliders } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { authService } from '../../services/authService';
 import api from '../../services/httpClient';
+import ErrorHandler from '../../utils/errorHandler';
 
 // ─── Seção genérica de configurações ────────────────────────────────────────
 
@@ -43,7 +44,9 @@ export function SystemSettings() {
     const isAdmin = authService.hasRole('ADMIN');
 
     const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [success, setSuccess] = useState('');
+    const [error, setError] = useState('');
 
     // Configurações de notificação
     const [notifEmail, setNotifEmail] = useState(true);
@@ -65,10 +68,41 @@ export function SystemSettings() {
         setTimeout(() => setSuccess(''), 3000);
     };
 
+    const applySettings = (data: any) => {
+        setNotifEmail(data.notificacoes.email);
+        setNotifLembrete(data.notificacoes.lembretes);
+        setMinutosLembrete(String(data.notificacoes.minutosAntecedencia));
+        setDuracaoPadrao(String(data.reunioes.duracaoPadraoMinutos));
+        setLimiteParticipantes(String(data.reunioes.limiteParticipantes));
+        setPermitirConflito(data.reunioes.permitirConflito);
+        setNomeEmpresa(data.sistema.nomeEmpresa);
+        setFusoHorario(data.sistema.fusoHorario);
+        setManutencao(data.sistema.modoManutencao);
+    };
+
+    const loadSettings = useCallback(async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const { data } = await api.get('/admin/settings');
+            applySettings(data);
+        } catch (err) {
+            setError(ErrorHandler.processError(err).message);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (isAdmin) loadSettings();
+        else setLoading(false);
+    }, [isAdmin, loadSettings]);
+
     const handleSave = async () => {
         setSaving(true);
+        setError('');
         try {
-            await api.put('/admin/settings', {
+            const { data } = await api.put('/admin/settings', {
                 notificacoes: {
                     email: notifEmail,
                     lembretes: notifLembrete,
@@ -85,10 +119,11 @@ export function SystemSettings() {
                     modoManutencao: manutencao,
                 },
             });
+            applySettings(data);
             showSuccess('Configurações salvas com sucesso!');
-        } catch {
-            // endpoint pode não existir ainda — apenas mostra feedback local
-            showSuccess('Configurações aplicadas (modo local).');
+        } catch (err) {
+            // Nunca reportar sucesso aqui: se o PUT falhou, nada foi salvo.
+            setError(ErrorHandler.processError(err).message);
         } finally {
             setSaving(false);
         }
@@ -134,7 +169,7 @@ export function SystemSettings() {
                             )}
                             <button
                                 onClick={handleSave}
-                                disabled={saving}
+                                disabled={saving || loading}
                                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all disabled:opacity-60"
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -147,6 +182,33 @@ export function SystemSettings() {
 
             {/* Conteúdo */}
             <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+                {error && (
+                    <div className="flex items-start justify-between gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                        <div className="flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                                    Não foi possível salvar as configurações
+                                </p>
+                                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{error}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={loadSettings}
+                            className="shrink-0 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors"
+                        >
+                            Recarregar
+                        </button>
+                    </div>
+                )}
+
+                {loading && (
+                    <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500 dark:text-slate-400">
+                        <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                        Carregando configurações…
+                    </div>
+                )}
 
                 {/* Seção: Sistema */}
                 <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">

@@ -9,12 +9,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/relatorios")
 public class RelatorioController {
+
+    private static final MediaType CSV_CONTENT_TYPE = new MediaType("text", "csv", StandardCharsets.UTF_8);
 
     private final RelatorioService relatorioService;
     private final CsvExportService csvExportService;
@@ -42,7 +45,7 @@ public class RelatorioController {
         String csv = csvExportService.exportToCsv(relatorio);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.TEXT_PLAIN);
+        headers.setContentType(CSV_CONTENT_TYPE);
         headers.setContentDispositionFormData("attachment", "relatorio_reunioes_por_sala.csv");
 
         return ResponseEntity.ok().headers(headers).body(csv);
@@ -66,7 +69,7 @@ public class RelatorioController {
         String csv = csvExportService.exportToCsv(relatorio);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.TEXT_PLAIN);
+        headers.setContentType(CSV_CONTENT_TYPE);
         headers.setContentDispositionFormData("attachment", "relatorio_tarefas_concluidas.csv");
 
         return ResponseEntity.ok().headers(headers).body(csv);
@@ -97,7 +100,7 @@ public class RelatorioController {
         String csv = csvExportService.exportToCsv(relatorio);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.TEXT_PLAIN);
+        headers.setContentType(CSV_CONTENT_TYPE);
         headers.setContentDispositionFormData("attachment", "relatorio_duracao_reunioes.csv");
 
         return ResponseEntity.ok().headers(headers).body(csv);
@@ -121,7 +124,7 @@ public class RelatorioController {
         String csv = csvExportService.exportToCsv(relatorio);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.TEXT_PLAIN);
+        headers.setContentType(CSV_CONTENT_TYPE);
         headers.setContentDispositionFormData("attachment", "relatorio_produtividade_participante.csv");
 
         return ResponseEntity.ok().headers(headers).body(csv);

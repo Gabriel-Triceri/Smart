@@ -141,19 +141,62 @@ export const useCanDo = (permission: PermissionType, projectId?: string, global 
 };
 
 /**
+ * Resolve uma lista de permissões de uma só vez.
+ *
+ * Não usa useCanDo por permissão: chamar um hook dentro de um .map() faria o
+ * número de hooks variar entre renders sempre que a lista mudasse de tamanho,
+ * violando as Rules of Hooks. Aqui a lista inteira é resolvida num único efeito.
+ */
+const useCanDoList = (permissions: PermissionType[], projectId?: string, global = false): boolean[] => {
+    const [projectResults, setProjectResults] = useState<boolean[]>([]);
+
+    // Chave estável: o array literal muda de identidade a cada render
+    const permissionsKey = permissions.join(',');
+
+    useEffect(() => {
+        if (global || !projectId) return;
+
+        let cancelled = false;
+        Promise.all(
+            permissions.map(p =>
+                projectService.checkPermission(projectId, undefined, p).catch(() => false)
+            )
+        ).then(results => {
+            if (!cancelled) setProjectResults(results);
+        });
+
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [global, projectId, permissionsKey]);
+
+    return useMemo(() => {
+        if (global) {
+            return permissions.map(p => authService.hasPermission(p));
+        }
+
+        if (!projectId) {
+            // Sem projectId, retorna false por segurança (deny by default)
+            return permissions.map(() => false);
+        }
+
+        // Enquanto a verificação não retorna, trata como sem permissão
+        return permissions.map((_, i) => projectResults[i] ?? false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [global, projectId, permissionsKey, projectResults]);
+};
+
+/**
  * Hook para verificar múltiplas permissões
  */
 export const useCanDoAny = (permissions: PermissionType[], projectId?: string, global = false): boolean => {
-    const results = permissions.map(p => useCanDo(p, projectId, global));
-    return results.some(r => r);
+    return useCanDoList(permissions, projectId, global).some(r => r);
 };
 
 /**
  * Hook para verificar se tem TODAS as permissões
  */
 export const useCanDoAll = (permissions: PermissionType[], projectId?: string, global = false): boolean => {
-    const results = permissions.map(p => useCanDo(p, projectId, global));
-    return results.every(r => r);
+    return useCanDoList(permissions, projectId, global).every(r => r);
 };
 
 export default CanDo;

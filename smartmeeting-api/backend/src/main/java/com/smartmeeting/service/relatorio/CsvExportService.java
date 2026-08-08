@@ -2,48 +2,58 @@ package com.smartmeeting.service.relatorio;
 
 import org.springframework.stereotype.Service;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class CsvExportService {
 
-    @SuppressWarnings("unchecked")
+    private static final String HEADER = "chave,valor";
+
+    /**
+     * Exporta um relatório para CSV no formato chave/valor.
+     *
+     * Os relatórios misturam escalares com estruturas aninhadas (ex.:
+     * "reunioes_por_sala" é um Map de sala -> contagem), o que não cabe em uma
+     * única linha tabular. As estruturas são achatadas em chaves pontilhadas,
+     * uma por linha, e os valores escapados conforme a RFC 4180.
+     */
     public String exportToCsv(Map<String, Object> data) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        Map<String, String> flat = new LinkedHashMap<>();
+        flatten(null, data, flat);
 
-        // Escreve o cabeçalho
-        pw.println(String.join(",", data.keySet()));
+        StringBuilder sb = new StringBuilder();
+        sb.append(HEADER).append("\r\n");
+        flat.forEach((key, value) -> sb.append(escape(key))
+                .append(',')
+                .append(escape(value))
+                .append("\r\n"));
 
-        // Escreve os valores
-        for (Object value : data.values()) {
-            if (value instanceof List) {
-                for (Object item : (List<?>) value) {
-                    pw.println(item.toString());
-                }
-            } else if (value instanceof Map) {
-                pw.println(mapToCsv((Map<String, Object>) value));
-            } else {
-                pw.print(value.toString() + ",");
-            }
-        }
-        pw.println();
-
-        return sw.toString();
+        return sb.toString();
     }
 
-    private String mapToCsv(Map<String, Object> map) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-
-        // Escreve os valores do mapa
-        for (Object value : map.values()) {
-            pw.print(value.toString() + ",");
+    private void flatten(String prefix, Object value, Map<String, String> target) {
+        if (value instanceof Map<?, ?> map) {
+            map.forEach((k, v) -> flatten(join(prefix, String.valueOf(k)), v, target));
+        } else if (value instanceof List<?> list) {
+            for (int i = 0; i < list.size(); i++) {
+                flatten(join(prefix, String.valueOf(i)), list.get(i), target);
+            }
+        } else {
+            target.put(prefix == null ? "" : prefix, value == null ? "" : value.toString());
         }
+    }
 
-        return sw.toString();
+    private String join(String prefix, String key) {
+        return prefix == null || prefix.isEmpty() ? key : prefix + "." + key;
+    }
+
+    private String escape(String value) {
+        if (value.indexOf(',') < 0 && value.indexOf('"') < 0
+                && value.indexOf('\n') < 0 && value.indexOf('\r') < 0) {
+            return value;
+        }
+        return '"' + value.replace("\"", "\"\"") + '"';
     }
 }

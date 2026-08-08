@@ -34,7 +34,9 @@ public class PermissionControllerTest {
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         String token = jwtTokenProvider.generateToken(authentication);
 
-        mockMvc.perform(get("/ws/permissions")
+        // /permissions é o endpoint REST; /ws/permissions é o handler WebSocket,
+        // que responde 400 a um GET HTTP comum por não ser um handshake de upgrade.
+        mockMvc.perform(get("/permissions")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }

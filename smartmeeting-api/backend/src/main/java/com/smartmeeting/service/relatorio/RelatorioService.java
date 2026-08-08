@@ -38,12 +38,12 @@ public class RelatorioService {
             reunioes = reuniaoRepository.findByDataHoraInicioBetween(dataInicio.atStartOfDay(),
                     dataFim.atTime(LocalTime.MAX));
         } else {
-            reunioes = reuniaoRepository.findAll();
+            reunioes = reuniaoRepository.findAllComSala();
         }
 
         Map<String, Long> reunioesPorSala = reunioes.stream()
                 .collect(Collectors.groupingBy(
-                        reuniao -> reuniao.getSala().getNome(),
+                        reuniao -> reuniao.getSala() == null ? "Sem sala" : reuniao.getSala().getNome(),
                         Collectors.counting()));
 
         Map<String, Object> resultado = new HashMap<>();
