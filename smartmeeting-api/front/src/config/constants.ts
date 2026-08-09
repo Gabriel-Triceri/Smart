@@ -6,7 +6,13 @@ export const APP_CONSTANTS = {
     // Configurações gerais
     APP_NAME: 'SmartMeeting',
     APP_VERSION: '1.0.0',
-    API_BASE_URL: 'http://localhost:8080', // Updated to ensure the correct backend URL is used
+    // Esta URL é resolvida no BUILD, não em runtime — é assim que o Vite trata
+    // import.meta.env. Publicar em outro host exige rebuildar com a variável
+    // definida. O fallback só serve para desenvolvimento local.
+    // O WebSocket em usePermissionWebSocket já lia esta mesma variável; aqui o
+    // valor estava fixo, então a aplicação publicada procurava o backend na
+    // máquina de quem abrisse o navegador.
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
     API_TIMEOUT: 15000,
 
     // Endpoints da API

@@ -27,7 +27,7 @@ public class Presenca extends Auditable {
 
         @Id
         @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_PRESENCA")
-        @SequenceGenerator(name = "SQ_PRESENCA", sequenceName = "SQ_PRESENCA", allocationSize = 1, initialValue = 1)
+        @SequenceGenerator(name = "SQ_PRESENCA", sequenceName = "SQ_PRESENCA", allocationSize = 1, initialValue = 10000)
         @Column(name = "ID_PRESENCA")
         private Long id;
 

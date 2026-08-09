@@ -23,7 +23,7 @@ public class Notificacao extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_NOTIFICACAO")
-    @SequenceGenerator(name = "SQ_NOTIFICACAO", sequenceName = "SQ_NOTIFICACAO", allocationSize = 1, initialValue = 1)
+    @SequenceGenerator(name = "SQ_NOTIFICACAO", sequenceName = "SQ_NOTIFICACAO", allocationSize = 1, initialValue = 10000)
     @Column(name = "ID_NOTIFICACAO")
     private Long id;
 

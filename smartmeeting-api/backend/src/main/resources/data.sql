@@ -6,15 +6,17 @@
 -- =====================================================
 -- 1. Primeiro criar as sequences (se não existirem)
 -- =====================================================
-CREATE SEQUENCE IF NOT EXISTS SQ_PESSOA START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_SALA START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_REUNIAO START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_PRESENCA START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_TAREFA START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_NOTIFICACAO START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_PERMISSION START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS SQ_ROLE START WITH 100;
-CREATE SEQUENCE IF NOT EXISTS HIBERNATE_SEQUENCE START WITH 1000;
+-- Rede de segurança: normalmente o Hibernate já criou estas sequences antes do
+-- data.sql rodar (defer-datasource-initialization: true), então os comandos
+-- abaixo são no-op. O valor inicial acompanha o initialValue das entidades.
+CREATE SEQUENCE IF NOT EXISTS SQ_PESSOA START WITH 10000;
+CREATE SEQUENCE IF NOT EXISTS SQ_SALA START WITH 10000;
+CREATE SEQUENCE IF NOT EXISTS SQ_REUNIAO START WITH 10000;
+CREATE SEQUENCE IF NOT EXISTS SQ_PRESENCA START WITH 10000;
+CREATE SEQUENCE IF NOT EXISTS SQ_TAREFA START WITH 10000;
+CREATE SEQUENCE IF NOT EXISTS SQ_NOTIFICACAO START WITH 10000;
+CREATE SEQUENCE IF NOT EXISTS SQ_PERMISSION START WITH 10000;
+CREATE SEQUENCE IF NOT EXISTS SQ_ROLE START WITH 10000;
 
 -- =====================================================
 -- 2. PESSOA (IDs 1..10)
@@ -463,17 +465,23 @@ KEY(TEMPLATE_TAREFA_ID, DEPENDENCIA) VALUES
 (8, 'Implementação');
 
 -- =====================================================
--- 24. REINICIAR SEQUENCES para valores altos
+-- 24. SEQUENCES
 -- =====================================================
-ALTER SEQUENCE SQ_PESSOA RESTART WITH 10000;
-ALTER SEQUENCE SQ_SALA RESTART WITH 10000;
-ALTER SEQUENCE SQ_REUNIAO RESTART WITH 10000;
-ALTER SEQUENCE SQ_PRESENCA RESTART WITH 10000;
-ALTER SEQUENCE SQ_TAREFA RESTART WITH 10000;
-ALTER SEQUENCE SQ_NOTIFICACAO RESTART WITH 10000;
-ALTER SEQUENCE SQ_PERMISSION RESTART WITH 10000;
-ALTER SEQUENCE SQ_ROLE RESTART WITH 10000;
-ALTER SEQUENCE HIBERNATE_SEQUENCE RESTART WITH 20000;
+-- Aqui havia um bloco de ALTER SEQUENCE ... RESTART WITH 10000, necessário
+-- porque o Hibernate criava as sequences começando em 1 e os IDs do seed vão
+-- de 1 a ~20. Com ddl-auto=create-drop isso era inofensivo: o banco nascia
+-- limpo a cada boot.
+--
+-- Com ddl-auto=update os dados passam a sobreviver, e esse reset viraria
+-- corrupção: a primeira Pessoa criada pelo usuário recebe o ID 10000, e no
+-- restart seguinte a sequence voltaria para 10000 e o próximo insert colidiria.
+--
+-- O início alto agora está declarado em @SequenceGenerator(initialValue = 10000)
+-- nas 8 entidades que usam SEQUENCE, que é onde o Hibernate lê ao criar. Numa
+-- base já existente, "update" não mexe na sequence, então ela preserva o avanço.
+--
+-- As entidades com GenerationType.IDENTITY não precisam disso: o H2 avança o
+-- contador sozinho quando um valor explícito maior é inserido.
 
 -- =====================================================
 -- 25. REINICIAR IDENTITY COLUMNS (Para tabelas com GenerationType.IDENTITY)

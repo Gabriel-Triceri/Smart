@@ -38,7 +38,7 @@ public class Tarefa extends Auditable {
 
         @Id
         @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_TAREFA")
-        @SequenceGenerator(name = "SQ_TAREFA", sequenceName = "SQ_TAREFA", allocationSize = 1, initialValue = 1)
+        @SequenceGenerator(name = "SQ_TAREFA", sequenceName = "SQ_TAREFA", allocationSize = 1, initialValue = 10000)
         @Column(name = "ID_TAREFA")
         private Long id;
 

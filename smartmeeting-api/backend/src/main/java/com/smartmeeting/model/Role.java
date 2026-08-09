@@ -35,7 +35,7 @@ public class Role extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_ROLE")
-    @SequenceGenerator(name = "SQ_ROLE", sequenceName = "SQ_ROLE", allocationSize = 1, initialValue = 1)
+    @SequenceGenerator(name = "SQ_ROLE", sequenceName = "SQ_ROLE", allocationSize = 1, initialValue = 10000)
     @Column(name = "ID_ROLE")
     private Long id;
 

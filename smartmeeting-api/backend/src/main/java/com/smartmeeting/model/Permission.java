@@ -22,7 +22,7 @@ public class Permission extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_PERMISSION")
-    @SequenceGenerator(name = "SQ_PERMISSION", sequenceName = "SQ_PERMISSION", allocationSize = 1, initialValue = 1)
+    @SequenceGenerator(name = "SQ_PERMISSION", sequenceName = "SQ_PERMISSION", allocationSize = 1, initialValue = 10000)
     @Column(name = "ID_PERMISSION")
     private Long id;
 

@@ -25,7 +25,7 @@ public class Sala extends Auditable {
 
         @Id
         @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SQ_SALA")
-        @SequenceGenerator(name = "SQ_SALA", sequenceName = "SQ_SALA", allocationSize = 1, initialValue = 1)
+        @SequenceGenerator(name = "SQ_SALA", sequenceName = "SQ_SALA", allocationSize = 1, initialValue = 10000)
         @Column(name = "ID_SALA")
         private Long id;
 

@@ -13,10 +13,11 @@ spring:
     password: ""
   jpa:
     hibernate:
-      # ATENÇÃO: create-drop recria o schema a cada inicialização, ou seja, os
-      # dados não sobrevivem a um restart (o data.sql repopula o seed). Troque
-      # para "update" se quiser preservar o que for cadastrado.
-      ddl-auto: create-drop
+      # "update" preserva os dados entre reinicializações. O seed (data.sql) é
+      # idempotente — usa MERGE ... KEY(...) — então continua podendo rodar
+      # sempre sem duplicar nada.
+      # Use DDL_AUTO=create-drop para começar de um banco limpo.
+      ddl-auto: ${DDL_AUTO:update}
     show-sql: true
     open-in-view: false
     defer-datasource-initialization: true
