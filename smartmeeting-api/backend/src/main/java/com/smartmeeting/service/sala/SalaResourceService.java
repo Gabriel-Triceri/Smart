@@ -6,11 +6,15 @@ import com.smartmeeting.mapper.SalaMapper;
 import com.smartmeeting.model.Sala;
 import com.smartmeeting.repository.SalaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Atualizações relacionadas a recursos da sala (placeholder).
+ * Atualizações relacionadas aos recursos (equipamentos) da sala.
  */
 @Service
 public class SalaResourceService {
@@ -23,11 +27,19 @@ public class SalaResourceService {
         this.mapper = mapper;
     }
 
+    @Transactional
     public SalaDTO updateRecursos(Long salaId, List<String> recursos) {
         Sala sala = repository.findById(salaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada com ID: " + salaId));
 
-        // Por enquanto não altera a entidade (como no original). Retorna DTO atual.
-        return mapper.toDTO(sala);
+        Set<String> equipamentos = recursos == null
+                ? new LinkedHashSet<>()
+                : recursos.stream()
+                        .filter(r -> r != null && !r.isBlank())
+                        .map(String::trim)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        sala.setEquipamentos(equipamentos);
+        return mapper.toDTO(repository.save(sala));
     }
 }

@@ -18,6 +18,9 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
     @EntityGraph(value = "Pessoa.default")
     Optional<Pessoa> findByCrachaId(String crachaId);
 
+    @Query("SELECT DISTINCT p FROM Pessoa p JOIN p.roles r WHERE r.id = :roleId")
+    List<Pessoa> findAllByRoleId(@Param("roleId") Long roleId);
+
     @Query("SELECT p FROM Pessoa p LEFT JOIN FETCH p.roles r LEFT JOIN FETCH r.permissions WHERE p.email = :email")
     Optional<Pessoa> findByEmail(@Param("email") String email);
 

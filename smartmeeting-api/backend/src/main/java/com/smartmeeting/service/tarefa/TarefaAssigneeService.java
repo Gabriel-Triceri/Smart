@@ -5,8 +5,10 @@ import com.smartmeeting.dto.TarefaDTO;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.mapper.TarefaMapperService;
 import com.smartmeeting.model.Pessoa;
+import com.smartmeeting.model.ProjectMember;
 import com.smartmeeting.model.Tarefa;
 import com.smartmeeting.repository.PessoaRepository;
+import com.smartmeeting.repository.ProjectMemberRepository;
 import com.smartmeeting.repository.TarefaRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ public class TarefaAssigneeService {
     private final PessoaRepository pessoaRepository;
     private final TarefaRepository tarefaRepository;
     private final TarefaMapperService tarefaMapper;
+    private final ProjectMemberRepository projectMemberRepository;
 
     public List<AssigneeDTO> getAssigneesDisponiveis() {
         return pessoaRepository.findAll().stream()
@@ -46,10 +49,20 @@ public class TarefaAssigneeService {
         return tarefaMapper.toDTO(atualizada);
     }
 
+    /**
+     * Pessoas que podem receber uma tarefa dentro de um projeto: os membros do
+     * projeto. Sem projeto informado, cai para todas as pessoas do sistema.
+     */
     public List<Pessoa> getAssigneesDisponiveis(Long projetoId) {
-        // Placeholder implementation or delegate to Project service if possible,
-        // but for now keeping compatible with Orchestrator if it calls this
-        return List.of();
+        if (projetoId == null) {
+            return pessoaRepository.findAll();
+        }
+
+        return projectMemberRepository.findByProjectId(projetoId).stream()
+                .map(ProjectMember::getPerson)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     private AssigneeDTO toAssigneeDTO(Pessoa pessoa) {

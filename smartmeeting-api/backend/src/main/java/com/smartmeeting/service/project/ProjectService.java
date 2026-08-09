@@ -4,6 +4,7 @@ import com.smartmeeting.dto.AddProjectMemberDTO;
 import com.smartmeeting.dto.CreateProjectDTO;
 import com.smartmeeting.dto.ProjectDTO;
 import com.smartmeeting.dto.ProjectMemberDTO;
+import com.smartmeeting.dto.UpdateProjectDTO;
 import com.smartmeeting.model.Pessoa;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,17 @@ public class ProjectService {
 
     public ProjectDTO findProjectById(Long id) {
         return crudService.buscarPorId(id);
+    }
+
+    public ProjectDTO updateProject(Long id, UpdateProjectDTO updateProjectDTO, Pessoa currentUser) {
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            if (!projectPermissionService.hasPermission(id, currentUser.getId(),
+                    com.smartmeeting.enums.PermissionType.PROJECT_EDIT)) {
+                throw new com.smartmeeting.exception.ForbiddenException(
+                        "Você não tem permissão para editar este projeto.");
+            }
+        }
+        return crudService.atualizar(id, updateProjectDTO);
     }
 
     public void deleteProject(Long id, Pessoa currentUser) {

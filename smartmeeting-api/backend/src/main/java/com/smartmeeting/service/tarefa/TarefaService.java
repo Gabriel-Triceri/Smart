@@ -163,7 +163,11 @@ public class TarefaService {
         anexoService.deletarAnexo(anexoId, deletedBy);
     }
 
-    public byte[] downloadAnexo(Long anexoId) throws Exception {
+    public AnexoTarefa buscarAnexo(Long anexoId) {
+        return anexoService.buscarAnexo(anexoId);
+    }
+
+    public byte[] downloadAnexo(Long anexoId) {
         return anexoService.downloadAnexo(anexoId);
     }
 

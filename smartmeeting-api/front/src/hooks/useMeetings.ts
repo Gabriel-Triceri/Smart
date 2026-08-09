@@ -294,6 +294,31 @@ export const useMeetings = () => {
         [loadStatistics]
     );
 
+    /* -------------------- ENCERRAR -------------------- */
+    const encerrarReuniao = useCallback(
+        async (id: number, observacoes?: string) => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const encerradaRaw = await reuniaoService.encerrarReuniao(String(id), observacoes);
+                const encerrada = normalizeReuniao(encerradaRaw);
+
+                setReunioes((prev) => prev.map((r) => (r.id === id ? encerrada : r)));
+                loadStatistics();
+
+                return encerrada;
+            } catch (err) {
+                setError("Erro ao encerrar reunião");
+                console.error("Erro ao encerrar reunião:", err);
+                return null;
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [loadStatistics]
+    );
+
     /* -------------------- OBTER POR ID -------------------- */
     const getReuniaoById = useCallback(async (id: number) => {
         try {
@@ -381,6 +406,7 @@ export const useMeetings = () => {
         createReuniao,
         updateReuniao,
         deleteReuniao,
+        encerrarReuniao,
         getReuniaoById,
         searchParticipantes,
         getSalasDisponiveis,

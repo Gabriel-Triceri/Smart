@@ -16,7 +16,7 @@ import { Calendar } from '../Calendar';
 import { MeetingList } from './MeetingList';
 import { MeetingForm } from './MeetingForm';
 import { MeetingDetailsModal } from './MeetingDetailsModal';
-import { formatDate, formatTime } from '../../utils/dateHelpers';
+import { reuniaoToFormData } from '../../utils/meetingHelpers';
 
 type ViewType = 'calendar' | 'list';
 type ModalType = 'form' | 'details' | null;
@@ -28,7 +28,8 @@ export const MeetingManager: React.FC = () => {
         error,
         createReuniao,
         updateReuniao,
-        deleteReuniao
+        deleteReuniao,
+        encerrarReuniao
     } = useMeetings();
 
     const { isDarkMode } = useTheme();
@@ -53,34 +54,13 @@ export const MeetingManager: React.FC = () => {
         );
     }, [reunioes, searchTerm]);
 
-    const parseReuniaoToForm = (reuniao: Reuniao): Partial<ReuniaoFormData> => {
-        const start = reuniao.dataHoraInicio ? new Date(reuniao.dataHoraInicio) : new Date();
-        const dur = reuniao.duracaoMinutos ?? 60;
-        const end = new Date(start.getTime() + dur * 60 * 1000);
-
-        return {
-            titulo: reuniao.titulo,
-            pauta: reuniao.pauta,
-            data: formatDate(start, 'yyyy-MM-dd'),
-            horaInicio: formatTime(start),
-            horaFim: formatTime(end),
-            salaId: reuniao.sala?.id ?? undefined,
-            participantes: (reuniao.participantes ?? []).map(p => String(p.id)),
-            tipo: reuniao.tipo,
-            prioridade: reuniao.prioridade,
-            linkReuniao: reuniao.linkReuniao,
-            lembretes: reuniao.lembretes,
-            observacoes: reuniao.observacoes
-        };
-    };
-
     const handleCreateReuniao = () => {
         setReuniaoEmEdicao(null);
         setModalType('form');
     };
 
     const handleEditReuniao = (reuniao: Reuniao) => {
-        setReuniaoEmEdicao(parseReuniaoToForm(reuniao));
+        setReuniaoEmEdicao(reuniaoToFormData(reuniao));
         setSelectedReuniao(reuniao);
         setModalType('form');
     };
@@ -117,13 +97,24 @@ export const MeetingManager: React.FC = () => {
     };
 
     const handleEncerrarReuniao = async () => {
-        console.log('Encerrar reunião - funcionalidade em desenvolvimento');
+        if (!selectedReuniao) return;
+
+        const encerrada = await encerrarReuniao(selectedReuniao.id);
+        if (encerrada) {
+            setModalType(null);
+            setSelectedReuniao(null);
+        }
     };
 
-    const handleToggleLembrete = () => {
-        if (selectedReuniao) {
-            const atualizada = { ...selectedReuniao, lembretes: !selectedReuniao.lembretes };
-            setSelectedReuniao(atualizada);
+    const handleToggleLembrete = async () => {
+        if (!selectedReuniao) return;
+
+        const novoValor = !selectedReuniao.lembretes;
+        // Persiste no backend antes de refletir na tela: só atualizar o estado
+        // local fazia o toggle "voltar" no próximo carregamento.
+        const atualizada = await updateReuniao(selectedReuniao.id, { lembretes: novoValor });
+        if (atualizada) {
+            setSelectedReuniao({ ...selectedReuniao, lembretes: novoValor });
         }
     };
 

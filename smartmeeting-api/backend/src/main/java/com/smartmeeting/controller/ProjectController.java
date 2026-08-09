@@ -4,6 +4,7 @@ import com.smartmeeting.dto.AddProjectMemberDTO;
 import com.smartmeeting.dto.CreateProjectDTO;
 import com.smartmeeting.dto.ProjectDTO;
 import com.smartmeeting.dto.ProjectMemberDTO;
+import com.smartmeeting.dto.UpdateProjectDTO;
 import com.smartmeeting.enums.PermissionType;
 import com.smartmeeting.exception.ForbiddenException;
 import com.smartmeeting.model.Pessoa;
@@ -93,19 +94,13 @@ public class ProjectController {
         return ResponseEntity.ok(project);
     }
 
-    // REMOVIDO pois updateProject NÃO EXISTE no ProjectService
-    // Se quiser, eu implemento ele igual ao padrão.
-    /*
-     * @PutMapping("/{id}")
-     * public ResponseEntity<ProjectDTO> updateProject(@PathVariable Long id,
-     *
-     * @Valid @RequestBody UpdateProjectDTO
-     * updateProjectDTO, @AuthenticationPrincipal Pessoa currentUser) {
-     * ProjectDTO updatedProject = projectService.updateProject(id,
-     * updateProjectDTO, currentUser);
-     * return ResponseEntity.ok(updatedProject);
-     * }
-     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ProjectDTO> updateProject(@PathVariable Long id,
+            @Valid @RequestBody UpdateProjectDTO updateProjectDTO,
+            @AuthenticationPrincipal Pessoa currentUser) {
+        ProjectDTO updatedProject = projectService.updateProject(id, updateProjectDTO, currentUser);
+        return ResponseEntity.ok(updatedProject);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id, @AuthenticationPrincipal Pessoa currentUser) {

@@ -66,6 +66,13 @@ public class RoleController {
         return ResponseEntity.ok(toDTO(updated));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_ROLES')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        roleService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{id}/permissions/{permissionId}")
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_ROLES')")
     public ResponseEntity<RoleDTO> addPermission(@PathVariable Long id, @PathVariable Long permissionId) {

@@ -6,6 +6,7 @@ import com.smartmeeting.model.Permission;
 import com.smartmeeting.model.Role;
 
 import com.smartmeeting.repository.PermissionRepository;
+import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.RoleRepository;
 import com.smartmeeting.websocket.PermissionWebSocketHandler;
 import org.springframework.stereotype.Service;
@@ -21,11 +22,14 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final PessoaRepository pessoaRepository;
     private final PermissionWebSocketHandler webSocketHandler;
 
-    public RoleService(RoleRepository roleRepository, PermissionRepository permissionRepository, PermissionWebSocketHandler webSocketHandler) {
+    public RoleService(RoleRepository roleRepository, PermissionRepository permissionRepository,
+            PessoaRepository pessoaRepository, PermissionWebSocketHandler webSocketHandler) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
+        this.pessoaRepository = pessoaRepository;
         this.webSocketHandler = webSocketHandler;
     }
 
@@ -80,21 +84,20 @@ public class RoleService {
         return roleRepository.save(existing);
     }
 
-    // @Transactional
-    // public void delete(Long id) {
-    // Role roleToDelete = roleRepository.findById(id)
-    // .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado
-    // com ID: " + id));
-    //
-    // // Desassocia a role de todas as pessoas antes de deletar para evitar erro de
-    // FK
-    // pessoaRepository.findAllByRolesContaining(roleToDelete).forEach(pessoa -> {
-    // pessoa.getRoles().remove(roleToDelete);
-    // pessoaRepository.save(pessoa);
-    // });
-    //
-    // roleRepository.deleteById(id);
-    // }
+    @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)
+    public void delete(Long id) {
+        Role roleToDelete = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cargo (Role) não encontrado com ID: " + id));
+
+        // Desassocia a role de todas as pessoas antes de deletar, senão a FK da
+        // tabela de junção impede a remoção.
+        List<com.smartmeeting.model.Pessoa> portadores = pessoaRepository.findAllByRoleId(id);
+        portadores.forEach(pessoa -> pessoa.getRoles().remove(roleToDelete));
+        pessoaRepository.saveAll(portadores);
+
+        roleRepository.delete(roleToDelete);
+    }
 
     @Transactional
     @org.springframework.cache.annotation.CacheEvict(value = "users", allEntries = true)

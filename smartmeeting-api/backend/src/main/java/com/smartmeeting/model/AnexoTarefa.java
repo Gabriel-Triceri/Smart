@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@EqualsAndHashCode(exclude = "tarefa")
+@EqualsAndHashCode(exclude = { "tarefa", "conteudo" })
 @NamedEntityGraph(name = "AnexoTarefa.comTarefaEAutor", attributeNodes = {
                 @NamedAttributeNode("tarefa"),
                 @NamedAttributeNode("autor")
@@ -35,6 +35,17 @@ public class AnexoTarefa {
 
         @Column(name = "URL_ARQUIVO", nullable = false)
         private String url;
+
+        /**
+         * Conteúdo do arquivo. Guardado no próprio banco para o sistema rodar sem
+         * depender de storage externo; se o volume crescer, este é o campo a migrar
+         * para um bucket, mantendo a URL como ponteiro.
+         */
+        @Lob
+        @Basic(fetch = FetchType.LAZY)
+        @ToString.Exclude
+        @Column(name = "CONTEUDO_ARQUIVO")
+        private byte[] conteudo;
 
         @Column(name = "DATA_UPLOAD", nullable = false)
         private LocalDateTime dataUpload = LocalDateTime.now();

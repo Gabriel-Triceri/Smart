@@ -1,10 +1,14 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.*;
+import com.smartmeeting.model.AnexoTarefa;
 import com.smartmeeting.service.project.ProjectPermissionService;
 import com.smartmeeting.service.tarefa.TarefaService;
 import com.smartmeeting.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -280,12 +284,50 @@ public class TarefaController {
         return ResponseEntity.ok(tarefaService.anexarArquivo(id, arquivo));
     }
 
+    @GetMapping("/{id}/anexos")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<AnexoTarefaDTO>> listarAnexos(@PathVariable Long id) {
+        List<AnexoTarefaDTO> anexos = tarefaService.listarAnexos(id).stream()
+                .map(this::toAnexoDTO)
+                .toList();
+        return ResponseEntity.ok(anexos);
+    }
+
+    @GetMapping("/{tarefaId}/anexos/{anexoId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> baixarAnexo(@PathVariable Long tarefaId, @PathVariable Long anexoId) {
+        AnexoTarefa anexo = tarefaService.buscarAnexo(anexoId);
+        byte[] conteudo = tarefaService.downloadAnexo(anexoId);
+
+        MediaType tipo = anexo.getTipoArquivo() != null
+                ? MediaType.parseMediaType(anexo.getTipoArquivo())
+                : MediaType.APPLICATION_OCTET_STREAM;
+
+        return ResponseEntity.ok()
+                .contentType(tipo)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(anexo.getNomeArquivo()).build().toString())
+                .body(conteudo);
+    }
+
     @DeleteMapping("/{tarefaId}/anexos/{anexoId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deletarAnexo(@PathVariable Long tarefaId,
                                              @PathVariable Long anexoId) {
-        // deletar sem precisar de Pessoa — simplificado
         tarefaService.listarAnexos(tarefaId); // valida existência da tarefa
+        tarefaService.deletarAnexo(anexoId, null);
         return ResponseEntity.noContent().build();
+    }
+
+    private AnexoTarefaDTO toAnexoDTO(AnexoTarefa anexo) {
+        return new AnexoTarefaDTO()
+                .setId(anexo.getId())
+                .setNome(anexo.getNomeArquivo())
+                .setTipo(anexo.getTipoArquivo())
+                .setUrl(anexo.getUrl())
+                .setTamanho(anexo.getTamanhoArquivo())
+                .setUploadedBy(anexo.getAutor() != null ? anexo.getAutor().getEmail() : null)
+                .setUploadedByNome(anexo.getAutor() != null ? anexo.getAutor().getNome() : null)
+                .setCreatedAt(anexo.getDataUpload());
     }
 }

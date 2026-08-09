@@ -39,6 +39,24 @@ export const projectService = {
         return response.data;
     },
 
+    async updateProject(
+        projectId: string,
+        data: { name?: string; description?: string; status?: string }
+    ): Promise<ProjectDTO> {
+        if (!IdValidation.isValidId(projectId)) {
+            throw new Error('ID do projeto inválido');
+        }
+        const response = await api.put(`/projects/${projectId}`, data);
+        return response.data;
+    },
+
+    async deleteProject(projectId: string): Promise<void> {
+        if (!IdValidation.isValidId(projectId)) {
+            throw new Error('ID do projeto inválido');
+        }
+        await api.delete(`/projects/${projectId}`);
+    },
+
     // ===========================================
     // COLUNAS KANBAN DINÂMICAS (por projeto)
     // ===========================================

@@ -9,6 +9,7 @@ import { Sala, Reuniao, StatusReuniao } from '../../types/meetings';
 import { MeetingForm } from '../meetings/MeetingForm';
 import { MeetingDetailsModal } from '../meetings/MeetingDetailsModal';
 import { reuniaoService } from '../../services/reuniaoService';
+import { reuniaoToFormData } from '../../utils/meetingHelpers';
 
 interface RoomTimelineProps {
     salas: Sala[];
@@ -46,6 +47,8 @@ export const RoomTimeline: React.FC<RoomTimelineProps> = ({
     const [meetings, setMeetings] = useState<Reuniao[]>([]);
     const [selectedSlot, setSelectedSlot] = useState<{ salaId: number, time: Date } | null>(null);
     const [selectedMeeting, setSelectedMeeting] = useState<Reuniao | null>(null);
+    const [editingMeeting, setEditingMeeting] = useState<Reuniao | null>(null);
+    const [actionError, setActionError] = useState('');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const fetchMeetings = async () => {
@@ -61,6 +64,59 @@ export const RoomTimeline: React.FC<RoomTimelineProps> = ({
     useEffect(() => {
         fetchMeetings();
     }, [currentDate]);
+
+    /* Ações sobre uma reunião aberta a partir da timeline. Antes eram stubs, e
+       editar/excluir/encerrar por aqui simplesmente não fazia nada. */
+
+    const runMeetingAction = async (acao: () => Promise<unknown>, mensagemErro: string) => {
+        setActionError('');
+        try {
+            await acao();
+            await fetchMeetings();
+            setSelectedMeeting(null);
+            return true;
+        } catch (error) {
+            console.error(mensagemErro, error);
+            setActionError(mensagemErro);
+            return false;
+        }
+    };
+
+    const handleDeleteMeeting = async () => {
+        if (!selectedMeeting) return;
+        if (!confirm(`Excluir a reunião "${selectedMeeting.titulo}"?`)) return;
+
+        await runMeetingAction(
+            () => reuniaoService.deleteReuniao(String(selectedMeeting.id)),
+            'Não foi possível excluir a reunião.'
+        );
+    };
+
+    const handleEncerrarMeeting = async () => {
+        if (!selectedMeeting) return;
+
+        await runMeetingAction(
+            () => reuniaoService.encerrarReuniao(String(selectedMeeting.id)),
+            'Não foi possível encerrar a reunião.'
+        );
+    };
+
+    const handleToggleLembreteMeeting = async () => {
+        if (!selectedMeeting) return;
+
+        // PUT substitui a entidade inteira: parte do formulário completo.
+        const payload = { ...reuniaoToFormData(selectedMeeting), lembretes: !selectedMeeting.lembretes };
+        await runMeetingAction(
+            () => reuniaoService.updateReuniao(String(selectedMeeting.id), payload),
+            'Não foi possível alterar o lembrete.'
+        );
+    };
+
+    const handleEditMeeting = () => {
+        if (!selectedMeeting) return;
+        setEditingMeeting(selectedMeeting);
+        setSelectedMeeting(null);
+    };
 
     useEffect(() => {
         if (scrollContainerRef.current) {
@@ -289,16 +345,43 @@ export const RoomTimeline: React.FC<RoomTimelineProps> = ({
                                 }}
                                 isEditing={false}
                                 onSubmit={async (data) => {
+                                    setActionError('');
                                     try {
                                         await reuniaoService.createReuniao(data);
                                         await fetchMeetings();
                                         handleCloseModal();
                                     } catch (error) {
                                         console.error('Erro ao criar reunião:', error);
-                                        alert('Erro ao criar reunião. Verifique o console.');
+                                        setActionError('Não foi possível criar a reunião.');
                                     }
                                 }}
                                 onCancel={handleCloseModal}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {editingMeeting && (
+                <div className="fixed inset-0 z-50">
+                    <div className="flex items-center justify-center min-h-screen p-4">
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setEditingMeeting(null)} />
+                        <div className="relative w-full max-w-2xl z-10">
+                            <MeetingForm
+                                initialData={reuniaoToFormData(editingMeeting)}
+                                isEditing
+                                onSubmit={async (data) => {
+                                    setActionError('');
+                                    try {
+                                        await reuniaoService.updateReuniao(String(editingMeeting.id), data);
+                                        await fetchMeetings();
+                                        setEditingMeeting(null);
+                                    } catch (error) {
+                                        console.error('Erro ao atualizar reunião:', error);
+                                        setActionError('Não foi possível salvar as alterações da reunião.');
+                                    }
+                                }}
+                                onCancel={() => setEditingMeeting(null)}
                             />
                         </div>
                     </div>
@@ -309,11 +392,23 @@ export const RoomTimeline: React.FC<RoomTimelineProps> = ({
                 <MeetingDetailsModal
                     reuniao={selectedMeeting}
                     onClose={handleCloseModal}
-                    onEdit={() => console.log('Edit')}
-                    onDelete={() => console.log('Delete')}
-                    onEncerrar={() => console.log('Encerrar')}
-                    onToggleLembrete={() => console.log('Toggle')}
+                    onEdit={handleEditMeeting}
+                    onDelete={handleDeleteMeeting}
+                    onEncerrar={handleEncerrarMeeting}
+                    onToggleLembrete={handleToggleLembreteMeeting}
                 />
+            )}
+
+            {actionError && (
+                <div className="fixed bottom-4 right-4 z-[60] max-w-sm flex items-start gap-3 px-4 py-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg shadow-lg">
+                    <span className="text-sm text-red-700 dark:text-red-300">{actionError}</span>
+                    <button
+                        onClick={() => setActionError('')}
+                        className="shrink-0 text-red-500 hover:text-red-700 text-sm font-medium"
+                    >
+                        Fechar
+                    </button>
+                </div>
             )}
         </div>
     );

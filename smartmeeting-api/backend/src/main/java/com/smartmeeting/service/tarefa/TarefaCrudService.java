@@ -32,6 +32,7 @@ public class TarefaCrudService {
     private final TemplateTarefaRepository templateTarefaRepository;
     private final TarefaMapperService tarefaMapper;
     private final TarefaHistoryService historyService;
+    private final TarefaNotificacaoService notificacaoService;
     private final ProjectRepository projectRepository;
     private final KanbanColumnDynamicRepository columnRepository;
     private final KanbanColumnInitializationService columnInitializationService;
@@ -125,7 +126,22 @@ public class TarefaCrudService {
 
         Tarefa salvo = tarefaRepository.save(tarefa);
         logger.info("Tarefa criada ID {}", salvo.getId());
+
+        notificarSemFalhar(() -> notificacaoService.enviarNotificacaoNovaTarefa(salvo), salvo.getId());
+
         return tarefaMapper.toDTO(salvo);
+    }
+
+    /**
+     * Notificar não pode derrubar a operação principal — mesma proteção já usada
+     * no registro de histórico.
+     */
+    private void notificarSemFalhar(Runnable envio, Long tarefaId) {
+        try {
+            envio.run();
+        } catch (Exception e) {
+            logger.error("Erro ao notificar sobre a tarefa {}: {}", tarefaId, e.getMessage());
+        }
     }
 
     @Transactional
@@ -158,6 +174,7 @@ public class TarefaCrudService {
         Integer progressoAntigo = tarefa.getProgresso();
         Pessoa responsavelAntigo = tarefa.getResponsavel();
         String nomeResponsavelAntigo = responsavelAntigo != null ? responsavelAntigo.getNome() : null;
+        boolean concluidaAntes = tarefa.isConcluida();
 
         if (dtoAtualizada.getTitulo() != null)
             tarefa.setTitulo(dtoAtualizada.getTitulo());
@@ -280,6 +297,20 @@ public class TarefaCrudService {
                     "Erro ao registrar histórico para tarefa {}: {}",
                     id,
                     e.getMessage());
+        }
+
+        if (!concluidaAntes && atualizado.isConcluida()) {
+            notificarSemFalhar(() -> notificacaoService.enviarNotificacaoTarefaConcluida(atualizado), id);
+        } else {
+            Pessoa respNovoParaNotificacao = atualizado.getResponsavel();
+            boolean trocouResponsavel = respNovoParaNotificacao != null
+                    && (responsavelAntigo == null
+                            || !responsavelAntigo.getId().equals(respNovoParaNotificacao.getId()));
+
+            if (trocouResponsavel) {
+                notificarSemFalhar(
+                        () -> notificacaoService.enviarNotificacaoTarefaAtualizada(atualizado, "responsável"), id);
+            }
         }
 
         return tarefaMapper.toDTO(atualizado);

@@ -88,22 +88,35 @@ public class ProjectPermissionService {
     }
 
     private void applyHardcodedDefaults(ProjectRole role) {
-        if (role == ProjectRole.ADMIN) {
-            for (PermissionType perm : PermissionType.values()) {
-                boolean granted = perm != PermissionType.PROJECT_DELETE &&
-                        perm != PermissionType.ADMIN_SYSTEM_SETTINGS;
-                saveOrUpdateTemplate(role, perm, granted);
+        switch (role) {
+            case OWNER -> {
+                // Dono do projeto: tudo dentro do projeto, inclusive excluí-lo.
+                // ADMIN_SYSTEM_SETTINGS fica de fora por ser permissão do sistema,
+                // não do projeto.
+                for (PermissionType perm : PermissionType.values()) {
+                    saveOrUpdateTemplate(role, perm, perm != PermissionType.ADMIN_SYSTEM_SETTINGS);
+                }
             }
-        } else if (role == ProjectRole.MEMBER_EDITOR) {
-            Set<PermissionType> memberPermissions = Set.of(
-                    PermissionType.PROJECT_VIEW,
-                    PermissionType.TASK_CREATE, PermissionType.TASK_VIEW, PermissionType.TASK_EDIT,
-                    PermissionType.TASK_MOVE, PermissionType.TASK_COMMENT, PermissionType.TASK_ATTACH,
-                    PermissionType.KANBAN_VIEW,
-                    PermissionType.MEETING_VIEW, PermissionType.MEETING_CREATE);
-            for (PermissionType perm : PermissionType.values()) {
-                saveOrUpdateTemplate(role, perm, memberPermissions.contains(perm));
+            case ADMIN -> {
+                for (PermissionType perm : PermissionType.values()) {
+                    boolean granted = perm != PermissionType.PROJECT_DELETE &&
+                            perm != PermissionType.ADMIN_SYSTEM_SETTINGS;
+                    saveOrUpdateTemplate(role, perm, granted);
+                }
             }
+            case MEMBER_EDITOR -> {
+                Set<PermissionType> memberPermissions = Set.of(
+                        PermissionType.PROJECT_VIEW,
+                        PermissionType.TASK_CREATE, PermissionType.TASK_VIEW, PermissionType.TASK_EDIT,
+                        PermissionType.TASK_MOVE, PermissionType.TASK_COMMENT, PermissionType.TASK_ATTACH,
+                        PermissionType.KANBAN_VIEW,
+                        PermissionType.MEETING_VIEW, PermissionType.MEETING_CREATE);
+                for (PermissionType perm : PermissionType.values()) {
+                    saveOrUpdateTemplate(role, perm, memberPermissions.contains(perm));
+                }
+            }
+            // Sem default silencioso: um ProjectRole novo sem defaults ficaria sem
+            // permissão nenhuma e o problema só apareceria em produção.
         }
     }
 

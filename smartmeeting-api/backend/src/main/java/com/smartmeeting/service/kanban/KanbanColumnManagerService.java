@@ -127,14 +127,21 @@ public class KanbanColumnManagerService {
             throw new BadRequestException("Não é possível remover a coluna padrão");
         }
 
-        moveTasksToDefaultColumn(column);
-
         if (moveToColumnId != null) {
-            if (!columnRepository.existsById(moveToColumnId)) {
-                throw new ResourceNotFoundException("Coluna destino não encontrada: " + moveToColumnId);
+            KanbanColumnDynamic destino = columnRepository.findById(moveToColumnId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Coluna destino não encontrada: " + moveToColumnId));
+
+            if (destino.getId().equals(column.getId())) {
+                throw new BadRequestException("A coluna de destino não pode ser a própria coluna removida");
             }
-            log.info("Tarefas seriam movidas da coluna {} para {}", columnId, moveToColumnId);
-            // mover tarefas: implementar se houver relação direta com columnKey/coluna
+            if (!destino.getProject().getId().equals(column.getProject().getId())) {
+                throw new BadRequestException("A coluna de destino precisa pertencer ao mesmo projeto");
+            }
+
+            moveTasksTo(column, destino);
+        } else {
+            moveTasksToDefaultColumn(column);
         }
 
         column.setActive(false);
@@ -163,21 +170,25 @@ public class KanbanColumnManagerService {
     }
 
     private void moveTasksToDefaultColumn(KanbanColumnDynamic column) {
-        List<Tarefa> tasks = tarefaRepository.findByColumnId(column.getId());
-        if (tasks.isEmpty()) {
-            return;
-        }
         KanbanColumnDynamic defaultColumn = columnRepository
                 .findByProjectIdAndIsDefaultTrue(column.getProject().getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Coluna padrão não encontrada para o projeto: " + column.getProject().getId()));
 
+        moveTasksTo(column, defaultColumn);
+    }
+
+    private void moveTasksTo(KanbanColumnDynamic origem, KanbanColumnDynamic destino) {
+        List<Tarefa> tasks = tarefaRepository.findByColumnId(origem.getId());
+        if (tasks.isEmpty()) {
+            return;
+        }
+
         for (Tarefa task : tasks) {
-            task.setColumn(defaultColumn);
+            task.setColumn(destino);
         }
         tarefaRepository.saveAll(tasks);
-        log.info("{} tarefas movidas da coluna {} para a coluna padrão {}", tasks.size(), column.getId(),
-                defaultColumn.getId());
+        log.info("{} tarefas movidas da coluna {} para a coluna {}", tasks.size(), origem.getId(), destino.getId());
     }
 
     @Transactional

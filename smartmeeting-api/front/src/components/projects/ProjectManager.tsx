@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
     Briefcase, Plus, Search, LayoutGrid, List,
     Shield, Calendar, RefreshCw, X, Save, Loader2,
-    ChevronRight, Clock
+    ChevronRight, Clock, Pencil, Trash2
 } from 'lucide-react';
 import { projectService } from '../../services/projectService';
 import { ProjectDTO, PermissionType } from '../../types/meetings';
@@ -40,14 +40,17 @@ function getAvatarColor(name: string) {
     return AVATAR_COLORS[idx];
 }
 
-interface CreateProjectModalProps {
+interface ProjectFormModalProps {
+    /** Quando informado, o modal edita o projeto em vez de criar um novo. */
+    project?: ProjectDTO | null;
     onClose: () => void;
-    onCreated: () => void;
+    onSaved: () => void;
 }
 
-function CreateProjectModal({ onClose, onCreated }: CreateProjectModalProps) {
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
+function ProjectFormModal({ project, onClose, onSaved }: ProjectFormModalProps) {
+    const isEditing = !!project;
+    const [name, setName] = useState(project?.name ?? '');
+    const [description, setDescription] = useState(project?.description ?? '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -56,12 +59,16 @@ function CreateProjectModal({ onClose, onCreated }: CreateProjectModalProps) {
         if (!name.trim()) { setError('Nome é obrigatório'); return; }
         setLoading(true);
         try {
-            // FIX #6: chama projectService.createProject diretamente (método agora existe)
-            // Antes: await (projectService as any).createProject?.(...) — silenciosamente não fazia nada
-            await projectService.createProject({ name: name.trim(), description: description.trim() || undefined });
-            onCreated();
+            const payload = { name: name.trim(), description: description.trim() || undefined };
+            if (isEditing) {
+                await projectService.updateProject(project!.id, payload);
+            } else {
+                await projectService.createProject(payload);
+            }
+            onSaved();
         } catch (err: any) {
-            setError(err.response?.data?.message ?? 'Erro ao criar projeto');
+            setError(err.response?.data?.message
+                ?? `Erro ao ${isEditing ? 'salvar' : 'criar'} projeto`);
         } finally {
             setLoading(false);
         }
@@ -77,8 +84,12 @@ function CreateProjectModal({ onClose, onCreated }: CreateProjectModalProps) {
                             <Briefcase className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Novo Projeto</h2>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Preencha as informações básicas</p>
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                                {isEditing ? 'Editar Projeto' : 'Novo Projeto'}
+                            </h2>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {isEditing ? 'Atualize as informações do projeto' : 'Preencha as informações básicas'}
+                            </p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
@@ -123,7 +134,9 @@ function CreateProjectModal({ onClose, onCreated }: CreateProjectModalProps) {
                         <button type="submit" disabled={loading}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all disabled:opacity-60">
                             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            {loading ? 'Criando...' : 'Criar Projeto'}
+                            {loading
+                                ? (isEditing ? 'Salvando...' : 'Criando...')
+                                : (isEditing ? 'Salvar Alterações' : 'Criar Projeto')}
                         </button>
                     </div>
                 </form>
@@ -135,9 +148,11 @@ function CreateProjectModal({ onClose, onCreated }: CreateProjectModalProps) {
 interface ProjectCardProps {
     project: ProjectDTO;
     onManagePermissions: (project: ProjectDTO) => void;
+    onEdit: (project: ProjectDTO) => void;
+    onDelete: (project: ProjectDTO) => void;
 }
 
-function ProjectCard({ project, onManagePermissions }: ProjectCardProps) {
+function ProjectCard({ project, onManagePermissions, onEdit, onDelete }: ProjectCardProps) {
     const status = getStatusConfig(project.status);
     const avatarColor = getAvatarColor(project.name);
 
@@ -167,7 +182,7 @@ function ProjectCard({ project, onManagePermissions }: ProjectCardProps) {
                 </div>
             </div>
 
-            <div className="px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 rounded-b-xl flex gap-2">
+            <div className="px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 rounded-b-xl flex flex-wrap items-center gap-2">
                 <CanDo permission={PermissionType.PROJECT_MANAGE_MEMBERS} projectId={project.id}>
                     <button
                         onClick={() => onManagePermissions(project)}
@@ -177,9 +192,28 @@ function ProjectCard({ project, onManagePermissions }: ProjectCardProps) {
                         Permissões
                     </button>
                 </CanDo>
+                <CanDo permission={PermissionType.PROJECT_EDIT} projectId={project.id}>
+                    <button
+                        onClick={() => onEdit(project)}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg transition-all"
+                        title="Editar projeto"
+                    >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Editar
+                    </button>
+                </CanDo>
+                <CanDo permission={PermissionType.PROJECT_DELETE} projectId={project.id}>
+                    <button
+                        onClick={() => onDelete(project)}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-lg transition-all"
+                        title="Excluir projeto"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                </CanDo>
                 <button
                     onClick={() => onManagePermissions(project)}
-                    className="ml-auto flex items-center gap-1 px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    className="ml-auto flex items-center gap-1 px-3 py-2 text-xs font-medium whitespace-nowrap text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                 >
                     Ver detalhes
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -192,9 +226,11 @@ function ProjectCard({ project, onManagePermissions }: ProjectCardProps) {
 interface ProjectRowProps {
     project: ProjectDTO;
     onManagePermissions: (project: ProjectDTO) => void;
+    onEdit: (project: ProjectDTO) => void;
+    onDelete: (project: ProjectDTO) => void;
 }
 
-function ProjectRow({ project, onManagePermissions }: ProjectRowProps) {
+function ProjectRow({ project, onManagePermissions, onEdit, onDelete }: ProjectRowProps) {
     const status = getStatusConfig(project.status);
     const avatarColor = getAvatarColor(project.name);
 
@@ -232,6 +268,24 @@ function ProjectRow({ project, onManagePermissions }: ProjectRowProps) {
                         <Shield className="w-4 h-4" />
                     </button>
                 </CanDo>
+                <CanDo permission={PermissionType.PROJECT_EDIT} projectId={project.id}>
+                    <button
+                        onClick={() => onEdit(project)}
+                        className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                        title="Editar projeto"
+                    >
+                        <Pencil className="w-4 h-4" />
+                    </button>
+                </CanDo>
+                <CanDo permission={PermissionType.PROJECT_DELETE} projectId={project.id}>
+                    <button
+                        onClick={() => onDelete(project)}
+                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        title="Excluir projeto"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </CanDo>
                 <button
                     onClick={() => onManagePermissions(project)}
                     className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
@@ -251,7 +305,9 @@ export function ProjectManager() {
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [searchTerm, setSearchTerm] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [editingProject, setEditingProject] = useState<ProjectDTO | null>(null);
     const [permissionsProject, setPermissionsProject] = useState<ProjectDTO | null>(null);
+    const [actionError, setActionError] = useState('');
 
     const fetchProjects = async () => {
         setLoading(true);
@@ -264,6 +320,19 @@ export function ProjectManager() {
             console.error('Erro ao buscar projetos:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteProject = async (project: ProjectDTO) => {
+        if (!confirm(`Excluir o projeto "${project.name}"? Esta ação não pode ser desfeita.`)) return;
+
+        setActionError('');
+        try {
+            await projectService.deleteProject(project.id);
+            await fetchProjects();
+        } catch (err: any) {
+            console.error('Erro ao excluir projeto:', err);
+            setActionError(err.response?.data?.message ?? 'Não foi possível excluir o projeto.');
         }
     };
 
@@ -405,6 +474,8 @@ export function ProjectManager() {
                                 key={project.id}
                                 project={project}
                                 onManagePermissions={setPermissionsProject}
+                                onEdit={setEditingProject}
+                                onDelete={handleDeleteProject}
                             />
                         ))}
                     </div>
@@ -422,6 +493,8 @@ export function ProjectManager() {
                                 key={project.id}
                                 project={project}
                                 onManagePermissions={setPermissionsProject}
+                                onEdit={setEditingProject}
+                                onDelete={handleDeleteProject}
                             />
                         ))}
                     </div>
@@ -430,10 +503,30 @@ export function ProjectManager() {
 
             {/* Modais */}
             {showCreateModal && (
-                <CreateProjectModal
+                <ProjectFormModal
                     onClose={() => setShowCreateModal(false)}
-                    onCreated={() => { setShowCreateModal(false); fetchProjects(); }}
+                    onSaved={() => { setShowCreateModal(false); fetchProjects(); }}
                 />
+            )}
+
+            {editingProject && (
+                <ProjectFormModal
+                    project={editingProject}
+                    onClose={() => setEditingProject(null)}
+                    onSaved={() => { setEditingProject(null); fetchProjects(); }}
+                />
+            )}
+
+            {actionError && (
+                <div className="fixed bottom-4 right-4 z-[60] max-w-sm flex items-start gap-3 px-4 py-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg shadow-lg">
+                    <span className="text-sm text-red-700 dark:text-red-300">{actionError}</span>
+                    <button
+                        onClick={() => setActionError('')}
+                        className="shrink-0 text-red-500 hover:text-red-700 text-sm font-medium"
+                    >
+                        Fechar
+                    </button>
+                </div>
             )}
 
             {permissionsProject && (
