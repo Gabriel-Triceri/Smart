@@ -1,18 +1,29 @@
+# Configuração única da aplicação.
+# Antes existiam application.properties e application.yml ao mesmo tempo. O
+# Spring mesclava os dois (o .properties vencendo nas chaves conflitantes), o
+# que deixava o comportamento efetivo difícil de prever: ddl-auto e o segredo
+# JWT vinham do .properties, enquanto data.sql, e-mail e CORS vinham do .yml.
+# Os valores abaixo reproduzem exatamente essa configuração efetiva.
+
 spring:
   datasource:
-    url: jdbc:h2:file:./data/smartmeeting;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:file:./data/smartmeeting;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password: ""
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: update
+      # ATENÇÃO: create-drop recria o schema a cada inicialização, ou seja, os
+      # dados não sobrevivem a um restart (o data.sql repopula o seed). Troque
+      # para "update" se quiser preservar o que for cadastrado.
+      ddl-auto: create-drop
     show-sql: true
+    open-in-view: false
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
-    defer-datasource-initialization: true
+        highlight_sql: true
   sql:
     init:
       mode: always
@@ -22,10 +33,12 @@ spring:
       enabled: true
       path: /h2-console
   mail:
-    host: sandbox.smtp.mailtrap.io
-    port: 2525
-    username: a1b2c3d4e5f6g7
-    password: a1b2c3d4e5f6g7
+    host: ${MAIL_HOST:sandbox.smtp.mailtrap.io}
+    port: ${MAIL_PORT:2525}
+    # Credenciais de exemplo: o envio real de e-mail só funciona definindo
+    # MAIL_USERNAME/MAIL_PASSWORD no ambiente.
+    username: ${MAIL_USERNAME:a1b2c3d4e5f6g7}
+    password: ${MAIL_PASSWORD:a1b2c3d4e5f6g7}
     properties:
       mail:
         smtp:
@@ -33,13 +46,19 @@ spring:
           starttls:
             enable: true
 
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
 app:
   jwt:
-    secret: c2VjcmV0by1zdXBlci1zdXBlci1zZWd1cm8tcGFyYS1zbWFydG1lZXRpbmctYXBpLWp3dC1hdXRoZW50aWNhdGlvbg==
+    # Sobrescreva JWT_SECRET em qualquer ambiente que não seja local.
+    secret: ${JWT_SECRET:secretkeysecretkeysecretkeysecretkeysecretkeysecretkeysecretkeysecretkey}
     expiration-ms: 86400000
-  # FIX: origens permitidas extraídas do código para configuração.
-  # SecurityConfig e WebSocketConfig lêem esta propriedade,
-  # evitando URLs hardcoded (inclusive o manus.computer de desenvolvimento).
+  # SecurityConfig e WebSocketConfig leem esta propriedade, evitando URLs
+  # hardcoded no código.
   cors:
     allowed-origins:
       - http://localhost:3000
@@ -48,12 +67,14 @@ app:
 logging:
   level:
     root: INFO
+    org.springframework: INFO
     org.springframework.web: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: DEBUG
+    org.springframework.web.servlet.error.BasicErrorController: DEBUG
+    org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController: DEBUG
+    org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.hibernate.engine.jdbc.spi.SqlExceptionHelper: ERROR
     com.smartmeeting: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: DEBUG
-    org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController: DEBUG

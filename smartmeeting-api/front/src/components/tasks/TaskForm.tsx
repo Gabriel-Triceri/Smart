@@ -118,9 +118,14 @@ export function TaskForm({
             }
             await onSubmit(payload);
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao salvar tarefa:', error);
-            alert('Ocorreu um erro ao salvar a tarefa. Por favor, tente novamente.');
+            // Erro inline, junto do formulário, em vez de um alert() bloqueante.
+            setErrors(prev => ({
+                ...prev,
+                submit: error?.response?.data?.message
+                    ?? 'Ocorreu um erro ao salvar a tarefa. Por favor, tente novamente.',
+            }));
         } finally {
             setLoading(false);
         }
@@ -373,7 +378,13 @@ export function TaskForm({
                 </form>
 
                 {/* Footer Actions */}
-                <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3 rounded-b-xl">
+                <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-wrap justify-end items-center gap-3 rounded-b-xl">
+                    {errors.submit && (
+                        <p className="mr-auto text-sm text-red-500 flex items-center gap-1.5">
+                            <X className="w-3.5 h-3.5 shrink-0" />
+                            {errors.submit}
+                        </p>
+                    )}
                     <button
                         type="button"
                         onClick={onClose}

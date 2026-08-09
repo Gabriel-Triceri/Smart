@@ -14,6 +14,7 @@ import { kanbanService } from '../../services/kanbanService';
 import { projectService } from '../../services/projectService';
 import { ProjectPermissionsModal } from '../permissions/ProjectPermissionsModal';
 import { CanDo } from '../permissions/CanDo';
+import { FeedbackToast, FeedbackTone } from '../common/FeedbackToast';
 
 /* --- CORREÇÃO PARA REACT 18 (STRICT MODE) --- */
 export const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
@@ -136,6 +137,9 @@ export function KanbanBoard({
   const [addingColumn, setAddingColumn] = useState(false);
 
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [feedback, setFeedback] = useState<{ message: string; tone: FeedbackTone } | null>(null);
+
+  const notify = (message: string, tone: FeedbackTone = 'error') => setFeedback({ message, tone });
 
   useEffect(() => {
     if (!projectId) loadGlobalColumns();
@@ -157,7 +161,6 @@ export function KanbanBoard({
 
   useEffect(() => {
     if (projectId) {
-      console.log(`[KanbanBoard] Mudando para projeto ${projectId}. Limpando colunas antigas.`);
       setDynamicColumns([]);
       setColumns([]);
       loadDynamicColumns();
@@ -261,7 +264,7 @@ export function KanbanBoard({
       setTempTitle('');
     } catch (err) {
       console.error('Erro ao salvar coluna:', err);
-      alert('Erro ao salvar coluna. Verifique suas permissões.');
+      notify('Erro ao salvar coluna. Verifique suas permissões.');
     }
   };
 
@@ -279,7 +282,7 @@ export function KanbanBoard({
 
     const columnToDelete = dynamicColumns.find(c => String(c.id) === columnId);
     if (columnToDelete?.isDefault) {
-      return alert('Não é possível excluir a coluna padrão do projeto.');
+      return notify('Não é possível excluir a coluna padrão do projeto.');
     }
 
     if (!confirm('Tem certeza que deseja excluir esta coluna? As tarefas nela serão movidas para a coluna padrão.')) return;
@@ -289,7 +292,7 @@ export function KanbanBoard({
       await loadDynamicColumns();
     } catch (err: any) {
       console.error('Erro ao deletar coluna dinâmica:', err);
-      alert('Erro ao excluir coluna: ' + (err?.response?.data?.message || err?.message));
+      notify('Erro ao excluir coluna: ' + (err?.response?.data?.message || err?.message));
     }
   };
 
@@ -299,8 +302,8 @@ export function KanbanBoard({
   };
 
   const handleAddDynamicColumn = async () => {
-    if (!projectId) return alert('ID do projeto não encontrado.');
-    if (!newColumnTitle.trim()) return alert('Título da coluna é obrigatório.');
+    if (!projectId) return notify('ID do projeto não encontrado.');
+    if (!newColumnTitle.trim()) return notify('Título da coluna é obrigatório.');
     try {
       setAddingColumn(true);
       const payload = {
@@ -317,10 +320,10 @@ export function KanbanBoard({
       setNewColumnTitle('');
       setNewColumnColor(COLUMN_COLORS[0]);
       setShowAddColumnModal(false);
-      alert('Coluna adicionada com sucesso!');
+      notify('Coluna adicionada com sucesso!', 'success');
     } catch (err: any) {
       console.error('[KanbanBoard] Erro ao criar coluna:', err);
-      alert('Erro ao adicionar coluna: ' + (err?.response?.data?.message || err?.message || String(err)));
+      notify('Erro ao adicionar coluna: ' + (err?.response?.data?.message || err?.message || String(err)));
     } finally {
       setAddingColumn(false);
     }
@@ -379,7 +382,6 @@ export function KanbanBoard({
     onMoveTask(draggableId, targetColumnId, newPosition);
   };
 
-  console.log('[KanbanBoard] Renderizando colunas:', columns.map(c => c.title));
 
   return (
     <div className="h-full flex flex-col relative animate-in fade-in duration-500">
@@ -658,6 +660,14 @@ export function KanbanBoard({
           projectName="Projeto"
           isOpen={showPermissionsModal}
           onClose={() => setShowPermissionsModal(false)}
+        />
+      )}
+
+      {feedback && (
+        <FeedbackToast
+          message={feedback.message}
+          tone={feedback.tone}
+          onClose={() => setFeedback(null)}
         />
       )}
     </div>

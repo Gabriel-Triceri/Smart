@@ -93,7 +93,6 @@ export const SalaForm: React.FC<SalaFormProps> = ({
         if (!formData.categoria) newErrors.categoria = 'Categoria obrigatória';
 
         if (Object.keys(newErrors).length > 0) {
-            console.log('⚠️ Erros de validação encontrados:', newErrors);
         }
 
         setErrors(newErrors);
@@ -111,10 +110,8 @@ export const SalaForm: React.FC<SalaFormProps> = ({
             return;
         }
 
-        console.log('💾 Tentando salvar dados:', formData);
         try {
             await onSave(formData);
-            console.log('✅ Salvo com sucesso');
             onClose();
         } catch (error) {
             console.error('❌ Erro ao salvar sala:', error);
@@ -247,7 +244,6 @@ export const SalaForm: React.FC<SalaFormProps> = ({
                                         value={formData.categoria || ''}
                                         onChange={(e) => {
                                             const categoria = e.target.value as Sala['categoria'];
-                                            console.log('🔄 Mudança de categoria:', categoria);
                                             const categoriaConfig = categorias.find(c => c.value === categoria);
                                             setFormData(prev => ({ ...prev, categoria, cor: categoriaConfig?.cor || prev.cor }));
                                         }}

@@ -26,7 +26,6 @@ export function TaskCard({
     compact = false,
     children
 }: TaskCardProps) {
-    console.log('DEBUG TaskCard - tarefa recebida:', tarefa);
     const getDateStatus = (dateStr: string) => {
         const date = new Date(dateStr);
         const now = new Date();

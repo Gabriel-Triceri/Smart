@@ -209,7 +209,6 @@ export function useTarefas({ reuniaoId, projectId, filtrosIniciais }: UseTarefas
                 return;
             }
 
-            console.log('Mover tarefa:', { tarefaId, colunaId, newPosition });
 
             // FIX #2: usa kanbanService.moverTarefa que chama o endpoint correto
             // POST /tarefas/{id}/mover em vez do inexistente PUT /kanban/mover/{id}

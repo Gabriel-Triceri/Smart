@@ -354,7 +354,6 @@ export function TaskManager() {
                             <TaskFilters
                                 filters={filtros}
                                 onFiltersChange={aplicarFiltros}
-                                tarefas={tarefas}
                                 assignees={assigneesDisponiveis}
                                 projetos={projects}
                             />

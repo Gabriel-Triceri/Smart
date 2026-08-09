@@ -4,7 +4,6 @@ import {
     Search,
     Shield,
     Users,
-    Filter,
     Download,
     Mail,
     AlertCircle,
@@ -14,6 +13,7 @@ import { userRoleService } from '../../services/userRoleService';
 import { useRoles } from '../../hooks/useRoles';
 import { UserRoleModal } from './UserRoleModal';
 import { UserTableSkeleton } from './PermissionSkeleton';
+import { FeedbackToast } from '../common/FeedbackToast';
 
 interface User {
     id: number;
@@ -30,6 +30,7 @@ export const UserRoleList: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [showRoleModal, setShowRoleModal] = useState(false);
+    const [actionError, setActionError] = useState('');
 
     useEffect(() => {
         loadUsers();
@@ -82,8 +83,25 @@ export const UserRoleList: React.FC = () => {
             await loadUsers();
         } catch (err: any) {
             console.error('Error toggling role:', err);
-            alert(err.response?.data?.message || 'Erro ao atualizar role');
+            setActionError(err.response?.data?.message || 'Erro ao atualizar role');
         }
+    };
+
+    /** Exporta os usuários atualmente listados; antes o botão não tinha ação. */
+    const handleExportCsv = () => {
+        const escape = (v: string) => /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+        const linhas = [
+            ['nome', 'email', 'roles'].join(','),
+            ...filteredUsers.map(u => [u.nome, u.email, u.roles.join(' | ')].map(escape).join(',')),
+        ];
+
+        const blob = new Blob([linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'usuarios-e-roles.csv';
+        link.click();
+        URL.revokeObjectURL(url);
     };
 
     const getInitials = (name: string) => {
@@ -144,10 +162,12 @@ export const UserRoleList: React.FC = () => {
                             className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                         />
                     </div>
-                    <button className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 transition-colors">
-                        <Filter className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 transition-colors">
+                    <button
+                        onClick={handleExportCsv}
+                        disabled={filteredUsers.length === 0}
+                        title="Exportar lista em CSV"
+                        className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
                         <Download className="w-4 h-4" />
                     </button>
                 </div>
@@ -247,13 +267,10 @@ export const UserRoleList: React.FC = () => {
                         </table>
                     </div>
 
-                    {/* Simple Pagination Footer */}
-                    <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 flex items-center justify-between text-xs text-slate-500">
-                        <span>Mostrando {filteredUsers.length} registros</span>
-                        <div className="flex gap-1">
-                            <button className="px-2 py-1 border border-slate-200 dark:border-slate-700 rounded hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50" disabled>Anterior</button>
-                            <button className="px-2 py-1 border border-slate-200 dark:border-slate-700 rounded hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50" disabled>Próximo</button>
-                        </div>
+                    {/* A lista carrega todos os usuários de uma vez; os controles de
+                        paginação eram decorativos (sempre desabilitados) e foram removidos. */}
+                    <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-xs text-slate-500">
+                        <span>Mostrando {filteredUsers.length} de {users.length} registros</span>
                     </div>
                 </div>
             )}
@@ -269,6 +286,10 @@ export const UserRoleList: React.FC = () => {
                         setSelectedUser(null);
                     }}
                 />
+            )}
+
+            {actionError && (
+                <FeedbackToast message={actionError} onClose={() => setActionError('')} />
             )}
         </div>
     );
