@@ -7,7 +7,6 @@ import com.smartmeeting.dto.ProjectMemberDTO;
 import com.smartmeeting.dto.UpdateProjectDTO;
 import com.smartmeeting.enums.PermissionType;
 import com.smartmeeting.exception.ForbiddenException;
-import com.smartmeeting.model.Pessoa;
 
 import com.smartmeeting.service.project.ProjectService;
 import com.smartmeeting.service.project.ProjectPermissionService;
@@ -16,7 +15,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -36,9 +34,8 @@ public class ProjectController {
     }
 
     @PostMapping
-    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody CreateProjectDTO createProjectDTO,
-            @AuthenticationPrincipal Pessoa currentUser) {
-        ProjectDTO project = projectService.createProject(createProjectDTO, currentUser);
+    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody CreateProjectDTO createProjectDTO) {
+        ProjectDTO project = projectService.createProject(createProjectDTO, SecurityUtils.getCurrentUserId());
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
@@ -52,7 +49,7 @@ public class ProjectController {
      * Admin global pode ver todos os projetos
      */
     @GetMapping
-    public ResponseEntity<List<ProjectDTO>> getAllProjects(@AuthenticationPrincipal Pessoa currentUser) {
+    public ResponseEntity<List<ProjectDTO>> getAllProjects() {
         // Admin global pode ver todos os projetos
         if (SecurityUtils.isAdmin()) {
             List<ProjectDTO> projects = projectService.findAllProjects();
@@ -60,7 +57,7 @@ public class ProjectController {
         }
 
         // Usuários comuns só veem projetos onde são membros
-        List<ProjectDTO> projects = projectService.findMyProjects(currentUser);
+        List<ProjectDTO> projects = projectService.findMyProjects(SecurityUtils.getCurrentUserId());
         return ResponseEntity.ok(projects);
     }
 
@@ -81,8 +78,7 @@ public class ProjectController {
      * Busca um projeto por ID (com verificação de permissão)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ProjectDTO> getProjectById(@PathVariable Long id,
-            @AuthenticationPrincipal Pessoa currentUser) {
+    public ResponseEntity<ProjectDTO> getProjectById(@PathVariable Long id) {
         // Admin global pode ver qualquer projeto
         if (SecurityUtils.isAdmin()) {
             ProjectDTO project = projectService.findProjectById(id);
@@ -101,47 +97,48 @@ public class ProjectController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProjectDTO> updateProject(@PathVariable Long id,
-            @Valid @RequestBody UpdateProjectDTO updateProjectDTO,
-            @AuthenticationPrincipal Pessoa currentUser) {
-        ProjectDTO updatedProject = projectService.updateProject(id, updateProjectDTO, currentUser);
+            @Valid @RequestBody UpdateProjectDTO updateProjectDTO) {
+        ProjectDTO updatedProject = projectService.updateProject(id, updateProjectDTO,
+                SecurityUtils.getCurrentUserId());
         return ResponseEntity.ok(updatedProject);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable Long id, @AuthenticationPrincipal Pessoa currentUser) {
+    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!SecurityUtils.isAdmin()) {
-            if (!projectPermissionService.hasPermission(id, currentUser.getId(), PermissionType.PROJECT_DELETE)) {
+            if (!projectPermissionService.hasPermission(id, currentUserId, PermissionType.PROJECT_DELETE)) {
                 throw new ForbiddenException("Você não tem permissão para excluir este projeto.");
             }
         }
-        projectService.deleteProject(id, currentUser);
+        projectService.deleteProject(id, currentUserId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{projectId}/members")
     public ResponseEntity<ProjectMemberDTO> addMember(@PathVariable Long projectId,
-            @Valid @RequestBody AddProjectMemberDTO addProjectMemberDTO,
-            @AuthenticationPrincipal Pessoa currentUser) {
+            @Valid @RequestBody AddProjectMemberDTO addProjectMemberDTO) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!SecurityUtils.isAdmin()) {
-            if (!projectPermissionService.hasPermission(projectId, currentUser.getId(),
+            if (!projectPermissionService.hasPermission(projectId, currentUserId,
                     PermissionType.PROJECT_MANAGE_MEMBERS)) {
                 throw new ForbiddenException("Você não tem permissão para gerenciar membros neste projeto.");
             }
         }
-        ProjectMemberDTO newMember = projectService.addMember(projectId, addProjectMemberDTO, currentUser);
+        ProjectMemberDTO newMember = projectService.addMember(projectId, addProjectMemberDTO, currentUserId);
         return new ResponseEntity<>(newMember, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{projectId}/members/{memberId}")
-    public ResponseEntity<Void> removeMember(@PathVariable Long projectId, @PathVariable Long memberId,
-            @AuthenticationPrincipal Pessoa currentUser) {
+    public ResponseEntity<Void> removeMember(@PathVariable Long projectId, @PathVariable Long memberId) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!SecurityUtils.isAdmin()) {
-            if (!projectPermissionService.hasPermission(projectId, currentUser.getId(),
+            if (!projectPermissionService.hasPermission(projectId, currentUserId,
                     PermissionType.PROJECT_MANAGE_MEMBERS)) {
                 throw new ForbiddenException("Você não tem permissão para gerenciar membros neste projeto.");
             }
         }
-        projectService.removeMember(projectId, memberId, currentUser);
+        projectService.removeMember(projectId, memberId, currentUserId);
         return ResponseEntity.noContent().build();
     }
 

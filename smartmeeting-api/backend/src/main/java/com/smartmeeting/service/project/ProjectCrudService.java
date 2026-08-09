@@ -30,6 +30,7 @@ public class ProjectCrudService {
     private final ProjectRepository projectRepository;
     private final PessoaRepository pessoaRepository;
     private final PermissionCacheInvalidator cacheInvalidator;
+    private final ProjectPermissionService projectPermissionService;
 
     public ProjectDTO toDTO(Project project) {
         if (project == null)
@@ -105,6 +106,16 @@ public class ProjectCrudService {
         project.setMembers(members);
 
         Project saved = projectRepository.save(project);
+
+        // O dono era criado como membro sem nenhuma linha em PROJECT_PERMISSION, então
+        // quem criava um projeto não conseguia nem abri-lo (403), a menos que fosse admin
+        // global. Os projetos do seed só funcionavam porque o data.sql insere as
+        // permissões na mão.
+        saved.getMembers().stream()
+                .filter(m -> m.getPerson() != null && m.getPerson().getId().equals(owner.getId()))
+                .findFirst()
+                .ifPresent(projectPermissionService::initializePermissionsForMember);
+
         return toDTO(saved);
     }
 

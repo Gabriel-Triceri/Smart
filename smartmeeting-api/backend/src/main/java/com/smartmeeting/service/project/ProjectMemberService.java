@@ -26,6 +26,7 @@ public class ProjectMemberService {
     private final PessoaRepository pessoaRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectPermissionRepository projectPermissionRepository;
+    private final ProjectPermissionService projectPermissionService;
     private final PermissionCacheInvalidator cacheInvalidator;
 
     /**
@@ -63,6 +64,13 @@ public class ProjectMemberService {
         member.setJoinedAt(LocalDateTime.now());
 
         ProjectMember saved = projectMemberRepository.save(member);
+
+        // Sem isto o membro nasce com zero linhas em PROJECT_PERMISSION, ou seja, sem
+        // acesso nenhum ao projeto do qual acabou de entrar — e cada "false" ainda ficava
+        // no cache. As permissões vêm do template do papel.
+        projectPermissionService.initializePermissionsForMember(saved);
+        cacheInvalidator.invalidate(projectId, personId);
+
         return toDTO(saved);
     }
 

@@ -31,12 +31,8 @@ public class ProjectService {
      * em nome de outra pessoa — antes o {@code ownerId} vinha cru do corpo e qualquer
      * autenticado apontava quem quisesse como proprietário.
      *
-     * Usa {@link com.smartmeeting.util.SecurityUtils} e não o {@code currentUser} recebido,
-     * porque {@code @AuthenticationPrincipal Pessoa} resolve para {@code null} (o principal
-     * é um {@code UserPrincipal}).
      */
-    public ProjectDTO createProject(CreateProjectDTO createProjectDTO, Pessoa currentUser) {
-        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+    public ProjectDTO createProject(CreateProjectDTO createProjectDTO, Long currentUserId) {
         if (currentUserId == null) {
             throw new com.smartmeeting.exception.ForbiddenException("Usuário não autenticado.");
         }
@@ -64,9 +60,9 @@ public class ProjectService {
         return crudService.buscarPorId(id);
     }
 
-    public ProjectDTO updateProject(Long id, UpdateProjectDTO updateProjectDTO, Pessoa currentUser) {
+    public ProjectDTO updateProject(Long id, UpdateProjectDTO updateProjectDTO, Long currentUserId) {
         if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
-            if (!projectPermissionService.hasPermission(id, currentUser.getId(),
+            if (!projectPermissionService.hasPermission(id, currentUserId,
                     com.smartmeeting.enums.PermissionType.PROJECT_EDIT)) {
                 throw new com.smartmeeting.exception.ForbiddenException(
                         "Você não tem permissão para editar este projeto.");
@@ -75,9 +71,9 @@ public class ProjectService {
         return crudService.atualizar(id, updateProjectDTO);
     }
 
-    public void deleteProject(Long id, Pessoa currentUser) {
+    public void deleteProject(Long id, Long currentUserId) {
         if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
-            if (!projectPermissionService.hasPermission(id, currentUser.getId(),
+            if (!projectPermissionService.hasPermission(id, currentUserId,
                     com.smartmeeting.enums.PermissionType.PROJECT_DELETE)) {
                 throw new com.smartmeeting.exception.ForbiddenException(
                         "Você não tem permissão para excluir este projeto.");
@@ -87,9 +83,9 @@ public class ProjectService {
     }
 
     // Members
-    public ProjectMemberDTO addMember(Long projectId, AddProjectMemberDTO addProjectMemberDTO, Pessoa currentUser) {
+    public ProjectMemberDTO addMember(Long projectId, AddProjectMemberDTO addProjectMemberDTO, Long currentUserId) {
         if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
-            if (!projectPermissionService.hasPermission(projectId, currentUser.getId(),
+            if (!projectPermissionService.hasPermission(projectId, currentUserId,
                     com.smartmeeting.enums.PermissionType.PROJECT_MANAGE_MEMBERS)) {
                 throw new com.smartmeeting.exception.ForbiddenException(
                         "Você não tem permissão para gerenciar membros neste projeto.");
@@ -98,9 +94,9 @@ public class ProjectService {
         return memberService.addMember(projectId, addProjectMemberDTO.getPersonId(), addProjectMemberDTO.getRole());
     }
 
-    public void removeMember(Long projectId, Long memberId, Pessoa currentUser) {
+    public void removeMember(Long projectId, Long memberId, Long currentUserId) {
         if (!com.smartmeeting.util.SecurityUtils.isAdmin()) {
-            if (!projectPermissionService.hasPermission(projectId, currentUser.getId(),
+            if (!projectPermissionService.hasPermission(projectId, currentUserId,
                     com.smartmeeting.enums.PermissionType.PROJECT_MANAGE_MEMBERS)) {
                 throw new com.smartmeeting.exception.ForbiddenException(
                         "Você não tem permissão para gerenciar membros neste projeto.");
@@ -110,8 +106,8 @@ public class ProjectService {
     }
 
     // Search
-    public List<ProjectDTO> findMyProjects(Pessoa currentUser) {
-        return searchService.findMyProjects(currentUser.getId());
+    public List<ProjectDTO> findMyProjects(Long currentUserId) {
+        return searchService.findMyProjects(currentUserId);
     }
 
     // Compatibility if Controller calls methods expecting Entity - NO, Controller
