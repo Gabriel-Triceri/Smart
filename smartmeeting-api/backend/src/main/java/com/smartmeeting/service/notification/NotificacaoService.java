@@ -63,6 +63,39 @@ public class NotificacaoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Notificações destinadas a uma pessoa. Este é o caminho normal de leitura: antes o
+     * endpoint listava as notificações de todos os usuários do sistema.
+     */
+    public List<NotificacaoDTO> listarPara(Long destinatarioId) {
+        return repository.findByDestinatarioId(destinatarioId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Garante que a notificação pertence ao usuário atual, exceto para administradores.
+     */
+    public void verificarAcesso(Long notificacaoId) {
+        if (com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            return;
+        }
+
+        Notificacao notificacao = repository.findById(notificacaoId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Notificação não encontrada com ID: " + notificacaoId));
+
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        Long destinatarioId = notificacao.getDestinatario() != null
+                ? notificacao.getDestinatario().getId()
+                : null;
+
+        if (currentUserId == null || !currentUserId.equals(destinatarioId)) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Esta notificação não pertence a você.");
+        }
+    }
+
     // Corrigido: Retorna NotificacaoDTO diretamente, lançando exceção se não
     // encontrado
     public NotificacaoDTO buscarPorId(Long id) {

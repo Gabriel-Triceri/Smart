@@ -5,6 +5,7 @@ import com.smartmeeting.dto.ProjectPermissionDTO;
 import com.smartmeeting.dto.UpdatePermissionsRequest;
 import com.smartmeeting.enums.PermissionType;
 import com.smartmeeting.enums.ProjectRole;
+import com.smartmeeting.exception.BadRequestException;
 import com.smartmeeting.service.project.ProjectPermissionService;
 import com.smartmeeting.websocket.PermissionWebSocketNotifier;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class ProjectPermissionController {
     public ResponseEntity<MemberPermissionsDTO> getMemberPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId) {
-        MemberPermissionsDTO permissions = permissionService.getMemberPermissions(memberId);
+        MemberPermissionsDTO permissions = permissionService.getMemberPermissions(memberId, projectId);
         return ResponseEntity.ok(permissions);
     }
 
@@ -56,7 +57,7 @@ public class ProjectPermissionController {
             @PathVariable("memberId") Long memberId,
             @RequestBody UpdatePermissionsRequest request) {
         request.setProjectMemberId(memberId);
-        MemberPermissionsDTO updated = permissionService.updateMemberPermissions(request);
+        MemberPermissionsDTO updated = permissionService.updateMemberPermissions(request, projectId);
 
         // ADICIONADO: notificar o membro afetado via WebSocket
         wsNotifier.notifyPermissionsUpdated(updated.getPersonId(), projectId);
@@ -70,8 +71,8 @@ public class ProjectPermissionController {
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId,
             @RequestBody Map<String, String> request) {
-        ProjectRole newRole = ProjectRole.valueOf(request.get("role"));
-        MemberPermissionsDTO updated = permissionService.updateMemberRole(memberId, newRole);
+        ProjectRole newRole = parseProjectRole(request.get("role"));
+        MemberPermissionsDTO updated = permissionService.updateMemberRole(memberId, newRole, projectId);
 
         // ADICIONADO: notificar o membro afetado via WebSocket
         wsNotifier.notifyPermissionsUpdated(updated.getPersonId(), projectId);
@@ -84,7 +85,7 @@ public class ProjectPermissionController {
     public ResponseEntity<MemberPermissionsDTO> resetMemberPermissions(
             @PathVariable("projectId") Long projectId,
             @PathVariable("memberId") Long memberId) {
-        MemberPermissionsDTO reset = permissionService.resetToDefaultPermissions(memberId);
+        MemberPermissionsDTO reset = permissionService.resetToDefaultPermissions(memberId, projectId);
 
         // ADICIONADO: notificar o membro afetado via WebSocket
         wsNotifier.notifyPermissionsUpdated(reset.getPersonId(), projectId);
@@ -113,9 +114,35 @@ public class ProjectPermissionController {
             }
         }
 
-        PermissionType permType = PermissionType.valueOf(permission);
+        PermissionType permType = parsePermissionType(permission);
         boolean hasPermission = permissionService.hasPermission(projectId, targetPersonId, permType);
         return ResponseEntity.ok(Map.of("hasPermission", hasPermission));
+    }
+
+    /* Valores de enum vindos do corpo/query eram passados direto para valueOf, que lança
+       IllegalArgumentException (ou NPE, se ausente) e virava 500. São entradas do cliente:
+       o correto é 400. */
+
+    private ProjectRole parseProjectRole(String valor) {
+        if (valor == null || valor.isBlank()) {
+            throw new BadRequestException("O campo 'role' é obrigatório");
+        }
+        try {
+            return ProjectRole.valueOf(valor.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Papel de projeto inválido: " + valor);
+        }
+    }
+
+    private PermissionType parsePermissionType(String valor) {
+        if (valor == null || valor.isBlank()) {
+            throw new BadRequestException("O parâmetro 'permission' é obrigatório");
+        }
+        try {
+            return PermissionType.valueOf(valor.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Permissão inválida: " + valor);
+        }
     }
 
     @GetMapping("/types")
@@ -128,7 +155,7 @@ public class ProjectPermissionController {
     public ResponseEntity<Map<PermissionType, Boolean>> getRoleTemplate(
             @PathVariable("projectId") Long projectId,
             @PathVariable("role") String role) {
-        ProjectRole projectRole = ProjectRole.valueOf(role);
+        ProjectRole projectRole = parseProjectRole(role);
         Map<PermissionType, Boolean> template = permissionService.getRolePermissionTemplate(projectRole);
         return ResponseEntity.ok(template);
     }

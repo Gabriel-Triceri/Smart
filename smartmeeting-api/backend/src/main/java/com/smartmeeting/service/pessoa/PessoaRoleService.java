@@ -8,6 +8,7 @@ import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.RoleRepository;
 import com.smartmeeting.websocket.PermissionWebSocketHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
@@ -41,7 +42,14 @@ public class PessoaRoleService {
                 .orElseGet(ArrayList::new);
     }
 
+    /**
+     * O cache "users" guarda o UserDetails com as authorities já resolvidas, e é dele
+     * que o JwtAuthenticationFilter monta a autorização de cada request. Sem o evict,
+     * conceder ou revogar um papel só passava a valer quando o cache expirasse — até
+     * uma hora depois — enquanto o WebSocket já avisava o frontend que mudou.
+     */
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void addRoleToPessoa(Long pessoaId, Long roleId) {
         if (pessoaId == null) {
             throw new BadRequestException("ID da pessoa não pode ser null");
@@ -74,6 +82,7 @@ public class PessoaRoleService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void removeRoleFromPessoa(Long pessoaId, Long roleId) {
         if (pessoaId == null) {
             throw new BadRequestException("ID da pessoa não pode ser null");

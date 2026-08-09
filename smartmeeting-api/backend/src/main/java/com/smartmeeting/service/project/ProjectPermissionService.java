@@ -37,9 +37,11 @@ public class ProjectPermissionService {
     private final RolePermissionTemplateRepository templateRepository;
     private final RoleRepository roleRepository;
     private final CacheManager cacheManager;
+    private final PermissionCacheInvalidator cacheInvalidator;
     // private final PermissionWebSocketHandler webSocketHandler;
 
-    private static final String PERMISSIONS_CACHE = "projectPermissions";
+    /** Nome do cache. Público para que o {@code CacheConfig} registre exatamente este. */
+    public static final String PERMISSIONS_CACHE = "projectPermissions";
 
     /**
      * Inicializa os templates de permissões por role (executado no startup)
@@ -182,34 +184,14 @@ public class ProjectPermissionService {
 
     /**
      * Invalida o cache de permissões para um usuário específico em um projeto.
-     * Chamado após atualizações de permissão para garantir consistência.
+     * A invalidação é aplicada depois do commit — ver {@link PermissionCacheInvalidator}.
      */
     public void invalidateUserCache(Long projectId, Long personId) {
-        Cache cache = getCache();
-        if (cache != null) {
-            // Invalida todas as permissões do usuário no projeto
-            for (PermissionType perm : PermissionType.values()) {
-                String cacheKey = buildCacheKey(projectId, personId, perm);
-                cache.evict(cacheKey);
-            }
-            log.debug("Cache invalidado para usuário {} no projeto {}", personId, projectId);
-        }
-    }
-
-    /**
-     * Invalida todo o cache de permissões do projeto.
-     * Use com cuidado - pode afetar performance.
-     */
-    public void invalidateProjectCache(Long projectId) {
-        Cache cache = getCache();
-        if (cache != null) {
-            cache.clear();
-            log.info("Todo o cache de permissões invalidado para o projeto {}", projectId);
-        }
+        cacheInvalidator.invalidate(projectId, personId);
     }
 
     private String buildCacheKey(Long projectId, Long personId, PermissionType permissionType) {
-        return String.format("proj_%d_user_%d_perm_%s", projectId, personId, permissionType.name());
+        return PermissionCacheInvalidator.buildCacheKey(projectId, personId, permissionType);
     }
 
     private Cache getCache() {
@@ -220,24 +202,41 @@ public class ProjectPermissionService {
     }
 
     /**
-     * Obtém todas as permissões de um membro
+     * Carrega um membro garantindo que ele pertence ao projeto informado.
+     *
+     * As rotas validam a permissão sobre o {@code projectId} do path, mas resolviam o
+     * membro só pelo {@code memberId} — então quem administrava um projeto conseguia ler
+     * e alterar permissões de membros de <b>outros</b> projetos. A resposta é 404 e não
+     * 403 de propósito: confirmar que o membro existe noutro projeto já é vazamento.
      */
-    @Transactional // Adicione aqui, pois o método pode realizar escrita (inicialização)
-    public MemberPermissionsDTO getMemberPermissions(Long projectMemberId) {
+    private ProjectMember findMemberInProject(Long projectMemberId, Long projectId) {
         ProjectMember member = memberRepository.findById(projectMemberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Membro não encontrado: " + projectMemberId));
 
-        // REMOVA o IF do ProjectRole.OWNER daqui.
-        // Você quer que o sistema mostre as permissões do dono,
-        // apenas não quer que ninguém as altere (isso você já tratou no update).
+        if (projectId != null
+                && (member.getProject() == null || !projectId.equals(member.getProject().getId()))) {
+            throw new ResourceNotFoundException(
+                    "Membro " + projectMemberId + " não encontrado no projeto " + projectId);
+        }
 
-        List<ProjectPermission> permissions = permissionRepository.findByProjectMemberId(projectMemberId);
+        return member;
+    }
+
+    /**
+     * Obtém todas as permissões de um membro, validando que ele é do projeto informado.
+     */
+    @Transactional // pode realizar escrita (inicialização preguiçosa)
+    public MemberPermissionsDTO getMemberPermissions(Long projectMemberId, Long projectId) {
+        return carregarPermissoes(findMemberInProject(projectMemberId, projectId));
+    }
+
+    private MemberPermissionsDTO carregarPermissoes(ProjectMember member) {
+        List<ProjectPermission> permissions = permissionRepository.findByProjectMemberId(member.getId());
 
         // Se o banco estiver vazio para este membro, inicializamos agora (Lazy Initialization)
         if (permissions.isEmpty()) {
             initializePermissionsForMember(member);
-            // Busca novamente após inicializar
-            permissions = permissionRepository.findByProjectMemberId(projectMemberId);
+            permissions = permissionRepository.findByProjectMemberId(member.getId());
         }
 
         return toMemberPermissionsDTO(member, permissions);
@@ -246,22 +245,23 @@ public class ProjectPermissionService {
     /**
      * Obtém permissões de um usuário em um projeto específico
      */
+    @Transactional
     public MemberPermissionsDTO getPermissionsByProjectAndPerson(Long projectId, Long personId) {
         ProjectMember member = memberRepository.findByProjectIdAndPersonId(projectId, personId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Membro não encontrado no projeto: " + projectId + " para pessoa: " + personId));
 
-        return getMemberPermissions(member.getId());
+        return carregarPermissoes(member);
     }
 
     /**
      * Lista todas as permissões de todos os membros de um projeto
      */
+    @Transactional
     public List<MemberPermissionsDTO> getAllMemberPermissions(Long projectId) {
-        List<ProjectMember> members = memberRepository.findByProjectId(projectId);
-
-        return members.stream()
-                .map(member -> getMemberPermissions(member.getId()))
+        // Os membros já vêm do projeto, então não precisam da validação de posse.
+        return memberRepository.findByProjectId(projectId).stream()
+                .map(this::carregarPermissoes)
                 .collect(Collectors.toList());
     }
 
@@ -269,17 +269,15 @@ public class ProjectPermissionService {
      * Atualiza permissões de um membro com invalidação de cache otimizada.
      */
     @Transactional
-    public MemberPermissionsDTO updateMemberPermissions(UpdatePermissionsRequest request) {
-        ProjectMember member = memberRepository.findById(request.getProjectMemberId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Membro não encontrado: " + request.getProjectMemberId()));
+    public MemberPermissionsDTO updateMemberPermissions(UpdatePermissionsRequest request, Long projectId) {
+        ProjectMember member = findMemberInProject(request.getProjectMemberId(), projectId);
 
         if (member.getRole() == ProjectRole.OWNER) {
             throw new BadRequestException("Não é possível alterar permissões do proprietário do projeto");
         }
 
         Long affectedPersonId = member.getPerson().getId();
-        Long projectId = member.getProject().getId();
+        Long projectIdDoMembro = member.getProject().getId();
 
         for (Map.Entry<PermissionType, Boolean> entry : request.getPermissions().entrySet()) {
             PermissionType permType = entry.getKey();
@@ -299,26 +297,37 @@ public class ProjectPermissionService {
         log.info("Permissões atualizadas para membro {} no projeto {}",
                 member.getPerson().getNome(), member.getProject().getName());
 
-        // Invalida cache ANTES de retornar para garantir que próximas consultas vejam as mudanças
-        invalidateUserCache(projectId, affectedPersonId);
+        invalidateUserCache(projectIdDoMembro, affectedPersonId);
 
-        return getMemberPermissions(member.getId());
+        return carregarPermissoes(member);
     }
 
     /**
      * Atualiza role de um membro e reseta permissões para o padrão do novo role
      */
     @Transactional
-    public MemberPermissionsDTO updateMemberRole(Long projectMemberId, ProjectRole newRole) {
-        ProjectMember member = memberRepository.findById(projectMemberId)
-                .orElseThrow(() -> new ResourceNotFoundException("Membro não encontrado: " + projectMemberId));
+    public MemberPermissionsDTO updateMemberRole(Long projectMemberId, ProjectRole newRole, Long projectId) {
+        ProjectMember member = findMemberInProject(projectMemberId, projectId);
 
         if (member.getRole() == ProjectRole.OWNER) {
             throw new BadRequestException("Não é possível alterar o papel do proprietário do projeto");
         }
 
+        // O papel de dono é atribuído na criação do projeto e nunca por esta rota. Sem
+        // esta guarda, um membro com PROJECT_MANAGE_MEMBERS apontava o próprio memberId,
+        // virava OWNER, herdava PROJECT_DELETE e a linha ficava imutável pela guarda acima.
+        if (newRole == ProjectRole.OWNER) {
+            throw new BadRequestException("Não é possível promover um membro a proprietário do projeto");
+        }
+
         Long affectedPersonId = member.getPerson().getId();
-        Long projectId = member.getProject().getId();
+        Long projectIdDoMembro = member.getProject().getId();
+
+        // Impede alterar o próprio papel, mesmo tendo permissão de gerenciar membros.
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (currentUserId != null && currentUserId.equals(affectedPersonId)) {
+            throw new BadRequestException("Não é possível alterar o próprio papel no projeto");
+        }
 
         member.setRole(newRole);
         memberRepository.save(member);
@@ -326,30 +335,32 @@ public class ProjectPermissionService {
         permissionRepository.deleteByProjectMemberId(projectMemberId);
         initializePermissionsForMember(member);
 
-        // Invalida cache ANTES de retornar
-        invalidateUserCache(projectId, affectedPersonId);
+        invalidateUserCache(projectIdDoMembro, affectedPersonId);
 
-        return getMemberPermissions(projectMemberId);
+        return carregarPermissoes(member);
     }
 
     /**
      * Reseta permissões de um membro para o padrão do seu role
      */
     @Transactional
-    public MemberPermissionsDTO resetToDefaultPermissions(Long projectMemberId) {
-        ProjectMember member = memberRepository.findById(projectMemberId)
-                .orElseThrow(() -> new ResourceNotFoundException("Membro não encontrado: " + projectMemberId));
+    public MemberPermissionsDTO resetToDefaultPermissions(Long projectMemberId, Long projectId) {
+        ProjectMember member = findMemberInProject(projectMemberId, projectId);
+
+        // Mesma invariante dos métodos irmãos: o dono não é alterado por esta rota.
+        if (member.getRole() == ProjectRole.OWNER) {
+            throw new BadRequestException("Não é possível redefinir as permissões do proprietário do projeto");
+        }
 
         Long affectedPersonId = member.getPerson().getId();
-        Long projectId = member.getProject().getId();
+        Long projectIdDoMembro = member.getProject().getId();
 
         permissionRepository.deleteByProjectMemberId(projectMemberId);
         initializePermissionsForMember(member);
 
-        // Invalida cache ANTES de retornar
-        invalidateUserCache(projectId, affectedPersonId);
+        invalidateUserCache(projectIdDoMembro, affectedPersonId);
 
-        return getMemberPermissions(projectMemberId);
+        return carregarPermissoes(member);
     }
 
     /**

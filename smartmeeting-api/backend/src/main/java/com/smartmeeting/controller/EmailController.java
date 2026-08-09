@@ -2,6 +2,7 @@ package com.smartmeeting.controller;
 
 import com.smartmeeting.service.email.EmailService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,7 +24,11 @@ public class EmailController {
      * @param destinatario Endereço de e-mail do destinatário
      * @return Mensagem de confirmação
      */
+    // Restrito a admin, alinhando com POST /reunioes/testar-email, que faz exatamente a
+    // mesma coisa e já exigia admin. Aberto, era um relay de e-mail para endereço
+    // arbitrário usando a infraestrutura da aplicação.
     @PostMapping("/teste")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_SYSTEM_SETTINGS')")
     public ResponseEntity<String> testarEmail(@RequestParam String destinatario) {
         boolean sucesso = emailService.enviarEmailTeste(destinatario);
         if (sucesso) {

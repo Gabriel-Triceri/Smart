@@ -15,6 +15,7 @@ import com.smartmeeting.util.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -66,7 +67,11 @@ public class ProjectController {
     /**
      * Lista todos os projetos, independentemente de o usuário ser membro
      */
+    // Devolve todos os projetos com dados de contato do cliente e a lista de membros com
+    // e-mail. Sem verificação, era o bypass do GET /projects logo acima, que filtra por
+    // associação.
     @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_VIEW_REPORTS')")
     public ResponseEntity<List<ProjectDTO>> listAllProjects() {
         List<ProjectDTO> projects = projectService.findAllProjects();
         return ResponseEntity.ok(projects);

@@ -8,6 +8,7 @@ import com.smartmeeting.model.Project;
 import com.smartmeeting.model.ProjectMember;
 import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.ProjectMemberRepository;
+import com.smartmeeting.repository.ProjectPermissionRepository;
 import com.smartmeeting.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,24 @@ public class ProjectMemberService {
     private final ProjectRepository projectRepository;
     private final PessoaRepository pessoaRepository;
     private final ProjectMemberRepository projectMemberRepository;
-    // private final ProjectCrudService crudService; // removed unused
+    private final ProjectPermissionRepository projectPermissionRepository;
+    private final PermissionCacheInvalidator cacheInvalidator;
+
+    /**
+     * Remove o membro e as permissões que apontam para ele.
+     *
+     * PROJECT_PERMISSION tem FK para PROJECT_MEMBER, então apagar o membro direto sempre
+     * violava a integridade referencial — remover alguém de um projeto nunca funcionou.
+     */
+    private void removerMembroComPermissoes(ProjectMember member) {
+        Long projectId = member.getProject() != null ? member.getProject().getId() : null;
+        Long personId = member.getPerson() != null ? member.getPerson().getId() : null;
+
+        projectPermissionRepository.deleteByProjectMemberId(member.getId());
+        projectMemberRepository.delete(member);
+
+        cacheInvalidator.invalidate(projectId, personId);
+    }
 
     @Transactional
     public ProjectMemberDTO addMember(Long projectId, Long personId, ProjectRole role) {
@@ -60,15 +78,17 @@ public class ProjectMemberService {
         ProjectMember member = projectMemberRepository.findByProjectAndPerson(project, person)
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found in project"));
 
-        projectMemberRepository.delete(member);
+        removerMembroComPermissoes(member);
     }
 
     @Transactional
     public void removeMemberById(Long memberId) {
-        if (!projectMemberRepository.existsById(memberId)) {
-            throw new ResourceNotFoundException("Member not found with ID: " + memberId);
-        }
-        projectMemberRepository.deleteById(memberId);
+        // Carrega antes de apagar: sem projeto e pessoa não dá para invalidar o cache,
+        // e sem invalidar o removido continuava passando em todos os checks.
+        ProjectMember member = projectMemberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Member not found with ID: " + memberId));
+
+        removerMembroComPermissoes(member);
     }
 
     @Transactional
@@ -84,6 +104,7 @@ public class ProjectMemberService {
 
         member.setRole(newRole);
         ProjectMember saved = projectMemberRepository.save(member);
+        cacheInvalidator.invalidate(projectId, personId);
         return toDTO(saved);
     }
 

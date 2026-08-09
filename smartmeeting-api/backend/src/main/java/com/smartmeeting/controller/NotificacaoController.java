@@ -2,7 +2,9 @@ package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.NotificacaoDTO;
 import com.smartmeeting.service.notification.NotificacaoService;
+import com.smartmeeting.util.SecurityUtils;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,14 +20,18 @@ public class NotificacaoController {
     }
 
     /**
-     * Lista todas as notificações cadastradas no sistema
-     * 
-     * @return Lista de notificações convertidas para DTO
+     * Lista as notificações do usuário autenticado. Administradores recebem todas.
+     *
+     * Antes este endpoint devolvia as notificações de todos os usuários do sistema para
+     * qualquer autenticado.
      */
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<NotificacaoDTO>> listar() {
-        List<NotificacaoDTO> notificacoes = service.listarTodas();
-        return ResponseEntity.ok(notificacoes);
+        if (SecurityUtils.isAdmin()) {
+            return ResponseEntity.ok(service.listarTodas());
+        }
+        return ResponseEntity.ok(service.listarPara(SecurityUtils.getCurrentUserId()));
     }
 
     /**
@@ -36,8 +42,9 @@ public class NotificacaoController {
      *         existir
      */
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<NotificacaoDTO> buscarPorId(@PathVariable Long id) {
-        // O service já lança ResourceNotFoundException se não encontrar
+        service.verificarAcesso(id);
         NotificacaoDTO dto = service.buscarPorId(id);
         return ResponseEntity.ok(dto);
     }
@@ -48,7 +55,9 @@ public class NotificacaoController {
      * @param dto Dados da notificação a ser criada
      * @return ResponseEntity contendo a notificação criada com ID gerado
      */
+    /** Criar notificação para outra pessoa é ação administrativa. */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS')")
     public ResponseEntity<NotificacaoDTO> criar(@RequestBody NotificacaoDTO dto) {
         NotificacaoDTO salvo = service.salvar(dto);
         return ResponseEntity.ok(salvo);
@@ -63,7 +72,9 @@ public class NotificacaoController {
      *         existir
      */
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<NotificacaoDTO> atualizar(@PathVariable Long id, @RequestBody NotificacaoDTO dto) {
+        service.verificarAcesso(id);
         NotificacaoDTO atualizado = service.atualizar(id, dto);
         return ResponseEntity.ok(atualizado);
     }
@@ -75,7 +86,9 @@ public class NotificacaoController {
      * @return ResponseEntity com status 204 (No Content) ou 404 se não encontrada
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        service.verificarAcesso(id);
         service.deletar(id);
         return ResponseEntity.noContent().build();
     }

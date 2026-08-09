@@ -1,6 +1,9 @@
 package com.smartmeeting.controller;
 
 import com.smartmeeting.dto.*;
+import com.smartmeeting.enums.PermissionType;
+import com.smartmeeting.exception.ForbiddenException;
+import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.AnexoTarefa;
 import com.smartmeeting.service.project.ProjectPermissionService;
 import com.smartmeeting.service.tarefa.TarefaService;
@@ -25,6 +28,65 @@ public class TarefaController {
     private final TarefaService tarefaService;
     private final ProjectPermissionService projectPermissionService;
 
+    /**
+     * Exige uma permissão sobre o projeto ao qual a tarefa pertence.
+     *
+     * A maior parte deste controller exigia apenas autenticação, então qualquer usuário
+     * alcançava tarefas de projetos dos quais não participa. Tarefas sem projeto seguem
+     * acessíveis a qualquer autenticado, como já era o comportamento de criar/editar.
+     */
+    private void exigirPermissaoNaTarefa(Long tarefaId, PermissionType permissao, String acao) {
+        if (SecurityUtils.isAdmin()) {
+            return;
+        }
+
+        Long projectId = tarefaService.buscarPorIdDTO(tarefaId).getProjectId();
+        if (projectId == null) {
+            return;
+        }
+
+        if (!projectPermissionService.hasPermissionForCurrentUser(projectId, permissao)) {
+            throw new ForbiddenException("Você não tem permissão para " + acao + " neste projeto.");
+        }
+    }
+
+    /**
+     * Garante que o item do checklist é da tarefa informada no path.
+     *
+     * As rotas de atualizar/excluir item operavam só pelo {@code itemId}, ignorando o
+     * {@code tarefaId} — então a permissão era verificada sobre uma tarefa e a escrita
+     * acontecia em outra.
+     */
+    private void exigirItemDaTarefa(Long tarefaId, Long itemId) {
+        boolean pertence = tarefaService.listarChecklistItems(tarefaId).stream()
+                .anyMatch(item -> itemId.equals(item.getId()));
+
+        if (!pertence) {
+            throw new ResourceNotFoundException(
+                    "Item " + itemId + " não encontrado na tarefa " + tarefaId);
+        }
+    }
+
+    /** Mesma amarração do checklist, para o anexo não ser lido/apagado por outra tarefa. */
+    private void exigirAnexoDaTarefa(Long tarefaId, Long anexoId) {
+        boolean pertence = tarefaService.listarAnexos(tarefaId).stream()
+                .anyMatch(anexo -> anexoId.equals(anexo.getId()));
+
+        if (!pertence) {
+            throw new ResourceNotFoundException(
+                    "Anexo " + anexoId + " não encontrado na tarefa " + tarefaId);
+        }
+    }
+
+    private void exigirPermissaoNoProjeto(Long projectId, PermissionType permissao, String acao) {
+        if (projectId == null || SecurityUtils.isAdmin()) {
+            return;
+        }
+        if (!projectPermissionService.hasPermissionForCurrentUser(projectId, permissao)) {
+            throw new ForbiddenException("Você não tem permissão para " + acao + " neste projeto.");
+        }
+    }
+
     // ── CRUD ─────────────────────────────────────────────────────────────────
 
     @GetMapping
@@ -40,6 +102,8 @@ public class TarefaController {
             return ResponseEntity.ok(tarefaService.getTarefasPorReuniao(reuniaoId));
         }
 
+        exigirPermissaoNoProjeto(projectId, PermissionType.TASK_VIEW, "visualizar tarefas");
+
         Map<String, Object> filtros = new java.util.HashMap<>();
         if (projectId    != null) filtros.put("projectId",    projectId);
         if (columnId     != null) filtros.put("columnId",     columnId);
@@ -51,6 +115,7 @@ public class TarefaController {
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TarefaDTO> buscarPorId(@PathVariable Long id) {
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_VIEW, "visualizar tarefas");
         return ResponseEntity.ok(tarefaService.buscarPorIdDTO(id));
     }
 
@@ -103,6 +168,8 @@ public class TarefaController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TarefaDTO> duplicar(@PathVariable Long id,
                                               @RequestBody(required = false) Map<String, Object> modificacoes) {
+        // Duplicar cria uma tarefa: exigia nada e contornava o check de TASK_CREATE do POST.
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_CREATE, "criar tarefas");
         return ResponseEntity.ok(tarefaService.duplicarTarefa(id, modificacoes));
     }
 
@@ -110,6 +177,8 @@ public class TarefaController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TarefaDTO> atualizarProgresso(@PathVariable Long id,
                                                         @RequestParam Integer progresso) {
+        // Mesma entidade que o PUT, que já exigia TASK_EDIT.
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_EDIT, "editar tarefas");
         return ResponseEntity.ok(tarefaService.atualizarProgresso(id, progresso));
     }
 
@@ -174,6 +243,7 @@ public class TarefaController {
     @GetMapping("/{id}/checklist")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ChecklistItemDTO>> listarChecklist(@PathVariable Long id) {
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_VIEW, "visualizar tarefas");
         return ResponseEntity.ok(tarefaService.listarChecklistItems(id));
     }
 
@@ -182,6 +252,7 @@ public class TarefaController {
     public ResponseEntity<ChecklistItemDTO> adicionarChecklist(
             @PathVariable Long id,
             @RequestBody CreateChecklistItemRequest request) {
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_EDIT, "editar tarefas");
         return ResponseEntity.ok(tarefaService.adicionarChecklistItem(id, request));
     }
 
@@ -191,6 +262,8 @@ public class TarefaController {
             @PathVariable Long tarefaId,
             @PathVariable Long itemId,
             @RequestBody CreateChecklistItemRequest request) {
+        exigirPermissaoNaTarefa(tarefaId, PermissionType.TASK_EDIT, "editar tarefas");
+        exigirItemDaTarefa(tarefaId, itemId);
         return ResponseEntity.ok(tarefaService.atualizarChecklistItem(itemId, request));
     }
 
@@ -198,6 +271,8 @@ public class TarefaController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deletarChecklist(@PathVariable Long tarefaId,
                                                  @PathVariable Long itemId) {
+        exigirPermissaoNaTarefa(tarefaId, PermissionType.TASK_EDIT, "editar tarefas");
+        exigirItemDaTarefa(tarefaId, itemId);
         tarefaService.deletarChecklistItem(itemId);
         return ResponseEntity.noContent().build();
     }
@@ -212,6 +287,7 @@ public class TarefaController {
         String conteudo = (String) body.get("conteudo");
         @SuppressWarnings("unchecked")
         List<String> mencoes = (List<String>) body.getOrDefault("mencoes", List.of());
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_COMMENT, "comentar em tarefas");
         return ResponseEntity.ok(tarefaService.adicionarComentario(id, conteudo, mencoes));
     }
 
@@ -231,6 +307,7 @@ public class TarefaController {
         Long pessoaId = Long.valueOf(body.get("pessoaId").toString());
         Boolean principal = body.containsKey("principal")
                 ? Boolean.valueOf(body.get("principal").toString()) : true;
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_ASSIGN, "atribuir responsáveis");
         return ResponseEntity.ok(tarefaService.atribuirResponsavel(id, pessoaId, principal));
     }
 
@@ -281,12 +358,14 @@ public class TarefaController {
     public ResponseEntity<Map<String, Object>> anexar(
             @PathVariable Long id,
             @RequestParam("arquivo") MultipartFile arquivo) {
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_ATTACH, "anexar arquivos");
         return ResponseEntity.ok(tarefaService.anexarArquivo(id, arquivo));
     }
 
     @GetMapping("/{id}/anexos")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AnexoTarefaDTO>> listarAnexos(@PathVariable Long id) {
+        exigirPermissaoNaTarefa(id, PermissionType.TASK_VIEW, "visualizar tarefas");
         List<AnexoTarefaDTO> anexos = tarefaService.listarAnexos(id).stream()
                 .map(this::toAnexoDTO)
                 .toList();
@@ -296,6 +375,8 @@ public class TarefaController {
     @GetMapping("/{tarefaId}/anexos/{anexoId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> baixarAnexo(@PathVariable Long tarefaId, @PathVariable Long anexoId) {
+        exigirPermissaoNaTarefa(tarefaId, PermissionType.TASK_VIEW, "visualizar tarefas");
+        exigirAnexoDaTarefa(tarefaId, anexoId);
         AnexoTarefa anexo = tarefaService.buscarAnexo(anexoId);
         byte[] conteudo = tarefaService.downloadAnexo(anexoId);
 
@@ -314,7 +395,8 @@ public class TarefaController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deletarAnexo(@PathVariable Long tarefaId,
                                              @PathVariable Long anexoId) {
-        tarefaService.listarAnexos(tarefaId); // valida existência da tarefa
+        exigirPermissaoNaTarefa(tarefaId, PermissionType.TASK_ATTACH, "gerenciar anexos");
+        exigirAnexoDaTarefa(tarefaId, anexoId);
         tarefaService.deletarAnexo(anexoId, null);
         return ResponseEntity.noContent().build();
     }

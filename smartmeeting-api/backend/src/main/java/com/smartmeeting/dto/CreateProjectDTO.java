@@ -21,13 +21,16 @@ public class CreateProjectDTO {
 
     private String description;
 
-    @NotNull(message = "A data de início é obrigatória.")
+    /** Opcional: quando ausente, o projeto começa hoje. */
     @FutureOrPresent(message = "A data de início não pode ser no passado.")
     private LocalDate startDate;
 
     private LocalDate endDate;
 
-    @NotNull(message = "O ID do proprietário é obrigatório.")
+    /**
+     * Opcional e ignorado para não-administradores: o dono é sempre o usuário autenticado.
+     * Antes, qualquer um podia criar um projeto apontando outra pessoa como proprietária.
+     */
     private Long ownerId;
 
     // Dados do responsável pelo projeto no cliente (opcional)

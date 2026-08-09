@@ -26,9 +26,33 @@ public class ProjectService {
     private final ProjectPermissionService projectPermissionService;
 
     // CRUD
+    /**
+     * O dono é derivado do usuário autenticado. Só administradores podem criar um projeto
+     * em nome de outra pessoa — antes o {@code ownerId} vinha cru do corpo e qualquer
+     * autenticado apontava quem quisesse como proprietário.
+     *
+     * Usa {@link com.smartmeeting.util.SecurityUtils} e não o {@code currentUser} recebido,
+     * porque {@code @AuthenticationPrincipal Pessoa} resolve para {@code null} (o principal
+     * é um {@code UserPrincipal}).
+     */
     public ProjectDTO createProject(CreateProjectDTO createProjectDTO, Pessoa currentUser) {
-        // Ignorando currentUser pois o DTO define o owner.
-        // Futuramente pode-se validar se currentUser pode criar para outro owner.
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new com.smartmeeting.exception.ForbiddenException("Usuário não autenticado.");
+        }
+
+        boolean querOutroDono = createProjectDTO.getOwnerId() != null
+                && !createProjectDTO.getOwnerId().equals(currentUserId);
+
+        if (querOutroDono && !com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você não pode criar um projeto em nome de outra pessoa.");
+        }
+
+        if (!querOutroDono) {
+            createProjectDTO.setOwnerId(currentUserId);
+        }
+
         return crudService.criar(createProjectDTO);
     }
 

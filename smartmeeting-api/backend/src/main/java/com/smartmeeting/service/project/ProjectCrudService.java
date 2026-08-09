@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,7 @@ public class ProjectCrudService {
 
     private final ProjectRepository projectRepository;
     private final PessoaRepository pessoaRepository;
+    private final PermissionCacheInvalidator cacheInvalidator;
 
     public ProjectDTO toDTO(Project project) {
         if (project == null)
@@ -79,7 +81,7 @@ public class ProjectCrudService {
         Project project = new Project();
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
-        project.setStartDate(dto.getStartDate());
+        project.setStartDate(dto.getStartDate() != null ? dto.getStartDate() : LocalDate.now());
         project.setEndDate(dto.getEndDate());
         project.setClientContactName(dto.getClientContactName());
         project.setClientContactEmail(dto.getClientContactEmail());
@@ -151,10 +153,18 @@ public class ProjectCrudService {
         return toDTO(saved);
     }
 
+    @Transactional
     public void deletar(Long id) {
-        if (!projectRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Project not found with ID: " + id);
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with ID: " + id));
+
+        // Invalida cada membro individualmente, para não limpar o cache do sistema inteiro.
+        if (project.getMembers() != null) {
+            project.getMembers().stream()
+                    .filter(m -> m.getPerson() != null)
+                    .forEach(m -> cacheInvalidator.invalidate(id, m.getPerson().getId()));
         }
-        projectRepository.deleteById(id);
+
+        projectRepository.delete(project);
     }
 }

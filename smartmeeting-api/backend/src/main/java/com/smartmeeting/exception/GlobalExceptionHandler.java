@@ -119,6 +119,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * ForbiddenException carrega @ResponseStatus(FORBIDDEN), mas o handler genérico de
+     * Exception abaixo tem precedência sobre a anotação — então toda checagem manual de
+     * permissão do sistema respondia 500 em vez de 403. Este handler existe para isso.
+     */
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException ex, WebRequest request) {
+        String path = ((ServletWebRequest) request).getRequest().getRequestURI();
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN.value(), "Forbidden",
+                ex.getMessage(), path);
+        log.warn("Forbidden: {}", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
     // Handler para AccessDeniedException (403 Forbidden - Spring Security)
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
