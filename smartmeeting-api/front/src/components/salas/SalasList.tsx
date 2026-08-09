@@ -3,7 +3,8 @@ import {
     Users, Monitor, Wifi, Phone, Settings, Trash2,
     MapPin, Clock, AlertTriangle, CheckCircle, Wrench, Edit, CalendarCheck
 } from 'lucide-react';
-import { Sala, SalaStatus } from '../../types/meetings';
+import { Sala, SalaStatus, PermissionType } from '../../types/meetings';
+import { CanDo } from '../permissions/CanDo';
 
 interface SalasListProps {
     salas: Sala[];
@@ -162,20 +163,27 @@ export const SalasList: React.FC<SalasListProps> = ({
                                                     <CalendarCheck className="w-4 h-4" />
                                                 </button>
                                             )}
-                                            <button
-                                                onClick={() => onEditSala(sala)}
-                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 rounded-lg transition-colors"
-                                                title="Editar"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => onDeleteSala(sala)}
-                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:text-red-400 rounded-lg transition-colors"
-                                                title="Excluir"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            {/* Criar, editar e excluir sala exigem
+                                                ADMIN_SYSTEM_SETTINGS no backend; aqui não
+                                                havia gate nenhum. */}
+                                            <CanDo permission={PermissionType.ADMIN_SYSTEM_SETTINGS} global>
+                                                <button
+                                                    onClick={() => onEditSala(sala)}
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 rounded-lg transition-colors"
+                                                    title="Editar"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                            </CanDo>
+                                            <CanDo permission={PermissionType.ADMIN_SYSTEM_SETTINGS} global>
+                                                <button
+                                                    onClick={() => onDeleteSala(sala)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:text-red-400 rounded-lg transition-colors"
+                                                    title="Excluir"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </CanDo>
                                         </div>
                                     </td>
                                 </tr>

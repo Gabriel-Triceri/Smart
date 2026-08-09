@@ -546,25 +546,32 @@ export function KanbanBoard({
             {/* Add Column + Permissions (only when in project) */}
             {projectId && (
               <div className="flex-shrink-0 w-72 min-w-[18rem] space-y-3">
-                <button
-                  onClick={() => setShowAddColumnModal(true)}
-                  className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
-                >
-                  <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                  <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
-                    Adicionar Coluna
-                  </span>
-                </button>
+                {/* KANBAN_MANAGE_COLUMNS existia no enum e não era verificada em lugar
+                    nenhum: gerir colunas estava aberto a qualquer membro do projeto. */}
+                <CanDo permission={PermissionType.KANBAN_MANAGE_COLUMNS} projectId={projectId}>
+                  <button
+                    onClick={() => setShowAddColumnModal(true)}
+                    className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all group"
+                  >
+                    <PlusIcon className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                    <span className="text-sm font-medium text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
+                      Adicionar Coluna
+                    </span>
+                  </button>
+                </CanDo>
 
-                <button
-                  onClick={() => setShowPermissionsModal(true)}
-                  className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
-                >
-                  <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
-                  <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
-                    Permissões
-                  </span>
-                </button>
+                {/* Terceira porta para o editor de permissões do projeto. */}
+                <CanDo permission={PermissionType.PROJECT_MANAGE_MEMBERS} projectId={projectId}>
+                  <button
+                    onClick={() => setShowPermissionsModal(true)}
+                    className="w-full h-16 flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all group"
+                  >
+                    <ShieldIcon className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors" />
+                    <span className="text-sm font-medium text-slate-500 group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-purple-400">
+                      Permissões
+                    </span>
+                  </button>
+                </CanDo>
               </div>
             )}
           </div>

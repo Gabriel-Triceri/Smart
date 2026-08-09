@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { authService } from '../services/authService';
+import { projectService } from '../services/projectService';
 
 interface WebSocketMessage {
     type: string;
@@ -111,9 +112,15 @@ export function usePermissionWebSocket(options: UsePermissionWebSocketOptions = 
                         message.type === 'permission_updated' ||
                         message.type === 'project_permissions_changed'
                     ) {
-                        if (message.projectId) {
-                            onPermissionsUpdated?.(message.projectId);
-                        }
+                        // Descarta o cache de verificações antes de avisar quem escuta,
+                        // senão o refresh releria os valores antigos ainda em cache.
+                        projectService.invalidatePermissionChecks();
+
+                        // Mudanças de papel GLOBAL chegam sem projectId (o backend manda 0).
+                        // Antes elas eram descartadas aqui e a tela ficava desatualizada até
+                        // um F5.
+                        onPermissionsUpdated?.(message.projectId ?? 0);
+
                         window.dispatchEvent(new CustomEvent('permissionsUpdated', { detail: message }));
                     }
                 } catch {

@@ -121,17 +121,31 @@ export function usePermissionCache(): UsePermissionCacheReturn {
         try {
             const userInfo = authService.getUserInfo();
 
-            const [permissionsData, rolesData] = await Promise.all([
-                permissionService.getAllPermissions().catch(() => []),
-                roleService.getAllRoles().catch(() => [])
-            ]);
+            // O catálogo global de permissões e papéis é restrito a admin no backend.
+            // Buscá-lo para todo mundo gerava três 403 no console a cada boot e deixava
+            // o cache vazio — o que fazia hasPermission negar tudo para não-admin.
+            // Os papéis e permissões do próprio usuário já vêm no JWT.
+            const rolesDoToken = authService.getRoles();
+            const podeVerCatalogo = rolesDoToken.includes('ADMIN')
+                || rolesDoToken.includes('ROLE_ADMIN')
+                || authService.hasPermission('ADMIN_MANAGE_ROLES');
 
-            let userRoles: string[] = [];
-            if (userInfo.id) {
-                try {
-                    userRoles = await roleService.getUserRoles(Number(userInfo.id));
-                } catch {
-                    userRoles = [];
+            let permissionsData: Permission[] = [];
+            let rolesData: import('../types/permissions').Role[] = [];
+            let userRoles: string[] = rolesDoToken;
+
+            if (podeVerCatalogo) {
+                [permissionsData, rolesData] = await Promise.all([
+                    permissionService.getAllPermissions().catch(() => []),
+                    roleService.getAllRoles().catch(() => [])
+                ]);
+
+                if (userInfo.id) {
+                    try {
+                        userRoles = await roleService.getUserRoles(Number(userInfo.id));
+                    } catch {
+                        userRoles = rolesDoToken;
+                    }
                 }
             }
 
@@ -187,9 +201,16 @@ export function usePermissionCache(): UsePermissionCacheReturn {
 
     const hasPermission = useCallback((permissionName: string): boolean => {
         const normalizedName = normalizePermission(permissionName);
-        
-        // Check direct match
-        if (cache.permissions.some(p => p.nome === normalizedName)) {
+
+        // Atenção: cache.permissions é o CATÁLOGO de todas as permissões do sistema
+        // (GET /permissions), não as do usuário. A checagem que existia aqui — "a permissão
+        // consta no catálogo?" — retornava true para qualquer permissão existente, ou seja,
+        // liberava tudo. A permissão do usuário vem dos papéis dele, abaixo.
+
+        // Fonte primária: as permissões efetivas que o backend colocou no JWT.
+        // O catálogo abaixo só existe para admin, então sem isto o não-admin
+        // seria negado em tudo.
+        if (authService.getPermissions().includes(normalizedName)) {
             return true;
         }
 
@@ -271,16 +292,19 @@ const LEGACY_PERMISSION_MAP: Record<string, string> = {
 
 export function normalizePermission(permissionName: string): string {
     if (!permissionName) return '';
-    
+
     const normalized = permissionName.toUpperCase().trim();
-    
-    // Check if already modern
-    if (LEGACY_PERMISSION_MAP[normalized] || isModernPermission(normalized)) {
-        return normalized;
+
+    // O nome legado tem precedência sobre o "já é moderno": a condição anterior testava
+    // os dois juntos e devolvia o nome original, então toda chave presente no mapa saía
+    // sem tradução ('VIEW_PROJECT' nunca virava 'PROJECT_VIEW') e a linha de conversão
+    // abaixo era inalcançável.
+    const legado = LEGACY_PERMISSION_MAP[normalized];
+    if (legado) {
+        return legado;
     }
-    
-    // Convert legacy to modern
-    return LEGACY_PERMISSION_MAP[normalized] || permissionName;
+
+    return isModernPermission(normalized) ? normalized : permissionName;
 }
 
 function isModernPermission(name: string): boolean {

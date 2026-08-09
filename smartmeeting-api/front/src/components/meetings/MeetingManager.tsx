@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { useMeetings } from '../../hooks/useMeetings';
 import { useTheme } from '../../context/ThemeContext';
-import { Reuniao, ReuniaoFormData } from '../../types/meetings';
+import { Reuniao, ReuniaoFormData, PermissionType } from '../../types/meetings';
+import { CanDo } from '../permissions/CanDo';
 import { Calendar } from '../Calendar';
 import { MeetingList } from './MeetingList';
 import { MeetingForm } from './MeetingForm';
@@ -224,13 +225,18 @@ export const MeetingManager: React.FC = () => {
                                 <Filter className="w-4 h-4" />
                             </button>
 
-                            <button
-                                onClick={handleCreateReuniao}
-                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">Nova Reunião</span>
-                            </button>
+                            {/* O módulo de reuniões não tinha nenhum gate; o backend exige
+                                MEETING_CREATE (ou papel de organizador/admin) desde a
+                                correção do POST /reunioes. */}
+                            <CanDo permission={PermissionType.MEETING_CREATE} global>
+                                <button
+                                    onClick={handleCreateReuniao}
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Nova Reunião</span>
+                                </button>
+                            </CanDo>
                         </div>
                     </div>
                 </div>

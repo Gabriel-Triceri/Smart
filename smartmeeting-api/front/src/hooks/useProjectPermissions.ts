@@ -6,6 +6,7 @@ import {
     ProjectPermissionDTO
 } from '../types/meetings';
 import { projectService } from '../services/projectService';
+import { authService } from '../services/authService';
 import { usePermissionCache } from './usePermissionCache';
 
 interface UseProjectPermissionsReturn {
@@ -167,27 +168,22 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
     ): Promise<boolean> => {
         if (!projectId) return false;
 
-        // If personId is current user and we have admin, return true
-        const userInfo = (permissionCache as any)['userInfo'] || (permissionCache as any).authService?.getUserInfo?.();
-        if (personId === undefined || personId === userInfo?.id) {
-            if (isGlobalAdmin()) {
-                return true;
-            }
+        // O usuário atual vem do authService; antes era lido de um campo "userInfo" que o
+        // usePermissionCache nunca expôs, então ficava sempre undefined e todo o caminho
+        // de cache abaixo era inalcançável — sempre caía na API.
+        const currentUserId = authService.getUserInfo()?.id;
+        const ehUsuarioAtual = personId === undefined
+            || (currentUserId != null && String(personId) === String(currentUserId));
+
+        if (ehUsuarioAtual && isGlobalAdmin()) {
+            return true;
         }
 
-        // Use cached data if available for current user
-        if (personId === undefined || personId === userInfo?.id) {
-            const currentUserId = String(userInfo?.id);
-            const currentMember = members.find(m => String(m.personId) === currentUserId);
-            
-            if (currentMember) {
-                // Check from local state first (from cache)
-                if (currentMember.permissionMap) {
-                    const granted = currentMember.permissionMap[permissionType];
-                    if (granted !== undefined) {
-                        return granted;
-                    }
-                }
+        if (ehUsuarioAtual && currentUserId != null) {
+            const currentMember = members.find(m => String(m.personId) === String(currentUserId));
+            const granted = currentMember?.permissionMap?.[permissionType];
+            if (granted !== undefined) {
+                return granted;
             }
         }
 
@@ -219,13 +215,17 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
         return members.find(m => String(m.projectMemberId) === memberId);
     }, [members]);
 
-    // Helper: Check if member has permission (from local state - cached)
+    /**
+     * Estado real de uma permissão DE UM MEMBRO — usado para desenhar os checkboxes da
+     * tela de permissões.
+     *
+     * Não tem bypass de admin de propósito: a pergunta aqui é "este membro tem esta
+     * permissão?", não "eu posso fazer isto?". O bypass fazia todo membro aparecer com
+     * todas as permissões marcadas para qualquer admin, o contador mostrar sempre o total
+     * e o clique não surtir efeito visível — ou seja, quem administra permissões era
+     * justamente quem não conseguia enxergá-las.
+     */
     const hasPermission = useCallback((memberId: string | undefined, permissionType: PermissionType): boolean => {
-        // Admin bypass
-        if (isGlobalAdmin()) {
-            return true;
-        }
-
         if (!memberId) return false;
 
         const member = members.find(m => String(m.projectMemberId) === memberId);
@@ -240,7 +240,7 @@ export function useProjectPermissions(projectId: string): UseProjectPermissionsR
         return member.permissions.some(p =>
             p.permissionType === permissionType && p.granted
         );
-    }, [members, isGlobalAdmin]);
+    }, [members]);
 
     // Load data on mount and when cache is updated
     useEffect(() => {

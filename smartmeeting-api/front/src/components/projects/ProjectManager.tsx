@@ -211,13 +211,18 @@ function ProjectCard({ project, onManagePermissions, onEdit, onDelete }: Project
                         <Trash2 className="w-3.5 h-3.5" />
                     </button>
                 </CanDo>
-                <button
-                    onClick={() => onManagePermissions(project)}
-                    className="ml-auto flex items-center gap-1 px-3 py-2 text-xs font-medium whitespace-nowrap text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                >
-                    Ver detalhes
-                    <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+                {/* "Ver detalhes" abre o MESMO editor de permissões do botão acima, então
+                    precisa do mesmo gate — sem ele, quem não podia gerenciar membros não
+                    via o escudo mas entrava por aqui. */}
+                <CanDo permission={PermissionType.PROJECT_MANAGE_MEMBERS} projectId={project.id}>
+                    <button
+                        onClick={() => onManagePermissions(project)}
+                        className="ml-auto flex items-center gap-1 px-3 py-2 text-xs font-medium whitespace-nowrap text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
+                        Ver detalhes
+                        <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                </CanDo>
             </div>
         </div>
     );
@@ -286,12 +291,15 @@ function ProjectRow({ project, onManagePermissions, onEdit, onDelete }: ProjectR
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </CanDo>
-                <button
-                    onClick={() => onManagePermissions(project)}
-                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                >
-                    <ChevronRight className="w-4 h-4" />
-                </button>
+                {/* Mesma porta de entrada do editor de permissões — mesmo gate. */}
+                <CanDo permission={PermissionType.PROJECT_MANAGE_MEMBERS} projectId={project.id}>
+                    <button
+                        onClick={() => onManagePermissions(project)}
+                        className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                </CanDo>
             </div>
         </div>
     );
@@ -420,15 +428,18 @@ export function ProjectManager() {
                                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-blue-500' : ''}`} />
                             </button>
 
-                            <CanDo permission={PermissionType.PROJECT_VIEW} global>
-                                <button
-                                    onClick={() => setShowCreateModal(true)}
-                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Novo Projeto</span>
-                                </button>
-                            </CanDo>
+                            {/* Sem gate de propósito: criar um projeto próprio é liberado a
+                                qualquer autenticado, e o backend define o dono a partir do
+                                token. O gate anterior usava PROJECT_VIEW, que todo mundo que
+                                enxerga esta tela já tem — nunca bloqueava nada e sugeria uma
+                                restrição inexistente. */}
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden sm:inline">Novo Projeto</span>
+                            </button>
                         </div>
                     </div>
                 </div>

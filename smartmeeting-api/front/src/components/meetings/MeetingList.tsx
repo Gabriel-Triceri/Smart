@@ -4,10 +4,11 @@ import {
     Video, MoreVertical, Eye, Edit, Trash2, PlayCircle,
     CheckCircle, XCircle, AlertCircle, ChevronDown
 } from 'lucide-react';
-import { Reuniao, FiltroReunioes, StatusReuniao } from '../../types/meetings';
+import { Reuniao, FiltroReunioes, StatusReuniao, PermissionType } from '../../types/meetings';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getReuniaoData, getReuniaoHoraInicio } from '../../utils/reuniaoHelpers';
+import { authService } from '../../services/authService';
 
 interface MeetingListProps {
     reunioes: Reuniao[];
@@ -132,9 +133,21 @@ export const MeetingList: React.FC<MeetingListProps> = ({
         }
     };
 
-    const canDelete = (reuniao: Reuniao) => reuniao.status === StatusReuniao.AGENDADA && new Date(reuniao.dataHoraInicio) > new Date();
-    const canEdit = (reuniao: Reuniao) => reuniao.status === StatusReuniao.AGENDADA;
+    // Estes predicados só cobriam a regra de negócio (status e data). A permissão é uma
+    // condição à parte e faltava por completo — o módulo de reuniões não tinha um único
+    // gate, embora MEETING_EDIT e MEETING_DELETE existam e o backend as exija.
+    const podeEditarReunioes = authService.hasPermission(PermissionType.MEETING_EDIT);
+    const podeExcluirReunioes = authService.hasPermission(PermissionType.MEETING_DELETE);
+
+    const canDelete = (reuniao: Reuniao) => podeExcluirReunioes
+        && reuniao.status === StatusReuniao.AGENDADA
+        && new Date(reuniao.dataHoraInicio) > new Date();
+
+    const canEdit = (reuniao: Reuniao) => podeEditarReunioes
+        && reuniao.status === StatusReuniao.AGENDADA;
+
     const canEncerrar = (reuniao: Reuniao) => {
+        if (!podeEditarReunioes) return false;
         const agora = new Date();
         const dataHoraInicio = new Date(reuniao.dataHoraInicio);
         return reuniao.status === StatusReuniao.AGENDADA && agora >= dataHoraInicio;

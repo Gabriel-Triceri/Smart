@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import {
     Plus, Building, Search, Filter, X, List, Clock
 } from 'lucide-react';
-import { Sala } from '../../types/meetings';
+import { Sala, PermissionType } from '../../types/meetings';
+import { CanDo } from '../permissions/CanDo';
 import { useSalas } from '../../hooks/useSalas';
 import { SalasList } from './SalasList';
 import { SalaForm } from './SalaForm';
@@ -199,13 +200,15 @@ export const SalaManager: React.FC = () => {
                                 </button>
                             )}
 
-                            <button
-                                onClick={handleCreateSala}
-                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">Nova Sala</span>
-                            </button>
+                            <CanDo permission={PermissionType.ADMIN_SYSTEM_SETTINGS} global>
+                                <button
+                                    onClick={handleCreateSala}
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all active:scale-95 whitespace-nowrap"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Nova Sala</span>
+                                </button>
+                            </CanDo>
                         </div>
                     </div>
 

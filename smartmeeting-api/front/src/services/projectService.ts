@@ -14,6 +14,10 @@ import {
 import api from './httpClient';
 import { IdValidation } from '../utils/validation';
 
+/** Cache curto das verificações de permissão por projeto — ver checkPermission. */
+const PERMISSION_CHECK_TTL_MS = 5000;
+const permissionCheckCache = new Map<string, { promessa: Promise<boolean>; expiraEm: number }>();
+
 export const projectService = {
 
     // ===========================================
@@ -156,17 +160,45 @@ export const projectService = {
         return response.data;
     },
 
+    /**
+     * Verifica uma permissão no projeto, com deduplicação de requisições.
+     *
+     * Cada `<CanDo>` por projeto dispara esta chamada ao montar. Numa lista de 20 projetos
+     * com 3 gates por card eram 60 requisições paralelas, e o modal de detalhes de tarefa
+     * disparava 9 chamadas idênticas de uma vez. Aqui promessas em voo para a mesma chave
+     * são compartilhadas e o resultado fica em cache por alguns segundos, o que colapsa a
+     * rajada de montagem numa requisição por combinação sem segurar o valor tempo demais.
+     */
     async checkPermission(projectId: string, personId: string | undefined, permissionType: PermissionType): Promise<boolean> {
         if (!IdValidation.isValidId(projectId)) throw new Error('ID do projeto inválido');
         if (personId !== undefined && !IdValidation.isValidId(personId)) throw new Error('ID da pessoa inválido');
-        try {
-            const params: Record<string, string> = { permission: permissionType };
-            if (personId) params.personId = personId;
-            const response = await api.get(`/projects/${projectId}/permissions/check`, { params });
-            return response.data?.hasPermission ?? false;
-        } catch {
-            return false;
+
+        const chave = `${projectId}|${personId ?? 'eu'}|${permissionType}`;
+
+        const emCache = permissionCheckCache.get(chave);
+        if (emCache && Date.now() < emCache.expiraEm) {
+            return emCache.promessa;
         }
+
+        const promessa = (async () => {
+            try {
+                const params: Record<string, string> = { permission: permissionType };
+                if (personId) params.personId = personId;
+                const response = await api.get(`/projects/${projectId}/permissions/check`, { params });
+                return response.data?.hasPermission ?? false;
+            } catch {
+                permissionCheckCache.delete(chave); // erro não fica em cache
+                return false;
+            }
+        })();
+
+        permissionCheckCache.set(chave, { promessa, expiraEm: Date.now() + PERMISSION_CHECK_TTL_MS });
+        return promessa;
+    },
+
+    /** Descarta o cache de verificações — usar quando permissões mudam. */
+    invalidatePermissionChecks(): void {
+        permissionCheckCache.clear();
     },
 
     async getAvailablePermissionTypes(projectId: string): Promise<ProjectPermissionDTO[]> {

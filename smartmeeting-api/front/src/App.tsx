@@ -49,17 +49,41 @@ interface NavigationProps {
     setShowMobile?: (state: boolean) => void;
 }
 
-function Navigation({ activeView, setActiveView, items, showMobile = false, setShowMobile }: NavigationProps) {
+/**
+ * Regra única de acesso a uma tela.
+ *
+ * Antes esta lógica vivia só dentro da Navigation, ou seja, decidia apenas quais botões
+ * apareciam. A tela em si era renderizada incondicionalmente, então bastava gravar o nome
+ * dela no localStorage e recarregar para abrir qualquer área — inclusive a de permissões.
+ */
+function podeAcessarItem(item: NavigationItem): boolean {
     const userRoles = authService.getRoles();
+    const userPermissions = authService.getPermissions();
 
-    const visibleItems = items.filter(item => {
-        const userPermissions = authService.getPermissions();
-        const roleMatch = !item.allowedRoles?.length ||
-            item.allowedRoles.some(r => userRoles.includes(r));
-        const permissionMatch = !item.allowedPermissions?.length ||
-            item.allowedPermissions.some(p => userPermissions.includes(p));
-        return roleMatch && permissionMatch;
-    });
+    const roleMatch = !item.allowedRoles?.length ||
+        item.allowedRoles.some(r => userRoles.includes(r));
+    const permissionMatch = !item.allowedPermissions?.length ||
+        item.allowedPermissions.some(p => userPermissions.includes(p));
+
+    return roleMatch && permissionMatch;
+}
+
+function AcessoRestrito() {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
+            <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
+                <Shield className="w-8 h-8 text-red-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-mono-900 dark:text-mono-100 mb-1">Acesso restrito</h2>
+            <p className="text-mono-500 dark:text-mono-400 max-w-sm">
+                Você não tem permissão para acessar esta área. Escolha outra opção no menu.
+            </p>
+        </div>
+    );
+}
+
+function Navigation({ activeView, setActiveView, items, showMobile = false, setShowMobile }: NavigationProps) {
+    const visibleItems = items.filter(podeAcessarItem);
 
     return (
         <nav className={`${showMobile ? 'space-y-2 py-4 border-t border-mono-200 dark:border-mono-700 md:hidden' : 'hidden md:flex items-center space-x-1'}`}>
@@ -109,6 +133,8 @@ function App() {
     useEffect(() => {
         setMounted(true);
         const savedView = localStorage.getItem('smartmeeting-active-view') as ActiveView;
+        // A validação contra VALID_VIEWS sozinha só garante que o nome existe, não que o
+        // usuário pode abrir a tela.
         if (savedView && VALID_VIEWS.includes(savedView)) setActiveView(savedView);
     }, []);
 
@@ -183,6 +209,11 @@ function App() {
         settings:    <SystemSettings key={`settings-${refreshKey}`} />,  // FIX #10
     };
 
+    // A permissão é reavaliada na renderização: cobre tanto a tela restaurada do
+    // localStorage quanto uma permissão revogada durante a sessão.
+    const itemAtivo = navigationItems.find(item => item.id === activeView);
+    const podeVerTelaAtual = !itemAtivo || podeAcessarItem(itemAtivo);
+
     if (!mounted) return <LoadingSkeleton />;
 
     return (
@@ -241,7 +272,7 @@ function App() {
 
                 {/* Conteúdo principal */}
                 <main className="flex-1">
-                    {viewComponents[activeView]}
+                    {podeVerTelaAtual ? viewComponents[activeView] : <AcessoRestrito />}
                 </main>
 
                 {/* Rodapé */}
