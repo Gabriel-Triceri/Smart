@@ -1,0 +1,11 @@
+node_modules
+dist
+.git
+*.log
+
+# Importante: o .env local não pode entrar na imagem. O Vite dá precedência a
+# variáveis já presentes no ambiente sobre as dos arquivos .env, mas manter o
+# arquivo fora do contexto elimina qualquer dúvida sobre qual valor venceu.
+.env
+.env.*
+!.env.example

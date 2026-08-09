@@ -1,0 +1,10 @@
+target
+.git
+*.log
+
+# O banco de desenvolvimento não entra na imagem — em produção ele vem do
+# volume declarado no compose.
+data
+
+# Pasta com pontos no lugar de barras: o Maven nunca a lê.
+src.test.resources

@@ -3,6 +3,7 @@ package com.smartmeeting.config;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +34,10 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService customUserDetailsService;
+
+    /** Mesma propriedade lida por WebSocketConfig — as duas precisam concordar. */
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:3001}")
+    private String[] allowedOrigins;
 
     public SecurityConfig(
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
@@ -88,11 +93,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:3001",
-                "https://3000-ieoksv0ct41for8oic153-28527b58.manus.computer"
-        ));
+        // Estas origens estavam fixas no código, apesar de o application.yml
+        // afirmar que esta classe lia app.cors.allowed-origins — só o
+        // WebSocketConfig lia. Além de impedir rodar em qualquer outra origem
+        // (container, deploy), a lista carregava um host de sandbox de terceiro
+        // esquecido aqui. Agora as duas classes leem a mesma propriedade.
+        config.setAllowedOrigins(Arrays.asList(allowedOrigins));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

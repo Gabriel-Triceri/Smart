@@ -58,12 +58,13 @@ app:
     # Sobrescreva JWT_SECRET em qualquer ambiente que não seja local.
     secret: ${JWT_SECRET:secretkeysecretkeysecretkeysecretkeysecretkeysecretkeysecretkeysecretkey}
     expiration-ms: 86400000
-  # SecurityConfig e WebSocketConfig leem esta propriedade, evitando URLs
-  # hardcoded no código.
+  # SecurityConfig e WebSocketConfig leem esta propriedade com @Value em String[].
+  # Precisa ser uma string separada por vírgula, e não uma lista YAML: a lista
+  # vira allowed-origins[0], [1], que o placeholder ${app.cors.allowed-origins}
+  # não resolve — era por isso que o WebSocketConfig acabava sempre no default.
+  # Sobrescreva com APP_CORS_ALLOWED_ORIGINS=http://host1,http://host2
   cors:
-    allowed-origins:
-      - http://localhost:3000
-      - http://localhost:3001
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001}
 
 logging:
   level:

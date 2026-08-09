@@ -605,10 +605,17 @@
 # DEVOPS & CONTAINERS
 # ==============================================================================
 # Docker
+# Estas regras vêm de um template genérico e ignoravam justamente os arquivos
+# que precisam ser versionados para o `docker compose up` funcionar num clone
+# novo. Mantidas para arquivos locais/temporários, com exceção para os nossos.
 **/Dockerfile*
 **/.dockerignore
 **/docker-compose*.yml
 **/.docker/
+
+!Dockerfile
+!.dockerignore
+!nginx.conf
 
 # Kubernetes
 **/*.kubeconfig
