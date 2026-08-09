@@ -57,12 +57,18 @@ public class ReuniaoService {
         return statisticsService.getTotalReunioesByPessoa(pessoaId);
     }
 
-    public List<Reuniao> getProximasReunioes() {
-        return statisticsService.getProximasReunioes();
+    /** @param userId nulo para admin (vê tudo); do contrário, só o que o usuário alcança. */
+    public List<Reuniao> getProximasReunioes(Long userId) {
+        return statisticsService.getProximasReunioes(userId);
     }
 
-    @Cacheable("statistics")
-    public ReuniaoStatisticsDTO getReuniaoStatistics() {
-        return statisticsService.getReuniaoStatistics();
+    /**
+     * O cache passou a ser por usuário. Com a chave única anterior, a primeira resposta
+     * cacheada — a de quem chamasse primeiro — era devolvida a todos os outros: agora que o
+     * resultado é filtrado por permissão, isso vazaria reuniões de projetos alheios.
+     */
+    @Cacheable(value = "statistics", key = "#userId == null ? 'ADMIN_TODAS' : #userId")
+    public ReuniaoStatisticsDTO getReuniaoStatistics(Long userId) {
+        return statisticsService.getReuniaoStatistics(userId);
     }
 }

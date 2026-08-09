@@ -45,11 +45,16 @@ public class ReuniaoMapper {
         String pautaSegura = escape(reuniao.getPauta());
         String ataSegura = escape(reuniao.getAta());
 
-        // Converter participantes para DTOs
-        List<PessoaDTO> participantesDetalhes = toPessoaDTOs(reuniao.getParticipantes());
+        // Coleções lazy só são lidas se já estiverem inicializadas: com open-in-view=false
+        // a sessão pode ter fechado antes deste ponto (é o caso do retorno de POST/PUT
+        // /reunioes), e tocar o proxy estouraria LazyInitializationException.
+        List<Pessoa> participantes = inicializados(reuniao.getParticipantes());
 
-        List<Long> participantesIds = reuniao.getParticipantes() != null
-                ? reuniao.getParticipantes().stream()
+        // Converter participantes para DTOs
+        List<PessoaDTO> participantesDetalhes = toPessoaDTOs(participantes);
+
+        List<Long> participantesIds = participantes != null
+                ? participantes.stream()
                         .map(Pessoa::getId)
                         .collect(Collectors.toList())
                 : null;
@@ -67,9 +72,10 @@ public class ReuniaoMapper {
         }
 
         // Converter tarefas
+        List<Tarefa> tarefas = inicializados(reuniao.getTarefas());
         List<String> tarefasStrings = null;
-        if (reuniao.getTarefas() != null) {
-            tarefasStrings = reuniao.getTarefas().stream()
+        if (tarefas != null) {
+            tarefasStrings = tarefas.stream()
                     .map(Tarefa::getDescricao)
                     .collect(Collectors.toList());
         }
@@ -128,6 +134,14 @@ public class ReuniaoMapper {
         }
 
         return reuniao;
+    }
+
+    /** Devolve a coleção só quando ela já foi carregada; nulo se ainda é proxy lazy. */
+    private <T> List<T> inicializados(List<T> colecao) {
+        if (colecao == null || !org.hibernate.Hibernate.isInitialized(colecao)) {
+            return null;
+        }
+        return colecao;
     }
 
     /**

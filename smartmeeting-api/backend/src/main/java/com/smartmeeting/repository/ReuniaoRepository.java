@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +53,16 @@ public interface ReuniaoRepository extends JpaRepository<Reuniao, Long> {
 
     @EntityGraph(value = "Reuniao.completa")
     List<Reuniao> findByStatus(StatusReuniao status);
+
+    /**
+     * Reuniões de uma sala nos status informados. Base da checagem de conflito de horário
+     * — o filtro de sobreposição fica em {@code SalaAvailabilityService}, porque comparar
+     * {@code [inicio, inicio + duracaoMinutos)} em JPQL exigiria aritmética de data que o
+     * H2 e o Oracle escrevem de formas diferentes.
+     */
+    @Query("SELECT r FROM Reuniao r LEFT JOIN FETCH r.sala WHERE r.sala.id = :salaId AND r.status IN :status")
+    List<Reuniao> findBySalaIdAndStatusIn(@Param("salaId") Long salaId,
+                                          @Param("status") Collection<StatusReuniao> status);
 
     long countByStatus(StatusReuniao status);
 

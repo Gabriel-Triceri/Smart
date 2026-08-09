@@ -47,9 +47,12 @@ class ReuniaoAuthorizationTest {
     @Test
     @WithMockUser(username = "participante@teste.com", roles = { "PARTICIPANTE" })
     void participanteNaoPodeCriarReuniao_deveRetornar403() throws Exception {
+        // Corpo válido de propósito: o que este caso prova é a negação por papel, e um
+        // corpo inválido pararia antes, no @Valid, devolvendo 400 em vez de 403.
         mockMvc.perform(post("/reunioes")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content("{\"titulo\":\"Reunião\",\"dataHoraInicio\":\"2030-01-01T10:00:00\","
+                        + "\"duracaoMinutos\":60,\"pauta\":\"Pauta\"}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -66,8 +69,11 @@ class ReuniaoAuthorizationTest {
         // eq(PermissionType.MEETING_CREATE)))
         // .thenReturn(true);
 
-        // Provide valid JSON content for the request
-        String validContent = "{\"projectId\": 1, \"title\": \"Reunião Teste\"}";
+        // O corpo tem de passar pelo @Valid do ReuniaoDTO — antes o campo era "title",
+        // que nem existe no DTO, e nada era validado.
+        String validContent = "{\"projectId\": 1, \"titulo\": \"Reunião Teste\","
+                + "\"dataHoraInicio\": \"2030-01-01T10:00:00\", \"duracaoMinutos\": 60,"
+                + "\"pauta\": \"Pauta de teste\"}";
 
         mockMvc.perform(post("/reunioes")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -7,7 +7,6 @@ import com.smartmeeting.service.reuniao.ReuniaoService;
 import com.smartmeeting.service.sala.SalaService;
 import com.smartmeeting.service.pessoa.PessoaService;
 import com.smartmeeting.service.project.ProjectPermissionService;
-import com.smartmeeting.service.tarefa.TarefaService;
 import com.smartmeeting.service.email.EmailService;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -30,19 +29,17 @@ public class ReuniaoController {
     private final EmailService emailService;
     private final SalaService salaService;
     private final PessoaService pessoaService;
-    private final TarefaService tarefaService;
 
     private final ProjectPermissionService projectPermissionService;
 
     public ReuniaoController(ReuniaoService service, ReuniaoMapper mapper, EmailService emailService,
-            SalaService salaService, PessoaService pessoaService, TarefaService tarefaService,
+            SalaService salaService, PessoaService pessoaService,
             ProjectPermissionService projectPermissionService) {
         this.service = service;
         this.mapper = mapper;
         this.emailService = emailService;
         this.salaService = salaService;
         this.pessoaService = pessoaService;
-        this.tarefaService = tarefaService;
         this.projectPermissionService = projectPermissionService;
     }
 
@@ -207,14 +204,20 @@ public class ReuniaoController {
      * Lista todas as salas disponíveis
      */
     @GetMapping("/salas")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<SalaDTO>> listarSalas() {
         return ResponseEntity.ok(salaService.listarTodas());
     }
 
     /**
-     * Lista todas as pessoas (organizadores e participantes)
+     * Lista todas as pessoas (organizadores e participantes).
+     *
+     * Devolve o diretório inteiro — nome, e-mail e ID de crachá de todo mundo — e não tinha
+     * nenhuma verificação, enquanto o {@code GET /pessoas} equivalente sempre exigiu admin.
+     * O gate aqui é o mesmo do {@code PessoaController}, para os dois não divergirem.
      */
     @GetMapping("/pessoas")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ADMIN_MANAGE_USERS')")
     public ResponseEntity<List<PessoaDTO>> listarPessoas() {
         return ResponseEntity.ok(pessoaService.listarTodas());
     }
@@ -223,40 +226,55 @@ public class ReuniaoController {
      * API de total de reuniões do sistema
      */
     @GetMapping("/total")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Long>> getTotalReunioes() {
         long totalReunioes = service.getTotalReunioes();
         return ResponseEntity.ok(Map.of("totalReunioes", totalReunioes));
     }
 
     /**
-     * API de total de reuniões por pessoa
+     * API de total de reuniões por pessoa.
+     *
+     * Restrito ao próprio usuário (ou admin): a contagem de reuniões de terceiros era
+     * legível por qualquer autenticado, só trocando o id na URL.
      */
     @GetMapping("/total/{pessoaId}")
     public ResponseEntity<Map<String, Long>> getTotalReunioesByPessoa(@PathVariable("pessoaId") Long pessoaId) {
+        Long currentUserId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+        if (!com.smartmeeting.util.SecurityUtils.isAdmin() && !pessoaId.equals(currentUserId)) {
+            throw new com.smartmeeting.exception.ForbiddenException(
+                    "Você só pode consultar o total de reuniões da própria conta.");
+        }
+
         long totalReunioes = service.getTotalReunioesByPessoa(pessoaId);
         return ResponseEntity.ok(Map.of("totalReunioes", totalReunioes));
     }
 
     /**
-     * API de estatísticas de reuniões
+     * API de estatísticas de reuniões.
+     *
+     * Os números e — principalmente — a lista das próximas reuniões (título, pauta, sala,
+     * organizador) saíam completos para qualquer autenticado. Agora tudo é calculado sobre
+     * o conjunto que o usuário alcança, com a mesma regra de {@code GET /reunioes}.
      */
     @Transactional(readOnly = true)
     @GetMapping("/statistics")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReuniaoStatisticsDTO> getReuniaoStatistics() {
-        ReuniaoStatisticsDTO statistics = service.getReuniaoStatistics();
+        Long escopo = com.smartmeeting.util.SecurityUtils.isAdmin()
+                ? null // admin vê o sistema inteiro
+                : com.smartmeeting.util.SecurityUtils.getCurrentUserId();
+
+        ReuniaoStatisticsDTO statistics = service.getReuniaoStatistics(escopo);
         // Populate proximasList with DTOs
-        List<ReuniaoDTO> proximasList = service.getProximasReunioes().stream()
+        List<ReuniaoDTO> proximasList = service.getProximasReunioes(escopo).stream()
                 .map(mapper::toDTO)
                 .collect(Collectors.toList());
         statistics.setProximasReunioesList(proximasList);
         return ResponseEntity.ok(statistics);
     }
 
-    /**
-     * API de tarefas por reunião
-     */
-    @GetMapping("/{id}/tarefas")
-    public ResponseEntity<List<TarefaDTO>> getTarefasPorReuniao(@PathVariable Long id) {
-        return ResponseEntity.ok(tarefaService.getTarefasPorReuniao(id));
-    }
+    // GET /reunioes/{id}/tarefas vive em ReuniaoTarefaController, que já mapeia o prefixo
+    // /reunioes/{reuniaoId}/tarefas — havia dois handlers para exatamente o mesmo caminho.
+    // A verificação de TASK_VIEW está lá.
 }

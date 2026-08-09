@@ -36,7 +36,7 @@ public class NotificacaoAgendadaService {
         this.emailService = emailService;
     }
 
-    @Scheduled(cron = "0 0 10 * * *")
+    @Scheduled(cron = "${app.notificacoes.lembrete-checklist.cron:0 0 10 * * *}")
     @Transactional(readOnly = true)
     public void enviarLembretesChecklist() {
         log.info("Iniciando envio de lembretes de checklist");
@@ -63,7 +63,7 @@ public class NotificacaoAgendadaService {
                 emailsEnviados, reunioes.size());
     }
 
-    @Scheduled(cron = "0 */30 * * * *")
+    @Scheduled(cron = "${app.notificacoes.pendencias.cron:0 */30 * * * *}")
     @Transactional(readOnly = true)
     public void verificarPendencias() {
         log.info("Verificando pendências de reuniões próximas");
@@ -91,7 +91,7 @@ public class NotificacaoAgendadaService {
                 emailsEnviados, reunioes.size());
     }
 
-    @Scheduled(cron = "0 0 8 * * *")
+    @Scheduled(cron = "${app.notificacoes.tarefas-pendentes.cron:0 0 8 * * *}")
     @Transactional(readOnly = true)
     public void enviarLembretesTarefasPendentes() {
         log.info("Enviando lembretes de tarefas pendentes");
@@ -111,7 +111,7 @@ public class NotificacaoAgendadaService {
                 emailsEnviados, tarefasPendentes.size());
     }
 
-    @Scheduled(cron = "0 */15 * * * *")
+    @Scheduled(cron = "${app.notificacoes.presencas-atrasadas.cron:0 */15 * * * *}")
     @Transactional(readOnly = true)
     public void verificarPresencasAtrasadas() {
         log.info("Verificando presenças atrasadas");
@@ -124,10 +124,20 @@ public class NotificacaoAgendadaService {
 
         int alertasEnviados = 0;
         for (Reuniao reuniao : reunioesEmAndamento) {
-            Set<Long> participantesPresentes = reuniao.getPresencas().stream()
-                    .map(Presenca::getParticipante)
-                    .map(Pessoa::getId)
-                    .collect(Collectors.toSet());
+            // Reunião sem participantes (ou sem nenhuma presença registrada) tem as
+            // coleções nulas quando criada pela API: sem estas guardas o job inteiro
+            // morre no primeiro NPE e as demais reuniões nunca são verificadas.
+            if (reuniao.getParticipantes() == null || reuniao.getParticipantes().isEmpty()) {
+                continue;
+            }
+
+            Set<Long> participantesPresentes = reuniao.getPresencas() == null
+                    ? Set.of()
+                    : reuniao.getPresencas().stream()
+                            .map(Presenca::getParticipante)
+                            .filter(java.util.Objects::nonNull)
+                            .map(Pessoa::getId)
+                            .collect(Collectors.toSet());
 
             List<Pessoa> participantesAusentes = reuniao.getParticipantes().stream()
                     .filter(p -> !participantesPresentes.contains(p.getId()))

@@ -6,6 +6,7 @@ import com.smartmeeting.model.Reuniao;
 import com.smartmeeting.repository.ReuniaoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -30,17 +31,36 @@ public class ReuniaoStatisticsService {
         return repository.countByOrganizadorIdOrParticipantesId(pessoaId);
     }
 
-    public List<Reuniao> getProximasReunioes() {
+    /**
+     * Reuniões visíveis para o usuário informado, ou todas quando {@code userId} é nulo
+     * (admin).
+     *
+     * A regra de visibilidade é a mesma de {@code GET /reunioes} — organizador,
+     * participante ou membro do projeto com MEETING_VIEW/PROJECT_VIEW — e vem da mesma
+     * query, para as duas rotas não divergirem.
+     */
+    @Transactional(readOnly = true)
+    public List<Reuniao> carregarVisiveis(Long userId) {
+        return userId == null
+                ? repository.findAllComSala()
+                : repository.findAllWithDetailsByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Reuniao> getProximasReunioes(Long userId) {
         LocalDateTime now = LocalDateTime.now();
-        return repository.findAll().stream()
-                .filter(r -> r.getDataHoraInicio().isAfter(now) && r.getStatus() == StatusReuniao.AGENDADA)
+        return carregarVisiveis(userId).stream()
+                .filter(r -> r.getDataHoraInicio() != null
+                        && r.getDataHoraInicio().isAfter(now)
+                        && r.getStatus() == StatusReuniao.AGENDADA)
                 .sorted(Comparator.comparing(Reuniao::getDataHoraInicio))
                 .limit(5)
                 .collect(Collectors.toList());
     }
 
-    public ReuniaoStatisticsDTO getReuniaoStatistics() {
-        List<Reuniao> todasReunioes = repository.findAll();
+    @Transactional(readOnly = true)
+    public ReuniaoStatisticsDTO getReuniaoStatistics(Long userId) {
+        List<Reuniao> todasReunioes = carregarVisiveis(userId);
         LocalDateTime now = LocalDateTime.now();
 
         long total = todasReunioes.size();
@@ -50,7 +70,7 @@ public class ReuniaoStatisticsService {
         long canceladas = todasReunioes.stream().filter(r -> r.getStatus() == StatusReuniao.CANCELADA).count();
 
         long proximasCount = todasReunioes.stream()
-                .filter(r -> r.getDataHoraInicio().isAfter(now) && r.getStatus() == StatusReuniao.AGENDADA)
+                .filter(r -> r.getDataHoraInicio() != null && r.getDataHoraInicio().isAfter(now) && r.getStatus() == StatusReuniao.AGENDADA)
                 .count();
 
         String salaMaisUsada = todasReunioes.stream()

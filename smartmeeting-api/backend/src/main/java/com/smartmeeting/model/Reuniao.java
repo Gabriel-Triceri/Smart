@@ -77,12 +77,17 @@ public class Reuniao extends Auditable {
     @Column(name = "STATUS_REUNIAO", nullable = false)
     private StatusReuniao status;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    // Sem cascade de propósito: a reunião referencia a pessoa, nunca gerencia o ciclo de
+    // vida dela. Com CascadeType.PERSIST, salvar uma reunião tentava persistir o
+    // organizador/sala recebidos do mapper — que vêm de outra transação (e, no caso de
+    // Sala, do cache de SalaRepository.findById) e portanto desanexados: criar reunião
+    // informando sala ou organizador falhava com "detached entity passed to persist".
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ORGANIZADOR_ID", referencedColumnName = "ID_PESSOA", foreignKey = @ForeignKey(name = "FK_REUNIAO_ORGANIZADOR"))
     @JsonManagedReference
     private Pessoa organizador;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SALA_ID", referencedColumnName = "ID_SALA", foreignKey = @ForeignKey(name = "FK_REUNIAO_SALA"))
     @JsonManagedReference
     private Sala sala;

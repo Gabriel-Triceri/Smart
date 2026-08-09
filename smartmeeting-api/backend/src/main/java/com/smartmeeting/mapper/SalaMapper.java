@@ -22,7 +22,13 @@ public class SalaMapper {
         dto.setCapacidade(sala.getCapacidade());
         dto.setLocalizacao(sala.getLocalizacao());
         dto.setStatus(sala.getStatus());
-        dto.setEquipamentos(sala.getEquipamentos() != null ? new ArrayList<>(sala.getEquipamentos()) : null);
+        // A coleção só é lida se já estiver carregada: a Sala pode chegar aqui desanexada
+        // (SalaRepository.findById é @Cacheable) e tocar o proxy estouraria
+        // LazyInitializationException com open-in-view=false.
+        dto.setEquipamentos(
+                sala.getEquipamentos() != null && org.hibernate.Hibernate.isInitialized(sala.getEquipamentos())
+                        ? new ArrayList<>(sala.getEquipamentos())
+                        : null);
         dto.setCategoria(sala.getCategoria());
         dto.setAndar(sala.getAndar());
         dto.setImagem(sala.getImagem());

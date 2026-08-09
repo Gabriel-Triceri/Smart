@@ -1,6 +1,7 @@
 package com.smartmeeting.service.reuniao;
 
 import com.smartmeeting.enums.StatusReuniao;
+import com.smartmeeting.exception.BadRequestException;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Presenca;
 import com.smartmeeting.model.Reuniao;
@@ -27,6 +28,12 @@ public class ReuniaoLifecycleService {
     public Reuniao encerrarReuniao(Long id) {
         Reuniao reuniao = reuniaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reunião não encontrada com ID: " + id));
+
+        // Encerrar é operação de uma vez só: sem esta guarda, reencerrar regerava a ata a
+        // partir das presenças atuais e sobrescrevia a ata já existente.
+        if (reuniao.getStatus() == StatusReuniao.FINALIZADA) {
+            throw new BadRequestException("A reunião " + id + " já está finalizada.");
+        }
 
         reuniao.setStatus(StatusReuniao.FINALIZADA);
 

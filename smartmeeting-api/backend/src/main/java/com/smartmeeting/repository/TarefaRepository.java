@@ -34,6 +34,15 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
     @EntityGraph(value = "Tarefa.completa")
     List<Tarefa> findByProjectId(Long projectId);
 
+    /**
+     * Solta as tarefas de uma reunião que está sendo excluída. A tarefa pertence também ao
+     * projeto e não deve morrer com a reunião — mas a FK FK_TAREFA_REUNIAO impede apagar a
+     * reunião enquanto alguma tarefa a referenciar.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Tarefa t SET t.reuniao = null WHERE t.reuniao.id = :reuniaoId")
+    int desvincularDaReuniao(@Param("reuniaoId") Long reuniaoId);
+
     @Modifying
     @Query("UPDATE Tarefa t SET t.progresso = t.progresso - 1 WHERE t.column.id = :columnId AND t.progresso > :progresso")
     void decrementarProgressoApos(@Param("columnId") Long columnId, @Param("progresso") Integer progresso);

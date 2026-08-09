@@ -1,5 +1,6 @@
 package com.smartmeeting.service.sala;
 
+import com.smartmeeting.exception.BadRequestException;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.mapper.SalaMapper;
 import com.smartmeeting.model.Reuniao;
@@ -31,6 +32,59 @@ public class SalaAvailabilityService {
                 this.repository = repository;
                 this.reuniaoRepository = reuniaoRepository;
                 this.mapper = mapper;
+        }
+
+        /**
+         * Recusa duas reuniões na mesma sala em horários que se sobrepõem.
+         *
+         * Este serviço já sabia calcular disponibilidade, mas nada no fluxo de criação/
+         * edição de reunião o consultava: dava para agendar quantas reuniões se quisesse
+         * na mesma sala e no mesmo horário.
+         *
+         * @param reuniaoIdIgnorada id da própria reunião num update — sem isto, editar a
+         *                          pauta de uma reunião conflitaria com ela mesma.
+         */
+        public void validarDisponibilidadeParaReuniao(Long salaId,
+                        LocalDateTime inicio,
+                        Integer duracaoMinutos,
+                        Long reuniaoIdIgnorada) {
+                if (salaId == null || inicio == null || duracaoMinutos == null || duracaoMinutos <= 0) {
+                        return;
+                }
+
+                LocalDateTime fim = inicio.plusMinutes(duracaoMinutos);
+
+                // Somente AGENDADA/EM_ANDAMENTO ocupam a sala: finalizada e cancelada não.
+                List<Reuniao> ocupantes = reuniaoRepository.findBySalaIdAndStatusIn(
+                                salaId,
+                                List.of(com.smartmeeting.enums.StatusReuniao.AGENDADA,
+                                                com.smartmeeting.enums.StatusReuniao.EM_ANDAMENTO));
+
+                Reuniao conflito = ocupantes.stream()
+                                .filter(r -> reuniaoIdIgnorada == null || !reuniaoIdIgnorada.equals(r.getId()))
+                                .filter(r -> seSobrepoe(inicio, fim, r))
+                                .findFirst()
+                                .orElse(null);
+
+                if (conflito != null) {
+                        throw new BadRequestException(String.format(
+                                        "A sala já está reservada para a reunião %d (%s) das %s às %s.",
+                                        conflito.getId(),
+                                        conflito.getTitulo(),
+                                        conflito.getDataHoraInicio(),
+                                        conflito.getDataHoraFim()));
+                }
+        }
+
+        /** Intervalos semiabertos: encostar o fim de uma no início da outra não conflita. */
+        private boolean seSobrepoe(LocalDateTime inicio, LocalDateTime fim, Reuniao existente) {
+                if (existente.getDataHoraInicio() == null || existente.getDuracaoMinutos() == null) {
+                        return false;
+                }
+                LocalDateTime inicioExistente = existente.getDataHoraInicio();
+                LocalDateTime fimExistente = inicioExistente.plusMinutes(existente.getDuracaoMinutos());
+
+                return inicio.isBefore(fimExistente) && inicioExistente.isBefore(fim);
         }
 
         public Map<String, Object> getDisponibilidadeSala(Long salaId, String data) {
