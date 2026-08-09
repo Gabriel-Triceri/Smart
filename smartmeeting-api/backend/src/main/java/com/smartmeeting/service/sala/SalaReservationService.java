@@ -1,6 +1,8 @@
 package com.smartmeeting.service.sala;
 
+import com.smartmeeting.enums.PermissionType;
 import com.smartmeeting.enums.StatusReuniao;
+import com.smartmeeting.exception.ForbiddenException;
 import com.smartmeeting.exception.ResourceNotFoundException;
 import com.smartmeeting.model.Pessoa;
 import com.smartmeeting.model.Reuniao;
@@ -8,6 +10,8 @@ import com.smartmeeting.model.Sala;
 import com.smartmeeting.repository.PessoaRepository;
 import com.smartmeeting.repository.ReuniaoRepository;
 import com.smartmeeting.repository.SalaRepository;
+import com.smartmeeting.service.project.ProjectPermissionService;
+import com.smartmeeting.util.SecurityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,13 +27,16 @@ public class SalaReservationService {
     private final SalaRepository repository;
     private final ReuniaoRepository reuniaoRepository;
     private final PessoaRepository pessoaRepository;
+    private final ProjectPermissionService projectPermissionService;
 
     public SalaReservationService(SalaRepository repository,
             ReuniaoRepository reuniaoRepository,
-            PessoaRepository pessoaRepository) {
+            PessoaRepository pessoaRepository,
+            ProjectPermissionService projectPermissionService) {
         this.repository = repository;
         this.reuniaoRepository = reuniaoRepository;
         this.pessoaRepository = pessoaRepository;
+        this.projectPermissionService = projectPermissionService;
     }
 
     @Transactional
@@ -69,6 +76,8 @@ public class SalaReservationService {
             throw new IllegalArgumentException("A reserva não pertence à sala especificada");
         }
 
+        exigirPermissaoParaCancelar(reserva);
+
         reserva.setStatus(StatusReuniao.CANCELADA);
         reuniaoRepository.save(reserva);
 
@@ -82,5 +91,31 @@ public class SalaReservationService {
             repository.save(sala);
         }
 
+    }
+
+    /**
+     * Cancelar a reserva não tinha dono: qualquer autenticado cancelava a reserva
+     * de qualquer outra pessoa. Só o organizador da reserva, um admin, ou quem
+     * tenha MEETING_DELETE no projeto da reunião pode cancelar.
+     */
+    private void exigirPermissaoParaCancelar(Reuniao reserva) {
+        if (SecurityUtils.isAdmin()) {
+            return;
+        }
+
+        Long usuarioAtual = SecurityUtils.getCurrentUserId();
+        boolean ehOrganizador = reserva.getOrganizador() != null
+                && reserva.getOrganizador().getId().equals(usuarioAtual);
+        if (ehOrganizador) {
+            return;
+        }
+
+        if (reserva.getProject() != null
+                && projectPermissionService.hasPermission(reserva.getProject().getId(), usuarioAtual,
+                        PermissionType.MEETING_DELETE)) {
+            return;
+        }
+
+        throw new ForbiddenException("Você não tem permissão para cancelar esta reserva.");
     }
 }

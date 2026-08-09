@@ -46,16 +46,7 @@ public class ReuniaoMapper {
         String ataSegura = escape(reuniao.getAta());
 
         // Converter participantes para DTOs
-        List<PessoaDTO> participantesDetalhes = reuniao.getParticipantes() != null
-                ? reuniao.getParticipantes().stream()
-                        .map(p -> new PessoaDTO(
-                                p.getId(),
-                                escape(p.getNome()),
-                                escape(p.getEmail()),
-                                p.getTipoUsuario(),
-                                p.getCrachaId()))
-                        .collect(Collectors.toList())
-                : null;
+        List<PessoaDTO> participantesDetalhes = toPessoaDTOs(reuniao.getParticipantes());
 
         List<Long> participantesIds = reuniao.getParticipantes() != null
                 ? reuniao.getParticipantes().stream()
@@ -64,18 +55,8 @@ public class ReuniaoMapper {
                 : null;
 
         // Converter organizador
-        PessoaDTO organizadorDTO = null;
-        Long organizadorId = null;
-        if (reuniao.getOrganizador() != null) {
-            Pessoa o = reuniao.getOrganizador();
-            organizadorDTO = new PessoaDTO(
-                    o.getId(),
-                    escape(o.getNome()),
-                    escape(o.getEmail()),
-                    o.getTipoUsuario(),
-                    o.getCrachaId());
-            organizadorId = o.getId();
-        }
+        PessoaDTO organizadorDTO = toPessoaDTO(reuniao.getOrganizador());
+        Long organizadorId = reuniao.getOrganizador() != null ? reuniao.getOrganizador().getId() : null;
 
         // Converter sala
         SalaDTO salaDTO = null;
@@ -178,6 +159,31 @@ public class ReuniaoMapper {
                 reuniao.getProject() != null ? reuniao.getProject().getId() : null);
     }
 
+    /**
+     * Converte uma Pessoa para DTO. A entidade nunca deve ser serializada
+     * diretamente: além dos relacionamentos lazy, ela carrega a senha.
+     */
+    private PessoaDTO toPessoaDTO(Pessoa pessoa) {
+        if (pessoa == null) {
+            return null;
+        }
+        return new PessoaDTO(
+                pessoa.getId(),
+                escape(pessoa.getNome()),
+                escape(pessoa.getEmail()),
+                pessoa.getTipoUsuario(),
+                pessoa.getCrachaId());
+    }
+
+    private List<PessoaDTO> toPessoaDTOs(List<Pessoa> pessoas) {
+        if (pessoas == null) {
+            return null;
+        }
+        return pessoas.stream()
+                .map(this::toPessoaDTO)
+                .collect(Collectors.toList());
+    }
+
     public ReuniaoDetailsDTO toReuniaoDetailsDTO(Reuniao reuniao) {
         if (reuniao == null) {
             return null;
@@ -193,9 +199,9 @@ public class ReuniaoMapper {
                 reuniao.getPauta(),
                 reuniao.getAta(),
                 reuniao.getStatus(),
-                reuniao.getOrganizador(),
-                reuniao.getSala(),
-                reuniao.getParticipantes(),
+                toPessoaDTO(reuniao.getOrganizador()),
+                reuniao.getSala() != null ? salaService.toDTO(reuniao.getSala()) : null,
+                toPessoaDTOs(reuniao.getParticipantes()),
                 projectName,
                 reuniao.getProject() != null ? reuniao.getProject().getId() : null);
     }

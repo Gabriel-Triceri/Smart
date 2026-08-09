@@ -3,17 +3,7 @@ package com.smartmeeting.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.smartmeeting.enums.TipoUsuario;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.Accessors;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.smartmeeting.enums.TipoUsuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -66,6 +56,10 @@ public class Pessoa extends Auditable {
     @Column(name = "EMAIL_PESSOA", nullable = false)
     private String email;
 
+    // A senha jamais pode sair numa resposta HTTP. Sem isto, qualquer DTO que
+    // exponha a entidade crua vaza o hash — era o caso de ReuniaoDetailsDTO, e
+    // com o seed usando {noop} o que vazava era a senha em texto puro.
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "SENHA_PESSOA", nullable = false)
     private String senha;
 

@@ -173,9 +173,21 @@ public class ProjectPermissionService {
     }
 
     /**
-     * Verifica se o usuário atual tem permissão (para uso em @PreAuthorize)
+     * Verifica se o usuário atual tem permissão (para uso em @PreAuthorize).
+     *
+     * O bypass de admin fica aqui, e não em cada chamador: dos 18 pontos de uso,
+     * uns escreviam {@code or hasRole('ADMIN')} no SpEL, outros embrulhavam com
+     * {@code if (!SecurityUtils.isAdmin())} e cinco simplesmente esqueceram —
+     * deixando GET/PUT/DELETE /reunioes/{id} em 403 até para o administrador,
+     * já que o seed não concede nenhuma permissão MEETING_* por projeto.
+     *
+     * Note que o bypass NÃO está em {@link #hasPermission}, que continua
+     * respondendo o estado real do membro — é o que a tela de permissões lê.
      */
     public boolean hasPermissionForCurrentUser(Long projectId, PermissionType permissionType) {
+        if (com.smartmeeting.util.SecurityUtils.isAdmin()) {
+            return true;
+        }
         Long userId = com.smartmeeting.util.SecurityUtils.getCurrentUserId();
         if (userId == null)
             return false;

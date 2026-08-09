@@ -1,8 +1,6 @@
 package com.smartmeeting.dto;
 
 import com.smartmeeting.enums.StatusReuniao;
-import com.smartmeeting.model.Pessoa;
-import com.smartmeeting.model.Sala;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,9 +13,9 @@ public class ReuniaoDetailsDTO {
     private String pauta;
     private String ata;
     private StatusReuniao status;
-    private Pessoa organizador;
-    private Sala sala;
-    private List<Pessoa> participantes;
+    private PessoaDTO organizador;
+    private SalaDTO sala;
+    private List<PessoaDTO> participantes;
     private String projectName;
     private Long projectId;
 
@@ -26,7 +24,7 @@ public class ReuniaoDetailsDTO {
     }
 
     public ReuniaoDetailsDTO(Long id, String titulo, LocalDateTime dataHoraInicio, Integer duracaoMinutos, String pauta,
-            String ata, StatusReuniao status, Pessoa organizador, Sala sala, List<Pessoa> participantes,
+            String ata, StatusReuniao status, PessoaDTO organizador, SalaDTO sala, List<PessoaDTO> participantes,
             String projectName, Long projectId) {
         this.id = id;
         this.titulo = titulo;
@@ -107,27 +105,27 @@ public class ReuniaoDetailsDTO {
         this.status = status;
     }
 
-    public Pessoa getOrganizador() {
+    public PessoaDTO getOrganizador() {
         return organizador;
     }
 
-    public void setOrganizador(Pessoa organizador) {
+    public void setOrganizador(PessoaDTO organizador) {
         this.organizador = organizador;
     }
 
-    public Sala getSala() {
+    public SalaDTO getSala() {
         return sala;
     }
 
-    public void setSala(Sala sala) {
+    public void setSala(SalaDTO sala) {
         this.sala = sala;
     }
 
-    public List<Pessoa> getParticipantes() {
+    public List<PessoaDTO> getParticipantes() {
         return participantes;
     }
 
-    public void setParticipantes(List<Pessoa> participantes) {
+    public void setParticipantes(List<PessoaDTO> participantes) {
         this.participantes = participantes;
     }
 

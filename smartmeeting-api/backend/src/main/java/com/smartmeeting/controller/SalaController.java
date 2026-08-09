@@ -73,7 +73,10 @@ public class SalaController {
         return ResponseEntity.ok(statistics);
     }
 
+    // Reservar cria uma Reuniao, então exige a mesma permissão que criar uma
+    // reunião — antes qualquer autenticado reservava qualquer sala.
     @PostMapping("/{id}/reservar")
+    @PreAuthorize("hasAnyRole('ADMIN','ORGANIZADOR') or hasAuthority('MEETING_CREATE')")
     public ResponseEntity<Void> reservarSala(@PathVariable("id") Long id, @RequestBody Map<String, String> body) {
         service.reservarSala(id, body.get("inicio"), body.get("fim"));
         return ResponseEntity.ok().build();

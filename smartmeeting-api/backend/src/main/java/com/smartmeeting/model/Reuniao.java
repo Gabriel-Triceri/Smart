@@ -30,10 +30,17 @@ import java.util.List;
                 name = "Reuniao.completa",
                 attributeNodes = {
                         @NamedAttributeNode("organizador"),
-                        @NamedAttributeNode("sala"),
+                        // A conversão para SalaDTO lê os equipamentos, e com
+                        // open-in-view desligado a sessão já fechou nesse ponto:
+                        // sem o subgraph, o detalhe da reunião estoura 500.
+                        @NamedAttributeNode(value = "sala", subgraph = "sala.equipamentos"),
                         @NamedAttributeNode("participantes"),
                         @NamedAttributeNode("project")
-                }
+                },
+                subgraphs = @NamedSubgraph(
+                        name = "sala.equipamentos",
+                        attributeNodes = @NamedAttributeNode("equipamentos")
+                )
         ),
         @NamedEntityGraph(
                 name = "Reuniao.paraListagem",

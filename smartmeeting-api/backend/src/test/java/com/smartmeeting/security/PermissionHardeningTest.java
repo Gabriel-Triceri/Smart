@@ -273,4 +273,49 @@ class PermissionHardeningTest {
                         .header("Authorization", tokenDe(CONVIDADO)))
                 .andExpect(status().isForbidden());
     }
+
+    // ── Vazamento de senha no detalhe da reunião ──────────────────────────────
+
+    @Test
+    void detalheDaReuniao_naoPodeExporSenhaDeNinguem() throws Exception {
+        // ReuniaoDetailsDTO expunha a entidade Pessoa crua e Pessoa.senha não era
+        // write-only: o hash (com {noop}, a senha em texto puro) saía para qualquer
+        // um com MEETING_VIEW.
+        mockMvc.perform(get("/reunioes/1")
+                        .header("Authorization", tokenDe(ADMIN)))
+                .andExpect(status().isOk())
+                // o payload continua populado — sem isto o teste passaria com o campo vazio
+                .andExpect(jsonPath("$.organizador.nome").exists())
+                .andExpect(jsonPath("$.participantes[0].nome").exists())
+                .andExpect(jsonPath("$.organizador.senha").doesNotExist())
+                .andExpect(jsonPath("$.participantes[0].senha").doesNotExist());
+    }
+
+    // ── Reserva de sala ───────────────────────────────────────────────────────
+
+    @Test
+    void cancelarReservaDeOutraPessoa_deveRetornar403() throws Exception {
+        // Reunião 6 (sala 1) é organizada pela pessoa 7, no projeto 7.
+        // carlos (pessoa 4) não é o organizador, não é admin e não é membro do projeto 7.
+        mockMvc.perform(delete("/salas/1/reservar/6")
+                        .header("Authorization", tokenDe(CONVIDADO)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void cancelarReservaPropria_deveFuncionar() throws Exception {
+        // Reunião 8 (sala 8) é organizada por otavio (pessoa 2).
+        mockMvc.perform(delete("/salas/8/reservar/8")
+                        .header("Authorization", tokenDe(ORGANIZADOR)))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void reservarSalaSemPermissaoDeCriarReuniao_deveRetornar403() throws Exception {
+        mockMvc.perform(post("/salas/1/reservar")
+                        .header("Authorization", tokenDe(CONVIDADO))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"inicio\":\"2030-01-01T10:00:00\",\"fim\":\"2030-01-01T11:00:00\"}"))
+                .andExpect(status().isForbidden());
+    }
 }
