@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # ---- Etapa 1: build ------------------------------------------------------
 # O JDK só é necessário para compilar; a imagem final leva apenas o JRE.
 FROM maven:3.9-eclipse-temurin-17 AS build
